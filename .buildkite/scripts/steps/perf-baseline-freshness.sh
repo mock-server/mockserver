@@ -40,7 +40,8 @@ set -euo pipefail
 # Whichever of the two is newest gives the verdict, so a passing manual run can clear a
 # failed scheduled one and a failing one turns the check red. Only scheduled builds
 # prove the cron is firing, so a manual run never rescues STALLED, and a manual build
-# that never measured (guard skip, cancelled before perf-run finished) is ignored.
+# that never measured (guard skip, cancelled before perf-run finished, perf-run refused
+# for its image revision) is ignored.
 #
 # NOT DETECTED: a scheduled build that goes GREEN while writing no fresh baseline.
 # perf-test-compare.sh currently has two such paths — an invalid run annotates an
@@ -218,9 +219,12 @@ DAILY_SCHEDULED_SEL="(.source == \"schedule\" and ${NOT_WEEKLY})"
 MEASURED_STEPS='["perf-run", "perf-microbench", "perf-compare"]'
 FULLY_MEASURED="((.jobs // []) as \$jobs | all(${MEASURED_STEPS}[]; . as \$k | any(\$jobs[]; .step_key == \$k and (.state == \"passed\" or .state == \"failed\"))))"
 MEASUREMENT_FAILED='any((.jobs // [])[]; .step_key == "perf-run" and (.state == "failed" or .state == "timed_out"))'
+# perf-test-run.sh sets perf_run_refused=image_revision when it refused to measure an image the
+# build's commit is not served; such a build measured nothing.
 MEASURED_MANUAL_SEL="(.source != \"schedule\" and ${NOT_WEEKLY}
   and (.source == \"ui\" or ((.message // \"\") | test(\"\\\\[perf-run\\\\]\")))
   and ((.env // {}) == {})
+  and ((.meta_data // {}).perf_run_refused != \"image_revision\")
   and (${FULLY_MEASURED} or ${MEASUREMENT_FAILED}))"
 # A guard-skip (master unchanged) lands as `passed`: the producer working correctly.
 IS_TERMINAL='(.state | . == "passed" or . == "failed" or . == "canceled" or . == "skipped" or . == "not_run" or . == "blocked")'

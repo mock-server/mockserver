@@ -206,6 +206,7 @@ non-scheduled build only if all of these hold:
 | It has finished | An in-flight build has no verdict yet |
 | No `[perf-soak]` or `[perf-xl-weekly]` in the message | Neither weekly build is the baseline producer |
 | It is on `master` | The check queries only the producer's `master` builds |
+| Its meta-data does not carry `perf_run_refused=image_revision` | `perf-test-run.sh` sets it when a forced build refuses an image its commit is not served; that build measured nothing |
 
 A counted manual build that failed fails the check (`NOT_PASSED`), the same as a failed
 scheduled one. A build whose `perf-run` step failed always counts as not passed, and the
@@ -292,7 +293,7 @@ Steps 1 and 4 are managed by Terraform (`terraform/buildkite-pipelines/pipelines
 
 The pipeline's first step (`perf-test-guard.sh`, `trigger` queue) implements a "daily but only if there's something new" gate:
 
-1. Calls `last_perf_run_commit` (in `lib/last-successful-commit.sh`) — resolves the commit the heavy regression run *last actually executed against*, by reading the most recent `perf_regression_ran_commit` Buildkite build meta-data (set by `perf-test-run.sh`) via the Buildkite API (token in AWS Secrets Manager `mockserver-build/buildkite-api-token`). This is deliberately distinct from the sibling `last_successful_commit` (last *passed build*, used by `generate-pipeline.sh`): the perf-test pipeline passes on its lint step on every push, so "last passed build" would almost always be `HEAD` and the guard would skip forever.
+1. Calls `last_perf_run_commit` (in `lib/last-successful-commit.sh`) — resolves the commit the heavy regression run *last actually executed against*, by reading the most recent `perf_regression_ran_commit` Buildkite build meta-data (set by `perf-test-run.sh`) via the Buildkite API (token in AWS Secrets Manager `mockserver-build/buildkite-api-token`). This is deliberately distinct from the sibling `last_successful_commit` (last *passed build*, used by `generate-pipeline.sh`): the perf-test pipeline passes on its lint step on every push, so "last passed build" would almost always be `HEAD` and the guard would skip forever. `perf-test-run.sh` sets the meta-data only when the build's commit is served the measured `:snapshot` image: the image was built from it, or from an ancestor with no `mockserver-java`-triggering change since. A run on an image that `mockserver-java` has not yet rebuilt for the commit therefore does not make the next scheduled run skip it, and a `[perf-run]` or UI build on `master` in that state fails before the SUT starts (see [Run Provenance](../code/performance-measurement.md#run-provenance)).
 2. If `HEAD` equals the last run commit, annotates "skipped" and exits 0 — no compute is consumed.
 3. Otherwise (new commit, or no prior run recorded) uses `buildkite-agent pipeline upload` to dynamically inject the run, microbench, HTTP/2-multiplex, and compare steps into the running build. These steps target the `perf` agent queue (c5.12xlarge, on-demand, up to three agents with one per machine), so the measurement steps of one build run in parallel on separate machines. With `PERF_XL=true` it also uploads the arm-only steps for the `perf-xl` queue (see [The perf-xl steps](#the-perf-xl-steps-opt-in)).
 

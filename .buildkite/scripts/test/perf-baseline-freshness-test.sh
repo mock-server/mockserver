@@ -285,6 +285,10 @@ fi
   | run "scheduled newest failed, older manual failed measurement" 1 "NOT_PASSED (last completed scheduled run was 'failed')"
 { ms 663 passed 1 passed passed passed; ms 661 failed 2 failed passed waiting_failed; b 653 schedule passed 5; } \
   | run "a newer passing manual run clears an older failed measurement" 0 "last completed #663 passed, manual [perf-run]"
+{ ms 661 failed 1 failed passed waiting_failed | jq -c '.meta_data = {perf_run_refused: "image_revision"}'; b 653 schedule passed 5; } \
+  | run "a build whose perf-run refused its image revision is ignored" 0 "last completed #653 passed, scheduled"
+{ ms 661 failed 1 failed passed waiting_failed | jq -c '.meta_data = {perf_run_refused: "no"}'; b 653 schedule passed 5; } \
+  | run "a build whose perf-run was not refused and failed still counts" 1 "NOT_PASSED (last completed manual [perf-run] run was 'failed')"
 { ms 661 failed 1 failed passed waiting_failed; b 500 schedule passed 40; } \
   | run "a failed measurement does not hide a stalled schedule" 1 "STALLED (no scheduled build within 30h)"
 

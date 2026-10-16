@@ -262,8 +262,13 @@ It reads **one S3 query** (the newest run for the branch in
   commit-gated (it writes no new object when master has not moved), so an object-age
   rule would cry wolf on a quiet master. Instead the run's `.commit` must be an
   ancestor-or-equal of the release commit: equal ⇒ this exact code was measured
-  (`CURRENT`); a proper ancestor with N intervening commits ⇒ the release contains
-  unmeasured code (`STALE`, blocks); not an ancestor ⇒ `DIVERGENT` (blocks).
+  (`CURRENT`); a proper ancestor whose later commits change nothing that rebuilds the
+  `:snapshot` image (`mockserver/` except the maven plugin, `mockserver-ui/`,
+  `test-fixtures/`) and nothing under `docker/` ⇒ the release ships the measured code
+  (`EQUIVALENT`, passes); any other proper ancestor ⇒ the release contains unmeasured code
+  (`STALE`, blocks); not an ancestor ⇒ `DIVERGENT` (blocks). A run is filed under the
+  commit its SUT image was built from, which can be older than the commit its build was
+  on; the `STALE` row then names both.
 - **Budgets** — the **blocking set is read from the budget file's own `gating` field**,
   never hard-coded. Only `gating:true` budgets can block. Those with an **absolute
   floor** (today: `forward.error_rate` and `churn.alloc_ratio_index_n15000`) are evaluated
@@ -273,6 +278,18 @@ It reads **one S3 query** (the newest run for the branch in
   reported as a delegated seam, covered by the daily `perf-test-compare.sh` gate, the
   baseline-freshness watchdog, and the recency check. `premerge_alloc.*` gating budgets
   are per-merge (`perf-alloc-gate.sh`) and out of scope for a daily run object.
+
+**Clearing `STALE`.** Wait until `mockserver-java` has pushed the `:snapshot` images for the
+release commit, or for its newest ancestor that changes `mockserver/`, `mockserver-ui/` or
+`test-fixtures/`. Then start a `mockserver-performance-test` build on `master` at the release
+commit with `[perf-run]` in its message (without the marker the commit guard can skip it). A
+`[perf-run]` build whose commit is not served the pulled image fails in its first minutes
+rather than measuring the wrong binary. In the run log, `provenance: OK` must show the release
+commit as the harness commit. When the run is persisted, re-run the preflight. If only
+`docker/` changed since the measured commit, no `:snapshot` rebuild happens on its own: start
+a `mockserver-java` build on `master` at the release commit first, as the `STALE` row says. If
+`master` moves past the release commit before the image is pulled, the build is refused;
+release the new tip instead.
 
 Every state it cannot resolve is its **own loud outcome, never a silent pass**:
 `NO_SESSION`/`S3_DENIED` (exit 3), `NO_HISTORY` (exit 1), `MALFORMED`/`INDETERMINATE`

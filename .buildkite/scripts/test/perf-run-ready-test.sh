@@ -103,5 +103,81 @@ ready "unhealthy, not running"        1 1  "unhealthy and not running"   "paused
 ready "running unhealthy keeps polling" 1 60 "did not become ready"      "running unhealthy"
 ready "never ready: post-mortem"      1 60 "stub-jvm-log-line"           "running starting"
 
+echo "--- 4. image revision vs harness commit: which commits are served the measured image"
+SNAPSHOT_LIB="$REPO_ROOT/.buildkite/scripts/lib/snapshot-image-inputs.sh"
+FNS="source '$SNAPSHOT_LIB'"$'\n'
+for fn in forced_run image_revision_refusal harness_commit_measured; do
+  body="$(extract "$fn")"
+  if [ -z "$body" ]; then bad "function $fn not found in $F"; continue; fi
+  FNS="$FNS$body"$'\n'
+done
+LAG_BLOCK="$(awk '/^# The checkout.s full SHA/ {p=1} p {print} p && /^  exit 1$/ {e=1} e && /^fi$/ {exit}' "$F")"
+[ -n "$LAG_BLOCK" ] || bad "refusal block (from '# The checkout's full SHA' to the 'fi' after its exit) not found"
+# A scratch history with no remote, so a commit it lacks cannot be fetched (fail closed).
+G="$WORK/history"
+git init -q "$G"
+commit() { # <path> -> the new commit's SHA
+  mkdir -p "$G/$(dirname "$1")"; echo "$RANDOM" >> "$G/$1"
+  git -C "$G" add -A
+  GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t git -C "$G" -c commit.gpgsign=false commit -q -m "$1"
+  git -C "$G" rev-parse HEAD
+}
+JAVA_SHA="$(commit mockserver/core.java)"
+DOCS_SHA="$(commit docs/notes.md)"
+LATER_JAVA_SHA="$(commit mockserver/later.java)"
+git -C "$G" checkout -q "$DOCS_SHA"
+ABSENT_SHA="0123456789abcdef0123456789abcdef01234567"
+# lag_rc <image revision> <BUILDKITE_COMMIT> [VAR=value...] -> exit code of the real block against a
+# stub docker; the meta-data it sets is appended to $WORK/meta
+lag_rc() {
+  local rev="$1" commit="$2" rc=0; shift 2
+  : > "$WORK/meta"
+  env -u BUILDKITE_SOURCE -u BUILDKITE_MESSAGE -u BUILDKITE_BRANCH -u PERF_RELEASE_COMPARISON -u PERF_RUN_NAME \
+    STUB_REV="$rev" BUILDKITE_COMMIT="$commit" REPO_ROOT="$G" MOCKSERVER_IMAGE="stub:snapshot" META="$WORK/meta" "$@" \
+    bash -c "set -euo pipefail; docker() { printf '%s\n' \"\$STUB_REV\"; }
+buildkite-agent() { if [ \"\$1\" = meta-data ]; then echo \"\$3=\$4\" >> \"\$META\"; else cat >/dev/null; fi; }
+$FNS $LAG_BLOCK" >"$WORK/lag" 2>&1 || rc=$?
+  echo "$rc"
+}
+check "[perf-run], image at an older java commit, tip changes mockserver/: refused" "1" "$(lag_rc "$JAVA_SHA" "$LATER_JAVA_SHA" BUILDKITE_MESSAGE="release [perf-run]")"
+if grep -qF "built from $JAVA_SHA, and the harness commit $LATER_JAVA_SHA is not served that image" "$WORK/lag" && grep -qF "[perf-run]" "$WORK/lag"; then
+  ok "  ... names both commits and the [perf-run] remedy"
+else
+  bad "  ... refusal text: $(head -3 "$WORK/lag")"
+fi
+check "  ... and flags the build as refused for the freshness watchdog" "perf_run_refused=image_revision" "$(cat "$WORK/meta")"
+check "[perf-run], image at the last java commit, docs-only tip: runs" "0" "$(lag_rc "$JAVA_SHA" "$DOCS_SHA" BUILDKITE_MESSAGE="[perf-run]")"
+check "  ... and clears the refused flag" "perf_run_refused=no" "$(cat "$WORK/meta")"
+check "UI build, tip changes mockserver/: refused" "1" "$(lag_rc "$JAVA_SHA" "$LATER_JAVA_SHA" BUILDKITE_SOURCE=ui)"
+check "UI build, image newer than the harness: refused" "1" "$(lag_rc "$LATER_JAVA_SHA" "$DOCS_SHA" BUILDKITE_SOURCE=ui)"
+check "UI build, image newer than the harness by a docs-only commit: refused" "1" "$(lag_rc "$DOCS_SHA" "$JAVA_SHA" BUILDKITE_SOURCE=ui)"
+check "UI build, symbolic HEAD commit, image current: runs" "0" "$(lag_rc "$DOCS_SHA" HEAD BUILDKITE_SOURCE=ui)"
+check "[perf-run], image from a commit not in the clone: refused" "1" "$(lag_rc "$ABSENT_SHA" "$DOCS_SHA" BUILDKITE_MESSAGE="[perf-run]")"
+check "[perf-run], image unlabelled: refused" "1" "$(lag_rc "" "$DOCS_SHA" BUILDKITE_MESSAGE="[perf-run]")"
+check "scheduled run, tip changes mockserver/: runs (filed under the image revision)" "0" "$(lag_rc "$JAVA_SHA" "$LATER_JAVA_SHA" BUILDKITE_SOURCE=schedule)"
+check "weekly scheduled [perf-run] build, tip changes mockserver/: runs" "0" "$(lag_rc "$JAVA_SHA" "$LATER_JAVA_SHA" BUILDKITE_SOURCE=schedule BUILDKITE_MESSAGE="Scheduled: weekly perf-xl headline run [perf-run] [perf-xl-weekly]")"
+check "[perf-run] on a branch, tip changes mockserver/: runs" "0" "$(lag_rc "$JAVA_SHA" "$LATER_JAVA_SHA" BUILDKITE_MESSAGE="[perf-run]" BUILDKITE_BRANCH=harness-change)"
+check "[perf-run] release comparison: runs" "0" "$(lag_rc "" "$DOCS_SHA" BUILDKITE_MESSAGE="[perf-run]" PERF_RELEASE_COMPARISON=8.0.0)"
+check "a refused allocprofile step writes no meta-data" "1:" "$(lag_rc "$JAVA_SHA" "$LATER_JAVA_SHA" BUILDKITE_MESSAGE="[perf-run]" PERF_RUN_NAME=allocprofile):$(cat "$WORK/meta")"
+REFUSAL_LINE="$(grep -n '^LAG_REFUSAL=' "$F" | head -1 | cut -d: -f1)"
+START_LINE="$(grep -n '^echo "--- starting upstream + MockServer' "$F" | head -1 | cut -d: -f1)"
+check "the refusal runs before the SUT starts" "true" \
+  "$([ -n "$REFUSAL_LINE" ] && [ -n "$START_LINE" ] && [ "$REFUSAL_LINE" -lt "$START_LINE" ] && echo true || echo false)"
+
+measured() { # ATTRIBUTED_COMMIT HARNESS_COMMIT PROVENANCE_OK -> 0 when the run may be recorded
+  local rc=0
+  REPO_ROOT="$G" ATTRIBUTED_COMMIT="$1" HARNESS_COMMIT="$2" PROVENANCE_OK="$3" bash -c "$FNS harness_commit_measured" || rc=$?
+  echo "$rc"
+}
+check "image built from the harness commit: recorded" "0" "$(measured "$DOCS_SHA" "$DOCS_SHA" true)"
+check "image at the last java commit, docs-only harness: recorded" "0" "$(measured "$JAVA_SHA" "$DOCS_SHA" true)"
+check "mockserver/ changed since the image: not recorded" "1" "$(measured "$JAVA_SHA" "$LATER_JAVA_SHA" true)"
+check "image newer than the harness commit: not recorded" "1" "$(measured "$DOCS_SHA" "$JAVA_SHA" true)"
+check "image from a commit not in the clone: not recorded" "1" "$(measured "$ABSENT_SHA" "$DOCS_SHA" true)"
+check "malformed label: not recorded" "1" "$(measured "$DOCS_SHA" "$DOCS_SHA" false)"
+check "unlabelled image in the grace window: recorded as before" "0" "$(measured "$DOCS_SHA" "$DOCS_SHA" null)"
+check "the ran-commit meta-data is set only under harness_commit_measured" "1" \
+  "$(grep -B1 'meta-data set "perf_regression_ran_commit"' "$F" | grep -c 'if harness_commit_measured; then' || true)"
+
 if [ "$FAILS" -gt 0 ]; then echo "FAILED: $FAILS check(s)" >&2; exit 1; fi
 echo "all perf-run start-up checks passed"

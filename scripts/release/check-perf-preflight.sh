@@ -27,8 +27,11 @@
 #                 exact trap the sibling baseline-freshness watchdog documents. So
 #                 instead: the run's `.commit` must be an ancestor-or-equal of the
 #                 release commit. Equal => this exact code was measured (CURRENT).
-#                 A proper ancestor => the release contains N commits no perf run
-#                 measured (STALE, blocks; remedy: run perf on the release commit,
+#                 A proper ancestor whose commits since change nothing that rebuilds
+#                 the :snapshot image, nor docker/ => the release ships the measured
+#                 code (EQUIVALENT, passes). Any other proper ancestor => the
+#                 release contains N commits no perf run measured (STALE, blocks;
+#                 remedy: run perf on the release commit,
 #                 or record an acceptance). Not an ancestor => the newest run is on
 #                 a different history than the release (DIVERGENT, blocks).
 #   3. BUDGETS    for every budget marked `gating:true` in perf-budgets.json:
@@ -70,8 +73,8 @@
 # OUTCOMES, KEPT DISTINCT (this is the whole point)
 #   PASS         valid + current-or-not-stale + no unaccepted gating breach
 #   INVALID      newest run's validity is false/absent          (finding)
-#   STALE        newest run measured a proper ancestor of the release commit;
-#                the release contains commits never measured    (finding)
+#   STALE        newest run measured a proper ancestor of the release commit, and
+#                the commits since change what the release ships (finding)
 #   DIVERGENT    newest run's commit is not an ancestor of the release commit
 #                (measured a different line of development)      (finding)
 #   BREACH       a gating ABSOLUTE budget is breached, unaccepted (finding)
@@ -94,6 +97,8 @@
 #   PERF_PREFLIGHT_BRANCH          run-history branch (default master)
 #   PERF_PREFLIGHT_RELEASE_COMMIT  release candidate commit for the recency check
 #                                  (default: git rev-parse HEAD in the repo)
+#   PERF_PREFLIGHT_GIT_REPO        repository whose history the recency check reads
+#                                  (default: this checkout)
 #   PERF_BUDGETS_FILE              default mockserver-performance-test/perf-budgets.json
 #   PERF_ACCEPTED_REGRESSIONS_FILE default mockserver-performance-test/perf-accepted-regressions.json
 #                                  (ABSENT = nothing accepted — the safe default)
@@ -575,21 +580,47 @@ else
 fi
 
 # --- 4. RECENCY (git ancestry, not wall-clock) ------------------------------
-REL_COMMIT="${PERF_PREFLIGHT_RELEASE_COMMIT:-$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || true)}"
-if [[ -z "$REL_COMMIT" ]]; then
+# A release commit with no change since the measured one to the paths that rebuild the :snapshot
+# image (lib/snapshot-image-inputs.sh) ships the measured code. docker/ must be unchanged too: it
+# shapes the released image but does not trigger a :snapshot rebuild.
+SNAPSHOT_LIB="$REPO_ROOT/.buildkite/scripts/lib/snapshot-image-inputs.sh"
+GIT_REPO="${PERF_PREFLIGHT_GIT_REPO:-$REPO_ROOT}"
+REL_COMMIT="${PERF_PREFLIGHT_RELEASE_COMMIT:-$(git -C "$GIT_REPO" rev-parse HEAD 2>/dev/null || true)}"
+if [[ ! -f "$SNAPSHOT_LIB" ]]; then
+  INDETS+=("INDETERMINATE (recency): ${SNAPSHOT_LIB} not found — cannot tell which commits share a :snapshot image.")
+elif [[ -z "$REL_COMMIT" ]]; then
   INDETS+=("INDETERMINATE (recency): could not resolve the release commit (set PERF_PREFLIGHT_RELEASE_COMMIT or run inside the release checkout).")
-elif ! git -C "$REPO_ROOT" cat-file -e "${REL_COMMIT}^{commit}" 2>/dev/null; then
+elif ! git -C "$GIT_REPO" cat-file -e "${REL_COMMIT}^{commit}" 2>/dev/null; then
   INDETS+=("INDETERMINATE (recency): release commit ${REL_COMMIT:0:12} is not present in this clone (shallow/unfetched) — cannot judge ancestry.")
-elif ! git -C "$REPO_ROOT" cat-file -e "${RUN_COMMIT}^{commit}" 2>/dev/null; then
+elif ! git -C "$GIT_REPO" cat-file -e "${RUN_COMMIT}^{commit}" 2>/dev/null; then
   INDETS+=("INDETERMINATE (recency): the newest run's commit ${RUN_COMMIT:0:12} is not present in this clone — cannot judge ancestry against the release. Fetch it, or run a fresh perf run on the release commit.")
 else
-  REL_FULL="$(git -C "$REPO_ROOT" rev-parse "${REL_COMMIT}^{commit}")"
-  RUN_FULL="$(git -C "$REPO_ROOT" rev-parse "${RUN_COMMIT}^{commit}")"
+  # shellcheck source=/dev/null
+  source "$SNAPSHOT_LIB"
+  REL_FULL="$(git -C "$GIT_REPO" rev-parse "${REL_COMMIT}^{commit}")"
+  RUN_FULL="$(git -C "$GIT_REPO" rev-parse "${RUN_COMMIT}^{commit}")"
   if [[ "$RUN_FULL" == "$REL_FULL" ]]; then
     NOTES+=("RECENCY ok (CURRENT): the newest perf run measured the exact release commit ${REL_FULL:0:12}.")
-  elif git -C "$REPO_ROOT" merge-base --is-ancestor "$RUN_FULL" "$REL_FULL" 2>/dev/null; then
-    N="$(git -C "$REPO_ROOT" rev-list --count "${RUN_FULL}..${REL_FULL}" 2>/dev/null || echo '?')"
-    FINDINGS+=("STALE: the newest perf run measured ${RUN_FULL:0:12}, an ancestor of the release commit ${REL_FULL:0:12}, with ${N} commit(s) in between that NO perf run has measured. The release could contain an unmeasured regression. Remedy: run the daily perf pipeline on the release commit, or record an acceptance in ${ACCEPT_FILE}.")
+  elif git -C "$GIT_REPO" merge-base --is-ancestor "$RUN_FULL" "$REL_FULL" 2>/dev/null; then
+    N="$(git -C "$GIT_REPO" rev-list --count "${RUN_FULL}..${REL_FULL}" 2>/dev/null || echo '?')"
+    DOCKER_CHANGES="$(git -C "$GIT_REPO" diff --name-only "$RUN_FULL" "$REL_FULL" -- docker/ 2>/dev/null || echo unknown)"
+    SNAPSHOT_SAME=false
+    snapshot_equivalent "$GIT_REPO" "$RUN_FULL" "$REL_FULL" && SNAPSHOT_SAME=true
+    if [[ "$SNAPSHOT_SAME" == true && -z "$DOCKER_CHANGES" ]]; then
+      NOTES+=("RECENCY ok (EQUIVALENT): the newest perf run measured ${RUN_FULL:0:12}; the ${N} commit(s) up to the release commit ${REL_FULL:0:12} change none of the paths that rebuild the :snapshot image, nor docker/, so the release ships the measured code.")
+    else
+      RUN_HARNESS="$(jq -r '.harness_commit // empty' "$NEWEST" 2>/dev/null)"
+      LAGGED=""
+      if [[ "$RUN_HARNESS" =~ ^[0-9a-f]{40}$ && "$RUN_HARNESS" != "$RUN_FULL" ]]; then
+        LAGGED=" That run's build was on ${RUN_HARNESS:0:12} and was served the :snapshot image built from ${RUN_FULL:0:12}."
+      fi
+      if [[ "$SNAPSHOT_SAME" == true ]]; then
+        REMEDY="docker/ changed since the measured commit, which does not rebuild the :snapshot images: start a mockserver-java build on ${BRANCH} at ${REL_FULL} so it pushes them, then create a mockserver-performance-test build at that commit with [perf-run] in its message."
+      else
+        REMEDY="create a mockserver-performance-test build on ${BRANCH} at commit ${REL_FULL} with [perf-run] in its message (without it the commit guard can skip the run), once mockserver-java has pushed the :snapshot images for the release commit or for its newest ancestor that changes mockserver/, mockserver-ui/ or test-fixtures/. A [perf-run] build refuses an image its commit is not served, within minutes."
+      fi
+      FINDINGS+=("STALE: the newest perf run measured ${RUN_FULL:0:12}, an ancestor of the release commit ${REL_FULL:0:12}, with ${N} commit(s) in between that NO perf run has measured. The release could contain an unmeasured regression.${LAGGED} Remedy: ${REMEDY} Its run log must show 'provenance: OK' with harness commit ${REL_FULL:0:10}. Then re-run this gate. Or record an acceptance in ${ACCEPT_FILE}.")
+    fi
   else
     FINDINGS+=("DIVERGENT: the newest perf run's commit ${RUN_FULL:0:12} is NOT an ancestor of the release commit ${REL_FULL:0:12} — it measured a different line of development. The stored baseline does not describe this release.")
   fi

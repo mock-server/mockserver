@@ -80,6 +80,41 @@ expect "a run without the churn ratio is INDETERMINATE" 2 "churn.alloc_ratio_ind
 run_with '.forward_guard.error_rate = 0.5' "$WORK/fwd-bad.json"
 expect "a forward error rate over its floor is still a BREACH" 1 "BREACH: gating budget forward.error_rate" -- run_gate "$WORK/fwd-bad.json"
 
+echo "--- RECENCY against a scratch history: which later commits still ship the measured code"
+# A throwaway repository, so the real clone gains no objects.
+G="$WORK/history"
+git init -q "$G"
+commit() { # <path> -> the new commit's SHA
+  mkdir -p "$G/$(dirname "$1")"; echo "$RANDOM" >> "$G/$1"
+  git -C "$G" add -A
+  GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t git -C "$G" -c commit.gpgsign=false commit -q -m "$1"
+  git -C "$G" rev-parse HEAD
+}
+MEASURED="$(commit mockserver/core.java)"
+DOCS_TIP="$(commit docs/notes.md)"
+PLUGIN_TIP="$(commit mockserver/mockserver-maven-plugin/pom.xml)"
+JAVA_TIP="$(commit mockserver/later.java)"
+git -C "$G" checkout -q "$PLUGIN_TIP"
+DOCKER_TIP="$(commit docker/graaljs/Dockerfile)"
+# release_gate <run.json> <release commit>: the gate on the scratch history
+release_gate() {
+  local dir="$WORK/runs-$RANDOM"
+  mkdir -p "$dir"
+  cp "$1" "$dir/2026-01-01T00-00-00Z__fixture.json"
+  env PERF_PREFLIGHT_LOCAL_DIR="$dir" PERF_PREFLIGHT_GIT_REPO="$G" PERF_PREFLIGHT_RELEASE_COMMIT="$2" \
+      PERF_ACCEPTED_REGRESSIONS_FILE="$WORK/no-acceptances.json" "$GATE"
+}
+jq --arg c "$MEASURED" --arg h "$DOCS_TIP" '.commit = $c | .harness_commit = $h' "$FIXTURE" > "$WORK/measured.json"
+expect "docs-only commits since the measured one: EQUIVALENT, passes" 0 "RECENCY ok (EQUIVALENT)" -- release_gate "$WORK/measured.json" "$DOCS_TIP"
+expect "a maven-plugin-only change since: EQUIVALENT, passes" 0 "RECENCY ok (EQUIVALENT)" -- release_gate "$WORK/measured.json" "$PLUGIN_TIP"
+expect "a mockserver/ change since: STALE" 1 "STALE:" -- release_gate "$WORK/measured.json" "$JAVA_TIP"
+expect "  ... and the remedy names a [perf-run] build on the release commit" 1 "at commit ${JAVA_TIP} with [perf-run] in its message" -- release_gate "$WORK/measured.json" "$JAVA_TIP"
+expect "  ... and names the build the run was on" 1 "That run's build was on ${DOCS_TIP:0:12} and was served the :snapshot image built from ${MEASURED:0:12}" -- release_gate "$WORK/measured.json" "$JAVA_TIP"
+expect "a docker/ change since: STALE, remedy rebuilds the :snapshot images" 1 "start a mockserver-java build on master at ${DOCKER_TIP}" -- release_gate "$WORK/measured.json" "$DOCKER_TIP"
+jq --arg c "$MEASURED" '.commit = $c | .harness_commit = "HEAD"' "$FIXTURE" > "$WORK/symbolic.json"
+release_gate "$WORK/symbolic.json" "$JAVA_TIP" > "$WORK/symbolic.out" 2>&1 || true
+if grep -qF "was served the :snapshot image" "$WORK/symbolic.out"; then bad "a symbolic harness_commit is reported as a different build"; else ok "a symbolic harness_commit is not reported as a different build"; fi
+
 echo
 if [ "$FAILS" -gt 0 ]; then echo ":x: $FAILS check(s) failed" >&2; exit 1; fi
 echo "all perf preflight gate checks passed"

@@ -139,10 +139,12 @@ fi
 echo "--- 5. arm-only invariants, run from the real blocks of perf-test-run.sh"
 ARMFN="$(grep -m1 '^arm_only()' "$RUN")"
 ELIG="$(awk '/^BASELINE_ELIGIBLE="true"$/ {p=1} /^# --- image freshness:/ {exit} p' "$RUN")"
-# The `if` line before the meta-data write, the write, and its `fi`: whatever condition guards it.
-RAN="$(awk '{prev = cur; cur = $0} /meta-data set "perf_regression_ran_commit"/ {print prev; print; getline; print; exit}' "$RUN")"
+# The indented if-block holding the meta-data write, whatever conditions guard it.
+RAN="$(awk '/^  if / {buf = ""; p = 1} p {buf = buf $0 "\n"} /^  fi$/ && p {p = 0; if (buf ~ /meta-data set "perf_regression_ran_commit"/) {printf "%s", buf; exit}}' "$RUN")"
+MEASUREDFN="$(awk '/^harness_commit_measured\(\) *\{/ {p=1} p {print} p && /^}/ {exit}' "$RUN")"
+MEASUREDFN="source '$REPO_ROOT/.buildkite/scripts/lib/snapshot-image-inputs.sh'"$'\n'"$MEASUREDFN"
 FINAL="$(awk '/^# Arm-only: nothing downstream gates this result/ {p=1} p' "$RUN")"
-for b in ARMFN ELIG RAN FINAL; do [ -n "${!b}" ] || bad "block $b not found in $RUN"; done
+for b in ARMFN ELIG RAN MEASUREDFN FINAL; do [ -n "${!b}" ] || bad "block $b not found in $RUN"; done
 elig() { # PERF_RUN_ARM -> BASELINE_ELIGIBLE after the real eligibility block
   env -i PATH="$PATH" PERF_RUN_ARM="$1" PERF_JVM_DIAGNOSTICS=standard JAVA_TOOL_OPTS_VAL="" \
     CONFIG_PROFILE=default RIG_PROFILE=default K6_NUMA_NODE=other bash -c "set -euo pipefail; $ARMFN
@@ -151,14 +153,17 @@ echo \"\$BASELINE_ELIGIBLE\"" 2>/dev/null | tail -1
 }
 check "full run stays baseline-eligible" "true" "$(elig "")"
 check "hw_matrix arm-only is not baseline-eligible" "false" "$(elig hw_matrix)"
-ran() { # PERF_RUN_ARM -> number of perf_regression_ran_commit writes
-  env -i PATH="$PATH" PERF_RUN_ARM="$1" PERF_RELEASE_COMPARISON="" HARNESS_COMMIT=abc bash -c "set -euo pipefail
+ran() { # PERF_RUN_ARM [ATTRIBUTED_COMMIT] -> number of perf_regression_ran_commit writes
+  env -i PATH="$PATH" PERF_RUN_ARM="$1" PERF_RELEASE_COMPARISON="" HARNESS_COMMIT=abc REPO_ROOT="$REPO_ROOT" \
+    ATTRIBUTED_COMMIT="${2:-abc}" PROVENANCE_OK=true bash -c "set -euo pipefail
 buildkite-agent() { echo \"META \$*\"; }
 $ARMFN
+$MEASUREDFN
 $RAN" 2>/dev/null | grep -c '^META meta-data set perf_regression_ran_commit abc$' || true
 }
 check "full run records perf_regression_ran_commit" "1" "$(ran "")"
 check "arm-only run does not record perf_regression_ran_commit" "0" "$(ran rw_multik6)"
+check "full run on an image its commit is not served does not record perf_regression_ran_commit" "0" "$(ran "" older)"
 final() { # PERF_RUN_ARM validity.valid -> exit code of the real final block
   local d="$WORK/final-${1:-full}-$2"; mkdir -p "$d"
   jq -n --argjson v "$2" '{run_arm: "hw_matrix", agent: {instance_type: "c6i.32xlarge", queue: "perf-xl"},

@@ -54,6 +54,30 @@ elif [ "${PERF_XL:-false}" = "true" ]; then
 fi
 arm_only() { [ -n "$PERF_RUN_ARM" ]; }
 
+# shellcheck source=.buildkite/scripts/lib/snapshot-image-inputs.sh
+source "$SCRIPT_DIR/../lib/snapshot-image-inputs.sh"
+
+# A UI build or a [perf-run] build asks for its own commit to be measured (perf-test-guard.sh's predicate).
+forced_run() { [ "${BUILDKITE_SOURCE:-}" = "ui" ] || [[ "${BUILDKITE_MESSAGE:-}" == *"[perf-run]"* ]]; }
+
+# Prints why a forced master run must not measure an image labelled $1 when the harness is $2;
+# prints nothing when it may. Scheduled runs, the weekly [perf-run] perf-xl one included, keep
+# attributing an older image to its own revision.
+image_revision_refusal() { # image_revision harness_commit
+  forced_run || return 0
+  [ "${BUILDKITE_SOURCE:-}" != schedule ] || return 0
+  [ "${BUILDKITE_BRANCH:-master}" = master ] || return 0
+  [ -z "${PERF_RELEASE_COMPARISON:-}" ] || return 0
+  snapshot_equivalent "$REPO_ROOT" "$1" "$2" && return 0
+  echo "the SUT image ${MOCKSERVER_IMAGE:-} was built from ${1:-<no revision label>}, and the harness commit $2 is not served that image (mockserver-java paths changed since, or the commit is not in this clone)"
+}
+
+# The harness commit counts as measured only when it is served the measured image (perf-test-guard.sh
+# skips a commit recorded as run, so a run on an older image must leave it unrecorded).
+harness_commit_measured() {
+  [ "${PROVENANCE_OK:-}" != false ] && snapshot_equivalent "$REPO_ROOT" "$ATTRIBUTED_COMMIT" "$HARNESS_COMMIT"
+}
+
 # --- artifact-name prefixing (run identity) -----------------------------------
 # Every Buildkite artifact this script uploads is named from PERF_RUN_NAME. UNSET
 # (the standard daily `perf-run` step) leaves names byte-identical to before
@@ -1110,6 +1134,27 @@ else
   echo "--- PERF_PULL_IMAGE=false — using the cached/local $MOCKSERVER_IMAGE (provenance check still applies)"
 fi
 
+# The checkout's full SHA (a UI build's BUILDKITE_COMMIT can be the symbolic HEAD).
+HARNESS_COMMIT="$(git -C "$REPO_ROOT" rev-parse --verify -q "${BUILDKITE_COMMIT:-HEAD}^{commit}" 2>/dev/null || echo "${BUILDKITE_COMMIT:-unknown}")"
+# A forced run that measured an image this commit is not served would be read as a measurement
+# of this one, so it is refused here rather than after an hour of load.
+PULLED_REVISION="$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$MOCKSERVER_IMAGE" 2>/dev/null || true)"
+LAG_REFUSAL="$(image_revision_refusal "$PULLED_REVISION" "$HARNESS_COMMIT")"
+# perf-baseline-freshness.sh ignores a build whose perf-run step was refused: it measured nothing.
+# Set on every perf-run attempt, so a retry that measures clears an earlier refusal.
+if [ -z "${PERF_RUN_NAME:-}" ] && command -v buildkite-agent >/dev/null 2>&1; then
+  if [ -n "$LAG_REFUSAL" ]; then REFUSED_FLAG=image_revision; else REFUSED_FLAG=no; fi
+  buildkite-agent meta-data set "perf_run_refused" "$REFUSED_FLAG" || true
+fi
+if [ -n "$LAG_REFUSAL" ]; then
+  LAG_MSG="Forced perf run refused: ${LAG_REFUSAL}. Wait until mockserver-java has pushed the :snapshot images for ${HARNESS_COMMIT:0:10}, or for its newest ancestor that changes mockserver/, mockserver-ui/ or test-fixtures/, then start a new mockserver-performance-test build on ${HARNESS_COMMIT:0:10} with [perf-run] in its message. If master has moved past it, measure the new tip instead."
+  echo "+++ :x: $LAG_MSG" >&2
+  if command -v buildkite-agent >/dev/null 2>&1; then
+    printf ':x: %s\n' "$LAG_MSG" | buildkite-agent annotate --style error --context "perf-image-revision" || true
+  fi
+  exit 1
+fi
+
 # --- item 13: pull the CLUSTERED image here too, beside the SUT pull -----------
 # THE FIX for a harness that never measured: the clustered A/B block guards on
 # `docker image inspect "$CLU_IMAGE"`, and NOTHING in the perf flow ever pulled or
@@ -1690,10 +1735,12 @@ fi
 # Buildkite build's commit (this checkout of the perf scripts) is recorded SEPARATELY
 # as HARNESS_COMMIT: if the harness changed, the measurement METHOD changed and a
 # reader must see both. This deliberately STOPS treating image-lag — a snapshot tag
-# that trails master by one java-pipeline duration — as a failure: a lagging image was
+# that trails master (mockserver-java rebuilds it only for its own paths) — as a failure: a lagging image was
 # measured correctly and is attributable to the commit it was built from, which is
 # exactly what this result now records (build #284's three-docs-commit lag was a false
-# alarm under the old equality check). Three outcomes, and provenance STILL fails
+# alarm under the old equality check). A forced master run is the exception: it is refused at
+# the image pull unless the harness commit is served this image (snapshot_equivalent).
+# Three outcomes, and provenance STILL fails
 # closed in the ones that matter:
 #   well-formed label -> provenance_ok=true : ATTRIBUTED_COMMIT = the image revision;
 #               attributable; the validity check passes.
@@ -1711,7 +1758,7 @@ fi
 #               (PERF_PROVENANCE_GRACE_UNTIL), after which it fails closed (the stamping
 #               regressed); a malformed cutoff fails closed. During the grace window the
 #               result is filed under HARNESS_COMMIT, exactly as pre-label behaviour.
-HARNESS_COMMIT="${BUILDKITE_COMMIT:-$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)}"
+# HARNESS_COMMIT is resolved beside the SUT image pull, where a forced run checks it against the image.
 # A genuine revision label is stamped from `git rev-parse HEAD` at image-build time
 # (java-docker-push-snapshot.sh -> SOURCE_COMMIT -> the Dockerfile LABEL), so it is a
 # 40-char lowercase-hex SHA. Validate that SHAPE and treat any NON-EMPTY value that is
@@ -4846,17 +4893,17 @@ if command -v buildkite-agent >/dev/null 2>&1; then
   [ -f "$REPO_ROOT/serving-hw-matrix.json" ] && bk_upload_artifact "serving-hw-matrix.json" || true
   [ -f "$REPO_ROOT/serving-multiproc.json" ] && bk_upload_artifact "serving-multiproc.json" || true
   [ -f "$REPO_ROOT/serving-rw-multik6.json" ] && bk_upload_artifact "serving-rw-multik6.json" || true
-  # Record the HARNESS commit this run executed against — deliberately NOT the
-  # attributed (image-revision) `$COMMIT`. perf-test-guard.sh reads this (via
-  # last_perf_run_commit) and compares it to the current git HEAD to decide "has
-  # master moved since the last real run". HEAD is a harness-checkout SHA, so the
-  # stored value must be one too: keying this off the image revision (which lags
-  # master by a java-pipeline duration) would make LAST != HEAD on every quiet day
-  # and dispatch the heavy run daily forever, defeating the commit-gate economy.
-  # Keyed off real runs, NOT the lint build that passes on every push.
+  # perf-test-guard.sh (via last_perf_run_commit) compares this to its git HEAD to decide whether
+  # master moved since the last real run, so it holds the harness-checkout SHA, and only when that
+  # SHA is served the measured image (harness_commit_measured). A run on an image mockserver-java
+  # has not yet rebuilt for it leaves the commit unrecorded for the next scheduled run.
   # A release run or an arm-only run must not make the guard skip the next daily run of this commit.
   if [ -z "$PERF_RELEASE_COMPARISON" ] && ! arm_only; then
-    buildkite-agent meta-data set "perf_regression_ran_commit" "$HARNESS_COMMIT" || true
+    if harness_commit_measured; then
+      buildkite-agent meta-data set "perf_regression_ran_commit" "$HARNESS_COMMIT" || true
+    else
+      echo "--- perf_regression_ran_commit not recorded: the harness commit ${HARNESS_COMMIT:0:10} is not served the SUT image (${ATTRIBUTED_COMMIT:0:10}), so the next scheduled run measures it"
+    fi
   fi
 else
   cp "$RESULT_JSON" "$REPO_ROOT/perf-result.json"

@@ -96,7 +96,7 @@ detail="$(grep -E '(^  ✗ |^  \? |^NO_SESSION|^S3_DENIED|^NO_HISTORY|^MALFORMED
     echo '```'
   fi
   echo
-  echo 'This gate is intentionally NOT soft_fail. It exists so a release cannot publish on top of a stale, invalid, or unaccepted-regressed performance baseline (the "we shipped a 2x slowdown" failure). Remedies: run the daily perf pipeline on the release commit (STALE), investigate the flagged metric (BREACH), or record a reviewed acceptance in mockserver-performance-test/perf-accepted-regressions.json. The full probe output is in this step log.'
+  echo 'This gate is intentionally NOT soft_fail. It exists so a release cannot publish on top of a stale, invalid, or unaccepted-regressed performance baseline (the "we shipped a 2x slowdown" failure). Remedies: for STALE, start a mockserver-performance-test build on the release commit with `[perf-run]` in its message once the :snapshot images it is served are pushed (the STALE row gives the exact steps); investigate the flagged metric (BREACH), or record a reviewed acceptance in mockserver-performance-test/perf-accepted-regressions.json. The full probe output is in this step log.'
 } > "$ann_file"
 
 if command -v buildkite-agent >/dev/null 2>&1; then

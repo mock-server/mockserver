@@ -1522,7 +1522,7 @@ Only the checks that cannot apply to a release image change:
 | Revision label | Absent label fails once the grace date passes | Absent label passes: the image is identified by its verified version |
 | Image freshness | Older than 7 days reds compare | Not evaluated: `config.image_stale` is null |
 | Clustered A/B | On | Off by default, because the clustered image is the current snapshot |
-| Guard bookkeeping | Records `perf_regression_ran_commit` | Does not, so the next daily run is not skipped |
+| Guard bookkeeping | Records `perf_regression_ran_commit` when the harness commit is served the measured image: built from it, or from an ancestor with no mockserver-java path change since (see [Run Provenance](#run-provenance)) | Does not, so the next daily run is not skipped |
 | Event-log budget | Main SUT at the shipped default, confirmed from `mock_server_event_log_max_retained_bytes`; `growth.js` raised to 256 MiB at runtime | Main SUT started at 256 MiB (`PERF_MAX_EVENT_LOG_BYTES` overrides), confirmed from the container env when the release predates the gauge; `growth.js` runs at it with no runtime change, because a release may predate the runtime-configuration fix |
 
 The run's other MockServer containers are started from the same image, so the upstreams (the
@@ -2471,6 +2471,31 @@ Every stored run JSON carries a `config` block: MockServer version and image dig
 `DISABLE_SYSTEM_OUT` flag, resolved heap and GC, JVM options, k6 image digest, cpusets, and
 k6 container CPU allocation. Values are resolved from the running JVM where possible — the
 record describes what the run was, not what someone intended.
+
+**Which commit a run measured.** A run is filed (`.commit`, and the S3 key) under its SUT
+image's `org.opencontainers.image.revision` label. The commit the build checked out is
+`harness_commit`. Only `mockserver-java` pushes the `:snapshot` images, and
+`generate-pipeline.sh` triggers it only for changes under `mockserver/` (except
+`mockserver/mockserver-maven-plugin/`), `mockserver-ui/` and `test-fixtures/`. So the two
+commits often differ, in one of two ways:
+
+- **The harness commit is served the image.** The image's commit is an ancestor, and no change
+  under those paths lies between them (a docs-only tip, for example). No newer image will be
+  built for the harness commit, so the run counts as measuring it.
+- **It is not served the image.** A change under those paths lies between them and its
+  `:snapshot` push has not landed yet, the image is newer than the harness commit, or either
+  commit is missing from the clone after one fetch.
+
+The test is `snapshot_equivalent` in `.buildkite/scripts/lib/snapshot-image-inputs.sh`, which
+also holds the path list `generate-pipeline.sh` triggers on.
+
+| Build | Harness commit not served the image |
+|---|---|
+| Scheduled (the 04:00 daily, the weekly `PERF_XL` build) | Runs and is filed under the image's commit. `perf_regression_ran_commit` is not set, so the next scheduled run measures the harness commit again |
+| `[perf-run]` or UI build on `master` | Fails after the image pull, before the SUT starts, and the annotation says to start it again once the `:snapshot` images are pushed. The build sets `perf_run_refused=image_revision`, so `perf-baseline-freshness.sh` ignores it as a build that measured nothing |
+| `[perf-run]` or UI build on another branch, or `PERF_RELEASE_COMPARISON` | Runs; the snapshot is always `master`'s, and a release image has no label |
+
+`perf-run-ready-test.sh` (section 4) checks these cases on a scratch history.
 
 An earlier version had `"instance_type": ""` for every stored run because `curl -s` exits 0 on
 an empty body, so the fallback never fired. A populated field that holds an empty value survives

@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=.buildkite/scripts/lib/last-successful-commit.sh
 source "$SCRIPT_DIR/lib/last-successful-commit.sh"
+# shellcheck source=.buildkite/scripts/lib/snapshot-image-inputs.sh
+source "$SCRIPT_DIR/lib/snapshot-image-inputs.sh"
 
 DEFAULT_BRANCH="${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-}"
 if [ -z "$DEFAULT_BRANCH" ]; then
@@ -197,9 +199,10 @@ trigger_client_if_changed() {
 
 # Match changes under mockserver/ excluding the maven-plugin submodule (which has its own pipeline).
 # test-fixtures/ is included: the Java model is round-tripped against the same shared corpus.
-JAVA_CHANGES="$(grep -E -- "^(mockserver/|mockserver-ui/|test-fixtures/)" <<<"$CHANGED_FILES" | grep -vE -- "^mockserver/mockserver-maven-plugin/" || true)"
+# The paths live in lib/snapshot-image-inputs.sh, which the perf run reads to tell which commits share a :snapshot image.
+JAVA_CHANGES="$(java_trigger_changes <<<"$CHANGED_FILES")"
 if [ -n "$JAVA_CHANGES" ]; then
-  trigger_if_changed "^(mockserver/|mockserver-ui/|test-fixtures/)" "mockserver-java" "MockServer Java"
+  trigger_if_changed "$JAVA_TRIGGER_REGEX" "mockserver-java" "MockServer Java"
 fi
 trigger_if_changed "^mockserver-ui/" "mockserver-ui" "MockServer UI"
 # The jekyll copy of the OpenAPI spec is included deliberately: the Node suite asserts it stays
