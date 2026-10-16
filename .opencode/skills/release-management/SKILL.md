@@ -127,9 +127,7 @@ Validate each of these before declaring the release ready:
    `mockserver-release/crates`, `mockserver-release/nuget`,
    `mockserver-release/vsce`, `mockserver-release/ovsx`,
    `mockserver-release/jetbrains`, `mockserver-release/mcp-dns-key`,
-   `mockserver-release/dashboard-analytics`,
-   `mockserver-release/winget-github-token`, `mockserver-release/sdkman-vendor`,
-   `mockserver-release/chocolatey-api-key`, and the GitHub PAT's
+   `mockserver-release/dashboard-analytics`, and the GitHub PAT's
    **Actions-variables** capability (a `DENIED` here only affects the Dependabot
    release-in-flight gate, not publication; fix by adding "Variables: read and
    write" to the fine-grained PAT).

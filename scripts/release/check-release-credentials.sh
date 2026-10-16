@@ -533,7 +533,7 @@ probe_postman() {
 probe_shape_only() {
   local json="$1" key
   # try the common field names in order
-  for k in token api_key private_key key consumer-key consumer-token; do
+  for k in token api_key private_key key; do
     key="$(secret_field "$json" "$k")"
     [[ -n "$key" ]] && break
   done
@@ -575,9 +575,6 @@ CREDENTIALS=(
   "mockserver-release/jetbrains|0|probe_shape_only|JetBrains Marketplace"
   "mockserver-release/mcp-dns-key|0|probe_shape_only|MCP registry DNS"
   "mockserver-release/dashboard-analytics|0|probe_shape_only|Dashboard analytics (best-effort)"
-  "mockserver-release/winget-github-token|0|probe_shape_only|winget (Windows Package Manager)"
-  "mockserver-release/sdkman-vendor|0|probe_shape_only|SDKMAN!"
-  "mockserver-release/chocolatey-api-key|0|probe_shape_only|Chocolatey"
 )
 
 # -----------------------------------------------------------------------------

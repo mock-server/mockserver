@@ -34,10 +34,7 @@ ALL_COMPONENTS=(
   github
   binary
   scoop
-  winget
-  chocolatey
   homebrew
-  sdkman
   asdf
   mcp
   client-go

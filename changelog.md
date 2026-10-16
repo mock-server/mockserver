@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- MockServer is no longer published to Chocolatey, SDKMAN! or winget; install the CLI with Homebrew, Scoop or asdf/mise instead
+
 ### Fixed
 
 ## [9.0.0] - 2026-10-15

@@ -98,9 +98,6 @@ Versioned Site and Update Version References run first (sequentially), then the 
 | Homebrew/homebrew-core (a few hours later — bumped by BrewTestBot) | https://formulae.brew.sh/api/formula/mockserver.json → `.versions.stable` should equal `<release-version>` |
 | Homebrew tap (`mock-server/tap`) | `brew info mock-server/tap/mockserver` — version should equal `<release-version>` |
 | Scoop | `scoop bucket add mockserver https://github.com/mock-server/scoop-mockserver && scoop info mockserver` — or view `mockserver.json` directly in the bucket repo |
-| winget | https://github.com/microsoft/winget-pkgs/tree/master/manifests/m/MockServer/MockServer — PR for `<release-version>` should appear, or `winget show MockServer.MockServer` after it merges |
-| Chocolatey | https://community.chocolatey.org/packages/mockserver — `<release-version>` should appear (moderation may take hours to days) |
-| SDKMAN! | `sdk list mockserver` — `<release-version>` should be listed and marked as default |
 | asdf / mise | `asdf list all mockserver` — `<release-version>` should appear |
 
 ### 9. Homebrew homebrew-core — fully automated, no action required
@@ -141,7 +138,7 @@ example).
 
 ### 11. Package-manager channels — automated, soft_fail
 
-Six CLI distribution channels publish the **self-contained jlink bundles** uploaded
+Three CLI distribution channels publish the **self-contained jlink bundles** uploaded
 by the `binary` component. They run in the `:package: Package Managers` Buildkite
 group (after the Binary Bundles step) as `soft_fail` steps — a channel failure
 never blocks the release. Each channel also skips itself gracefully when its
@@ -151,9 +148,6 @@ prerequisite is not yet configured.
 |---|---|---|
 | Homebrew tap | `github.com/mock-server/homebrew-tap` exists + `mockserver-release/github-token` has write access | Renders `Formula/mockserver.rb` from four darwin/linux checksums and pushes to the tap repo. Distinct from homebrew-core (§9). |
 | Scoop | `github.com/mock-server/scoop-mockserver` exists + `mockserver-release/github-token` has write access | Renders `mockserver.json` from the Windows bundle checksum and pushes to the bucket repo. Windows only. |
-| winget | `mockserver-release/winget-github-token` set + `wingetcreate` on a Windows agent | Renders manifest and opens a PR on `microsoft/winget-pkgs`. Windows only. |
-| Chocolatey | `mockserver-release/chocolatey-api-key` set + `choco` on a Windows/mono agent | Renders nuspec + install script, packs `.nupkg`, pushes to `community.chocolatey.org`. Windows only. Moderation may take hours to days. |
-| SDKMAN! | `mockserver-release/sdkman-vendor` set (`consumer-key` + `consumer-token`) + `mockserver` registered as a candidate (one-time) | Calls Vendor API to register all five platforms, set default, and announce. |
 | asdf / mise | `github.com/mock-server/asdf-mockserver` exists + `mockserver-release/github-token` has write access + plugin registered in asdf index (one-time) | Syncs `packaging/asdf/bin/` to the plugin repo; no per-release artifact push needed. |
 
 Each channel's full prerequisites and manual fallback are documented in
@@ -208,10 +202,7 @@ scripts/release/
     ├── binary.sh                 # per-platform jlink bundles (GitHub Release assets)
     ├── versioned-site.sh         # X-Y.mock-server.com Terraform
     ├── scoop.sh                  # Scoop bucket (Windows — mock-server/scoop-mockserver)
-    ├── winget.sh                 # winget PR (Windows — microsoft/winget-pkgs)
-    ├── chocolatey.sh             # Chocolatey package (Windows — community.chocolatey.org)
     ├── homebrew.sh               # Homebrew tap formula (macOS/Linux — mock-server/homebrew-tap)
-    ├── sdkman.sh                 # SDKMAN! Vendor API (all platforms)
     ├── asdf.sh                   # asdf/mise plugin repo sync + discoverability check
     ├── client-{go,dotnet,rust,php}.sh   # polyglot MockServer client publishers (soft_fail)
     ├── tc-{node,python,dotnet,go,rust}.sh  # Testcontainers module publishers (soft_fail)
@@ -508,10 +499,7 @@ python3 scripts/release/version_refs.py check . --list   # every occurrence with
 | `finalize` | Show pom version-bump diff | git push, mvn deploy snapshot |
 | `binary` | Build all five platform jlink bundles | `gh release upload` (asset push to GitHub Release) |
 | `scoop` | Fetch checksum, render manifest, print it | Push to `mock-server/scoop-mockserver` bucket repo |
-| `winget` | Fetch checksum, render manifest, print it | `wingetcreate` PR submission to `microsoft/winget-pkgs` |
-| `chocolatey` | Fetch checksum, render nuspec + install script, print them | `choco pack` + `choco push` |
 | `homebrew` | Fetch four checksums, render formula, print it | Push `Formula/mockserver.rb` to `mock-server/homebrew-tap` |
-| `sdkman` | Print the five Vendor API calls that would be made | `POST /release` × 5, `PUT /default`, `POST /announce` |
 | `asdf` | Report what would be synced/verified; skip clone and push | Clone `mock-server/asdf-mockserver`, sync `bin/`, push if drifted; check release discoverability |
 
 ## Pinned Docker images
@@ -562,11 +550,9 @@ We install `unzip` into the public image instead of switching `MAVEN_IMAGE` to t
 | Where | How the credential is passed |
 |---|---|
 | `tc-dotnet.sh`, `client-dotnet.sh` | `dotnet nuget push --api-key` inside the container; dotnet has no environment-variable alternative |
-| `sdkman.sh` | `curl -H "Consumer-Key: …" -H "Consumer-Token: …"` on the host |
 | `swaggerhub.sh` (`sh_api_call`) | `curl -H "Authorization: …"` on the host |
 | `postman-collection.sh` | `curl -H "X-Api-Key: …"` on the host |
 | `mcp.sh` | `mcp-publisher login dns --private-key …` on the host (the CLI accepts the key only as a flag) |
-| `winget.sh`, `chocolatey.sh` | `wingetcreate --token` / `choco push --api-key` on the host; Windows-only, so they skip on the Linux release agents |
 | `.buildkite/scripts/steps/java-deploy-snapshot.sh` (CI, not the release) | `run-in-docker.sh -e SONATYPE_USERNAME=… -e SONATYPE_PASSWORD=…` for the snapshot deploy |
 
 The `curl` cases can move to a `0600` config file read with `curl -K`, as `check-release-credentials.sh` already does.

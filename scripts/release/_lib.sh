@@ -61,17 +61,6 @@ DRY_RUN="${DRY_RUN:-true}"
 
 is_dry_run() { [[ "$DRY_RUN" == "true" ]]; }
 
-dry_run_or() {
-  local description="$1"; shift
-  if is_dry_run; then
-    log_dry "skip: $description"
-    log_dry "would: $*"
-    return 0
-  fi
-  log_info "$description"
-  "$@"
-}
-
 # -----------------------------------------------------------------------------
 # Input validation
 #
@@ -934,10 +923,9 @@ git_tag_and_push() {
 # -----------------------------------------------------------------------------
 # Package-manager channel helpers
 #
-# Shared by the optional package-manager publish components (scoop, winget,
-# chocolatey, homebrew, sdkman, asdf). Those channels all publish the SAME
-# self-contained jlink bundles that the `binary` component uploads to the
-# GitHub Release "mockserver-<version>":
+# Shared by the optional package-manager publish components (scoop, homebrew,
+# asdf). Those channels all publish the SAME self-contained jlink bundles that
+# the `binary` component uploads to the GitHub Release "mockserver-<version>":
 #
 #   mockserver-<version>-linux-x86_64.tar.gz   (+ .sha256 sidecar)
 #   mockserver-<version>-linux-aarch64.tar.gz  (+ .sha256)
@@ -987,19 +975,6 @@ fetch_release_sha256() {
   fi
   echo "$PM_PLACEHOLDER_SHA256"
   return 1
-}
-
-# Returns 0 if the named Secrets Manager secret exists. In dry-run it never
-# touches AWS and always returns 0, so a local `--dry-run` smoke test renders
-# the manifest without credentials. In execute mode a missing secret returns
-# non-zero, letting the component skip an unconfigured optional channel cleanly
-# instead of failing the release.
-pm_secret_available() {
-  local secret_id="$1"
-  is_dry_run && return 0
-  local -a args=(--region "$REGION" --secret-id "$secret_id")
-  [[ -n "${AWS_PROFILE:-}" ]] && args+=(--profile "$AWS_PROFILE")
-  aws secretsmanager describe-secret "${args[@]}" >/dev/null 2>&1
 }
 
 # Returns 0 if a public GitHub repo (owner/name) exists and is reachable. Used

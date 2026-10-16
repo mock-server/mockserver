@@ -302,7 +302,7 @@ steps:
   # the Binary Bundles `wait` so both the release and its assets exist. Every
   # step is soft_fail: these are convenience distribution surfaces, never a
   # release gate. Each component also skips itself gracefully when its target
-  # repo / API secret is not configured (see packaging/<channel>/release-component.md).
+  # repo is not configured (see packaging/<channel>/release-component.md).
   - group: ":package: Package Managers"
     steps:
       - label: ":beer: Homebrew"
@@ -313,24 +313,6 @@ steps:
 
       - label: ":windows: Scoop"
         command: ".buildkite/scripts/release-runner.sh scoop"
-        soft_fail: true
-        timeout_in_minutes: 10
-        agents: { queue: "release" }
-
-      - label: ":windows: winget"
-        command: ".buildkite/scripts/release-runner.sh winget"
-        soft_fail: true
-        timeout_in_minutes: 10
-        agents: { queue: "release" }
-
-      - label: ":chocolate_bar: Chocolatey"
-        command: ".buildkite/scripts/release-runner.sh chocolatey"
-        soft_fail: true
-        timeout_in_minutes: 10
-        agents: { queue: "release" }
-
-      - label: ":sdk: SDKMAN!"
-        command: ".buildkite/scripts/release-runner.sh sdkman"
         soft_fail: true
         timeout_in_minutes: 10
         agents: { queue: "release" }
