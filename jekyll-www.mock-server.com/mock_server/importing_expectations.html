@@ -31,6 +31,8 @@ sitemap:
 
 <p>Send a <span class="inline_code">PUT</span> request to <span class="inline_code">/mockserver/import</span> with the HAR or Postman JSON document as the request body. MockServer creates one expectation per entry (HAR) or per saved example response (Postman) and returns <span class="inline_code">201 Created</span> with the generated expectations as JSON.</p>
 
+<p>Each imported HAR or Postman expectation's <span class="inline_code">id</span> is derived from the request it matches, not from the entry's position in the file (as it was before 9.0.0). Re-importing the same file already updated its own expectations in place under the old scheme too; what's fixed is a <em>different</em> file importing entries at the same positions &mdash; it no longer collides with, and silently overwrites, the first file's expectations. If you re-import a file you already imported before upgrading to 9.0.0, clear the existing expectations once first, or you may end up with both the old position-keyed and new request-keyed copies.</p>
+
 <a id="format_detection" class="anchor" href="#format_detection">&nbsp;</a>
 
 <h3>Format detection</h3>

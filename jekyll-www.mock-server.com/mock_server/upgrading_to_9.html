@@ -16,7 +16,7 @@ sitemap:
     <strong>Most of these changes need an action only if you use the specific feature or client they name.</strong> But five of them can affect a plain HTTP mock with no special configuration: a <span class="inline_code">statusCode</span> outside 100&ndash;999 is now rejected (no opt-out), an unexpected control-plane failure now answers <span class="inline_code">500</span> instead of <span class="inline_code">400</span>, an over-count verification failure's message wording changed, a repeated <span class="inline_code">id</span> in an initialisation file now keeps the last entry instead of the first, and <span class="inline_code">maxLoggedMatchFailures</span> now caps did-not-match log entries at 50 by default. Check the table below against what you use.
 </p>
 
-<p>MockServer 9.0.0 is a major release. Most of its breaking changes are opt-out, feature-gated, or fix a matcher that used to be silently ignored, but not all &mdash; see the callout above for the ones that can affect a plain HTTP mock. This page lists every <span class="inline_code">BREAKING</span> entry from the <a href="https://github.com/mock-server/mockserver-monorepo/blob/master/changelog.md" target="_blank" rel="noopener noreferrer">changelog</a>, plus the Go client's module-path move (tracked separately, not yet a changelog entry at the time of writing), grouped by who it affects, with the exact property or code change to make.</p>
+<p>MockServer 9.0.0 is a major release. Most of its breaking changes are opt-out, feature-gated, or fix a matcher that used to be silently ignored, but not all &mdash; see the callout above for the ones that can affect a plain HTTP mock. This page lists every <span class="inline_code">BREAKING</span> entry from the <a href="https://github.com/mock-server/mockserver-monorepo/blob/master/changelog.md" target="_blank" rel="noopener noreferrer">changelog</a>, including the Go client's module-path move, grouped by who it affects, with the exact property or code change to make. A further section below, <a href="#non_breaking_changes">Non-breaking changes that can still affect an unmodified setup</a>, covers changes the changelog does not mark <span class="inline_code">BREAKING</span> but that alter the behaviour of a server or client that sets nothing new.</p>
 
 <a id="who_needs_to_act" class="anchor" href="#who_needs_to_act">&nbsp;</a>
 
@@ -149,6 +149,14 @@ sitemap:
 
 <p><strong>If your code treats any control-plane <span class="inline_code">400</span> as "my request was bad", or catches the Java client's <span class="inline_code">IllegalArgumentException</span> as a catch-all:</strong> distinguish a genuine <span class="inline_code">500</span> (an internal MockServer fault) from a <span class="inline_code">400</span> (your request was rejected).</p>
 
+<p>Each client surfaces this differently:</p>
+<ul>
+  <li><strong>Java:</strong> the client raises <span class="inline_code">ClientException</span> for a <span class="inline_code">500</span>. <span class="inline_code">retrieveLogsByCorrelationId</span> and <span class="inline_code">retrieveActiveExpectations(requestDefinition, format)</span> now <em>throw</em> instead of returning the error body as their result for any response status &ge;400: <span class="inline_code">400</span> still raises <span class="inline_code">IllegalArgumentException</span>, <span class="inline_code">401</span> raises <span class="inline_code">AuthenticationException</span>, and every other status &ge;400 (including <span class="inline_code">500</span>) raises <span class="inline_code">ClientException</span>. Wrap calls to these two methods accordingly &mdash; see <a href="/mock_server/troubleshooting_matching.html#correlation_id_retrieval">Troubleshooting Matching &ndash; Retrieving Logs by Correlation ID</a>.</li>
+  <li><strong>PHP:</strong> the client raises <span class="inline_code">MockServerException</span> (was <span class="inline_code">InvalidRequestException</span>).</li>
+  <li><strong>Rust:</strong> the client raises <span class="inline_code">Error::UnexpectedStatus</span> (was <span class="inline_code">Error::InvalidRequest</span>).</li>
+  <li><strong>Node, Python, Ruby, Go, .NET:</strong> unchanged.</li>
+</ul>
+
 <a id="control_plane_mtls" class="anchor" href="#control_plane_mtls">&nbsp;</a>
 
 <h3>Control-plane mTLS trusts only the configured CA chain</h3>
@@ -271,7 +279,9 @@ sitemap:
   <li>Legacy, fill-in-the-middle and Ollama <span class="inline_code">/api/generate</span> completions, and forwarded AWS Bedrock <span class="inline_code">InvokeModel</span> calls to prompt-string models, are now <span class="inline_code">text_completion</span></li>
 </ul>
 
-<p><strong>To migrate:</strong> if a trace query, dashboard or alert finds completions by <span class="inline_code">gen_ai.operation.name == "chat"</span> (or a <span class="inline_code">chat </span> span-name prefix), also match the new operation names. See <a href="/mock_server/ai_traffic_inspection.html">AI Traffic Inspection</a>.</p>
+<p>Separately, embeddings and rerank spans are now named <span class="inline_code">embeddings &lt;model&gt;</span> / <span class="inline_code">rerank &lt;model&gt;</span> instead of <span class="inline_code">chat &lt;model&gt;</span>. Token/cost metrics are unaffected by any of these renames, since they're labelled by provider/model, not operation.</p>
+
+<p><strong>To migrate:</strong> if a trace query, dashboard or alert finds completions by <span class="inline_code">gen_ai.operation.name == "chat"</span> (or a <span class="inline_code">chat </span> span-name prefix), also match <span class="inline_code">generate_content</span> and <span class="inline_code">text_completion</span>, and update any query/alert selecting embeddings or rerank spans by name or operation. See <a href="/mock_server/observability.html#genai_spans">Observability &ndash; GenAI Spans</a>.</p>
 
 <a id="java_client" class="anchor" href="#java_client">&nbsp;</a>
 
@@ -282,7 +292,7 @@ sitemap:
 <ul>
   <li><a href="#control_plane_mtls">Control-plane mTLS now trusts only the configured CA chain</a> &mdash; the client, not only the server.</li>
   <li><a href="#binary_forwarder_removed">The removed binary-forwarding APIs</a>: <span class="inline_code">ConfigurationProperties</span>/<span class="inline_code">Configuration.forwardBinaryRequestsWithoutWaitingForResponse</span>, both <span class="inline_code">NettyHttpClient.sendRequest(BinaryMessage, ...)</span> overloads, and the <span class="inline_code">MockServerBinaryClientCodec</span> classes.</li>
-  <li><a href="#control_plane_500">An unexpected control-plane failure now answers <span class="inline_code">500</span>, not <span class="inline_code">400</span></a> &mdash; if your code catches the client's <span class="inline_code">IllegalArgumentException</span> as a catch-all for control-plane failures, it will no longer see that exception for an internal MockServer fault, only for a request MockServer genuinely rejects.</li>
+  <li><a href="#control_plane_500">An unexpected control-plane failure now answers <span class="inline_code">500</span>, not <span class="inline_code">400</span></a> &mdash; if your code catches the client's <span class="inline_code">IllegalArgumentException</span> as a catch-all for control-plane failures, it will no longer see that exception for an internal MockServer fault, only for a request MockServer genuinely rejects. <span class="inline_code">retrieveLogsByCorrelationId</span> and <span class="inline_code">retrieveActiveExpectations(requestDefinition, format)</span> now throw (<span class="inline_code">IllegalArgumentException</span> for <span class="inline_code">400</span>, <span class="inline_code">AuthenticationException</span> for <span class="inline_code">401</span>, <span class="inline_code">ClientException</span> otherwise) for any response status &ge;400, instead of returning its body as a string.</li>
   <li><a href="#asyncapi_verification">AsyncAPI verify rejects unknown/top-level count fields</a> &mdash; <span class="inline_code">verifyAsyncMessage</span> now answers <span class="inline_code">400</span> for a top-level <span class="inline_code">atLeast</span>/<span class="inline_code">atMost</span>/<span class="inline_code">exactly</span> or an unknown field, instead of silently checking "at least 1 message".</li>
   <li><a href="#verification_wording">The over-count verification wording change</a> &mdash; any test asserting the exact text of a <span class="inline_code">never()</span>/<span class="inline_code">atMost</span>/<span class="inline_code">exactly</span>/<span class="inline_code">between</span> failure needs updating.</li>
 </ul>
@@ -295,7 +305,16 @@ sitemap:
 
 <h3>mockserver-client/llm typings drop their default export</h3>
 
-<p>For TypeScript users of the Node client's deep import <span class="inline_code">mockserver-client/llm</span>: its typings no longer declare a default export. Everything imported from <span class="inline_code">mockserver-client</span> itself type-checks exactly as it did in 8.0.0.</p>
+<p>For TypeScript users of the Node client's deep import <span class="inline_code">mockserver-client/llm</span>: its typings now describe the module as a plain object of named exports, matching what the JavaScript has always done. Everything imported from <span class="inline_code">mockserver-client</span> itself type-checks exactly as it did in 8.0.0.</p>
+
+<p><strong>To migrate:</strong></p>
+<ul>
+  <li>A <strong>default import without <span class="inline_code">esModuleInterop</span>/<span class="inline_code">allowSyntheticDefaultImports</span></strong> no longer compiles. Use <span class="inline_code">import llm = require('mockserver-client/llm')</span>, <span class="inline_code">import * as llm from 'mockserver-client/llm'</span>, <span class="inline_code">import { llm } from 'mockserver-client'</span>, or turn on <span class="inline_code">esModuleInterop</span>.</li>
+  <li><strong>Reading the module's <span class="inline_code">.default</span> property</strong> is now a compile error &mdash; drop <span class="inline_code">.default</span> from the access.</li>
+  <li><strong>Named imports, <span class="inline_code">import * as</span>, and <span class="inline_code">require</span> in type-checked JavaScript</strong> now all type-check.</li>
+  <li><strong>Declaring your own value with the same name as an imported builder type</strong> (<span class="inline_code">Provider</span>, <span class="inline_code">Role</span>, or one of the ten builder names) is now a compile error (<span class="inline_code">TS2440</span>) instead of silently shadowing the type import &mdash; use the imported value, or rename your import (<span class="inline_code">import { Provider as ProviderName }</span>).</li>
+  <li>A <strong>module augmentation of <span class="inline_code">mockserver-client/llm</span></strong> still compiles but reaches less: members added to a builder interface or to <span class="inline_code">Llm</span> are no longer visible on the factories/builders or on the object imported from that path. Augment <span class="inline_code">mockserver-client</span> or the new <span class="inline_code">mockserver-client/llmTypes</span> instead &mdash; builder types now live there. <span class="inline_code">TurnBuilder</span> is now declared alongside the other builder constructors.</li>
+</ul>
 
 <a id="node_exports_map" class="anchor" href="#node_exports_map">&nbsp;</a>
 
@@ -351,6 +370,115 @@ sitemap:
 <pre class="code" style="padding: 2px;"><code class="code">go get github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9</code></pre>
 
 <p>and update the corresponding import statements from the old (pre-9.0.0) path to the <span class="inline_code">/v9</span> path. Do the same for the Testcontainers-Go module if you use it.</p>
+
+<a id="non_breaking_changes" class="anchor" href="#non_breaking_changes">&nbsp;</a>
+
+<h2>Non-breaking changes that can still affect an unmodified setup</h2>
+
+<p>None of these are in the <span class="inline_code">BREAKING</span> list above, but each changes the behaviour of a server or client that sets nothing new &mdash; worth checking even if the table at the top says you're unaffected.</p>
+
+<a id="docker_jar_split" class="anchor" href="#docker_jar_split">&nbsp;</a>
+
+<h3>Docker image: jar split</h3>
+
+<p>If you override the standard Docker images' <span class="inline_code">ENTRYPOINT</span> or copy the jar out of them: <span class="inline_code">/mockserver-netty-jar-with-dependencies.jar</span> is now split into <span class="inline_code">/mockserver.jar</span> and <span class="inline_code">/mockserver-deps.jar</span>. Use <span class="inline_code">-cp /mockserver.jar:/mockserver-deps.jar:/libs/*</span> &mdash; <span class="inline_code">java -jar /mockserver.jar</span> still runs, but without the image's AppCDS start-up archive, so it starts more slowly. See <a href="/where/docker.html#docker_container_default_command">Running the Docker Container</a>.</p>
+
+<a id="forward_proxy_block_private_networks_502" class="anchor" href="#forward_proxy_block_private_networks_502">&nbsp;</a>
+
+<h3>forwardProxyBlockPrivateNetworks: service-name Host headers now get 502</h3>
+
+<p>With <span class="inline_code">forwardProxyBlockPrivateNetworks</span> on, a request that matches no expectation and whose <span class="inline_code">Host</span> header names MockServer itself by a name it doesn't recognise as its own (a Docker Compose or Kubernetes service name, for example) now gets <span class="inline_code">502 Bad Gateway</span> instead of <span class="inline_code">404 Not Found</span>, because that name resolves to a private address. Add the name to <span class="inline_code">noProxyHosts</span>, or set <span class="inline_code">attemptToProxyIfNoMatchingExpectation=false</span> if MockServer isn't used as a proxy, to get the <span class="inline_code">404</span> back.</p>
+
+<a id="local_bound_ip_dns_http3" class="anchor" href="#local_bound_ip_dns_http3">&nbsp;</a>
+
+<h3>localBoundIP now also binds the DNS and HTTP/3 ports</h3>
+
+<p>If you set <span class="inline_code">localBoundIP</span>, it now also keeps the DNS and HTTP/3 UDP ports on that address, where they previously listened on every address of the host even when it was set. A DNS query or HTTP/3 request sent to another address of the host is no longer answered &mdash; send them to the <span class="inline_code">localBoundIP</span> address, or leave <span class="inline_code">localBoundIP</span> unset.</p>
+
+<a id="http1_request_header_limits" class="anchor" href="#http1_request_header_limits">&nbsp;</a>
+
+<h3>HTTP/1.1 request line and header size limits are now on by default</h3>
+
+<p><span class="inline_code">maxInitialLineLength</span> (64 KB) and <span class="inline_code">maxHeaderSize</span> (256 KB) were previously unlimited. A request line longer than the limit now gets <span class="inline_code">414</span>, oversized headers get <span class="inline_code">431</span>, and any other request MockServer cannot read (an invalid header, a chunked body with an invalid chunk size) gets <span class="inline_code">400</span>, with the connection then closed &mdash; where before such a request was logged as an <span class="inline_code">ERROR</span> and matched/answered from whatever had been read. Set either property to <span class="inline_code">2147483647</span> to remove the limit.</p>
+
+<a id="max_event_log_size_default" class="anchor" href="#max_event_log_size_default">&nbsp;</a>
+
+<h3>maxEventLogSizeInBytes is now on by default</h3>
+
+<p>The event log is now bounded by size as well as by count: <span class="inline_code">maxEventLogSizeInBytes</span> defaults to a twentieth of heap at <span class="inline_code">WARN</span> and below, a twelfth at <span class="inline_code">INFO</span> and above. Set it to <span class="inline_code">0</span> to restore count-only bounding (<span class="inline_code">maxLogEntries</span>) &mdash; though an explicitly-set value you already relied on may now retain fewer entries than before, since it is now enforced rather than ignored.</p>
+
+<a id="idle_and_write_stall_timeouts" class="anchor" href="#idle_and_write_stall_timeouts">&nbsp;</a>
+
+<h3>Idle-connection and stalled-write timeouts</h3>
+
+<p>Idle client connections now close after 5 minutes by default (<span class="inline_code">inboundConnectionIdleTimeoutMillis</span>; set <span class="inline_code">0</span> to restore unlimited). A client that stops reading a response now has that response ended as incomplete after 1 minute of nothing being read (<span class="inline_code">responseWriteStallTimeoutMillis</span>; set <span class="inline_code">0</span> to disable): an HTTP/1.1 connection or tunnel is closed, and an HTTP/2 or HTTP/3 stream is reset while other streams on the same connection continue.</p>
+
+<a id="docker_heap_cap" class="anchor" href="#docker_heap_cap">&nbsp;</a>
+
+<h3>Docker images: JVM heap cap drops from 75% to 45% of the container memory limit</h3>
+
+<p>Because ZGC's working-set-under-load plus off-heap footprint could otherwise exceed the container limit and get OOM-killed, the heap is now three-fifths of what the 75% cap in 8.0.0 gave at every container size (for example 232 MiB instead of 384 MiB at a 512 MiB limit, 922 MiB instead of 1,536 MiB at 2 GiB). <strong>512 MiB is now the smallest supported container memory limit (768 MiB for <span class="inline_code">-clustered</span>); 256 MiB is no longer supported</strong> unless you also set a small explicit heap.</p>
+
+<p>Because <span class="inline_code">maxLogEntries</span> defaults off the heap ceiling when not set explicitly (below its 250,000 cap it scales with the heap), the smaller default heap changes its computed default too:</p>
+
+<table class="table-scroll">
+  <thead><tr><th>Container memory limit</th><th>8.0.0 default <span class="inline_code">maxLogEntries</span></th><th>9.0.0 default <span class="inline_code">maxLogEntries</span></th></tr></thead>
+  <tbody>
+    <tr><td>512 MiB</td><td>at most ~45,000 (less whatever heap was in use at start-up)</td><td>27,136</td></tr>
+    <tr><td>1 GiB</td><td>at most ~92,500 (less whatever heap was in use at start-up)</td><td>56,576</td></tr>
+    <tr><td>2 GiB</td><td>100,000 (flat cap)</td><td>115,456</td></tr>
+    <tr><td>4 GiB</td><td>100,000 (flat cap)</td><td>233,472</td></tr>
+  </tbody>
+</table>
+
+<p>So the new default is <strong>lower</strong> on small containers and <strong>higher</strong> on large ones. To keep a larger heap (and <span class="inline_code">maxLogEntries</span> default), set <span class="inline_code">-Xmx</span> explicitly via <span class="inline_code">JAVA_TOOL_OPTIONS</span> (keeping <span class="inline_code">-XX:+UseZGC</span>) and size the container <span class="inline_code">--memory</span> limit for it.</p>
+
+<a id="docker_zgc_default" class="anchor" href="#docker_zgc_default">&nbsp;</a>
+
+<h3>Docker images now use ZGC by default</h3>
+
+<p>Images now use ZGC by default instead of G1 (the <span class="inline_code">-aot</span> image keeps G1, for its cold-start profile, and the <span class="inline_code">-webhook</span> test-tool image is unchanged; the <span class="inline_code">-clustered</span> image needs generational ZGC explicitly &mdash; its JDK 21 base defaults ZGC to single-generational, so the image sets <span class="inline_code">JAVA_TOOL_OPTIONS="-XX:+UseZGC -XX:+ZGenerational"</span> in its environment; <span class="inline_code">-XX:+ZGenerational</span> is obsolete, and absent, from JDK 23 on, so the standard/local/<span class="inline_code">-aot</span>/<span class="inline_code">-graaljs</span> images don't set it). Override with <span class="inline_code">JAVA_TOOL_OPTIONS=-XX:+UseG1GC</span> &mdash; note that setting <span class="inline_code">JAVA_TOOL_OPTIONS</span> yourself for <em>any</em> reason replaces the image's default entirely, so include <span class="inline_code">-XX:+UseZGC</span> (and, on <span class="inline_code">-clustered</span>, <span class="inline_code">-XX:+ZGenerational</span> too) unless you want G1 back. Switching to G1 also loses the AppCDS start-up archive, which is trained under ZGC, so G1 start-up is slower on the standard/local images. On Helm, set <span class="inline_code">app.jvmOptions</span> to change <span class="inline_code">JAVA_TOOL_OPTIONS</span>.</p>
+
+<a id="junit_dev_mode_default" class="anchor" href="#junit_dev_mode_default">&nbsp;</a>
+
+<h3>JUnit rule/extension now default to "dev mode"</h3>
+
+<p>The JUnit 4 rule and JUnit 5 extension now default to <span class="inline_code">maxLogEntries=1000</span> and <span class="inline_code">maxExpectations=1000</span> instead of deriving them from heap, cutting memory across many in-JVM instances. A suite relying on deeper log history should raise the caps explicitly or set <span class="inline_code">mockserver.devMode=false</span>.</p>
+
+<a id="rust_delay_http_template_fields" class="anchor" href="#rust_delay_http_template_fields">&nbsp;</a>
+
+<h3>Rust client: Delay/HttpTemplate struct literals need newly-added fields</h3>
+
+<p>Struct-literal callers of <span class="inline_code">Delay</span>/<span class="inline_code">HttpTemplate</span> (rather than the provided constructors/builders) need to set newly-added fields: <span class="inline_code">distribution</span> and <span class="inline_code">template</span>/<span class="inline_code">template_type</span> on <span class="inline_code">Delay</span>; <span class="inline_code">delay</span>, <span class="inline_code">primary</span>, <span class="inline_code">response_override</span> and <span class="inline_code">response_modifier</span> on <span class="inline_code">HttpTemplate</span> (not WebSocket/SSE settings &mdash; <span class="inline_code">HttpTemplate</span> has none) &mdash; or the struct literal no longer compiles. If you don't use the Rust client, or always build these with the provided constructors, nothing changes.</p>
+
+<a id="python_client_other_changes" class="anchor" href="#python_client_other_changes">&nbsp;</a>
+
+<h3>Python client: http_request/http_response are now deprecated aliases</h3>
+
+<p><span class="inline_code">http_request</span>/<span class="inline_code">http_response</span> on <span class="inline_code">HttpOverrideForwardedRequest</span> now work only as deprecated aliases of <span class="inline_code">request_override</span>/<span class="inline_code">response_override</span> (which previously raised <span class="inline_code">TypeError</span> if used at all) &mdash; prefer the non-deprecated names in new code. If you don't use the Python client's forward-override builder, nothing changes.</p>
+
+<a id="other_things_worth_checking" class="anchor" href="#other_things_worth_checking">&nbsp;</a>
+
+<h3>Other things worth checking</h3>
+
+<ul>
+  <li><strong>Maven plugin:</strong> the <span class="inline_code">run</span>/<span class="inline_code">runForked</span> goals now fail the build when MockServer doesn't start, instead of logging an error and carrying on without a running server.</li>
+  <li><strong>Import ids:</strong> HAR and Postman import (not OpenAPI, which never used this scheme) now derive each imported expectation's <span class="inline_code">id</span> from the request it matches, instead of from the entry's position in the file (<span class="inline_code">har-0</span>, <span class="inline_code">har-1</span>, &hellip;). Re-importing the <em>same</em> file already updated its own expectations in place under the old scheme too; what's fixed is a <em>different</em> file importing entries at the same positions, which no longer collides with, and silently overwrites, the first file's expectations. If you re-import a file (or an older export of one) that you already imported under 8.0.0, clear the existing expectations once first, or you may end up with both the old position-keyed and new request-keyed copies.</li>
+  <li><strong>Internal <span class="inline_code">x-http2-*</span> headers</strong> (<span class="inline_code">x-http2-scheme</span>/<span class="inline_code">x-http2-stream-id</span> on a request, <span class="inline_code">x-http2-stream-weight</span> on a tunnelled response) are no longer leaked into recorded/matched/forwarded requests or responses. If an expectation or verification names one of these headers, remove it &mdash; it will no longer be present to match against.</li>
+  <li><strong>Log-level changes that can affect alerting:</strong> an HTTP/1.1 or HTTP/2 upload its client gives up on part way through the body now logs one <span class="inline_code">INFO</span> entry naming the stream/request, not an <span class="inline_code">ERROR</span> with a stack trace &mdash; an alert keyed on <span class="inline_code">ERROR</span> entries, or on that message, stops firing for this case, and nothing is logged for it at <span class="inline_code">WARN</span>/<span class="inline_code">ERROR</span> levels. Separately, some connection-reset warnings that Netty used to print outside MockServer's own log at <span class="inline_code">WARN</span> (an upstream resetting an idle pooled HTTP/2 connection, for example) now appear inside MockServer's log at <span class="inline_code">DEBUG</span>, so they no longer show at the default <span class="inline_code">INFO</span> level; set <span class="inline_code">logLevel=DEBUG</span> to see them.</li>
+  <li><strong>Java API:</strong> <span class="inline_code">NottableString.withStyle</span>/<span class="inline_code">withSchemaType</span> and <span class="inline_code">Parameter.withStyle</span> now return a new instance instead of mutating and returning <span class="inline_code">this</span> &mdash; code relying on the mutation (rather than using the return value) no longer sees the change.</li>
+  <li><strong>Event log timing:</strong> a log entry can now take up to 10 ms longer to reach the console, disk capture, or the dashboard, and disk capture now batches writes &mdash; a hard kill (not a graceful <span class="inline_code">stop()</span>) can lose up to 8 KB of not-yet-flushed disk-captured entries.</li>
+  <li><strong>Netty upgraded from 4.2.17.Final to 4.2.19.Final (bundled dependency), two visible changes:</strong> an HTTP/2 client whose <span class="inline_code">SETTINGS_INITIAL_WINDOW_SIZE</span> change would overflow a stream's flow-control window now has its whole <strong>connection</strong> closed with <span class="inline_code">FLOW_CONTROL_ERROR</span> (RFC 9113), where before only that one stream was reset; and in a <span class="inline_code">multipart/form-data</span> request, a file part whose declared <span class="inline_code">Content-Type</span> is not a plausible media type (for example <span class="inline_code">text</span>) is now read as <span class="inline_code">application/octet-stream</span> &mdash; a <span class="inline_code">partContentTypes</span> matcher for such a part must now name <span class="inline_code">application/octet-stream</span> instead of the part's declared type.</li>
+  <li><strong>Windows binary launchers</strong> (each client's launcher that runs the downloaded <span class="inline_code">mockserver.bat</span>, not a JVM started directly): hardened against characters <span class="inline_code">cmd.exe</span> would otherwise read as commands rather than text, in the launcher path or in extra launch arguments.
+    <ul>
+      <li><strong>Node:</strong> no longer starts MockServer through a shell at all (on Windows this previously ran <span class="inline_code">mockserver.bat</span> under <span class="inline_code">cmd.exe</span>, so <span class="inline_code">%NAME%</span> in an argument, or in the cache directory path, was expanded as an environment variable, and a line break could end the command early). A <span class="inline_code">spawnOptions.shell</span> option is now ignored. <span class="inline_code">MOCKSERVER_JAVA_OPTS</span> is now split on whitespace with quoted text kept together on every OS.</li>
+      <li><strong>Python:</strong> <span class="inline_code">start()</span> now quotes every argument itself instead of running with <span class="inline_code">shell=True</span>, and raises <span class="inline_code">ValueError</span> if the launcher path or an <span class="inline_code">extra_args</span> entry contains a double quote, a line break or NUL, or if together they contain more than one <span class="inline_code">%</span>.</li>
+      <li><strong>Ruby:</strong> builds the <span class="inline_code">cmd.exe</span> command line itself instead of relying on Ruby's own quoting, and raises <span class="inline_code">MockServer::Error</span> for the same character set (<span class="inline_code">"</span>, <span class="inline_code">&lt;</span>, <span class="inline_code">&gt;</span>, <span class="inline_code">|</span>, <span class="inline_code">&amp;</span>, a line break, NUL, or more than one <span class="inline_code">%</span>) in the launcher path or <span class="inline_code">extra_args</span>. Needs a native Ruby (mswin or mingw, such as RubyInstaller) on Windows.</li>
+      <li><strong>PHP:</strong> builds the <span class="inline_code">cmd.exe</span> command line itself and throws <span class="inline_code">BinaryInstallException</span> for the same cases in the launcher path or an extra argument.</li>
+      <li><strong>Go, Rust and .NET:</strong> each now quotes the launcher path itself before passing it to <span class="inline_code">cmd.exe</span>, and refuses a launcher path containing a double quote, a line break or NUL, or more than one <span class="inline_code">%</span>.</li>
+    </ul>
+  </li>
+</ul>
 
 <a id="see_also" class="anchor" href="#see_also">&nbsp;</a>
 

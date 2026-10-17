@@ -752,10 +752,18 @@ curl -X PUT "http://localhost:1080/mockserver/debugMismatch" -d '{
 
 <p>Once you have a correlation ID, retrieve all log entries for that request:</p>
 
+<p><code class="inline_code">retrieveLogsByCorrelationId</code> throws, rather than returning the error body as a string, if the control-plane request itself gets a response status of <code>400</code> or more: <code class="inline_code">IllegalArgumentException</code> for a <code>400</code>, <code class="inline_code">AuthenticationException</code> for a <code>401</code>, and <code class="inline_code">ClientException</code> for any other status (including a <code>500</code> from an internal MockServer fault) &mdash; wrap the call accordingly.</p>
+
 <button id="button_troubleshoot_retrieve_logs_by_correlation_id" class="accordion">retrieve logs by correlation ID</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
-    <div class="panel"><pre class="prettyprint lang-java code"><code class="code">String logs = mockServerClient.retrieveLogsByCorrelationId("abc-123-def-456");</code></pre></div>
+    <div class="panel"><pre class="prettyprint lang-java code"><code class="code">try {
+    String logs = mockServerClient.retrieveLogsByCorrelationId("abc-123-def-456");
+} catch (ClientException e) {
+    // the control-plane request itself failed (e.g. a 500 inside MockServer)
+} catch (IllegalArgumentException | AuthenticationException e) {
+    // the request was rejected (400) or not authenticated (401)
+}</code></pre></div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel"><pre class="prettyprint lang-javascript code"><code class="code">// no typed correlationId filter - call the REST endpoint
 const response = await fetch(

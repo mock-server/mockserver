@@ -66,6 +66,12 @@ mockserver.start_mockserver({
     process.exitCode = <span class="numeric_literal">1</span>;
 });</code></pre>
 
+<p><strong>TypeScript</strong></p>
+
+<p>TypeScript typings for <span class="inline_code">mockserver-node</span> are published in the npm package. They use Node's own types, so your project needs <span class="inline_code">@types/node</span> installed. Both <span class="inline_code">import mockserver = require('mockserver-node')</span> and <span class="inline_code">import * as mockserver from 'mockserver-node'</span> work with or without <span class="inline_code">esModuleInterop</span>; a default import (<span class="inline_code">import mockserver from 'mockserver-node'</span>) needs <span class="inline_code">esModuleInterop</span> turned on and is otherwise a compile error.</p>
+
+<p><strong>Note:</strong> the package declares an <span class="inline_code">exports</span> map, naming <span class="inline_code">index</span>, <span class="inline_code">downloadJar</span>, <span class="inline_code">downloadBinary</span> and <span class="inline_code">package.json</span>. A deep import of a path it doesn't name &mdash; for example <span class="inline_code">mockserver-node/tasks/mockServer.js</span> &mdash; now fails with <span class="inline_code">ERR_PACKAGE_PATH_NOT_EXPORTED</span>, where previously any file inside the package could be required.</p>
+
 <p><strong>Grunt Plugin</strong></p>
 
 <p>If you haven't used Grunt before, be sure to check out the Getting Started guide, as it explains how to create a Gruntfile as well as install and use Grunt plugins.</p>

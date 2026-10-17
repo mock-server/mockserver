@@ -92,7 +92,8 @@ sitemap:
 <ul>
     <li><code>org.mock-server:mockserver-netty-no-dependencies:{{ site.mockserver_version }}</code> &mdash; shaded, zero transitive dependencies (<strong>recommended</strong>)</li>
     <li><code>org.mock-server:mockserver-netty:{{ site.mockserver_version }}</code> &mdash; unshaded, transitive dependencies declared in the POM</li>
-    <li><code>org.mock-server:mockserver-netty:{{ site.mockserver_version }}:jar-with-dependencies</code> &mdash; single executable jar (for running MockServer from the command line via <code>java -jar</code>)</li>
+    <li><code>org.mock-server:mockserver-netty:{{ site.mockserver_version }}:jar-with-dependencies</code> &mdash; single executable jar (for running MockServer from the command line via <code>java -jar</code>), cross-platform</li>
+    <li><code>org.mock-server:mockserver-netty:{{ site.mockserver_version }}:jar-with-dependencies-linux-x86_64</code> / <code>:jar-with-dependencies-linux-aarch_64</code> &mdash; intended for Linux, about 13 MB smaller than the cross-platform jar because each keeps only that one Linux architecture's native libraries (e.g. netty-tcnative, netty's epoll transport) instead of every supported OS/architecture. Not tested or supported on macOS or Windows: keep using the cross-platform <code>jar-with-dependencies</code> there.</li>
 </ul>
 
 <a id="mockserver_client_java" class="anchor" href="#mockserver_client_java">&nbsp;</a>

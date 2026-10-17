@@ -46,7 +46,7 @@ helm push mockserver-{{ site.mockserver_version }}.tgz oci://&lt;your-private-re
 
 <h3>Deploy Via Chart Repository</h3>
 
-<p>The legacy HTTP-based Helm repository remains available at <strong>www.mock-server.com</strong>:</p>
+<p>The legacy HTTP-based Helm repository remains available at <strong>www.mock-server.com</strong>. Chart versions 5.3.0&ndash;5.14.0 (2018&ndash;2022) are no longer served from it; 5.15.0 (the last Java 11-compatible release) and 6.0.0 onwards remain. Any removed version is still installable from the <a href="#deploy_via_oci_registry">OCI registry</a> (<span class="keyword">oci://ghcr.io/mock-server/charts/mockserver</span>).</p>
 
 <pre class="prettyprint code"><code class="code">helm repo add mockserver https://www.mock-server.com
 helm repo update</code></pre>
@@ -125,7 +125,11 @@ helm repo update</code></pre>
     <li><span class="keyword">image.variant</span> (default: empty) - set <span class="keyword">http3</span> to use the image that can serve HTTP/3 (also set <span class="keyword">mockserver.http3Port</span> in your properties and expose that port as UDP on your Service; a pod that cannot start HTTP/3 on that port exits and restarts instead of running without it, and its log names the port and the cause), or <span class="keyword">graaljs</span> for JavaScript templates</li>
     <li><span class="keyword">podLabels</span> (default: {}) - additional labels to add to the MockServer pods</li>
     <li><span class="keyword">imagePullSecrets</span> (default: []) - list of image pull secrets for private registries</li>
+    <li><span class="keyword">app.terminationGracePeriodSeconds</span> (default: 45) - seconds Kubernetes waits after SIGTERM before SIGKILL; must comfortably exceed <span class="keyword">app.preStopSleepSeconds</span> plus the server's own in-flight drain (<span class="inline_code">mockserver.stopDrainMillis</span>, default 15s)</li>
+    <li><span class="keyword">app.preStopSleepSeconds</span> (default: 0, disabled) - seconds to pause before MockServer is told to shut down, so Service endpoint removal has time to propagate before the pod actually stops serving. Uses the native <span class="inline_code">lifecycle.preStop.sleep</span> action, because the distroless image has no shell for an <span class="inline_code">exec</span> hook. <strong>Requires Kubernetes 1.30+</strong> (the PodLifecycleSleepAction feature is Beta and on by default from 1.30; Alpha and off by default in 1.29) &mdash; confirm your cluster version before enabling it</li>
 </ul>
+
+<p>The chart's readiness probe polls <span class="inline_code">/mockserver/ready</span> every second from pod start (<span class="keyword">periodSeconds: 1</span>, <span class="keyword">failureThreshold: 20</span>), rather than the slower 2-second interval used before, so a pod that is ready quickly joins Service endpoints sooner.</p>
 
 <p>For example configure a proxyRemoteHost and proxyRemotePort, as follows:</p>
 

@@ -233,6 +233,7 @@ rate(mock_server_requests_received_total[5m])</code></pre>
         <tr><td><span class="inline_code">jvm_threads_daemon</span></td><td>&mdash;</td><td>Daemon thread count</td></tr>
         <tr><td><span class="inline_code">jvm_gc_collection_count</span></td><td>&mdash;</td><td>Total GC collections</td></tr>
         <tr><td><span class="inline_code">jvm_gc_collection_seconds_sum</span></td><td>&mdash;</td><td>Total GC time in seconds</td></tr>
+        <tr><td><span class="inline_code">jvm_runtime_info</span></td><td>&mdash;</td><td>Gauge whose value is always <span class="inline_code">1</span>; the garbage collector(s) in use and the Java runtime version, vendor, version, and VM name are carried as labels (<span class="inline_code">gc</span>, <span class="inline_code">java_runtime_version</span>, <span class="inline_code">java_vendor</span>, <span class="inline_code">java_version</span>, <span class="inline_code">vm_name</span>).</td></tr>
     </tbody>
 </table>
 
@@ -259,8 +260,47 @@ rate(mock_server_requests_received_total[5m])</code></pre>
         <tr><td><span class="inline_code">mock_server_inbound_connections_idle_closed_total</span></td><td>Counter</td><td>Connections closed by <a href="/mock_server/configuration_properties.html">inboundConnectionIdleTimeoutMillis</a> after being idle with nothing in progress.</td></tr>
         <tr><td><span class="inline_code">mock_server_response_write_stalls_total</span></td><td>Counter</td><td>Responses cut off because their client stopped reading them for <a href="/mock_server/configuration_properties.html#button_configuration_response_write_stall_timeout_millis">responseWriteStallTimeoutMillis</a>. The <span class="inline_code">protocol</span> label is <span class="inline_code">http1_1</span>, <span class="inline_code">http2</span>, <span class="inline_code">http3</span>, <span class="inline_code">tunnel</span> (a CONNECT or SOCKS tunnel), <span class="inline_code">websocket</span> or <span class="inline_code">other</span>; the <span class="inline_code">scope</span> label is <span class="inline_code">connection</span> when the whole connection was closed and <span class="inline_code">stream</span> when one HTTP/2 or HTTP/3 stream was reset. A rising count means clients are stopping part-way through responses, or the timeout is too short for your slowest readers.</td></tr>
         <tr><td><span class="inline_code">mock_server_websocket_read_pauses_total</span></td><td>Counter</td><td>Times a mocked WebSocket connection stopped reading because more than 128 delayed replies were still waiting to be sent on it. MockServer resumes reading once they drain, so the client is slowed down rather than failed; a rising count means clients send faster than their delayed replies are sent.</td></tr>
+        <tr><td><span class="inline_code">mock_server_scheduler_queued_tasks</span></td><td>Gauge</td><td>Tasks currently queued on the shared action scheduler pool (response delays, forward continuations, drift analysis). A sustained non-zero value means scheduled work is backing up behind the pool.</td></tr>
+        <tr><td><span class="inline_code">mock_server_evicted_log_entries_total</span></td><td>Counter</td><td>Number of event-log <strong>entries</strong> evicted because the event log reached its maximum size, either the entry limit (<a href="/mock_server/configuration_properties.html">maxLogEntries</a>) or the byte limit (<a href="/mock_server/configuration_properties.html">maxEventLogSizeInBytes</a>, on by default). Each increment is one evicted entry, not one eviction event.</td></tr>
     </tbody>
 </table>
+
+<h4>Event log ring buffer</h4>
+
+<p>
+    Before a log entry is available to retrieve, MockServer briefly holds it in an in-memory queue while it
+    finishes being processed. These gauges are read live at scrape time and cover two separate places an entry's
+    memory is held &mdash; the short-lived processing queue, and the longer-lived store entries are kept in once
+    processed &mdash; so a scrape can tell which one is holding the heap if event-log memory use grows:
+</p>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr><th>Metric</th><th>Type</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><span class="inline_code">mock_server_event_log_ring_occupancy</span></td><td>Gauge</td><td>Log entries currently waiting in the processing queue (received, but not yet fully recorded).</td></tr>
+        <tr><td><span class="inline_code">mock_server_event_log_ring_capacity</span></td><td>Gauge</td><td>How many entries the processing queue can hold at once (<span class="inline_code">ringBufferSize</span> in force) before new entries are dropped.</td></tr>
+        <tr><td><span class="inline_code">mock_server_event_log_in_flight_bytes</span></td><td>Gauge</td><td>Request/response body bytes held by entries still waiting in the processing queue.</td></tr>
+        <tr><td><span class="inline_code">mock_server_event_log_max_in_flight_bytes</span></td><td>Gauge</td><td>The body-byte budget for entries waiting in the processing queue (the larger of <a href="/mock_server/configuration_properties.html">maxEventLogSizeInBytes</a> and a heap-derived cap); <span class="inline_code">0</span> means this budget is disabled.</td></tr>
+        <tr><td><span class="inline_code">mock_server_event_log_retained_entries</span></td><td>Gauge</td><td>Log entries currently kept available to retrieve, once processing has finished.</td></tr>
+        <tr><td><span class="inline_code">mock_server_event_log_retained_bytes</span></td><td>Gauge</td><td>Total request/response body bytes held by all log entries currently kept available to retrieve.</td></tr>
+        <tr><td><span class="inline_code">mock_server_event_log_max_retained_bytes</span></td><td>Gauge</td><td>The body-byte budget for entries kept available to retrieve (<a href="/mock_server/configuration_properties.html">maxEventLogSizeInBytes</a>); <span class="inline_code">0</span> means this budget is disabled.</td></tr>
+        <tr><td><span class="inline_code">mock_server_event_log_max_retained_entries</span></td><td>Gauge</td><td>How many log entries can be kept available to retrieve at once (<a href="/mock_server/configuration_properties.html">maxLogEntries</a>).</td></tr>
+    </tbody>
+</table>
+
+<h4>Forward/proxy metrics</h4>
+
+<p>
+    Forwarded and proxied requests are tracked per upstream host: <span class="inline_code">mock_server_forward_request_duration_seconds</span>
+    (a histogram of forward latency) and <span class="inline_code">mock_server_forward_requests_total</span> (a counter by
+    <span class="inline_code">status_class</span>) are both labelled with <span class="inline_code">upstream_host</span> (host only, never the full
+    URL or path); <span class="inline_code">mock_server_forward_upstream_protocol_total</span> additionally labels the protocol actually
+    negotiated upstream (<span class="inline_code">http2</span> via ALPN, or <span class="inline_code">http1_1</span>). To bound cardinality, at
+    most 500 distinct upstream hosts get their own label value; any further hosts are grouped under <span class="inline_code">_other</span>. A
+    null or empty host is recorded as <span class="inline_code">unknown</span>.
+</p>
 
 <h4>Chaos metrics</h4>
 
