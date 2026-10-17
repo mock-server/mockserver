@@ -656,11 +656,11 @@ class TestSyncChaosExperiment:
             assert sent["stages"][0]["durationMillis"] == 60000
             assert result["status"] == "started"
 
-    def test_start_chaos_experiment_disabled_raises(self, sync_mock_server):
+    def test_start_chaos_experiment_forbidden_raises(self, sync_mock_server):
         SyncMockHandler.response_status = 403
-        SyncMockHandler.response_body = '{"error": "disabled"}'
+        SyncMockHandler.response_body = "Forbidden for control plane"
         with MockServerClient("127.0.0.1", sync_mock_server) as client:
-            with pytest.raises(MockServerError, match="chaos experiments are disabled"):
+            with pytest.raises(MockServerError, match="control-plane authorization denied"):
                 client.start_chaos_experiment({"name": "x", "stages": []})
 
     def test_start_chaos_experiment_invalid_raises(self, sync_mock_server):

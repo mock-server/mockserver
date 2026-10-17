@@ -116,12 +116,12 @@ RSpec.describe MockServer::Client do
         }
     end
 
-    it 'raises Error on 403 (chaos disabled)' do
+    it 'raises Error on 403 (control-plane authorization denied)' do
       stub_request(:put, "#{base_url}/mockserver/chaosExperiment")
-        .to_return(status: 403, body: '')
+        .to_return(status: 403, body: 'Forbidden for control plane')
 
       expect { client.start_chaos_experiment(experiment) }
-        .to raise_error(MockServer::Error, /chaos is disabled/)
+        .to raise_error(MockServer::Error, /control-plane authorization denied: Forbidden for control plane/)
     end
 
     it 'raises Error on 400 (invalid definition)' do

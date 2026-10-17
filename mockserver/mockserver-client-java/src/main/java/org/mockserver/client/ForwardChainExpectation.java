@@ -227,21 +227,38 @@ public class ForwardChainExpectation {
         return this;
     }
 
+    /**
+     * Replace this expectation's before-actions with the given list, which run in order before the primary
+     * action; an empty or null argument leaves the current list unchanged. To add one action to those
+     * already set use {@link #withBeforeAction(AfterAction)}.
+     *
+     * @param beforeActions the complete list of before-actions
+     */
     public ForwardChainExpectation withBeforeActions(AfterAction... beforeActions) {
         expectation.withBeforeActions(beforeActions);
         return this;
     }
 
     /**
-     * Set a single before-action to execute before the primary action. Blocking before-actions
-     * (the default) can gate the response via their failure policy and timeout.
+     * Append a before-action to execute before the primary action, after any before-actions already set,
+     * so chained calls register every action in order; to replace the whole list use
+     * {@link #withBeforeActions(AfterAction...)}. Blocking before-actions (the default) can gate the
+     * response via their failure policy and timeout.
      *
-     * @param beforeAction the before-action to set
+     * @param beforeAction the before-action to append
      */
     public ForwardChainExpectation withBeforeAction(AfterAction beforeAction) {
-        return withBeforeActions(beforeAction);
+        expectation.withBeforeAction(beforeAction);
+        return this;
     }
 
+    /**
+     * Replace this expectation's after-actions with the given list, which run after the primary action
+     * completes; an empty or null argument leaves the current list unchanged. To add one action to those
+     * already set use {@link #withAfterAction(AfterAction)}.
+     *
+     * @param afterActions the complete list of after-actions
+     */
     public ForwardChainExpectation withAfterActions(AfterAction... afterActions) {
         expectation.withAfterActions(afterActions);
         return this;
@@ -276,12 +293,15 @@ public class ForwardChainExpectation {
     }
 
     /**
-     * Set a single after-action to execute after the primary action completes
+     * Append an after-action to execute after the primary action completes, after any after-actions
+     * already set, so chained calls register every action in order; to replace the whole list use
+     * {@link #withAfterActions(AfterAction...)}.
      *
-     * @param afterAction the after-action to set
+     * @param afterAction the after-action to append
      */
     public ForwardChainExpectation withAfterAction(AfterAction afterAction) {
-        return withAfterActions(afterAction);
+        expectation.withAfterAction(afterAction);
+        return this;
     }
 
     /**

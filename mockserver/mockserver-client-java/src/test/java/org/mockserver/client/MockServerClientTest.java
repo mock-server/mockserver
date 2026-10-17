@@ -2934,7 +2934,7 @@ public class MockServerClientTest {
 
     @Test
     public void shouldThrowHelpfulErrorWhenForbiddenOnStartExperiment() {
-        // given - 403 FORBIDDEN (control-plane authorization denied, or chaos disabled)
+        // given - 403 FORBIDDEN (control-plane authorization denied)
         when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean()))
             .thenReturn(response().withStatusCode(FORBIDDEN.code()).withBody("{\"error\":\"Forbidden for control plane\"}"));
 

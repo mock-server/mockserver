@@ -320,11 +320,15 @@ class MockServerClient:
     def import_document(
         self, document_json: str, format: str | None = None
     ) -> list[Expectation]:
-        """Import a HAR, Postman or Pact document as expectations
-        (``PUT /mockserver/import``).
+        """Import a HAR, Postman, Pact, WireMock, Mountebank or Mockoon document as
+        expectations (``PUT /mockserver/import``).
 
-        *format* selects the importer (``har``, ``postman``, ``pact``); omit it to
-        let the server auto-detect from the JSON shape.
+        *format* selects the importer (``har``, ``postman``, ``pact``, ``wiremock``,
+        ``mountebank``, ``mockoon``); omit it to let the server auto-detect from
+        the JSON shape. Warnings the WireMock, Mountebank and Mockoon importers
+        report are logged at ``WARNING``. ``format="recording"`` raises
+        :class:`ValueError`; send ``PUT /mockserver/import?format=recording``
+        directly to re-import recorded traffic.
         """
         return self._run(
             self._async_client.import_document(document_json, format)

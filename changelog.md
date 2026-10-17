@@ -13,11 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - MockServer is no longer published to Chocolatey, SDKMAN! or winget; install the CLI with Homebrew, Scoop or asdf/mise instead
+- Java client: chaining `withBeforeAction(...)` or `withAfterAction(...)` now adds each action to the expectation, so `.withAfterAction(a).withAfterAction(b)` runs both `a` and `b`. Before, each call replaced the list and only the last action ran. `withBeforeActions(...)` and `withAfterActions(...)` still replace the whole list. The same singular methods are now on `Expectation` too
 - ClassGraph upgraded from 4.8.198 to 5.0.0. If you use the regular (not `-no-dependencies`) artifacts, three new transitive jars arrive with it (`classgraph-base`, `classgraph-vfs`, `classgraph-classpath`), and a project that pins `classgraph` to 4.x must stop doing so, because 5.x is not binary-compatible; for the same reason, another library in your build that uses the 4.x API can break if Maven resolves it to 5.0.0, so use the `-no-dependencies` artifacts there
 
 ### Fixed
 
 - MCP and A2A mocks built with the Java, Node, Python, Ruby, Go, PHP, .NET or Rust client builders now return text containing a backslash before `$` or `#` exactly as written; previously `a\$b` was returned as `a$b` and `a\#b` as `a#b`
+- Java, Node and Python clients: importing a WireMock, Mountebank or Mockoon document (`importDocument` / `import_document`), including one whose format is auto-detected, now returns the imported expectations. The server had already added them, but its reply also carries warnings, which the clients could not read: Java threw `IllegalArgumentException`, Node resolved the whole reply object instead of an array, and Python returned an empty list. Each client now returns the expectations and logs the warnings (Java at `WARN`, Node with `console.warn`, Python with `logging` at `WARNING`). A reply object without an `expectations` list (for example an error from a gateway) is now an error rather than an empty result. These methods also now refuse `format=recording` before sending anything. Before, the server would load the recorded request/response pairs into its request log and the client returned them as if they were added expectations; to re-import recorded traffic, send `PUT /mockserver/import?format=recording` directly. The Ruby, Go, .NET, Rust and PHP clients only import HAR and Postman documents, whose reply is a plain list, so they were not affected
+- Java, Python, Ruby and Go clients: starting a chaos experiment no longer reports a `403` as "chaos is disabled". No server setting disables chaos experiments; a `403` means control-plane authorization rejected the request, and the error now says so. In Go, `StartChaosExperiment` and `SetServiceChaos` no longer return `FeatureDisabledError` for a `403`. An invalid experiment is still rejected with `400`
 
 ## [9.0.0] - 2026-10-15
 

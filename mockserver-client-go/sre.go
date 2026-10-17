@@ -871,7 +871,7 @@ func (c *Client) SetServiceChaos(host string, profile ServiceChaosProfile, ttlMi
 		return err
 	}
 	if statusCode == 403 {
-		return &FeatureDisabledError{Feature: "service chaos", Status: statusCode, Body: string(respBody)}
+		return fmt.Errorf("mockserver: set service chaos forbidden by control-plane authorization (status 403): %s", string(respBody))
 	}
 	if statusCode >= 400 {
 		return fmt.Errorf("mockserver: set service chaos failed (status %d): %s", statusCode, string(respBody))
@@ -1150,7 +1150,9 @@ type ChaosExperiment struct {
 
 // StartChaosExperiment starts a scheduled multi-stage chaos experiment
 // (PUT /mockserver/chaosExperiment). Only one experiment may be active at a
-// time; starting a new one stops the previous one.
+// time; starting a new one stops the previous one. The server rejects an
+// invalid experiment with 400 and answers 403 only when control-plane
+// authorization denies the request; no server setting disables chaos.
 func (c *Client) StartChaosExperiment(experiment ChaosExperiment) error {
 	body, err := json.Marshal(experiment)
 	if err != nil {
@@ -1162,7 +1164,7 @@ func (c *Client) StartChaosExperiment(experiment ChaosExperiment) error {
 		return err
 	}
 	if statusCode == 403 {
-		return &FeatureDisabledError{Feature: "chaos experiment", Status: statusCode, Body: string(respBody)}
+		return fmt.Errorf("mockserver: start chaos experiment forbidden by control-plane authorization (status 403): %s", string(respBody))
 	}
 	if statusCode >= 400 {
 		return fmt.Errorf("mockserver: start chaos experiment failed (status %d): %s", statusCode, string(respBody))

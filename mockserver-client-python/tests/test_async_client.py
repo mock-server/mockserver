@@ -767,11 +767,11 @@ class TestAsyncChaosExperiment:
         assert result["status"] == "started"
 
     @pytest.mark.asyncio
-    async def test_start_chaos_experiment_disabled_raises(self, mock_server):
+    async def test_start_chaos_experiment_forbidden_raises(self, mock_server):
         MockHandler.response_status = 403
-        MockHandler.response_body = '{"error": "disabled"}'
+        MockHandler.response_body = "Forbidden for control plane"
         client = AsyncMockServerClient("127.0.0.1", mock_server)
-        with pytest.raises(MockServerError, match="chaos experiments are disabled"):
+        with pytest.raises(MockServerError, match="control-plane authorization denied"):
             await client.start_chaos_experiment({"name": "x", "stages": []})
 
 

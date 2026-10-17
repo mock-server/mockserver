@@ -854,6 +854,12 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    /**
+     * Replace this expectation's before-actions with the given list; a null or empty argument leaves the
+     * current list unchanged. To add one action to the existing list use {@link #withBeforeAction(AfterAction)}.
+     *
+     * @param beforeActions the complete list of before-actions
+     */
     public Expectation withBeforeActions(AfterAction... beforeActions) {
         if (beforeActions != null && beforeActions.length > 0) {
             this.beforeActions = new ArrayList<>(Arrays.asList(beforeActions));
@@ -862,6 +868,12 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    /**
+     * Replace this expectation's before-actions with the given list; a null or empty argument leaves the
+     * current list unchanged. To add one action to the existing list use {@link #withBeforeAction(AfterAction)}.
+     *
+     * @param beforeActions the complete list of before-actions
+     */
     public Expectation withBeforeActions(List<AfterAction> beforeActions) {
         if (beforeActions != null && !beforeActions.isEmpty()) {
             this.beforeActions = new ArrayList<>(beforeActions);
@@ -870,6 +882,30 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    /**
+     * Append one before-action to this expectation's before-actions, after any already set, so chained calls
+     * register every action in order; a null argument is ignored. To replace the whole list use
+     * {@link #withBeforeActions(AfterAction...)}.
+     *
+     * @param beforeAction the before-action to append
+     */
+    public Expectation withBeforeAction(AfterAction beforeAction) {
+        if (beforeAction != null) {
+            if (this.beforeActions == null) {
+                this.beforeActions = new ArrayList<>();
+            }
+            this.beforeActions.add(beforeAction);
+            this.hashCode = 0;
+        }
+        return this;
+    }
+
+    /**
+     * Replace this expectation's after-actions with the given list; a null or empty argument leaves the
+     * current list unchanged. To add one action to the existing list use {@link #withAfterAction(AfterAction)}.
+     *
+     * @param afterActions the complete list of after-actions
+     */
     public Expectation withAfterActions(AfterAction... afterActions) {
         if (afterActions != null && afterActions.length > 0) {
             this.afterActions = new ArrayList<>(Arrays.asList(afterActions));
@@ -878,6 +914,30 @@ public class Expectation extends ObjectWithJsonToString {
         return this;
     }
 
+    /**
+     * Append one after-action to this expectation's after-actions, after any already set, so chained calls
+     * register every action in order; a null argument is ignored. To replace the whole list use
+     * {@link #withAfterActions(AfterAction...)}.
+     *
+     * @param afterAction the after-action to append
+     */
+    public Expectation withAfterAction(AfterAction afterAction) {
+        if (afterAction != null) {
+            if (this.afterActions == null) {
+                this.afterActions = new ArrayList<>();
+            }
+            this.afterActions.add(afterAction);
+            this.hashCode = 0;
+        }
+        return this;
+    }
+
+    /**
+     * Replace this expectation's after-actions with the given list; a null or empty argument leaves the
+     * current list unchanged. To add one action to the existing list use {@link #withAfterAction(AfterAction)}.
+     *
+     * @param afterActions the complete list of after-actions
+     */
     public Expectation withAfterActions(List<AfterAction> afterActions) {
         if (afterActions != null && !afterActions.isEmpty()) {
             this.afterActions = new ArrayList<>(afterActions);

@@ -287,6 +287,26 @@ fn before_actions_single_object_form_is_accepted() {
 }
 
 #[test]
+fn chained_before_and_after_action_calls_append() {
+    let exp = Expectation::new(HttpRequest::new().path("/trigger"))
+        .respond(HttpResponse::new().status_code(200))
+        .before_action(ExpectationAction::request(HttpRequest::new().path("/before-one")))
+        .before_action(ExpectationAction::request(HttpRequest::new().path("/before-two")))
+        .after_action(ExpectationAction::request(HttpRequest::new().path("/after-one")))
+        .after_action(ExpectationAction::request(HttpRequest::new().path("/after-two")));
+    let paths = |actions: &Option<Vec<ExpectationAction>>| -> Vec<String> {
+        actions
+            .as_ref()
+            .unwrap()
+            .iter()
+            .map(|a| a.http_request.as_ref().unwrap().path.clone().unwrap())
+            .collect()
+    };
+    assert_eq!(paths(&exp.before_actions), vec!["/before-one", "/before-two"]);
+    assert_eq!(paths(&exp.after_actions), vec!["/after-one", "/after-two"]);
+}
+
+#[test]
 fn capture_array_form_round_trips() {
     let exp = round_trip_expectation(
         r#"{

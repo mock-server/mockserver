@@ -590,6 +590,8 @@ Setting one target clears the others. `AfterAction` also carries three optional 
 | `timeout` | `Delay` | `maxSocketTimeout` | Max wait for a blocking action; on expiry the action is treated as failed |
 | `failurePolicy` | `FailurePolicy` | `BEST_EFFORT` | `FAIL_FAST` aborts with `502` (primary action skipped); `BEST_EFFORT` logs and continues |
 
+In the Java API (`Expectation` and the client's `ForwardChainExpectation`) the singular `withBeforeAction` / `withAfterAction` append one action to the list, while the plural `withBeforeActions` / `withAfterActions` replace the whole list.
+
 Both lists are additive and optional (an expectation without them is unchanged), serialised via `AfterActionDTO`/`ExpectationDTO`, and validated against the shared `afterAction` JSON schema definition. Dispatch is handled in `HttpActionHandler` (`runBeforeActions` / `dispatchSideAction`) — see [request-processing.md](request-processing.md) for the before/after dispatch flow.
 
 #### Unified Ordered Steps (`steps`)

@@ -3412,17 +3412,29 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
-     * Import a HAR, Postman collection, or Pact contract as expectations. Wraps
-     * {@code PUT /mockserver/import}. When {@code format} is blank the server auto-detects the
-     * format from the JSON shape.
+     * Import a HAR, Postman collection, Pact contract, WireMock stub mapping, Mountebank imposter or
+     * Mockoon environment as expectations. Wraps {@code PUT /mockserver/import}. When {@code format}
+     * is blank the server auto-detects the format from the JSON shape.
+     *
+     * <p>The WireMock, Mountebank and Mockoon importers also report each foreign construct they could
+     * not map faithfully; those warnings are logged at {@code WARN}. Recorded-traffic re-import
+     * ({@code format=recording}) loads request/response pairs into the request log rather than adding
+     * expectations, so this method rejects it; send {@code PUT /mockserver/import?format=recording}
+     * directly instead.
      *
      * @param json   the document JSON (required)
-     * @param format one of {@code har}, {@code postman}, {@code pact}, or {@code null}/blank for auto-detect
+     * @param format one of {@code har}, {@code postman}, {@code pact}, {@code wiremock}, {@code mountebank},
+     *               {@code mockoon}, or {@code null}/blank for auto-detect
      * @return the upserted expectations
+     * @throws IllegalArgumentException if {@code json} is blank or {@code format} is {@code recording}
+     * @throws ClientException          if the reply is an object without an {@code expectations} array
      */
     public Expectation[] importDocument(String json, String format) {
         if (isBlank(json)) {
             throw new IllegalArgumentException("importDocument(json, format) requires a non null document JSON");
+        }
+        if (format != null && "recording".equalsIgnoreCase(format.trim())) {
+            throw new IllegalArgumentException("importDocument(json, format) does not support format=recording, which loads recorded request/response pairs into the request log rather than adding expectations - send PUT /mockserver/import?format=recording directly");
         }
         HttpRequest importRequest = request()
             .withMethod("PUT")
@@ -3433,10 +3445,42 @@ public class MockServerClient implements Stoppable {
             importRequest.withQueryStringParameter("format", format);
         }
         HttpResponse httpResponse = sendRequest(importRequest, false);
-        if (httpResponse != null && isNotBlank(httpResponse.getBodyAsString())) {
-            return expectationSerializer.deserializeArray(httpResponse.getBodyAsString(), true);
+        if (httpResponse == null || isBlank(httpResponse.getBodyAsString())) {
+            return new Expectation[0];
         }
-        return new Expectation[0];
+        String body = httpResponse.getBodyAsString();
+        JsonNode root = null;
+        try {
+            root = OBJECT_MAPPER.readTree(body);
+        } catch (Exception ignored) {
+            // not JSON: deserializeArray below reports it as it always has
+        }
+        if (root == null || !root.isObject()) {
+            return expectationSerializer.deserializeArray(body, true);
+        }
+        // the migration importers (wiremock, mountebank, mockoon) reply {"expectations":[...],"warnings":[...]}
+        JsonNode expectations = root.path("expectations");
+        if (!expectations.isArray()) {
+            throw new ClientException("import response has no expectations array - server responded: " + body);
+        }
+        logImportWarnings(format, root.path("warnings"));
+        return expectationSerializer.deserializeArray(expectations.toString(), true);
+    }
+
+    private static void logImportWarnings(String format, JsonNode warnings) {
+        if (!warnings.isArray() || warnings.isEmpty() || !MockServerLogger.isEnabled(WARN)) {
+            return;
+        }
+        List<String> lines = new ArrayList<>();
+        for (JsonNode warning : warnings) {
+            lines.add("[" + warning.path("item").asText() + "] " + warning.path("construct").asText() + ": " + warning.path("detail").asText());
+        }
+        MOCK_SERVER_LOGGER.logEvent(
+            new LogEntry()
+                .setLogLevel(WARN)
+                .setMessageFormat("import of {}document could not fully map{}construct(s), check the imported expectations:{}")
+                .setArguments(isNotBlank(format) ? format : "auto-detected", warnings.size(), lines)
+        );
     }
 
     // -------------------------------------------------------------------
@@ -4086,15 +4130,16 @@ public class MockServerClient implements Stoppable {
      * {@code stages} array, e.g.
      * {@code {"name":"flaky-upstream","loop":false,"stages":[{"durationMillis":30000,"profiles":{"api.example.com":{...}}}]}}.
      *
-     * <p>If service chaos is disabled the server responds {@code 403} and this throws a
-     * {@link ClientException} with a helpful message. A malformed definition (server responds
+     * <p>There is no server setting that disables chaos experiments. The server responds
+     * {@code 403} only when control-plane authorization rejects the request, and this throws a
+     * {@link ClientException} with a helpful message. An invalid definition (server responds
      * {@code 400}) surfaces as an {@link IllegalArgumentException} carrying the server's error
      * body (the common client convention — {@code sendRequest} maps every {@code 400} this way);
      * any other {@code >= 400} status is surfaced as a {@link ClientException}.
      *
      * @param experimentJson the experiment definition as JSON ({@code {name, loop?, stages[...]}})
      * @return JSON string describing the started experiment ({@code {"status":"started","name":...,"stages":...,"loop":...}})
-     * @throws ClientException          if chaos is disabled (server responds {@code 403}) or an unexpected error status is returned
+     * @throws ClientException          if control-plane authorization is denied (server responds {@code 403}) or an unexpected error status is returned
      * @throws IllegalArgumentException if the definition is rejected (server responds {@code 400})
      */
     public String startChaosExperiment(String experimentJson) {
@@ -4111,7 +4156,7 @@ public class MockServerClient implements Stoppable {
         );
         if (httpResponse != null && httpResponse.getStatusCode() != null) {
             if (httpResponse.getStatusCode() == FORBIDDEN.code()) {
-                throw new ClientException("forbidden while starting chaos experiment (control-plane authorization denied, or chaos disabled) - server responded: " + httpResponse.getBodyAsString());
+                throw new ClientException("forbidden while starting chaos experiment (control-plane authorization denied) - server responded: " + httpResponse.getBodyAsString());
             } else if (httpResponse.getStatusCode() >= 400) {
                 throw new ClientException(formatLogMessage("error:{}while starting chaos experiment", httpResponse.getBodyAsString()));
             }

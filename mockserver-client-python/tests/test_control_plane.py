@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -324,6 +325,76 @@ class TestImport:
         with MockServerClient("127.0.0.1", control_plane_server) as client:
             client.import_document('{"log":{"entries":[]}}')
             assert ControlPlaneHandler.last_path == "/mockserver/import"
+
+    def test_import_document_returns_expectations_and_logs_warnings(
+        self, control_plane_server, caplog
+    ):
+        # the wiremock, mountebank and mockoon importers reply with an object
+        ControlPlaneHandler.response_status = 201
+        ControlPlaneHandler.response_body = json.dumps(
+            {
+                "expectations": [
+                    {"httpRequest": {"path": "/api/xml"}, "httpResponse": {"statusCode": 200}}
+                ],
+                "warnings": [
+                    {
+                        "item": "GET /api/xml",
+                        "construct": "response.transformers",
+                        "detail": "response templating is not translated",
+                    }
+                ],
+            }
+        )
+        with caplog.at_level(logging.WARNING, logger="mockserver.async_client"):
+            with MockServerClient("127.0.0.1", control_plane_server) as client:
+                result = client.import_document('{"mappings":[]}', "wiremock")
+        assert "format=wiremock" in ControlPlaneHandler.last_path
+        assert len(result) == 1
+        assert isinstance(result[0], Expectation)
+        assert result[0].http_request.path == "/api/xml"
+        warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
+        assert len(warnings) == 1
+        assert "wiremock" in warnings[0]
+        assert (
+            "[GET /api/xml] response.transformers: response templating is not translated"
+            in warnings[0]
+        )
+
+    def test_import_document_object_reply_without_warnings_does_not_log(
+        self, control_plane_server, caplog
+    ):
+        ControlPlaneHandler.response_status = 201
+        ControlPlaneHandler.response_body = json.dumps(
+            {
+                "expectations": [
+                    {"httpRequest": {"path": "/r"}, "httpResponse": {"statusCode": 200}}
+                ],
+                "warnings": [],
+            }
+        )
+        with caplog.at_level(logging.WARNING, logger="mockserver.async_client"):
+            with MockServerClient("127.0.0.1", control_plane_server) as client:
+                result = client.import_document('{"routes":[]}', "mockoon")
+        assert len(result) == 1
+        assert not [r for r in caplog.records if r.levelno == logging.WARNING]
+
+    def test_import_document_rejects_recording_without_sending(self, control_plane_server):
+        with MockServerClient("127.0.0.1", control_plane_server) as client:
+            for format in ("recording", "Recording", " RECORDING "):
+                with pytest.raises(
+                    ValueError, match=r"PUT /mockserver/import\?format=recording"
+                ):
+                    client.import_document('{"httpRequest":{}}', format)
+        assert ControlPlaneHandler.last_method is None
+
+    def test_import_document_object_reply_without_expectations_raises(
+        self, control_plane_server
+    ):
+        ControlPlaneHandler.response_status = 201
+        ControlPlaneHandler.response_body = '{"error":"upstream unavailable"}'
+        with MockServerClient("127.0.0.1", control_plane_server) as client:
+            with pytest.raises(MockServerError, match="upstream unavailable"):
+                client.import_document('{"mappings":[]}', "wiremock")
 
     def test_import_document_rejects_blank(self, control_plane_server):
         with MockServerClient("127.0.0.1", control_plane_server) as client:

@@ -13,6 +13,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
@@ -229,6 +230,51 @@ public class ForwardChainExpectationTest {
         // then
         assertThat(returned, is(forwardChainExpectation));
         verify(mockExpectation).withCapture(rules);
+    }
+
+    @Test
+    public void shouldAppendEachChainedSingularBeforeAndAfterAction() {
+        // given
+        Expectation expectation = new Expectation(request("/trigger"));
+        ForwardChainExpectation chain = new ForwardChainExpectation(clientConfiguration(), new MockServerLogger(), new MockServerEventBus(), mockAbstractClient, expectation);
+        AfterAction beforeOne = AfterAction.beforeAction().withHttpRequest(request("/before-one"));
+        AfterAction beforeTwo = AfterAction.beforeAction().withHttpRequest(request("/before-two"));
+        AfterAction afterOne = AfterAction.afterAction().withHttpRequest(request("/after-one"));
+        AfterAction afterTwo = AfterAction.afterAction().withHttpRequest(request("/after-two"));
+
+        // when
+        ForwardChainExpectation returned = chain
+            .withBeforeAction(beforeOne)
+            .withBeforeAction(beforeTwo)
+            .withAfterAction(afterOne)
+            .withAfterAction(afterTwo);
+
+        // then
+        assertThat(returned, is(chain));
+        assertThat(expectation.getBeforeActions(), contains(beforeOne, beforeTwo));
+        assertThat(expectation.getAfterActions(), contains(afterOne, afterTwo));
+    }
+
+    @Test
+    public void shouldReplaceTheWholeBeforeAndAfterActionListWithThePluralForm() {
+        // given
+        Expectation expectation = new Expectation(request("/trigger"));
+        ForwardChainExpectation chain = new ForwardChainExpectation(clientConfiguration(), new MockServerLogger(), new MockServerEventBus(), mockAbstractClient, expectation);
+        AfterAction beforeOne = AfterAction.beforeAction().withHttpRequest(request("/before-one"));
+        AfterAction beforeTwo = AfterAction.beforeAction().withHttpRequest(request("/before-two"));
+        AfterAction afterOne = AfterAction.afterAction().withHttpRequest(request("/after-one"));
+        AfterAction afterTwo = AfterAction.afterAction().withHttpRequest(request("/after-two"));
+
+        // when
+        chain
+            .withBeforeAction(beforeOne)
+            .withBeforeActions(beforeTwo)
+            .withAfterAction(afterOne)
+            .withAfterActions(afterTwo);
+
+        // then
+        assertThat(expectation.getBeforeActions(), contains(beforeTwo));
+        assertThat(expectation.getAfterActions(), contains(afterTwo));
     }
 
 }

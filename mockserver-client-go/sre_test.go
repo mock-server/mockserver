@@ -1047,6 +1047,28 @@ func TestClient_StartChaosExperiment(t *testing.T) {
 	}
 }
 
+func TestClient_ChaosForbidden_IsNotAFeatureDisabledError(t *testing.T) {
+	ts := stubServer(t, 403, "Forbidden for control plane", nil, nil, nil)
+	defer ts.Close()
+
+	client := NewFromURL(ts.URL)
+	for name, err := range map[string]error{
+		"StartChaosExperiment": client.StartChaosExperiment(ChaosExperiment{Name: "x"}),
+		"SetServiceChaos":      client.SetServiceChaos("payments.internal:8443", ServiceChaosProfile{}, 0),
+	} {
+		if err == nil {
+			t.Fatalf("%s: expected error for 403 status", name)
+		}
+		var fde *FeatureDisabledError
+		if errors.As(err, &fde) {
+			t.Errorf("%s: a 403 is control-plane authorization, not a disabled feature: %v", name, err)
+		}
+		if !strings.Contains(err.Error(), "control-plane authorization") || !strings.Contains(err.Error(), "Forbidden for control plane") {
+			t.Errorf("%s: expected the error to name control-plane authorization and carry the body, got %v", name, err)
+		}
+	}
+}
+
 func TestClient_StartChaosExperiment_Invalid(t *testing.T) {
 	ts := stubServer(t, 400, `{"error":"empty stages"}`, nil, nil, nil)
 	defer ts.Close()

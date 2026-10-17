@@ -523,10 +523,13 @@ export interface MockServerClient {
     deleteFile(name: string): Promise<RequestResponse>;
 
     /**
-     * Import a HAR, Postman collection, or Pact contract as expectations
-     * (PUT /mockserver/import). When format is blank the server auto-detects.
+     * Import a HAR, Postman collection, Pact contract, WireMock stub mapping, Mountebank
+     * imposter or Mockoon environment as expectations (PUT /mockserver/import). When format
+     * is blank the server auto-detects. Warnings the WireMock, Mountebank and Mockoon
+     * importers report are written with console.warn. format "recording" throws: send
+     * PUT /mockserver/import?format=recording directly to re-import recorded traffic.
      */
-    importDocument(json: object | string, format?: 'har' | 'postman' | 'pact'): Promise<Expectation[]>;
+    importDocument(json: object | string, format?: 'har' | 'postman' | 'pact' | 'wiremock' | 'mountebank' | 'mockoon'): Promise<Expectation[]>;
 
     /** Import a HAR document as expectations (PUT /mockserver/import?format=har). */
     importHar(harJson: object | string): Promise<Expectation[]>;

@@ -912,14 +912,15 @@ module MockServer
     #
     # @param experiment [Hash, #to_h] the experiment definition
     # @return [Hash] the started status, e.g. { "status" => "started", "name" => ... }
-    # @raise [Error] if the experiment definition is invalid or chaos is disabled
-    #   (HTTP 400/403), or on any other failure
+    # @raise [Error] if the experiment definition is invalid (HTTP 400), if
+    #   control-plane authorization rejects the request (HTTP 403), or on any other
+    #   failure; there is no server setting that disables chaos experiments
     def start_chaos_experiment(experiment)
       payload = experiment.respond_to?(:to_h) ? experiment.to_h : experiment
       body = JSON.generate(payload)
       status, response_body = request('PUT', '/mockserver/chaosExperiment', body)
       if status == 403
-        raise Error, 'Chaos experiment rejected (status=403): chaos is disabled on the server'
+        raise Error, "Chaos experiment rejected (status=403): control-plane authorization denied: #{response_body}"
       end
       if status >= 400
         raise Error, "Failed to start chaos experiment (status=#{status}): #{response_body}"

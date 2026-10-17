@@ -44,6 +44,22 @@ from mockserver.websocket_client import MockServerWebSocketClient
 logger = logging.getLogger(__name__)
 
 
+def _log_import_warnings(format: str | None, warnings: object) -> None:
+    if not isinstance(warnings, list) or not warnings:
+        return
+    lines = "\n".join(
+        f"  [{w.get('item')}] {w.get('construct')}: {w.get('detail')}"
+        for w in warnings
+        if isinstance(w, dict)
+    )
+    logger.warning(
+        "import of %s document could not fully map %d construct(s), check the imported expectations:\n%s",
+        format or "auto-detected",
+        len(warnings),
+        lines,
+    )
+
+
 class AsyncScenarioHandle:
     """An async handle to a single named stateful scenario on the server.
 
@@ -577,15 +593,30 @@ class AsyncMockServerClient:
     async def import_document(
         self, document_json: str, format: str | None = None
     ) -> list[Expectation]:
-        """Import a HAR, Postman or Pact document as expectations.
+        """Import a HAR, Postman, Pact, WireMock, Mountebank or Mockoon document as
+        expectations.
 
         Issues ``PUT /mockserver/import`` with the document JSON. *format* (one of
-        ``har``, ``postman``, ``pact``) selects the importer; when omitted the
-        server auto-detects the format from the JSON shape. Returns the
-        created/updated expectations.
+        ``har``, ``postman``, ``pact``, ``wiremock``, ``mountebank``, ``mockoon``)
+        selects the importer; when omitted the server auto-detects the format from
+        the JSON shape. Returns the created/updated expectations. The WireMock,
+        Mountebank and Mockoon importers also report each foreign construct they
+        could not map faithfully; those warnings are logged at ``WARNING``.
+
+        ``format="recording"`` raises :class:`ValueError`: it loads recorded
+        request/response pairs into the request log rather than adding
+        expectations, so send ``PUT /mockserver/import?format=recording`` directly.
+        Raises :class:`MockServerError` if the reply is an object without an
+        ``expectations`` list.
         """
         if not document_json or not document_json.strip():
             raise ValueError("import_document requires a non-empty document JSON")
+        if format is not None and format.strip().lower() == "recording":
+            raise ValueError(
+                "import_document does not support format=recording, which loads recorded "
+                "request/response pairs into the request log rather than adding expectations "
+                "- send PUT /mockserver/import?format=recording directly"
+            )
         query_params = {"format": format} if format else None
         status, response_body = await self._request(
             "PUT", "/mockserver/import", document_json, query_params
@@ -596,6 +627,16 @@ class AsyncMockServerClient:
             )
         if response_body:
             parsed = json.loads(response_body)
+            if isinstance(parsed, dict):
+                # the migration importers (wiremock, mountebank, mockoon) reply
+                # {"expectations": [...], "warnings": [...]}
+                if not isinstance(parsed.get("expectations"), list):
+                    raise MockServerError(
+                        "import response has no expectations list - server responded: "
+                        f"{response_body}"
+                    )
+                _log_import_warnings(format, parsed.get("warnings"))
+                parsed = parsed["expectations"]
             if isinstance(parsed, list):
                 return [Expectation.from_dict(e) for e in parsed]
         return []
@@ -796,8 +837,9 @@ class AsyncMockServerClient:
         ``[{durationMillis, profiles{host: profile}}]``). Returns the started status
         (``{"status": "started", "name": ...}``).
 
-        Raises :class:`MockServerError` if chaos experiments are disabled (HTTP 403)
-        or the definition is invalid (HTTP 400).
+        Raises :class:`MockServerError` if the definition is invalid (HTTP 400) or
+        control-plane authorization rejects the request (HTTP 403); there is no
+        server setting that disables chaos experiments.
         """
         body = json.dumps(experiment)
         status, response_body = await self._request(
@@ -805,7 +847,7 @@ class AsyncMockServerClient:
         )
         if status == 403:
             raise MockServerError(
-                "Failed to start chaos experiment: chaos experiments are disabled "
+                "Failed to start chaos experiment: control-plane authorization denied "
                 f"(status=403): {response_body}"
             )
         if status >= 400:

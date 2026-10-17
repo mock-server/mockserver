@@ -582,11 +582,14 @@ public class Configuration {
     }
 
     /**
-     * Disable all logging and processing of log events
+     * Stop MockServer writing its log entries to the logger (the console and any configured log handlers).
+     * Log events are still processed and recorded in the in-memory event log, so verification, retrieving
+     * recorded requests or log messages, and the dashboard are unaffected and the event log retains as much
+     * memory as before; to retain fewer entries use logLevel, maxLogEntries or maxEventLogSizeInBytes.
      * <p>
      * The default is false
      *
-     * @param disableLogging disable all logging
+     * @param disableLogging stop writing log entries to the logger
      */
     public Configuration disableLogging(Boolean disableLogging) {
         this.disableLogging = disableLogging;

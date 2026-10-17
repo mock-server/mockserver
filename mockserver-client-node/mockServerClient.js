@@ -2533,27 +2533,63 @@ var mockServerClient;
         };
 
         // -------------------------------------------------------------------
-        // Import (HAR / Postman / Pact / auto-detect)
+        // Import (HAR / Postman / Pact / WireMock / Mountebank / Mockoon / auto-detect)
         // -------------------------------------------------------------------
+        // the migration importers (wiremock, mountebank, mockoon) reply {"expectations":[...],"warnings":[...]}
+        var importedExpectations = function (body, format) {
+            var reply = body ? JSON.parse(body) : [];
+            if (Array.isArray(reply) || !reply || typeof reply !== 'object') {
+                return reply;
+            }
+            if (!Array.isArray(reply.expectations)) {
+                throw new Error("import response has no expectations array - server responded: " + body);
+            }
+            var warnings = Array.isArray(reply.warnings) ? reply.warnings : [];
+            if (warnings.length > 0) {
+                console.warn("import of " + (format || "auto-detected") + " document could not fully map " + warnings.length +
+                    " construct(s), check the imported expectations:\n" + warnings.map(function (warning) {
+                        return "  [" + warning.item + "] " + warning.construct + ": " + warning.detail;
+                    }).join("\n"));
+            }
+            return reply.expectations;
+        };
         /**
-         * Import a HAR, Postman collection, or Pact contract as expectations
+         * Import a HAR, Postman collection, Pact contract, WireMock stub mapping,
+         * Mountebank imposter or Mockoon environment as expectations
          * (PUT /mockserver/import). When format is blank the server auto-detects
          * the format from the JSON shape.
          *
+         * The WireMock, Mountebank and Mockoon importers also report each foreign
+         * construct they could not map faithfully; those warnings are written with
+         * console.warn. format "recording" is rejected: it loads recorded
+         * request/response pairs into the request log rather than adding
+         * expectations, so send PUT /mockserver/import?format=recording directly.
+         *
          * @param json    the document (object or JSON string, required)
-         * @param format  one of "har", "postman", "pact", or null/blank for auto-detect
+         * @param format  one of "har", "postman", "pact", "wiremock", "mountebank",
+         *                "mockoon", or null/blank for auto-detect
          * @return promise resolving to the array of upserted expectations
          */
         var importDocument = function (json, format) {
             if (json === undefined || json === null || json === "") {
                 throw new Error("importDocument(json, format) requires a non null document");
             }
+            if (typeof format === "string" && format.trim().toLowerCase() === "recording") {
+                throw new Error("importDocument(json, format) does not support format=recording, which loads recorded request/response pairs into the request log rather than adding expectations - send PUT /mockserver/import?format=recording directly");
+            }
             var path = "/mockserver/import" + (format ? "?format=" + encodeURIComponent(format) : "");
             return {
                 then: function (sucess, error) {
                     makeRequest(host, port, path, json)
                         .then(function (result) {
-                            sucess(result.body ? JSON.parse(result.body) : []);
+                            var expectations;
+                            try {
+                                expectations = importedExpectations(result.body, format);
+                            } catch (err) {
+                                error(err);
+                                return;
+                            }
+                            sucess(expectations);
                         }, function (err) {
                             error(err);
                         });
