@@ -265,6 +265,13 @@ started with `-Dmockserver.loadGenerationEnabled=true`).
 | `mcp_tools_list.json` | Answer the MCP `tools/list` discovery call |
 | `mcp_tool_call.json` | Answer an MCP `tools/call` invocation |
 
+### parallel_search_mcp/
+
+| File | Description |
+|------|-------------|
+| `capture_forward.json` | Forward `/mcp` to the live Parallel Search MCP server so MockServer records it |
+| `replay_expectations.json` | Replay a recorded Parallel Search MCP session offline, echoing each JSON-RPC id |
+
 ### a2a/
 
 | File | Description |

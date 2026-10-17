@@ -23,6 +23,7 @@ Runnable examples demonstrating the [MockServer Rust client](../../mockserver-cl
 | [scenario](scenario/) | Run the 5 canonical stateful-scenario flows (state machine, sequential cycling, timed transition, external trigger, cross-protocol) and assert each. |
 | [load_scenario](load_scenario/) | Register, start, list, and stop a server-side load scenario (RATE ramp → VU hold → PAUSE) via the Load Scenario registry. |
 | [callback](callback/) | Register an object (closure) response callback that derives the response from the request, plus a declarative class callback; assert both. |
+| [parallel_search_mcp](parallel_search_mcp/) | Capture a remote MCP server (Parallel Search) through MockServer and replay it offline. |
 
 Each folder contains a runnable Rust binary and its own `README.md` with
 instructions.

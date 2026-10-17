@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A capture-and-replay example for a remote MCP server, in every client language (Java, Node, Python, Ruby, Go, .NET, Rust, PHP, curl, with shared JSON under `examples/json/parallel_search_mcp`): MockServer records an MCP client's calls to the live Parallel Search MCP server, then replays them offline from expectations that match on the JSON-RPC method and echo the request id
+
 ### Changed
 
 - MockServer is no longer published to Chocolatey, SDKMAN! or winget; install the CLI with Homebrew, Scoop or asdf/mise instead

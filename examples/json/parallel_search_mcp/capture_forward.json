@@ -1,0 +1,17 @@
+{
+  "httpRequest": {
+    "path": "/mcp"
+  },
+  "httpOverrideForwardedRequest": {
+    "requestOverride": {
+      "headers": {
+        "Host": ["search.parallel.ai"]
+      },
+      "socketAddress": {
+        "host": "search.parallel.ai",
+        "port": 443,
+        "scheme": "HTTPS"
+      }
+    }
+  }
+}

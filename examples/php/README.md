@@ -26,6 +26,7 @@ Runnable examples demonstrating the [MockServer PHP client](../../mockserver-cli
 | [forward_override](forward_override/) | Use `httpOverrideForwardedRequest` to statically modify proxied requests (PHP has no WebSocket breakpoints). |
 | [scenario](scenario/) | Stateful scenarios: state-machine login flow, sequential response cycling, timed and external transitions, and cross-protocol triggers. |
 | [load_scenario](load_scenario/) | Register, start, list, and stop a server-side load scenario (RATE ramp → VU hold → PAUSE) via the Load Scenario registry. |
+| [parallel_search_mcp](parallel_search_mcp/) | Capture a remote MCP server (Parallel Search) through MockServer and replay it offline. |
 
 Each folder contains a runnable PHP script and its own `README.md` with
 instructions.

@@ -1,0 +1,71 @@
+[
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/mcp",
+      "body": {
+        "type": "JSON_RPC",
+        "method": "initialize"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\": 200, \"headers\": [{\"name\": \"Content-Type\", \"values\": [\"application/json\"]}], \"body\": {\"jsonrpc\": \"2.0\", \"id\": $!{request.jsonRpcRawId}, \"result\": {\"protocolVersion\":\"2025-06-18\",\"capabilities\":{\"experimental\":{},\"prompts\":{\"listChanged\":false},\"resources\":{\"subscribe\":false,\"listChanged\":false},\"tools\":{\"listChanged\":false}},\"serverInfo\":{\"name\":\"Parallel Web Search MCP Server\",\"version\":\"1.27.0\"}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/mcp",
+      "body": {
+        "type": "JSON_RPC",
+        "method": "notifications/initialized"
+      }
+    },
+    "httpResponse": {
+      "statusCode": 202
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/mcp",
+      "body": {
+        "type": "JSON_RPC",
+        "method": "tools/list"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\": 200, \"headers\": [{\"name\": \"Content-Type\", \"values\": [\"application/json\"]}], \"body\": {\"jsonrpc\": \"2.0\", \"id\": $!{request.jsonRpcRawId}, \"result\": {\"tools\":[{\"name\":\"web_search\",\"description\":\"Perform web searches and return LLM-friendly results, including excerpts that are usually sufficient to answer directly without a follow-up fetch.\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"objective\":{\"type\":\"string\",\"description\":\"Natural-language description of what the web search is trying to find.\"},\"search_queries\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Concise keyword search queries, 3-6 words each, which may include search operators.\"}},\"required\":[\"objective\",\"search_queries\"]}},{\"name\":\"web_fetch\",\"description\":\"Fetch and extract relevant content from specific web URLs.\",\"inputSchema\":{\"type\":\"object\",\"properties\":{\"urls\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"List of URLs to extract content from.\"}},\"required\":[\"urls\"]}}]}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/mcp",
+      "body": {
+        "type": "JSON_PATH",
+        "jsonPath": "$[?(@.method == 'tools/call' && @.params.name == 'web_search')]"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\": 200, \"headers\": [{\"name\": \"Content-Type\", \"values\": [\"application/json\"]}], \"body\": {\"jsonrpc\": \"2.0\", \"id\": $!{request.jsonRpcRawId}, \"result\": {\"content\":[{\"type\":\"text\",\"text\":\"{${esc.b}\"search_id${esc.b}\": ${esc.b}\"search_389d66d935c6155de0a820e65a02817a${esc.b}\", ${esc.b}\"results${esc.b}\": [{${esc.b}\"url${esc.b}\": ${esc.b}\"https://www.mock-server.com/${esc.b}\", ${esc.b}\"title${esc.b}\": ${esc.b}\"MockServer ${esc.b}u2014 Mock any HTTP service. Record traffic. Now with MCP for AI assistants.${esc.b}\", ${esc.b}\"publish_date${esc.b}\": null, ${esc.b}\"excerpts${esc.b}\": [${esc.b}\"Getting Started${esc.b}${esc.b}nMockServer is a single, self-hosted tool that mocks and proxies the services your application depends on, so you can develop and test against realistic, controllable behaviour instead of fragile real dependencies. It is free and open-source, runs anywhere, and needs no SaaS ...${esc.b}\"]}, {${esc.b}\"url${esc.b}\": ${esc.b}\"https://www.mock-server.com/mock_server/getting_started.html${esc.b}\", ${esc.b}\"title${esc.b}\": ${esc.b}\"Getting Started Mocking | MockServer${esc.b}\", ${esc.b}\"publish_date${esc.b}\": ${esc.b}\"2026-06-24${esc.b}\", ${esc.b}\"excerpts${esc.b}\": [${esc.b}\"0. Start MockServer${esc.b}${esc.b}nThe fastest way to run MockServer is a single command ${esc.b}u2014 pick whichever fits your environment. Every option below starts a server that mocks and proxies HTTP and HTTPS on one port (default 1080 ):${esc.b}${esc.b}nDocker ${esc.b}u2014 no Java required${esc.b}${esc.b}ndocker run -p  1080 : 1080 ...${esc.b}\"]}]}\"}],\"isError\":false}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/mcp",
+      "body": {
+        "type": "JSON_PATH",
+        "jsonPath": "$[?(@.method == 'tools/call' && @.params.name == 'web_fetch')]"
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\": 200, \"headers\": [{\"name\": \"Content-Type\", \"values\": [\"application/json\"]}], \"body\": {\"jsonrpc\": \"2.0\", \"id\": $!{request.jsonRpcRawId}, \"result\": {\"content\":[{\"type\":\"text\",\"text\":\"{${esc.b}\"extract_id${esc.b}\": ${esc.b}\"extract_6f3500ef377f9b5622ff4699e69363f8${esc.b}\", ${esc.b}\"results${esc.b}\": [{${esc.b}\"url${esc.b}\": ${esc.b}\"https://www.mock-server.com/${esc.b}\", ${esc.b}\"title${esc.b}\": ${esc.b}\"MockServer ${esc.b}u2014 Mock any HTTP service. Record traffic. Now with MCP for AI assistants.${esc.b}\", ${esc.b}\"publish_date${esc.b}\": ${esc.b}\"2026-09-15${esc.b}\", ${esc.b}\"excerpts${esc.b}\": [${esc.b}\"${esc.h} MockServer${esc.b}${esc.b}n${esc.h}${esc.h} Getting Started${esc.b}${esc.b}nMockServer is a single, self-hosted tool that mocks and proxies the services your application depends on, so you can develop and test against realistic, controllable behaviour instead of fragile real dependencies. It is free and open-source, runs anywhere, and needs no SaaS account.${esc.b}${esc.b}n${esc.b}${esc.b}n...${esc.b}${esc.b}n${esc.b}${esc.b}n* **Isolate the system-under-test** ${esc.b}u2014 replace real dependencies so tests fail only on genuine bugs, not on network flakes or redeployed services.${esc.b}${esc.b}n* **Build against APIs that don't exist yet** ${esc.b}u2014 mock a service from its contract so teams can work in parallel before it is ...${esc.b}\"]}]}\"}],\"isError\":false}}}"
+    }
+  }
+]

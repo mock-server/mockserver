@@ -290,6 +290,12 @@ start/stop it by name (requires the server started with `-Dmockserver.loadGenera
 |------|-------------|
 | `mcp_tool.sh` | Mock an MCP server tool (`tools/list` and `tools/call`) over JSON-RPC |
 
+### parallel_search_mcp/
+
+| File | Description |
+|------|-------------|
+| `parallel_search_mcp.sh` | Capture a remote MCP server (Parallel Search) through MockServer and replay it offline |
+
 ### a2a/
 
 | File | Description |

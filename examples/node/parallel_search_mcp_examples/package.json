@@ -1,0 +1,11 @@
+{
+  "name": "parallel_search_mcp_examples",
+  "version": "1.0.0",
+  "description": "",
+  "main": "parallel_search_mcp.js",
+  "author": "James D Bloom",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "mockserver-client": "9.0.0"
+  }
+}
