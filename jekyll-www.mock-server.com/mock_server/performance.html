@@ -19,7 +19,7 @@ schema_faq:
   - question: "Does MockServer slow down with many expectations?"
     answer: "No. MockServer indexes expectations so each request is compared only against a small candidate set rather than scanning every expectation. At 5,000 expectations matching is up to 177× faster than a naive linear scan, keeping matching cost nearly flat as expectations grow."
   - question: "How do I tune MockServer for high throughput?"
-    answer: "The most impactful lever is the in-memory request log: lower maxLogEntries, or set maxEventLogBytes, so fewer recorded requests are retained on the heap. Note that disableLogging and disableSystemOut only silence console output — they do not stop requests being recorded, so neither reduces heap or GC pressure. Additional levers include the native epoll transport on Linux, thread-pool sizes, and forward-proxy connection pooling. See the Scalability Configuration section for details."
+    answer: "The most impactful lever is the in-memory request log: lower maxLogEntries, or set maxEventLogSizeInBytes, so fewer recorded requests are retained on the heap. Note that disableLogging and disableSystemOut only silence console output — they do not stop requests being recorded, so neither reduces heap or GC pressure. Additional levers include the native epoll transport on Linux, thread-pool sizes, and forward-proxy connection pooling. See the Scalability Configuration section for details."
 ---
 
 <!--
@@ -538,7 +538,7 @@ touches the queue.</p>
 
 <pre class="prettyprint lang-bash code"><code class="code">java -Xmx500m -Dmockserver.logLevel=WARN -Dmockserver.disableLogging=true -jar ~/.m2/repository/org/mock-server/mockserver-netty/{{ site.mockserver_version }}/mockserver-netty-{{ site.mockserver_version }}-no-dependencies.jar -serverPort 1080</code></pre>
 
-<p><strong>Note:</strong> the benchmark used <span class="inline_code">-Dmockserver.disableLogging=true</span> and <span class="inline_code">-Dmockserver.logLevel=WARN</span> to keep console output off the measurement. Neither setting stops requests being recorded into the in-memory request log — that is bounded by <span class="inline_code">maxLogEntries</span> and <span class="inline_code">maxEventLogBytes</span>, not by the logging switches.</p>
+<p><strong>Note:</strong> the benchmark used <span class="inline_code">-Dmockserver.disableLogging=true</span> and <span class="inline_code">-Dmockserver.logLevel=WARN</span> to keep console output off the measurement. Neither setting stops requests being recorded into the in-memory request log — that is bounded by <span class="inline_code">maxLogEntries</span> and <span class="inline_code">maxEventLogSizeInBytes</span>, not by the logging switches.</p>
 
 <a id="apache_bench" class="anchor" href="#apache_bench">&nbsp;</a>
 <h3>Apache Bench results</h3>

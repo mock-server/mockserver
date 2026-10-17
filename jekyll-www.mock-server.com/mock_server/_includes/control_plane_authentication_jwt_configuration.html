@@ -42,8 +42,8 @@
 
 <button id="button_configuration_control_plane_jwt_authentication_required_audience" class="accordion title"><strong>Control Plane JWT Authentication Required Audience</strong></button>
 <div class="panel title">
-    <p>Audience claim (i.e. aud) required when JWT authentication is enabled for control plane requests</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
+    <p>Audience claim (i.e. <span class="inline_code">aud</span>) a control-plane JWT must carry when JWT authentication is enabled. When empty (the default), the audience claim is not checked &mdash; any validly-signed token is accepted regardless of its audience. Set it to the audience your issuer puts in tokens meant for this MockServer instance to reject tokens issued for other services.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneJWTAuthenticationExpectedAudience(String controlPlaneJWTAuthenticationExpectedAudience)</code></pre>
     <p>System Property:</p>

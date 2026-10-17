@@ -857,7 +857,7 @@ Disable logging to standard output.
 - Environment variable: MOCKSERVER_DISABLE_SYSTEM_OUT
 
 **disableLogging**
-Disable all logging and processing of log events.
+Silence all log output. Log entries are still recorded in memory, so verification, retrieval and the dashboard are unaffected and no memory is saved.
 - Default: false
 - Environment variable: MOCKSERVER_DISABLE_LOGGING
 

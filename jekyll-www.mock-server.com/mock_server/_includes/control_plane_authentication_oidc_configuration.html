@@ -104,36 +104,4 @@
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneOidcScopeClaim="scp"</code></pre>
 </div>
 
-<button id="button_configuration_control_plane_authorization_enabled" class="accordion title"><strong>Control Plane Authorization Enabled</strong></button>
-<div class="panel title">
-    <p>Enable coarse role-based authorization of control plane requests. Once a request is authenticated, the verified principal's scopes/groups are mapped (via Control Plane Scope Mapping) to one of three hierarchical roles &mdash; <span class="keyword">read</span>, <span class="keyword">mutate</span> or <span class="keyword">admin</span> (admin satisfies mutate satisfies read). Reads (retrieve/verify/diff and all GETs) require <span class="keyword">read</span>; every other operation (creating expectations, clear, reset, etc.) requires <span class="keyword">mutate</span>. A principal without a sufficient role is rejected with <span class="keyword">403 Forbidden</span> and the denial is audited with outcome FORBIDDEN.</p>
-    <p>Authorization requires a verified principal with mapped scopes, so it should be used together with control plane OIDC authentication. It is off by default; when disabled, an authenticated request is never additionally authorized.</p>
-    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneAuthorizationEnabled(boolean enable)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneAuthorizationEnabled=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_AUTHORIZATION_ENABLED=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneAuthorizationEnabled=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneAuthorizationEnabled="true"</code></pre>
-</div>
-
-<button id="button_configuration_control_plane_scope_mapping" class="accordion title"><strong>Control Plane Scope Mapping</strong></button>
-<div class="panel title">
-    <p>Mapping from a verified scope/group value to a coarse control plane role (<span class="keyword">read</span>, <span class="keyword">mutate</span> or <span class="keyword">admin</span>), used when Control Plane Authorization Enabled is true.</p>
-    <p>Value should be a comma separated list of value=role pairs, for example: platform-admins=admin,qa-team=mutate,viewers=read. Unrecognised roles and malformed pairs are ignored.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneScopeMapping(Map&lt;String, ControlPlaneRole&gt; controlPlaneScopeMapping)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneScopeMapping=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_SCOPE_MAPPING=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneScopeMapping=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneScopeMapping="platform-admins=admin,qa-team=mutate,viewers=read"</code></pre>
-</div>
+<p>Once OIDC authentication verifies a principal, that principal's scopes/groups can be mapped to a coarse control-plane role (<span class="keyword">read</span>, <span class="keyword">mutate</span> or <span class="keyword">admin</span>) and used to authorize individual admin operations &mdash; see <a href="/mock_server/configuration_properties.html#button_configuration_control_plane_authorization">Control-Plane Authorization</a> for <span class="inline_code">controlPlaneAuthorizationEnabled</span> and <span class="inline_code">controlPlaneScopeMapping</span>.</p>

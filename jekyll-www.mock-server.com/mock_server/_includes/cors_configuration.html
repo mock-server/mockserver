@@ -54,7 +54,8 @@
 <button id="button_configuration_cors_allow_methods" class="accordion title"><strong>CORS Allow Methods Value</strong></button>
 <div class="panel title">
     <p>The value used for CORS in the <span class="constant">access-control-allow-methods</span> header.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>The property default is blank. When blank, MockServer does not send an empty header; it applies a built-in fallback of <span class="this_value">CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE</span> so the control-plane API and dashboard work cross-origin out of the box. Set this property only if you need a narrower method list.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span> (effective default: <span class="this_value">CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH, TRACE</span>)</p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.corsAllowMethods(String corsAllowMethods)</code></pre>
     <p>System Property:</p>
@@ -71,7 +72,8 @@
 <div class="panel title">
     <p>Default value used for CORS in the <span class="constant">access-control-allow-headers</span> and <span class="constant">access-control-expose-headers</span> headers.</p>
     <p>In addition to this default value any headers specified in the request header <span class="constant">access-control-request-headers</span> also get added to <span class="constant">access-control-allow-headers</span> and <span class="constant">access-control-expose-headers</span> headers in a CORS response.</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>The property default is blank. When blank <strong>and</strong> the preflight request carries no <span class="constant">access-control-request-headers</span> header, MockServer applies a built-in fallback of <span class="this_value">Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization</span> rather than sending an empty header. When blank and the preflight does carry <span class="constant">access-control-request-headers</span>, MockServer instead echoes back exactly the headers the browser asked to send. Setting it makes the listed headers always allowed; any headers a preflight requests are still added to them.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span> (effective default: <span class="this_value">Allow, Content-Encoding, Content-Length, Content-Type, ETag, Expires, Last-Modified, Location, Server, Vary, Authorization</span>)</p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.corsAllowHeaders(String corsAllowHeaders)</code></pre>
     <p>System Property:</p>
@@ -103,7 +105,7 @@
 
 <button id="button_configuration_cors_max_age" class="accordion title"><strong>CORS Max Age Value</strong></button>
 <div class="panel title">
-    <p>The value used for CORS in the <span class="constant">access-control-max-age</span> header.</p>
+    <p>The value, in seconds, used for CORS in the <span class="constant">access-control-max-age</span> header, which tells the browser how long it may cache a CORS preflight (<span class="constant">OPTIONS</span>) response before sending another one. Raise it to reduce the number of preflight requests a browser-based client sends against a long-running MockServer instance; the default of <span class="this_value">0</span> tells the browser not to cache preflights at all.</p>
     <p>Type: <span class="keyword">int</span> Default: <span class="this_value">0</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.corsMaxAgeInSeconds(int maxAgeInSeconds)</code></pre>

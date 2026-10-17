@@ -14,7 +14,7 @@
     <tbody>
         <tr><td><a href="#button_configuration_log_level"><code>logLevel</code></a></td><td>Global minimum log level</td><td><code>INFO</code></td></tr>
         <tr><td><a href="#button_configuration_disable_system_out"><code>disableSystemOut</code></a></td><td>Suppress stdout output</td><td><code>false</code></td></tr>
-        <tr><td><a href="#button_configuration_disable_logging"><code>disableLogging</code></a></td><td>Disable all logging and event processing</td><td><code>false</code></td></tr>
+        <tr><td><a href="#button_configuration_disable_logging"><code>disableLogging</code></a></td><td>Silence all log output (entries are still recorded)</td><td><code>false</code></td></tr>
         <tr><td><a href="#button_configuration_compact_log_format"><code>compactLogFormat</code></a></td><td>One-line summaries instead of full JSON in stdout</td><td><code>false</code></td></tr>
         <tr><td><a href="#button_configuration_log_level_overrides"><code>logLevelOverrides</code></a></td><td>Per-type/category log level overrides</td><td><code>{}</code></td></tr>
         <tr><td><a href="#button_configuration_detailed_match_failures"><code>detailedMatchFailures</code></a></td><td>Include per-field match failure reasons</td><td><code>true</code></td></tr>
@@ -47,7 +47,7 @@
 
 <button id="button_configuration_disable_system_out" class="accordion title"><strong>Disable Logging To System Out</strong></button>
 <div class="panel title">
-    <p>Disable logging to the system output</p>
+    <p>Removes the <span class="inline_code">java.util.logging</span> stdout console handler that MockServer installs by default, so MockServer's log lines are no longer printed to the console. It has no effect if you route logging through a different SLF4J binding or your own <span class="inline_code">java.util.logging.config.file</span>, and start-up failures are still printed to stderr. Log entries are still recorded in the in-memory event log exactly as before &mdash; <span class="inline_code">verify</span>, <span class="inline_code">retrieveLogMessages</span> and the dashboard's log view are unaffected, and no memory is saved. Use this to quiet a noisy console, for example in CI or when running many tests.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.disableSystemOut(boolean disableSystemOut)</code></pre>
@@ -63,7 +63,7 @@
 
 <button id="button_configuration_disable_logging" class="accordion title"><strong>Disable All Logging</strong></button>
 <div class="panel title">
-    <p>Disable all logging and processing of log events</p>
+    <p>Suppresses log output on every logging backend (the console, and any other appender your SLF4J provider sends to). Like <a href="#button_configuration_disable_system_out"><span class="inline_code">disableSystemOut</span></a>, this only stops log entries being <em>printed</em> &mdash; received-request/response entries are still recorded in the in-memory event log exactly as before, so <span class="inline_code">verify</span>, <span class="inline_code">retrieveLogMessages</span> and the dashboard's log view keep working, and no memory is saved. Use this to quiet all logging output, not to free heap &mdash; for that, lower <span class="inline_code">maxLogEntries</span> / <span class="inline_code">maxEventLogSizeInBytes</span> or raise the log level instead.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.disableLogging(boolean disableLogging)</code></pre>
@@ -204,7 +204,7 @@
 
 <button id="button_configuration_fail_verification_on_evicted_log" class="accordion title"><strong>Fail Verification When Event Log Has Evicted Entries</strong></button>
 <div class="panel title">
-    <p>The event log holds at most <a href="#button_configuration_max_log_entries"><code>maxLogEntries</code></a> entries (and at most <code>maxEventLogSizeInBytes</code> of bodies). Once it is full, the oldest entries are discarded to make room for new ones. On a very busy server, log events can also be dropped before they are recorded at all. Either way those entries are gone — they can no longer be retrieved or verified.</p>
+    <p>The event log holds at most <a href="#button_configuration_request_log_size"><code>maxLogEntries</code></a> entries (and at most <code>maxEventLogSizeInBytes</code> of bodies). Once it is full, the oldest entries are discarded to make room for new ones. On a very busy server, log events can also be dropped before they are recorded at all. Either way those entries are gone — they can no longer be retrieved or verified.</p>
     <p>This matters for verifications that assert something did <strong>not</strong> happen. If you call <span class="inline_code">verify(request, never())</span> and the matching entries have been discarded, MockServer cannot tell the difference between "this request was never made" and "this request was made, but the record of it was thrown away". Previously it reported success, so a test asserting an endpoint was never called could quietly turn green simply because the log had filled up.</p>
     <p>If true (the default) a verification that asserts an <strong>upper</strong> bound will fail, rather than pass, when the event log has discarded entries. The failure message lists what was lost since the event log was last reset, how many entries, and the fix for each cause. The dashboard shows the same on the verification's <code>VERIFICATION_FAILED</code> log entry.</p>
     <table>
@@ -226,7 +226,7 @@
         <tbody>
             <tr><td>log events were <strong>DROPPED</strong> &hellip; because the ring buffer was full</td><td>Log events arrived faster than the single logging thread could record them</td><td>Set the log level to <code>WARN</code> or <code>ERROR</code>, which stops non-matching expectations logging at all, or keep the log level and set <a href="#button_configuration_max_logged_match_failures"><code>maxLoggedMatchFailures</code></a> (for example to <code>10</code>) to log fewer of them per request. A larger <code>ringBufferSize</code> only absorbs short bursts.</td></tr>
             <tr><td>log events were <strong>DROPPED</strong> &hellip; exceeded the in-flight byte budget</td><td>The request and response bodies waiting to be logged went over their memory limit</td><td>Set the log level to <code>WARN</code> or <code>ERROR</code>, or, if you have heap to spare, raise <code>maxEventLogSizeInBytes</code> above the budget quoted in the message. <code>maxLoggedBodyBytes</code> does not help here.</td></tr>
-            <tr><td>recorded entries were <strong>EVICTED</strong> &hellip; maximum number of entries</td><td>The log reached <code>maxLogEntries</code> and discarded its oldest entries</td><td>Increase <a href="#button_configuration_max_log_entries"><code>maxLogEntries</code></a>, or set the log level to <code>WARN</code> or <code>ERROR</code> &mdash; each request can log one entry, at <code>INFO</code>, for each expectation that does not match (at most 50 by default), plus two. To keep the log level, set <a href="#button_configuration_max_logged_match_failures"><code>maxLoggedMatchFailures</code></a> lower to log fewer of those entries per request.</td></tr>
+            <tr><td>recorded entries were <strong>EVICTED</strong> &hellip; maximum number of entries</td><td>The log reached <code>maxLogEntries</code> and discarded its oldest entries</td><td>Increase <a href="#button_configuration_request_log_size"><code>maxLogEntries</code></a>, or set the log level to <code>WARN</code> or <code>ERROR</code> &mdash; each request can log one entry, at <code>INFO</code>, for each expectation that does not match (at most 50 by default), plus two. To keep the log level, set <a href="#button_configuration_max_logged_match_failures"><code>maxLoggedMatchFailures</code></a> lower to log fewer of those entries per request.</td></tr>
             <tr><td>recorded entries were <strong>EVICTED</strong> &hellip; maximum size in bytes</td><td>The log reached <code>maxEventLogSizeInBytes</code> and discarded its oldest entries</td><td>Increase <code>maxEventLogSizeInBytes</code>, or set <code>maxLoggedBodyBytes</code> so each recorded entry is smaller.</td></tr>
         </tbody>
     </table>

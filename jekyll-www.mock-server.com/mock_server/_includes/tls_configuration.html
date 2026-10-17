@@ -91,10 +91,10 @@
 <button id="button_configuration_tls_allow_insecure_protocols" class="accordion title"><strong>Allow Insecure TLS Protocols</strong></button>
 <div class="panel title">
     <p>Whether to honour deprecated <span class="inline_code">TLSv1</span> / <span class="inline_code">TLSv1.1</span> entries that appear in <a href="#button_configuration_tls_protocols">tlsProtocols</a>.</p>
-    <p>The default is <span class="this_value">false</span>, so even if TLSv1 or TLSv1.1 are present in <span class="inline_code">tlsProtocols</span> they are stripped before the SSL context is built. Set this to <span class="inline_code">true</span> only if a legacy client genuinely cannot negotiate TLSv1.2/TLSv1.3, together with adding the protocols back to <span class="inline_code">tlsProtocols</span>.</p>
+    <p>The default has been <span class="this_value">false</span> since 8.0.0: any <span class="inline_code">TLSv1</span> or <span class="inline_code">TLSv1.1</span> entries in <span class="inline_code">tlsProtocols</span> are filtered out before the SSL context is built, and the <span class="inline_code">tlsProtocols</span> default is <span class="inline_code">TLSv1.2,TLSv1.3</span>. Set this to <span class="inline_code">true</span> only if a legacy client genuinely cannot negotiate TLSv1.2/TLSv1.3, together with adding the protocols back to <span class="inline_code">tlsProtocols</span>.</p> <!-- version-ref:keep -->
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.tlsAllowInsecureProtocols(true)</code></pre>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.tlsAllowInsecureProtocols(boolean allow)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.tlsAllowInsecureProtocols=...</code></pre>
     <p>Environment Variable:</p>
@@ -126,7 +126,7 @@
 
 <button id="button_configuration_ssl_certificate_domain_name" class="accordion title"><strong>Inbound X.509 Domain Name</strong></button>
 <div class="panel title">
-    <p>The domain name for auto-generate TLS certificates</p>
+    <p>The Common Name (CN) MockServer puts on the auto-generated, dynamically-created inbound TLS certificate it presents to clients. It is also added as the first Subject Alternative Name (SAN) entry alongside any set via <a href="#button_configuration_ssl_subject_alternative_name_domains">sslSubjectAlternativeNameDomains</a>. Change it if your clients connect using a hostname other than <span class="inline_code">localhost</span> (for example a Docker Compose service name or an internal DNS name) and you want that name on the certificate without relying solely on dynamic SAN discovery.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">localhost</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.sslCertificateDomainName(String domainName)</code></pre>
@@ -145,9 +145,11 @@
     <p>The Subject Alternative Name (SAN) domain names for auto-generate TLS certificates as a comma separated list</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">localhost</span></p>
     <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.addSslSubjectAlternativeNameDomains(String... additionalSubjectAlternativeNameDomains)</code></pre>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.sslSubjectAlternativeNameDomains(Set&lt;String&gt; sslSubjectAlternativeNameDomains)</code></pre>
+    <p>On a <span class="inline_code">Configuration</span> instance (per-server, e.g. via <span class="inline_code">ClientAndServer.startClientAndServer(Configuration)</span>), add or clear domains incrementally instead of replacing the whole set:</p>
+    <pre class="prettyprint lang-java code"><code class="code">configuration.addSslSubjectAlternativeNameDomains(String... additionalSubjectAlternativeNameDomains)</code></pre>
     or
-    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.clearSslSubjectAlternativeNameDomains()</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">configuration.clearSslSubjectAlternativeNameDomains()</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslSubjectAlternativeNameDomains=...</code></pre>
     <p>Environment Variable:</p>
@@ -163,9 +165,11 @@
     <p>The Subject Alternative Name (SAN) IP addresses for auto-generate TLS certificates as a comma separated list</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">127.0.0.1,0.0.0.0</span></p>
     <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.addSslSubjectAlternativeNameIps(String... additionalSubjectAlternativeNameIps)</code></pre>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.sslSubjectAlternativeNameIps(Set&lt;String&gt; sslSubjectAlternativeNameIps)</code></pre>
+    <p>On a <span class="inline_code">Configuration</span> instance (per-server, e.g. via <span class="inline_code">ClientAndServer.startClientAndServer(Configuration)</span>), add or clear IPs incrementally instead of replacing the whole set:</p>
+    <pre class="prettyprint lang-java code"><code class="code">configuration.addSslSubjectAlternativeNameIps(String... additionalSubjectAlternativeNameIps)</code></pre>
     or
-    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.clearSslSubjectAlternativeNameIps()</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">configuration.clearSslSubjectAlternativeNameIps()</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.sslSubjectAlternativeNameIps=...</code></pre>
     <p>Environment Variable:</p>
@@ -340,7 +344,8 @@
     <p>When the TLS connection to the upstream cannot be established &mdash; for example its certificate is not trusted, is for another host name, the upstream does not speak TLS, the upstream closes the connection during the handshake, or the handshake takes longer than <span class="inline_code">socketConnectionTimeout</span> &mdash; MockServer answers the request with a <span class="inline_code">502 Bad Gateway</span> whose body says why, such as <span class="inline_code">TLS with the upstream failed: SSLHandshakeException: PKIX path building failed: ...</span>, and logs the failure as an error with the request. An upstream that closes the connection during the handshake, which is also how some servers refuse a TLS version or cipher they do not support, gives <span class="inline_code">TLS with the upstream failed: SSLHandshakeException: upstream closed the connection during the TLS handshake</span>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">ANY</span></p>
     <p>Java Code:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType(String trustManagerType)</code></pre>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager trustManagerType)</code></pre>
+    <p>The parameter is the <span class="inline_code">org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager</span> enum (<span class="inline_code">ANY</span>, <span class="inline_code">JVM</span>, or <span class="inline_code">CUSTOM</span>), not a plain string &mdash; e.g. <span class="inline_code">ConfigurationProperties.forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.CUSTOM)</span>.</p>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyTLSX509CertificatesTrustManagerType=...</code></pre>
     <p>Environment Variable:</p>

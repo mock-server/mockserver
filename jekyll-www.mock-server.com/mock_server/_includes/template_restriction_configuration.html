@@ -40,8 +40,8 @@
 
 <button id="button_configuration_restrict_content_allowed_in_javascript_templates" class="accordion title"><strong>Restrict content allowed in javascript templates</strong></button>
 <div class="panel title">
-    <p>Set comma separate list of text not allowed to be contained in javascript templates</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Comma-separated list of literal substrings that must not appear in a JavaScript response template's source. Each entry is checked with a plain substring (<span class="inline_code">contains</span>) match against the template text, not a regular expression, so matching is exact and case-sensitive. If any listed string is found anywhere in the template, MockServer refuses to run it and throws before evaluating any JavaScript, rather than running a partially-trusted template — use this as a defence-in-depth denylist (for example blocking <span class="inline_code">getRuntime().exec</span>, <span class="inline_code">ProcessBuilder</span>, or filesystem access patterns) alongside <a href="#button_configuration_allow_classes_in_javascript_templates">class allow/deny-listing</a>, not instead of it.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span> (no restriction)</p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.javascriptDisallowedText(String javascriptDisallowedText)</code></pre>
     <p>System Property:</p>
@@ -125,8 +125,8 @@
 
 <button id="button_configuration_restrict_content_allowed_in_velocity_templates" class="accordion title"><strong>Restrict content allowed in velocity templates</strong></button>
 <div class="panel title">
-    <p>Set comma separate list of text not allowed to be contained in velocity templates</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Comma-separated list of literal substrings that must not appear in a Velocity response template's source. Each entry is checked with a plain substring (<span class="inline_code">contains</span>) match, not a regular expression, so matching is exact and case-sensitive. If any listed string is found anywhere in the template, MockServer refuses to run it and throws before evaluating the template — use this as a defence-in-depth denylist (for example blocking <span class="inline_code">request.class</span> or other reflection-style access) alongside <a href="#button_configuration_disable_class_loading_in_velocity_templates">class loading restrictions</a>, not instead of them.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span> (no restriction)</p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.velocityDisallowedText(String velocityDisallowedText)</code></pre>
     <p>System Property:</p>
@@ -141,8 +141,8 @@
     
 <button id="button_configuration_restrict_content_allowed_in_mustache_templates" class="accordion title"><strong>Restrict content allowed in mustache templates</strong></button>
 <div class="panel title">
-    <p>Set comma separate list of text not allowed to be contained in mustache templates</p>
-    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Comma-separated list of literal substrings that must not appear in a Mustache response template's source. Each entry is checked with a plain substring (<span class="inline_code">contains</span>) match, not a regular expression, so matching is exact and case-sensitive. If any listed string is found anywhere in the template, MockServer refuses to run it and throws before evaluating the template — use this as a defence-in-depth denylist, for example <span class="inline_code">{% raw %}{{{,{{&amp;{% endraw %}</span> to block both Mustache forms that render a value unescaped (triple braces and <span class="inline_code">{% raw %}{{&amp;name}}{% endraw %}</span>), if your templates should never emit raw, unescaped output.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span> (no restriction)</p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.mustacheDisallowedText(String mustacheDisallowedText)</code></pre>
     <p>System Property:</p>
@@ -152,7 +152,7 @@
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.mustacheDisallowedText=...</code></pre>
     <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.mustacheDisallowedText="request.method"</code></pre>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.mustacheDisallowedText="{% raw %}{{{{% endraw %}"</code></pre>
 </div>
 
 <button id="button_configuration_template_faker_seed" class="accordion title"><strong>Template faker seed</strong></button>

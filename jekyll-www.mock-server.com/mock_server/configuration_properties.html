@@ -184,13 +184,17 @@ mockserver.enableCORSForAllResponses=false</code></pre>
         <tr><td><a href="#button_configuration_launch_ui__debug">Launch UI When Log Level DEBUG</a></td><td><a href="#logging_configuration">Logging &amp; Metrics</a></td></tr>
         <tr><td><a href="#button_configuration_enabled_metrics">Enable Metrics</a></td><td><a href="#logging_configuration">Logging &amp; Metrics</a></td></tr>
         <tr><td><a href="#button_configuration_log_event_listener">Custom Log Event Listener</a></td><td><a href="#logging_configuration">Logging &amp; Metrics</a></td></tr>
+        <tr><td><a href="#button_configuration_fail_verification_on_evicted_log">Fail Verification When Event Log Has Evicted Entries</a></td><td><a href="#logging_configuration">Logging &amp; Metrics</a></td></tr>
         <tr><td><a href="#button_configuration_dev_mode">Dev Mode</a></td><td><a href="#dev_mode_configuration">Developer Mode</a></td></tr>
         <tr><td><a href="#button_configuration_max_expectations">Maximum Expectations To Hold In Memory</a></td><td><a href="#memory_configuration">Memory Usage</a></td></tr>
+        <tr><td><a href="#button_configuration_max_expectations_size_in_bytes">Maximum Expectations Size In Bytes</a></td><td><a href="#memory_configuration">Memory Usage</a></td></tr>
         <tr><td><a href="#button_configuration_request_log_size">Maximum Log Entries To Hold In Memory</a></td><td><a href="#memory_configuration">Memory Usage</a></td></tr>
         <tr><td><a href="#button_configuration_ring_buffer_size">Log Event Ring Buffer Size</a></td><td><a href="#memory_configuration">Memory Usage</a></td></tr>
         <tr><td><a href="#button_configuration_max_event_log_size_in_bytes">Maximum Event Log Size In Bytes</a></td><td><a href="#memory_configuration">Memory Usage</a></td></tr>
         <tr><td><a href="#button_configuration_max_logged_body_bytes">Maximum Logged Body Bytes Per Entry</a></td><td><a href="#memory_configuration">Memory Usage</a></td></tr>
         <tr><td><a href="#button_configuration_max_web_socket_expectations">Maximum WebSockets For Object Callback Expectations</a></td><td><a href="#memory_configuration">Memory Usage</a></td></tr>
+        <tr><td><a href="#button_configuration_web_socket_proxy_max_recorded_frames">Maximum Recorded Frames Per Proxied WebSocket</a></td><td><a href="#memory_configuration">Memory Usage</a></td></tr>
+        <tr><td><a href="#button_configuration_web_socket_proxy_idle_timeout_seconds">Proxied WebSocket Idle Timeout</a></td><td><a href="#memory_configuration">Memory Usage</a></td></tr>
         <tr><td><a href="#button_configuration_log_memory_statistics">Output JVM Memory Usage</a></td><td><a href="#memory_configuration">Memory Usage</a></td></tr>
         <tr><td><a href="#button_configuration_memory_statistics_directory">Directory For Outputting JVM Memory Usage</a></td><td><a href="#memory_configuration">Memory Usage</a></td></tr>
         <tr><td><a href="#button_configuration_connection_delay_millis">Connection Delay</a></td><td><a href="#memory_configuration">Performance</a></td></tr>
@@ -206,6 +210,10 @@ mockserver.enableCORSForAllResponses=false</code></pre>
         <tr><td><a href="#button_configuration_client_nio_event_loop_thread_count">Number of Client Event Loop Threads</a></td><td><a href="#memory_configuration">Performance</a></td></tr>
         <tr><td><a href="#button_configuration_web_socket_event_loop_thread_count">Number of Client Web Socket Event Loop Threads</a></td><td><a href="#memory_configuration">Performance</a></td></tr>
         <tr><td><a href="#button_configuration_matchers_fail_fast">Request Matchers Fail Fast</a></td><td><a href="#memory_configuration">Performance</a></td></tr>
+        <tr><td><a href="#button_configuration_candidate_index_threshold">Candidate-Index Engagement Threshold (advanced)</a></td><td><a href="#memory_configuration">Performance</a></td></tr>
+        <tr><td><a href="#button_configuration_max_future_timeout">Maximum Future Timeout In Millis</a></td><td><a href="#memory_configuration">Performance</a></td></tr>
+        <tr><td><a href="#button_configuration_load_generation_metric_labels">Load Generation Metric Labels</a></td><td><a href="#memory_configuration">Performance</a></td></tr>
+        <tr><td><a href="#button_configuration_server_port">Server Port</a></td><td><a href="#socket_configuration">Socket</a></td></tr>
         <tr><td><a href="#button_configuration_http3_port">HTTP/3 (QUIC) Port</a></td><td><a href="#socket_configuration">Socket</a></td></tr>
         <tr><td><a href="#button_configuration_http3_max_idle_timeout">HTTP/3 Max Idle Timeout</a></td><td><a href="#socket_configuration">Socket</a></td></tr>
         <tr><td><a href="#button_configuration_http3_initial_max_data">HTTP/3 Initial Max Data</a></td><td><a href="#socket_configuration">Socket</a></td></tr>
@@ -225,6 +233,7 @@ mockserver.enableCORSForAllResponses=false</code></pre>
         <tr><td><a href="#button_configuration_max_header_size">Maximum HTTP Request Header Size</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_max_chunk_size">Maximum HTTP Request Chunk Size</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_max_request_body_size">Maximum Inbound Request Body Size</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
+        <tr><td><a href="#button_configuration_max_grpc_message_size">Maximum gRPC Message Size</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_max_response_body_size">Maximum Upstream Response Body Size</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_regex_matching_timeout_millis">Regex Matching Timeout</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_xpath_matching_timeout_millis">XPath Matching Timeout</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
@@ -233,7 +242,9 @@ mockserver.enableCORSForAllResponses=false</code></pre>
         <tr><td><a href="#button_configuration_attach_mismatch_diagnostic_to_response">Attach Mismatch Diagnostic To Unmatched Response</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_closest_match_hint_enabled">Closest Match Hint On Unmatched Response</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_forward_proxy_block_private_networks">Block Forwarding To Private Networks (SSRF Protection)</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
-        <tr><td><a href="#button_configuration_tls_allow_insecure_protocols">Allow Insecure TLS Protocols</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
+        <tr><td><a href="#button_configuration_tls_allow_insecure_protocols">Allow Insecure TLS Protocols</a></td><td><a href="#tls_configuration">TLS</a></td></tr>
+        <tr><td><a href="#button_configuration_max_subject_alternative_names">Maximum Dynamic Subject Alternative Names</a></td><td><a href="#tls_configuration">TLS</a></td></tr>
+        <tr><td><a href="#button_configuration_forward_proxy_hostname_verification">Outbound Host Name Verification</a></td><td><a href="#tls_configuration">TLS</a></td></tr>
         <tr><td><a href="#button_configuration_treat_semicolon_as_query_parameter_separator">Treat Semicolon As Query Parameter Separator</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_startup_warmup">Startup Warmup</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_assume_all_requests_are_http">Assume All Requests Are HTTP</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
@@ -252,17 +263,21 @@ mockserver.enableCORSForAllResponses=false</code></pre>
         <tr><td><a href="#button_configuration_cors_allow_credentials">CORS Allow Credentials Value</a></td><td><a href="#http_request_size_configuration">CORS</a></td></tr>
         <tr><td><a href="#button_configuration_cors_max_age">CORS Max Age Value</a></td><td><a href="#http_request_size_configuration">CORS</a></td></tr>
         <tr><td><a href="#button_configuration_default_response_headers">Default Response Headers</a></td><td><a href="#default_response_headers_configuration">Default Response Headers</a></td></tr>
+        <tr><td><a href="#button_configuration_allow_classes_in_javascript_templates">Allow Only Specific Classes In JavaScript Templates</a></td><td><a href="#default_response_headers_configuration">Template Restrictions</a></td></tr>
         <tr><td><a href="#button_configuration_disable_classes_in_javascript_templates">Disable Classes In JavaScript Templates</a></td><td><a href="#default_response_headers_configuration">Template Restrictions</a></td></tr>
         <tr><td><a href="#button_configuration_restrict_content_allowed_in_javascript_templates">Restrict Content In JavaScript Templates</a></td><td><a href="#default_response_headers_configuration">Template Restrictions</a></td></tr>
         <tr><td><a href="#button_configuration_javascript_template_execution_timeout">JavaScript Template Execution Timeout</a></td><td><a href="#default_response_headers_configuration">Template Restrictions</a></td></tr>
         <tr><td><a href="#button_configuration_template_faker_seed">Template Faker Seed</a></td><td><a href="#default_response_headers_configuration">Template Restrictions</a></td></tr>
         <tr><td><a href="#button_configuration_disable_class_loading_in_velocity_templates">Disable Class Loading In Velocity Templates</a></td><td><a href="#default_response_headers_configuration">Template Restrictions</a></td></tr>
+        <tr><td><a href="#button_configuration_velocity_template_execution_timeout">Velocity Template Execution Timeout</a></td><td><a href="#default_response_headers_configuration">Template Restrictions</a></td></tr>
+        <tr><td><a href="#button_configuration_template_failure_as_server_error">Answer A Failed Template With A 500</a></td><td><a href="#default_response_headers_configuration">Template Restrictions</a></td></tr>
         <tr><td><a href="#button_configuration_restrict_content_allowed_in_velocity_templates">Restrict Content In Velocity Templates</a></td><td><a href="#default_response_headers_configuration">Template Restrictions</a></td></tr>
         <tr><td><a href="#button_configuration_restrict_content_allowed_in_mustache_templates">Restrict Content In Mustache Templates</a></td><td><a href="#default_response_headers_configuration">Template Restrictions</a></td></tr>
         <tr><td><a href="#button_configuration_initialization_class">Expectation Initialization Class</a></td><td><a href="#proxy_configuration">Initializer &amp; Persistence</a></td></tr>
         <tr><td><a href="#button_configuration_initialization_json_path">Expectation Initialization JSON File Path</a></td><td><a href="#proxy_configuration">Initializer &amp; Persistence</a></td></tr>
         <tr><td><a href="#button_configuration_initialization_openapi_path">Expectation Initialization OpenAPI File Path</a></td><td><a href="#proxy_configuration">Initializer &amp; Persistence</a></td></tr>
         <tr><td><a href="#button_configuration_watch_initialization_json">Watch Expectation Initialization Files</a></td><td><a href="#proxy_configuration">Initializer &amp; Persistence</a></td></tr>
+        <tr><td><a href="#button_configuration_watch_initialization_json_poll_period_millis">Watch Expectation Initialization Files Poll Period</a></td><td><a href="#proxy_configuration">Initializer &amp; Persistence</a></td></tr>
         <tr><td><a href="#button_configuration_fail_on_initialization_error">Fail On Initialization Error</a></td><td><a href="#proxy_configuration">Initializer &amp; Persistence</a></td></tr>
         <tr><td><a href="#button_configuration_persist_expectations_as_json">Persist Expectations As JSON</a></td><td><a href="#proxy_configuration">Initializer &amp; Persistence</a></td></tr>
         <tr><td><a href="#button_configuration_persisted_expectations_file_path">Persisted Expectations File Path</a></td><td><a href="#proxy_configuration">Initializer &amp; Persistence</a></td></tr>
@@ -286,6 +301,7 @@ mockserver.enableCORSForAllResponses=false</code></pre>
         <tr><td><a href="#button_configuration_forward_socket_keep_alive_idle_seconds">Forward Upstream TCP Keepalive Idle Seconds</a></td><td><a href="#proxy_configuration">Proxying</a></td></tr>
         <tr><td><a href="#button_configuration_forward_socket_keep_alive_interval_seconds">Forward Upstream TCP Keepalive Interval Seconds</a></td><td><a href="#proxy_configuration">Proxying</a></td></tr>
         <tr><td><a href="#button_configuration_forward_socket_keep_alive_count">Forward Upstream TCP Keepalive Probe Count</a></td><td><a href="#proxy_configuration">Proxying</a></td></tr>
+        <tr><td><a href="#button_configuration_forward_loop_max_hops">Forward Loop Limit</a></td><td><a href="#proxy_configuration">Proxying</a></td></tr>
         <tr><td><a href="#button_configuration_forward_proxy_http2_enabled">Forward Upstream Requests Using HTTP/2</a></td><td><a href="#proxy_configuration">Proxying</a></td></tr>
         <tr><td><a href="#button_configuration_forward_proxy_http2_upgrade">Upgrade Forwarded Requests To HTTP/2</a></td><td><a href="#proxy_configuration">Proxying</a></td></tr>
         <tr><td><a href="#button_configuration_forward_proxy_retry_count">Retry Forwarded Requests On Transient Failure</a></td><td><a href="#proxy_configuration">Proxying</a></td></tr>
@@ -316,7 +332,7 @@ mockserver.enableCORSForAllResponses=false</code></pre>
         <tr><td><a href="#button_configuration_data_plane_api_key_authentication_value">Data Plane API Key Value</a></td><td><a href="#data_plane_authentication_configuration">Data Plane Authentication</a></td></tr>
         <tr><td><a href="#button_configuration_streaming_responses_enabled">Streaming Responses Enabled</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
         <tr><td><a href="#button_configuration_max_streaming_capture_bytes">Maximum Streaming Response Body Capture</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
-        <tr><td><a href="#button_configuration_max_llm_conversation_body_size">Maximum LLM Conversation Body Size</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
+        <tr><td><a href="#button_configuration_max_llm_conversation_body_size">Maximum LLM Conversation Body Size</a></td><td><a href="#memory_configuration">Performance</a></td></tr>
         <tr><td><a href="#button_configuration_llm_backend">Runtime LLM Backend (optional)</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
         <tr><td><a href="#button_configuration_llm_vcr">LLM Fixture (VCR) Recording &amp; Replay</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
         <tr><td><a href="#button_configuration_drift">Drift Detection</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
@@ -330,10 +346,12 @@ mockserver.enableCORSForAllResponses=false</code></pre>
         <tr><td><a href="#button_configuration_slo_verdicts">SLO Verdicts</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
         <tr><td><a href="#button_configuration_load_generation">Load Generation</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
         <tr><td><a href="#button_configuration_llm_metrics">LLM Token &amp; Cost Metrics</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
+        <tr><td><a href="#button_configuration_max_open_ai_responses_size_in_bytes">Maximum OpenAI Responses Store Size</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
         <tr><td><a href="#button_configuration_per_expectation_metrics">Per-Expectation Match Counters</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
-        <tr><td><a href="#button_configuration_slow_request_threshold_millis">Slow Request Threshold</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
-        <tr><td><a href="#button_configuration_metrics_request_duration_route_labels">Metrics Request Duration Route Labels</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
+        <tr><td><a href="#button_configuration_slow_request_threshold_millis">Slow Request Threshold</a></td><td><a href="#logging_configuration">Logging &amp; Metrics</a></td></tr>
+        <tr><td><a href="#button_configuration_metrics_request_duration_route_labels">Metrics Request Duration Route Labels</a></td><td><a href="#logging_configuration">Logging &amp; Metrics</a></td></tr>
         <tr><td><a href="#button_configuration_redact_secrets_in_recorded_expectations">Redact Secrets In Recorded Expectations</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
+        <tr><td><a href="#button_configuration_deduplicate_recorded_expectations">Deduplicate Recorded Expectations</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
         <tr><td><a href="#button_configuration_templatize_recorded_values">Templatize Recorded Values</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
         <tr><td><a href="#button_configuration_redact_secrets_in_log">Redact Secrets In Event Log &amp; Dashboard</a></td><td><a href="#streaming_proxy_configuration">Streaming Proxy</a></td></tr>
         <tr><td><a href="#button_configuration_dashboard_analytics_enabled">Dashboard Analytics Enabled</a></td><td><a href="#dashboard_analytics_configuration">Dashboard Analytics</a></td></tr>
@@ -361,12 +379,14 @@ mockserver.enableCORSForAllResponses=false</code></pre>
         <tr><td><a href="#button_configuration_mcp_enabled">Enable MCP Endpoint</a></td><td><a href="#mcp_configuration">MCP</a></td></tr>
         <tr><td><a href="#button_configuration_wasm_enabled">Enable WASM Body Matching</a></td><td><a href="#wasm_configuration">WASM</a></td></tr>
         <tr><td><a href="#button_configuration_wasm_max_memory_pages">WASM Maximum Memory Pages</a></td><td><a href="#wasm_configuration">WASM</a></td></tr>
+        <tr><td><a href="#button_configuration_wasm_execution_timeout_millis">WASM Execution Timeout</a></td><td><a href="#wasm_configuration">WASM</a></td></tr>
         <tr><td><a href="#button_configuration_grpc_enabled">Enable gRPC Support</a></td><td><a href="#grpc_configuration">gRPC</a></td></tr>
         <tr><td><a href="#button_configuration_grpc_descriptor_directory">gRPC Descriptor Directory</a></td><td><a href="#grpc_configuration">gRPC</a></td></tr>
         <tr><td><a href="#button_configuration_grpc_proto_directory">gRPC Proto Source Directory</a></td><td><a href="#grpc_configuration">gRPC</a></td></tr>
         <tr><td><a href="#button_configuration_grpc_protoc_path">gRPC Protoc Path</a></td><td><a href="#grpc_configuration">gRPC</a></td></tr>
         <tr><td><a href="#button_configuration_dns_enabled">Enable DNS Mocking</a></td><td><a href="#dns_configuration">DNS</a></td></tr>
         <tr><td><a href="#button_configuration_dns_port">DNS Port</a></td><td><a href="#dns_configuration">DNS</a></td></tr>
+        <tr><td><a href="#button_configuration_dns_response_limits">DNS Response Size and Record Limits</a></td><td><a href="#dns_configuration">DNS</a></td></tr>
         <tr><td><a href="#button_configuration_transparent_proxy_enabled">Transparent Proxy Enabled</a></td><td><a href="#service_mesh_configuration">Service Mesh</a></td></tr>
         <tr><td><a href="#button_configuration_transparent_proxy_tproxy">Transparent Proxy TPROXY Mode</a></td><td><a href="#service_mesh_configuration">Service Mesh</a></td></tr>
         <tr><td><a href="#button_configuration_transparent_proxy_ebpf">Transparent Proxy eBPF Original Destination Resolution</a></td><td><a href="#service_mesh_configuration">Service Mesh</a></td></tr>
@@ -394,6 +414,17 @@ mockserver.enableCORSForAllResponses=false</code></pre>
         <tr><td><a href="#button_configuration_control_plane_mtls_authentication_ca_chain">Control Plane mTLS Authentication CA Chain</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
         <tr><td><a href="#button_configuration_control_plane_mtls_authentication_private_key_path">Control Plane mTLS Authentication Client Private Key</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
         <tr><td><a href="#button_configuration_control_plane_mtls_authentication_certificate_path">Control Plane mTLS Authentication Client Certificate</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
+        <tr><td><a href="#button_configuration_control_plane_jwt_authentication_required">Enabled Control Plane JWT Authentication</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
+        <tr><td><a href="#button_configuration_control_plane_jwt_authentication_jwk_source">Control Plane JWT Authentication JWK Source</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
+        <tr><td><a href="#button_configuration_control_plane_jwt_authentication_required_audience">Control Plane JWT Authentication Required Audience</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
+        <tr><td><a href="#button_configuration_control_plane_jwt_authentication_required_claims">Control Plane JWT Authentication Required Claims</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
+        <tr><td><a href="#button_configuration_control_plane_jwt_authentication_matching_claims">Control Plane JWT Authentication Matching Claims</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
+        <tr><td><a href="#button_configuration_control_plane_oidc_authentication_required">Enabled Control Plane OIDC Authentication</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
+        <tr><td><a href="#button_configuration_control_plane_oidc_issuer">Control Plane OIDC Issuer</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
+        <tr><td><a href="#button_configuration_control_plane_oidc_jwks_uri">Control Plane OIDC JWKS URI</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
+        <tr><td><a href="#button_configuration_control_plane_oidc_audience">Control Plane OIDC Audience</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
+        <tr><td><a href="#button_configuration_control_plane_oidc_required_scopes">Control Plane OIDC Required Scopes</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
+        <tr><td><a href="#button_configuration_control_plane_oidc_scope_claim">Control Plane OIDC Scope Claim</a></td><td><a href="#control_plane_authentication_configuration">Control Plane Authentication</a></td></tr>
         <tr><td><a href="#button_configuration_dynamically_create_ca_certificate">Dynamically Create Inbound Certificate Authority X.509</a></td><td><a href="#tls_configuration">TLS</a></td></tr>
         <tr><td><a href="#button_configuration_directory_to_save_dynamic_ssl_certificates">Directory To Save Dynamic CA X.509 and Private Key</a></td><td><a href="#tls_configuration">TLS</a></td></tr>
         <tr><td><a href="#button_configuration_proactively_initialise_tls">Proactively Initialise TLS During Start Up</a></td><td><a href="#tls_configuration">TLS</a></td></tr>
@@ -435,6 +466,8 @@ mockserver.enableCORSForAllResponses=false</code></pre>
 <h2>Settings Properties</h2>
 
 <p><strong>Note:</strong> configuration properties loaded from property files and environment variables are read once at startup and cached. Changes to property files or environment variables after MockServer has started will not take effect. To change configuration at runtime, use the REST API (<span class="inline_code">PUT /mockserver/configuration</span>) or programmatic <span class="inline_code">ConfigurationProperties</span> method calls. System property changes via <span class="inline_code">ConfigurationProperties</span> static methods are read dynamically for properties that support runtime changes (e.g., <span class="inline_code">logLevel</span>).</p>
+
+<p><strong>What you can rely on with <span class="inline_code">PUT /mockserver/configuration</span>:</strong> changes take effect for request handling immediately, however MockServer was started — command line, Docker, the Maven plugin, <span class="inline_code">ClientAndServer</span>, the JUnit integrations, or Spring. If the request changes authentication or TLS settings, those switch over all at once — there is no moment where part of the change has applied and part has not. If a request is rejected (for example an invalid certificate path, or a negative value for a setting that must not be negative), it answers <span class="inline_code">400</span> and leaves the configuration exactly as it was before the request.</p>
 
 <p><strong>See also:</strong> <a href="/mock_server/chaos_testing.html">Chaos Testing &amp; Fault Injection</a> for injecting errors, latency, and outages into mocked and proxied responses using declarative chaos profiles.</p>
 
@@ -621,6 +654,23 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxExpectations="2000"</code></pre>
 </div>
 
+<button id="button_configuration_max_expectations_size_in_bytes" class="accordion title"><strong>Maximum Expectations Size In Bytes</strong></button>
+<div class="panel title">
+    <p>Maximum total estimated size in bytes of the expectations held in memory before the oldest, lowest-priority ones are evicted to stay within the budget. This bounds memory when individual expectations are large (big request-matcher or response bodies), which <span class="inline_code">maxExpectations</span> cannot, since a count cap treats a 10 MB expectation the same as a 10-byte one. A JSON request matcher is the heaviest case: it is parsed into a retained node tree many times the size of the raw JSON.</p>
+    <p><strong>Off (0) by default</strong>, so expectations are bounded only by <span class="inline_code">maxExpectations</span> unless you set this. It is opt-in because expectations are state you configured, not observational data — evicting one silently removes a mock you added. Turn it on if you register many large expectations and want a hard memory ceiling; a reasonable starting point is about an eighth of the JVM heap (leaving room for the request log, Netty buffers and the working set). When set, whichever of <span class="inline_code">maxExpectations</span> or this is reached first evicts, and the eviction is announced once per server in the log.</p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">0</span> (disabled)</p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxExpectationsSizeInBytes(long bytes)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxExpectationsSizeInBytes=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAX_EXPECTATIONS_SIZE_IN_BYTES=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxExpectationsSizeInBytes=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxExpectationsSizeInBytes="33554432"</code></pre>
+</div>
+
 <button id="button_configuration_request_log_size" class="accordion title"><strong>Maximum Log Entries To Hold In Memory</strong></button>
 <div class="panel title">
     <p>Maximum number of log entries to hold in memory, this includes recorded requests, expectation match failures and other log entries. Log entries are stored in a circular queue so once this limit is reached the oldest entries are overwritten. The lower the log level the more log entries will be captured, particularly at TRACE level logging.</p>
@@ -791,6 +841,25 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 <a id="socket_configuration" class="anchor" href="#socket_configuration">&nbsp;</a>
 
 <h2>Socket Configuration:</h2>
+
+<button id="button_configuration_server_port" class="accordion title"><strong>Server Port</strong></button>
+<div class="panel title">
+    <p>The port (or comma-separated list of ports) MockServer listens on for incoming requests. Port unification means the same port serves HTTP, HTTPS, and proxying (forward, transparent, and binary) traffic simultaneously &mdash; there is no separate proxy port to configure. Each port given starts its own listener; set several to bind more than one port, for example to run a mock on one port and a transparent proxy on another.</p>
+    <p>Set it when starting the server (CLI argument, system property, environment variable, properties file, or the port arguments passed to <span class="inline_code">ClientAndServer.startClientAndServer(...)</span> / the <span class="inline_code">ClientAndServer</span> and <span class="inline_code">MockServer</span> constructors). See <a href="/mock_server/running_mock_server.html">Running MockServer</a> for every way to start it.</p>
+    <p>Type: <span class="keyword">int</span> (or comma-separated list) Default: required for the command line, Docker, and the Maven plugin &mdash; the official Docker image sets it to <span class="this_value">1080</span></p>
+    <p>CLI Argument:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-p 1080</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.serverPort=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_SERVER_PORT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.serverPort=...</code></pre>
+    <p>Docker:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">docker run -d --rm -p 1080:1080 -e MOCKSERVER_SERVER_PORT=1080 mockserver/mockserver</code></pre>
+    <p>Example (multiple ports):</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-p 1080,1081</code></pre>
+</div>
 
 <button id="button_configuration_http3_port" class="accordion title"><strong>HTTP/3 (QUIC) Port</strong></button>
 <div class="panel title">
@@ -1314,23 +1383,6 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyBlockPrivateNetworks="true"</code></pre>
 </div>
 
-<button id="button_configuration_tls_allow_insecure_protocols" class="accordion title"><strong>Allow Insecure TLS Protocols</strong></button>
-<div class="panel title">
-    <p>Whether to honour TLSv1 and TLSv1.1 in <code>tlsProtocols</code>. Both protocols are deprecated by RFC 8996 and vulnerable to BEAST and POODLE.</p>
-    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
-    <p>The default has been <span class="inline_code">false</span> since 8.0.0: any <span class="inline_code">TLSv1</span> or <span class="inline_code">TLSv1.1</span> entries in <span class="inline_code">tlsProtocols</span> are filtered out before the SSL context is built, and the <span class="inline_code">tlsProtocols</span> default is <span class="inline_code">TLSv1.2,TLSv1.3</span>. To accept clients that only speak TLSv1 or TLSv1.1, set this to <span class="inline_code">true</span> and add those protocols to <span class="inline_code">tlsProtocols</span>.</p> <!-- version-ref:keep -->
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.tlsAllowInsecureProtocols(boolean allow)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.tlsAllowInsecureProtocols=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_TLS_ALLOW_INSECURE_PROTOCOLS=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.tlsAllowInsecureProtocols=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.tlsAllowInsecureProtocols="false"</code></pre>
-</div>
-
 <button id="button_configuration_treat_semicolon_as_query_parameter_separator" class="accordion title"><strong>Treat Semicolon As Query Parameter Separator</strong></button>
 <div class="panel title">
     <p>If true semicolons are treated as a separator for a query parameter string, if false the semicolon is treated as a normal character that is part of a query parameter value.</p>
@@ -1562,6 +1614,8 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <p>Use this flag for any shared, persistent, or team-facing setup. Without it, MockServer uses the built-in default CA whose private key is published in the MockServer git repository — safe only for isolated local development.</p>
     <p>For standalone launches (JAR, Docker, CLI), the startup "Proxy Setup" log block and the <span class="inline_code">mockserver-ca.pem</span> file are written automatically. The CA certificate and proxy configuration are always available on demand from <span class="inline_code">GET /mockserver/proxyConfiguration</span>, regardless of how MockServer was started.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxySetup(boolean enable)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxySetup=...</code></pre>
     <p>Environment Variable:</p>
@@ -1578,6 +1632,8 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <p>The default is <span class="this_value">false</span>, but the <strong>standalone launcher</strong> (the executable JAR, Docker image, and <span class="inline_code">mockserver</span> CLI) automatically enables this at startup, so anyone running MockServer as a proxy sees the block without any extra configuration. Embedded usage (<span class="inline_code">new ClientAndServer(...)</span> inside a test suite) stays silent by default to avoid polluting test output on every JUnit run; set this to <span class="inline_code">true</span> explicitly if the block is needed in embedded mode.</p>
     <p>When this setting is enabled, MockServer writes the CA certificate to <span class="inline_code">mockserver-ca.pem</span> in the dynamic-SSL directory at startup and prints the "Proxy Setup" log block. When this setting is disabled (e.g. embedded usage), the CA file is instead written on the first call to <span class="inline_code">GET /mockserver/proxyConfiguration</span>. The endpoint itself is always available regardless of this setting.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span> (auto-enabled by the standalone launcher)</p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxySetupLogging(boolean enable)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.proxySetupLogging=...</code></pre>
     <p>Environment Variable:</p>
@@ -2079,7 +2135,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
 
 <button id="button_configuration_proxy_authentication_realm" class="accordion title"><strong>Realm For Proxy Authentication to MockServer</strong></button>
 <div class="panel title">
-    <p>The authentication realm for proxy authentication to MockServer</p>
+    <p>The realm name MockServer advertises in the <span class="inline_code">Proxy-Authenticate</span> header of a <span class="inline_code">407 Proxy Authentication Required</span> response, when a client connects to MockServer as a forward/HTTP proxy without the expected credentials (<a href="#button_configuration_proxy_authentication_username">proxyAuthenticationUsername</a> / <a href="#button_configuration_proxy_authentication_password">proxyAuthenticationPassword</a>). This is purely a client-facing label &mdash; most HTTP clients display or log it, but it has no effect on whether authentication succeeds. Change it only to customise what a connecting client sees in its proxy-authentication prompt or error.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">MockServer HTTP Proxy</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.proxyAuthenticationRealm(String proxyAuthenticationRealm)</code></pre>
@@ -2403,22 +2459,6 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxStreamingCaptureBytes="524288"</code></pre>
 </div>
 
-<button id="button_configuration_max_llm_conversation_body_size" class="accordion title"><strong>Maximum LLM Conversation Body Size</strong></button>
-<div class="panel title">
-    <p>The maximum inbound request body size (in bytes) that LLM conversation-aware matchers will parse when evaluating predicates such as <span class="inline_code">whenLatestMessageContains</span> or <span class="inline_code">whenContainsToolResultFor</span>. Requests larger than this value skip conversation-aware parsing entirely and are treated as no-match by those predicates, which protects the matcher from crafted JSON inputs designed to consume CPU or memory. Values outside the supported range are clamped at startup.</p>
-    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">1048576</span> (1 MiB) Range: <span class="this_value">[16384, 67108864]</span> (16 KiB – 64 MiB)</p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.maxLlmConversationBodySize(int bytes)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxLlmConversationBodySize=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_MAX_LLM_CONVERSATION_BODY_SIZE=...</code></pre>
-    <p>Property File:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">mockserver.maxLlmConversationBodySize=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.maxLlmConversationBodySize="2097152"</code></pre>
-</div>
-
 <button id="button_configuration_max_open_ai_responses_size_in_bytes" class="accordion title"><strong>Maximum OpenAI Responses Store Size</strong></button>
 <div class="panel title">
     <p>An <span class="inline_code">OPENAI_RESPONSES</span> mock keeps each response it returns, streamed or not, so a client can continue the conversation with <span class="inline_code">previous_response_id</span> or fetch the response again with <span class="inline_code">GET /v1/responses/{id}</span>, as the real OpenAI Responses API allows. Each kept response includes the <span class="inline_code">tools</span>, <span class="inline_code">instructions</span> and <span class="inline_code">metadata</span> the request sent, so an agent that sends large tool definitions on every turn can make these responses hold a lot of memory.</p>
@@ -2445,7 +2485,7 @@ mockserver.enableCORSForAllResponses=true</code></pre>
         <li><strong>A single default backend</strong> via the properties below.</li>
         <li><strong>Named backends</strong> via a JSON file (<span class="inline_code">mockserver.llmBackendsConfig</span>) for multiple or advanced setups.</li>
     </ol>
-    <p>Supported providers reuse the existing provider list: Anthropic, OpenAI, OpenAI Responses, Gemini, Azure OpenAI, Ollama, and Bedrock. Ollama is the easiest to start with — it needs no key and runs locally. The API key is a secret and is redacted (<span class="inline_code">***</span>) anywhere configuration is logged.</p>
+    <p><span class="inline_code">llmProvider</span> selects which backend <span class="inline_code">llmApiKey</span> / <span class="inline_code">llmModel</span> / <span class="inline_code">llmBaseUrl</span> talk to, and accepts one of the <span class="inline_code">Provider</span> enum names: <span class="inline_code">ANTHROPIC</span>, <span class="inline_code">OPENAI</span>, <span class="inline_code">OPENAI_RESPONSES</span>, <span class="inline_code">GEMINI</span>, <span class="inline_code">AZURE_OPENAI</span>, <span class="inline_code">OLLAMA</span>, or <span class="inline_code">BEDROCK</span>. Ollama is the easiest to start with — it needs no key and runs locally. <span class="inline_code">llmModel</span> overrides the provider's default model (for example <span class="inline_code">gpt-4o</span>, <span class="inline_code">claude-sonnet-4-5</span>, or an Ollama-pulled model name); leave it empty to use the provider's own default. <span class="inline_code">llmBaseUrl</span> overrides the provider's default API endpoint — set it to point at a self-hosted or proxied endpoint (for example a local Ollama server, or an OpenAI-compatible gateway); leave it empty to use the provider's standard endpoint. The API key is a secret and is redacted (<span class="inline_code">***</span>) anywhere configuration is logged.</p>
     <p><span class="inline_code">llmBackendsConfig</span> takes the <strong>path</strong> of a backends JSON file, and the path is shown as you set it &mdash; the keys live in the file, which MockServer never returns. If you set the JSON document itself as the value instead, every <span class="inline_code">apiKey</span> in it is masked with <span class="inline_code">***REDACTED***</span> when the configuration is read back, and the rest of the document is shown so you can still see which backends are configured. A value that contains JSON but cannot be read as exactly one document is masked in full rather than shown, so nothing hidden inside it can leak. Sending a masked document back is safe, but if you rename or re-order a backend whose key you only ever saw masked, MockServer can no longer tell which key belongs to it &mdash; it then applies none of the document and logs a warning, rather than saving a backend with its key silently removed. Supply that backend's real key alongside the rename.</p>
     <p>Type: <span class="keyword">String</span> Default: <span class="this_value">unset</span> (runtime-LLM features disabled)</p>
     <p>Java Code:</p>
@@ -2461,9 +2501,10 @@ ConfigurationProperties.llmRequestTimeoutMillis(long millis)</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_LLM_PROVIDER=... MOCKSERVER_LLM_API_KEY=... MOCKSERVER_LLM_MODEL=... MOCKSERVER_LLM_BASE_URL=... MOCKSERVER_LLM_BACKENDS_CONFIG=... MOCKSERVER_LLM_REQUEST_TIMEOUT_MILLIS=...</code></pre>
     <p>Property File:</p>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.llmProvider=OLLAMA
-mockserver.llmRequestTimeoutMillis=30000</code></pre>
+mockserver.llmRequestTimeoutMillis=15000</code></pre>
     <p>Example (OpenAI default backend):</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.llmProvider="OPENAI" -Dmockserver.llmApiKey="sk-..."</code></pre>
+    <p><strong>Request timeout</strong> &mdash; <span class="inline_code">llmRequestTimeoutMillis</span> caps how long MockServer waits for each outbound call to the configured backend above (drift-detection replay, semantic matching, or explain narration). A backend's own <span class="inline_code">timeoutMillis</span>, when set in <span class="inline_code">llmBackendsConfig</span>, overrides this default for that named backend. Lower it to fail fast against an unreachable or slow backend; raise it for a locally-run model (e.g. Ollama on CPU) that can take longer to respond. Because these features fail closed, a timeout is treated the same as the feature being unconfigured &mdash; it never fails the mocked request. Type: <span class="keyword">long</span> Default: <span class="this_value">30000</span> (30 seconds)</p>
     <p><strong>Exploratory semantic matching</strong> &mdash; opt in to the fuzzy, LLM-judged <code>semanticMatch</code> conversation predicate. Off by default and ignored unless a backend (above) also resolves. It calls a live model to judge intent, so it is <strong>non-deterministic and must never gate a CI assertion</strong> &mdash; use it for exploration only. Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.llmSemanticMatchingEnabled(boolean enabled)</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.llmSemanticMatchingEnabled=... &nbsp; MOCKSERVER_LLM_SEMANTIC_MATCHING_ENABLED=...</code></pre>
@@ -2715,8 +2756,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
 
 <button id="button_configuration_control_plane_authorization" class="accordion title"><strong>Control-Plane Authorization</strong></button>
 <div class="panel title">
-    <p>Authorize control-plane operations against a scope-to-operation mapping, so fine-grained token scopes can gate individual admin actions (for example, allowing some callers to read mock state but not change it). This builds on <a href="#button_configuration_control_plane_oidc">Control-Plane OIDC Authentication</a> &mdash; a verified principal is required &mdash; and is off by default.</p>
-    <p><strong>Authorization enabled</strong> &mdash; when <code>true</code>, control-plane operations are authorized against the scope-to-operation mapping below. When <code>false</code> (the default) no per-operation authorization is applied.</p>
+    <p>Enable coarse role-based authorization of control-plane requests, mapping a verified principal's OIDC scopes/groups to one of three hierarchical roles &mdash; <code>read</code>, <code>mutate</code> or <code>admin</code> (<code>admin</code> satisfies <code>mutate</code> satisfies <code>read</code>). Reads (retrieve/verify/diff and all GETs) require <code>read</code>; every other operation (creating expectations, clear, reset, etc.) requires <code>mutate</code>. This builds on <a href="#button_configuration_control_plane_oidc">Control-Plane OIDC Authentication</a> &mdash; a verified principal is required &mdash; and is off by default; when disabled, an authenticated request is never additionally authorized.</p>
+    <p><strong>Authorization enabled</strong> &mdash; when <code>true</code>, control-plane operations are authorized against the scope-to-role mapping below. When <code>false</code> (the default) no per-operation authorization is applied.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneAuthorizationEnabled(boolean enabled)</code></pre>
@@ -2726,7 +2767,7 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_AUTHORIZATION_ENABLED=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneAuthorizationEnabled="true"</code></pre>
-    <p><strong>Scope mapping</strong> &mdash; maps required scopes (or groups) to control-plane operations such as read and write, letting fine-grained scopes gate which admin actions a caller may perform. Has effect only when control-plane authorization is enabled.</p>
+    <p><strong>Scope mapping</strong> &mdash; comma-separated <code>scope=role</code> pairs mapping a principal's OIDC scope or group value to a role (<code>read</code>, <code>mutate</code>, or <code>admin</code>), for example <code>platform-admins=admin,qa-team=mutate,viewers=read</code>. A principal may hold multiple scopes; the highest-ranked role from all matched scopes wins. A principal whose scopes do not map to any role is denied every mutation (and every read unless a <code>read</code>-or-higher role is mapped) &mdash; fail-closed. A denied mutation returns <code>403</code> with a generic <code>Forbidden for control plane</code> body (the detailed reason is logged server-side only) and is recorded in the audit log with <code>outcome=FORBIDDEN</code>. Has effect only when control-plane authorization is enabled. See <a href="/mock_server/control_plane_authorisation.html">Control-Plane Authorization</a> for the full behaviour reference.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneScopeMapping(Map&lt;String, ControlPlaneRole&gt; scopeMapping)</code></pre>
@@ -2982,36 +3023,6 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
     <p>The legacy <span class="inline_code">-Dmockserver.perExpectationMetrics</span> / <span class="inline_code">MOCKSERVER_PER_EXPECTATION_METRICS</span> form is still accepted for backward compatibility.</p>
 </div>
 
-<button id="button_configuration_slow_request_threshold_millis" class="accordion title"><strong>Slow Request Threshold</strong></button>
-<div class="panel title">
-    <p>Threshold in milliseconds for flagging slow forwarded requests. When a forwarded request's total time exceeds this threshold, MockServer emits a <span class="inline_code">WARN</span>-level log entry identifying the slow request and increments the <span class="inline_code">mock_server_slow_requests_total</span> Prometheus counter (visible when <span class="inline_code">metricsEnabled</span> is on). This makes it easy to spot upstreams that are responding slowly without trawling the full event log.</p>
-    <p>This is <strong>off by default</strong> (threshold <span class="this_value">0</span>, no requests flagged). Set it to the latency above which a forwarded request should be considered slow for your environment.</p>
-    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">0</span> (disabled)</p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.slowRequestThresholdMillis(long milliseconds)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.slowRequestThresholdMillis=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_SLOW_REQUEST_THRESHOLD_MILLIS=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.slowRequestThresholdMillis="2000"</code></pre>
-</div>
-
-<button id="button_configuration_metrics_request_duration_route_labels" class="accordion title"><strong>Metrics Request Duration Route Labels</strong></button>
-<div class="panel title">
-    <p>When enabled (alongside <span class="inline_code">metricsEnabled</span>), MockServer registers an additional histogram <span class="inline_code">mock_server_request_duration_by_method_seconds</span> with a <span class="inline_code">method</span> label for the HTTP method (GET, POST, etc.), alongside the unlabelled <span class="inline_code">mock_server_request_duration_seconds</span>. This lets you break request-latency percentiles down per HTTP method.</p>
-    <p>This is <strong>off by default</strong>. Cardinality is bounded to the set of standard HTTP methods, so enabling it adds only a small, fixed number of label values.</p>
-    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
-    <p>Java Code:</p>
-    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.metricsRequestDurationRouteLabels(boolean enable)</code></pre>
-    <p>System Property:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.metricsRequestDurationRouteLabels=...</code></pre>
-    <p>Environment Variable:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_METRICS_REQUEST_DURATION_ROUTE_LABELS=...</code></pre>
-    <p>Example:</p>
-    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.metricsEnabled="true" -Dmockserver.metricsRequestDurationRouteLabels="true"</code></pre>
-</div>
-
 <button id="button_configuration_redact_secrets_in_recorded_expectations" class="accordion title"><strong>Redact Secrets In Recorded Expectations</strong></button>
 <div class="panel title">
     <p>When MockServer records traffic as a proxy, the recorded expectations contain the exact headers that were sent &mdash; including credentials such as <span class="inline_code">Authorization</span> (bearer / token values), <span class="inline_code">Cookie</span>, <span class="inline_code">Set-Cookie</span>, <span class="inline_code">x-api-key</span> and <span class="inline_code">api-key</span>. When this setting is enabled, MockServer masks those header values with <span class="inline_code">***REDACTED***</span> before the recorded expectations are returned. Because this applies on the recorded-expectation retrieval path, it covers retrieving recordings as JSON, generating client code from recordings, and persisting recordings to disk &mdash; so proxied secrets do not leak into shared recordings, generated code, or saved files.</p>
@@ -3025,6 +3036,22 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_REDACT_SECRETS_IN_RECORDED_EXPECTATIONS=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.redactSecretsInRecordedExpectations="true"</code></pre>
+</div>
+
+<button id="button_configuration_deduplicate_recorded_expectations" class="accordion title"><strong>Deduplicate Recorded Expectations</strong></button>
+<div class="panel title">
+    <p>When MockServer records traffic as a proxy, repeated calls to the same route with different id path segments (e.g. <span class="inline_code">/users/1</span>, <span class="inline_code">/users/2</span>, <span class="inline_code">/users/3</span>) are retrieved as separate, structurally-identical recorded expectations. Enabling this setting post-processes retrieved recorded (SPY/CAPTURE) expectations to deduplicate those structurally-identical request/response pairs and templatize the variable id path segments, collapsing them into a single <span class="inline_code">/users/{id}</span> expectation.</p>
+    <p>The post-processor is conservative: it never merges expectations with differing responses, never over-widens a single recorded id, and preserves order. This only affects <strong>retrieval</strong> of recorded expectations (as JSON, generated client code, or persisted files) &mdash; the underlying recorded entries are unchanged. It also gates <a href="#button_configuration_templatize_recorded_values"><span class="inline_code">templatizeRecordedValues</span></a>, which has no effect unless this is also enabled.</p>
+    <p>This is <strong>off by default</strong>, so retrieved recorded expectations are byte-for-byte unchanged unless you opt in. Enable it when recording a flow with many similar per-resource calls that you want collapsed into reusable expectations.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.deduplicateRecordedExpectations(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.deduplicateRecordedExpectations=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_DEDUPLICATE_RECORDED_EXPECTATIONS=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.deduplicateRecordedExpectations="true"</code></pre>
 </div>
 
 <button id="button_configuration_templatize_recorded_values" class="accordion title"><strong>Templatize Recorded Values</strong></button>
@@ -3069,6 +3096,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
     <p>Master kill switch for the dashboard's anonymous usage analytics. When set to <span class="inline_code">false</span>, the analytics module never loads — no PostHog chunk is fetched, no events are sent, and the consent banner is suppressed. Use this to disable analytics across an entire deployment regardless of any other configuration.</p>
     <p>Analytics is also inactive unless <span class="inline_code">dashboardAnalyticsEndpoint</span> and <span class="inline_code">dashboardAnalyticsKey</span> are both set to non-empty values, so setting this switch alone has no effect unless an endpoint and key are also provided.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">true</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.dashboardAnalyticsEnabled(boolean enable)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.dashboardAnalyticsEnabled=...</code></pre>
     <p>Environment Variable:</p>
@@ -3081,6 +3110,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
 <div class="panel title">
     <p>The base URL of a self-hosted PostHog instance to which anonymous dashboard usage events are sent (the PostHog <span class="inline_code">api_host</span> value, for example <span class="inline_code">https://posthog.example.com</span>). When this property is blank or absent, analytics is disabled regardless of the other analytics settings. MockServer never uses the PostHog cloud endpoint by default — an operator must explicitly supply their own self-hosted endpoint.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"" (analytics disabled)</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.dashboardAnalyticsEndpoint(String endpoint)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.dashboardAnalyticsEndpoint=...</code></pre>
     <p>Environment Variable:</p>
@@ -3093,6 +3124,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
 <div class="panel title">
     <p>The PostHog write-only project API key for the self-hosted instance identified by <span class="inline_code">dashboardAnalyticsEndpoint</span>. When this property is blank or absent, analytics is disabled. The key is transmitted to the dashboard browser as part of the server configuration and is used only to authenticate with the PostHog ingest API — it cannot read or export any data.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"" (analytics disabled)</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.dashboardAnalyticsKey(String key)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.dashboardAnalyticsKey=...</code></pre>
     <p>Environment Variable:</p>
@@ -3114,6 +3147,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
     </ul>
     <p>The plain downloadable JAR and embedded / library use leave this property empty and send no analytics at all. Most users will never need to set this property.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"" (unset)</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.dashboardAnalyticsDistribution(String distribution)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.dashboardAnalyticsDistribution=...</code></pre>
     <p>Environment Variable:</p>
@@ -3130,8 +3165,10 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.otelMetricsEnabled(boolean enabled)</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.otelMetricsEnabled=... &nbsp; MOCKSERVER_OTEL_METRICS_ENABLED=...</code></pre>
     <p>Export interval (seconds), default <span class="this_value">60</span>:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.otelMetricsExportIntervalSeconds(long seconds)</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.otelMetricsExportIntervalSeconds=... &nbsp; MOCKSERVER_OTEL_METRICS_EXPORT_INTERVAL_SECONDS=...</code></pre>
     <p><strong>Aggregation temporality</strong> &mdash; how counter and histogram values are reported over OTLP: <span class="this_value">cumulative</span> (the default, a running total) or <span class="this_value">delta</span> (only the change since the last export). Choose <span class="inline_code">delta</span> for backends such as <strong>New Relic</strong> that prefer it &mdash; delta metrics do not require the backend to track a separate running total per pod/instance, which reduces the number of time series. Only affects OTLP export (the Prometheus endpoint is always cumulative); any unrecognised value falls back to <span class="inline_code">cumulative</span>.</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.otelMetricsTemporality(String temporality)</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.otelMetricsTemporality="delta" &nbsp; MOCKSERVER_OTEL_METRICS_TEMPORALITY=delta</code></pre>
     <p><strong>2. GenAI span export</strong> &mdash; emit one OpenTelemetry GenAI semantic-convention span per LLM completion MockServer serves <strong>or forwards/proxies</strong>, carrying provider (<span class="inline_code">gen_ai.system</span>), model, token usage and finish reason. When MockServer forwards traffic to an upstream LLM provider (matched-expectation forward or unmatched proxy-pass), it detects the provider from the target host and emits a GenAI span for the upstream response. These are spans MockServer codes deliberately &mdash; <strong>no</strong> auto-instrumentation is added.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
@@ -3167,14 +3204,20 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.prometheusRemoteWriteUrl(String url)</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.prometheusRemoteWriteUrl=... &nbsp; MOCKSERVER_PROMETHEUS_REMOTE_WRITE_URL=...</code></pre>
     <p><strong>Protocol version</strong> &mdash; <span class="this_value">v1</span> (default, universally supported) or <span class="this_value">v2</span>. v2 interns labels into a symbol table and carries per-series metadata; use it only if your receiver supports Remote-Write 2.0. Any unrecognised value falls back to <span class="inline_code">v1</span>.</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.prometheusRemoteWriteProtocolVersion(String version)</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.prometheusRemoteWriteProtocolVersion="v2" &nbsp; MOCKSERVER_PROMETHEUS_REMOTE_WRITE_PROTOCOL_VERSION=v2</code></pre>
     <p><strong>Push interval</strong> (seconds), default <span class="this_value">60</span>, minimum <span class="this_value">1</span>:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.prometheusRemoteWriteIntervalSeconds(long seconds)</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.prometheusRemoteWriteIntervalSeconds=... &nbsp; MOCKSERVER_PROMETHEUS_REMOTE_WRITE_INTERVAL_SECONDS=...</code></pre>
     <p><strong>Authentication</strong> &mdash; most hosted endpoints require it. A bearer token is used if set (it wins over basic auth); otherwise HTTP basic auth (username + password); then any custom headers are applied last (so a custom <span class="inline_code">Authorization</span> header can override). Credential values are never logged.</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.prometheusRemoteWriteBearerToken(String token)
+ConfigurationProperties.prometheusRemoteWriteBasicAuthUsername(String username)
+ConfigurationProperties.prometheusRemoteWriteBasicAuthPassword(String password)</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.prometheusRemoteWriteBearerToken=... &nbsp; MOCKSERVER_PROMETHEUS_REMOTE_WRITE_BEARER_TOKEN=...
 -Dmockserver.prometheusRemoteWriteBasicAuthUsername=... &nbsp; MOCKSERVER_PROMETHEUS_REMOTE_WRITE_BASIC_AUTH_USERNAME=...
 -Dmockserver.prometheusRemoteWriteBasicAuthPassword=... &nbsp; MOCKSERVER_PROMETHEUS_REMOTE_WRITE_BASIC_AUTH_PASSWORD=...</code></pre>
     <p><strong>Custom headers</strong> &mdash; extra HTTP headers as a comma-separated <span class="inline_code">key=value</span> list, for tenant/API-key headers such as New Relic's <span class="inline_code">Api-Key</span> or Grafana Mimir's <span class="inline_code">X-Scope-OrgID</span>:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.prometheusRemoteWriteHeaders(String headers)</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.prometheusRemoteWriteHeaders="Api-Key=NRAK-xxxx,X-Scope-OrgID=tenant-a" &nbsp; MOCKSERVER_PROMETHEUS_REMOTE_WRITE_HEADERS=...</code></pre>
     <p>Reading the configuration back with <span class="inline_code">GET /mockserver/configuration</span> masks the value of any credential-bearing header (<span class="inline_code">Authorization</span>, <span class="inline_code">Api-Key</span>, <span class="inline_code">X-Auth-Token</span> and similar) with <span class="inline_code">***REDACTED***</span>; every other header is returned exactly as you set it, so the example above reads back as <span class="inline_code">Api-Key=***REDACTED***,X-Scope-OrgID=tenant-a</span>. Sending that masked list straight back with <span class="inline_code">PUT /mockserver/configuration</span> is safe &mdash; the masked header keeps the real value MockServer already holds, while any header you edited is applied normally.</p>
     <p>When you edit a masked header list, leave each <span class="inline_code">***REDACTED***</span> exactly as it was returned &mdash; you may rename, add, remove and re-order the other headers freely. To <em>replace</em> a credential, type the new value on its own in place of the whole <span class="inline_code">***REDACTED***</span>; do not type it next to the mask.</p>
@@ -3625,6 +3668,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
 <div class="panel title">
     <p>The bucket name for S3 or GCS blob storage. Required when <span class="inline_code">blobStoreType</span> is <span class="inline_code">s3</span> or <span class="inline_code">gcs</span>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"" (none)</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.blobStoreBucket(String blobStoreBucket)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.blobStoreBucket="my-mockserver-bucket"</code></pre>
     <p>Environment Variable:</p>
@@ -3635,6 +3680,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
 <div class="panel title">
     <p>The AWS region for S3 blob storage. If not set, defaults to <span class="inline_code">us-east-1</span>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"" (us-east-1)</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.blobStoreRegion(String blobStoreRegion)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.blobStoreRegion="eu-west-1"</code></pre>
     <p>Environment Variable:</p>
@@ -3645,6 +3692,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
 <div class="panel title">
     <p>Endpoint override URL for S3-compatible stores (e.g. MinIO, LocalStack) or GCS emulators (e.g. fake-gcs-server). When set, the cloud client connects to this URL instead of the real cloud service.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"" (none -- use real cloud endpoint)</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.blobStoreEndpoint(String blobStoreEndpoint)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.blobStoreEndpoint="http://localhost:9000"</code></pre>
     <p>Environment Variable:</p>
@@ -3656,6 +3705,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
     <p>An optional prefix prepended to all blob keys in the cloud store. Useful for namespacing MockServer objects within a shared bucket or container (e.g. <span class="inline_code">mockserver/</span>).</p>
     <p>The trailing <span class="inline_code">/</span> is optional: MockServer always joins the prefix and the key with exactly one <span class="inline_code">/</span>, so <span class="inline_code">mockserver</span>, <span class="inline_code">mockserver/</span> and <span class="inline_code">/mockserver/</span> all produce the same object name (for example <span class="inline_code">mockserver/persistedExpectations.json</span>). A leading <span class="inline_code">/</span> and any repeated <span class="inline_code">//</span> are removed: S3-compatible stores such as MinIO reject a <span class="inline_code">//</span> outright, and a leading <span class="inline_code">/</span> produces an awkward object name that most tools cannot browse to.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"" (no prefix)</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.blobStoreKeyPrefix(String blobStoreKeyPrefix)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.blobStoreKeyPrefix="mockserver/"</code></pre>
     <p>Environment Variable:</p>
@@ -3666,6 +3717,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
 <div class="panel title">
     <p>The Azure Blob Storage container name. Required when <span class="inline_code">blobStoreType</span> is <span class="inline_code">azure</span>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"" (none)</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.blobStoreContainer(String blobStoreContainer)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.blobStoreContainer="my-container"</code></pre>
     <p>Environment Variable:</p>
@@ -3676,6 +3729,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
 <div class="panel title">
     <p>The Azure Blob Storage connection string (includes account name, key, and endpoint). Required when <span class="inline_code">blobStoreType</span> is <span class="inline_code">azure</span>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"" (none)</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.blobStoreConnectionString(String blobStoreConnectionString)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.blobStoreConnectionString="DefaultEndpointsProtocol=https;AccountName=...;AccountKey=..."</code></pre>
     <p>Environment Variable:</p>
@@ -3686,6 +3741,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
 <div class="panel title">
     <p>Explicit AWS access key ID for the S3 blob store. Optional — when empty, the default AWS credential chain is used (environment, profile, instance/IRSA role). Only relevant when <span class="inline_code">blobStoreType</span> is <span class="inline_code">s3</span>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"" (use default credential chain)</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.blobStoreAccessKeyId(String blobStoreAccessKeyId)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.blobStoreAccessKeyId="AKIA..."</code></pre>
     <p>Environment Variable:</p>
@@ -3696,6 +3753,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
 <div class="panel title">
     <p>Explicit AWS secret access key for the S3 blob store. Optional — when empty, the default AWS credential chain is used. Only relevant when <span class="inline_code">blobStoreType</span> is <span class="inline_code">s3</span>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"" (use default credential chain)</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.blobStoreSecretAccessKey(String blobStoreSecretAccessKey)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.blobStoreSecretAccessKey="..."</code></pre>
     <p>Environment Variable:</p>
@@ -3706,6 +3765,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
 <div class="panel title">
     <p>The Google Cloud project ID for the GCS blob store. Optional — when empty, the project is inferred from Application Default Credentials. Only relevant when <span class="inline_code">blobStoreType</span> is <span class="inline_code">gcs</span>.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">"" (infer from ADC)</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.blobStoreProjectId(String blobStoreProjectId)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.blobStoreProjectId="my-gcp-project"</code></pre>
     <p>Environment Variable:</p>
@@ -3719,6 +3780,8 @@ mockserver.llmRequestTimeoutMillis=30000</code></pre>
     <p>Set to <span class="inline_code">0</span> to skip the startup restore entirely. Only relevant when <span class="inline_code">persistExpectations</span> is enabled and <span class="inline_code">blobStoreType</span> is a cloud backend (<span class="inline_code">s3</span>, <span class="inline_code">gcs</span> or <span class="inline_code">azure</span>) — the <span class="inline_code">filesystem</span> backend reloads via <span class="inline_code">initializationJsonPath</span> instead.</p>
     <p>This value is read <strong>once, while MockServer starts</strong>, so it must be set before startup. Like the other <span class="inline_code">blobStore</span> settings it is reported by <span class="inline_code">GET /mockserver/configuration</span>, but changing it with <span class="inline_code">PUT /mockserver/configuration</span> on a running instance has no effect — the restore it governs has already happened.</p>
     <p>Type: <span class="keyword">int</span> Default: <span class="this_value">10</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.blobStoreRestoreTimeoutSeconds(int blobStoreRestoreTimeoutSeconds)</code></pre>
     <p>System Property:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.blobStoreRestoreTimeoutSeconds="10"</code></pre>
     <p>Environment Variable:</p>
