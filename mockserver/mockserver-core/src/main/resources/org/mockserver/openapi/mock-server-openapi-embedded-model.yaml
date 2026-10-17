@@ -363,6 +363,20 @@ paths:
             default: "all"
           required: false
           description: specifies the type of information to clear, default if not specified is "all", supported values are "all", "log", "expectations"
+        - in: query
+          name: namespace
+          schema:
+            type: string
+          required: false
+          description: >-
+            tenant filter - ignored for type=log. For type=expectations or type=all, when present,
+            clears only that namespace's expectations and leaves the event log untouched entirely
+            (even with type=all), leaving expectations in other namespaces and global (no-namespace)
+            expectations intact. Takes precedence over the request-matcher / expectation-id body for
+            selecting which expectations to clear. When omitted, the namespace is taken from the
+            request header named by the matchNamespaceHeader configuration property, if set; when
+            neither is present the clear is unscoped (all namespaces, and type=all clears the event
+            log too).
       requestBody:
         content:
           application/json:
@@ -444,6 +458,27 @@ paths:
             forwarded to this upstream and captured as recorded expectations, which this and later
             retrievals return in the requested format. Only arms recording; it does not synthesise
             traffic, so a retrieval made before any traffic arrives returns nothing.
+        - in: query
+          name: consolidate
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: >-
+            only applies to "recorded_expectations" retrieval. When true, collapses recorded exchanges
+            that share a request shape into a single reusable, unlimited-times expectation, sequencing
+            any differing responses. Per-request opt-in; takes precedence over the
+            deduplicateRecordedExpectations configuration property. Also implied by parameterize=true.
+        - in: query
+          name: parameterize
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: >-
+            only applies to "recorded_expectations" retrieval. When true, additionally generalises
+            volatile path/query/header/body values in the consolidated expectations (implies
+            consolidate). Per-request opt-in.
       responses:
         '200':
           description: recorded requests or active expectations returned
@@ -614,6 +649,24 @@ paths:
               schema:
                 type: string
                 description: OpenAPI specification in YAML format
+  /mockserver/dashboard:
+    get:
+      tags:
+        - control
+      summary: the MockServer dashboard UI
+      description: >-
+        Serves the dashboard single-page application (and its static assets, under the same path
+        prefix) that streams and visualises captured traffic, expectations and logs over a
+        WebSocket. Subject to control-plane authorisation when enabled, like other control-plane
+        reads.
+      responses:
+        '200':
+          description: dashboard HTML/assets returned
+          content:
+            text/html:
+              schema:
+                type: string
+                description: dashboard HTML
   /mockserver/configuration:
     get:
       tags:
@@ -756,6 +809,26 @@ paths:
             type: string
           required: false
           description: comma-separated body field names to redact in addition to the built-in set
+        - in: query
+          name: consolidate
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: >-
+            when true, collapses imported exchanges that share a request shape (e.g. a HAR that
+            captured the same endpoint many times) into a single reusable, unlimited-times
+            expectation, sequencing any differing responses. Opt-in; default false imports verbatim,
+            one expectation per exchange. Also implied by parameterize=true.
+        - in: query
+          name: parameterize
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: >-
+            when true, additionally generalises volatile path/query/header/body values in the
+            consolidated expectations (implies consolidate). Opt-in; default false.
       responses:
         '201':
           description: expectations created from the imported document

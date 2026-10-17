@@ -346,6 +346,11 @@
                   "key": "type",
                   "value": "all",
                   "disabled": true
+                },
+                {
+                  "key": "namespace",
+                  "value": "",
+                  "disabled": true
                 }
               ]
             },
@@ -428,6 +433,16 @@
                   "key": "forwardUnmatchedTo",
                   "value": "",
                   "disabled": true
+                },
+                {
+                  "key": "consolidate",
+                  "value": "false",
+                  "disabled": true
+                },
+                {
+                  "key": "parameterize",
+                  "value": "false",
+                  "disabled": true
                 }
               ]
             },
@@ -509,6 +524,24 @@
               ]
             },
             "description": "returns the OpenAPI specification describing the MockServer REST API in YAML format\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html"
+          }
+        },
+        {
+          "name": "the MockServer dashboard UI",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mockserver/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "mockserver",
+                "dashboard"
+              ]
+            },
+            "description": "Serves the dashboard single-page application (and its static assets, under the same path prefix) that streams and visualises captured traffic, expectations and logs over a WebSocket. Subject to control-plane authorisation when enabled, like other control-plane reads.\n\nFull API reference: https://www.mock-server.com/mock_server/mockserver_clients.html"
           }
         },
         {
@@ -1072,6 +1105,16 @@
                 {
                   "key": "additionalRedactedBodyFields",
                   "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "consolidate",
+                  "value": "false",
+                  "disabled": true
+                },
+                {
+                  "key": "parameterize",
+                  "value": "false",
                   "disabled": true
                 }
               ]

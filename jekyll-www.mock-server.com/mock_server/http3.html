@@ -88,6 +88,15 @@ Fix it with one of:
 
 <p>The bound HTTP/3 port can be retrieved programmatically via <span class="inline_code">MockServer.getHttp3Port()</span>.</p>
 
+<h3>Checking status at runtime</h3>
+
+<p><span class="inline_code">GET /mockserver/http3status</span> reports whether the HTTP/3 listener is active, which UDP port it is bound to, and how many QUIC connections are currently open &mdash; useful to confirm HTTP/3 actually started (rather than silently serving only HTTP/1.1 and HTTP/2) without parsing the startup log:</p>
+
+<pre class="code"><code class="code">curl -sf http://mockserver:1080/mockserver/http3status
+# {"enabled":true,"port":8443,"activeConnections":2}</code></pre>
+
+<p><span class="inline_code">enabled</span> is <span class="inline_code">true</span> only when <span class="inline_code">http3Port</span> is configured and bound (it is <span class="inline_code">false</span>, with <span class="inline_code">port</span> <span class="inline_code">-1</span> and <span class="inline_code">activeConnections</span> <span class="inline_code">0</span>, when HTTP/3 is off). This is a control-plane read, so it is subject to <a href="/mock_server/control_plane_authorisation.html">control plane authorisation</a> when it is enabled, the same as <span class="inline_code">/mockserver/dashboard</span> and <span class="inline_code">/mockserver/openapi.yaml</span>.</p>
+
 <a id="http3_native_requirement" class="anchor" href="#http3_native_requirement">&nbsp;</a>
 
 <h2>Native platform requirement</h2>

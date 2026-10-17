@@ -918,6 +918,28 @@ curl_close($ch);</code></pre>
 # 202 Accepted = verification passed</code></pre>
 </div>
 
+<h3>Generate HTTP expectations: <span class="inline_code">PUT /mockserver/asyncapi/http</span></h3>
+
+<p>
+    Convert an AsyncAPI spec's channels into plain HTTP expectations instead of connecting to a live broker &mdash;
+    useful when a test only needs a channel's example payload available over HTTP, with no broker client to set up.
+    For each channel in the spec, one <span class="inline_code">GET</span> expectation is created that responds
+    <span class="inline_code">200</span> with the same schema-aware example payload the broker publisher would send.
+    The path is derived from the channel name (dots become slashes, e.g. channel <span class="inline_code">orders.created</span>
+    &rarr; path <span class="inline_code">/orders/created</span>); a collision is disambiguated with a numeric suffix.
+</p>
+
+<p>The request body is either a plain AsyncAPI document (JSON or YAML), or a wrapper object that also sets a path prefix:</p>
+
+<pre class="code"><code class="code">curl -sf -X PUT http://mockserver:1080/mockserver/asyncapi/http \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "spec": "asyncapi: 3.0.0\nchannels:\n  orders.created:\n    messages:\n      orderCreated:\n        payload:\n          type: object\n          properties:\n            orderId:\n              type: string",
+    "channelPathPrefix": "/mocked"
+  }'</code></pre>
+
+<p>This responds <span class="inline_code">201 Created</span> with the created expectations (the standard MockServer expectation JSON array, same shape as <span class="inline_code">PUT /mockserver/expectation</span> returns). A spec with no channels, or a body that is empty or cannot be parsed, responds <span class="inline_code">400 Bad Request</span>. Unlike <span class="inline_code">PUT /mockserver/asyncapi</span>, this endpoint does not connect to a broker, so it works even without a <span class="inline_code">brokerConfig</span> and when no broker client/library is on the classpath — but it still needs the optional <span class="inline_code">mockserver-async</span> module on the classpath (the same module the rest of this page's AsyncAPI support depends on); without it the endpoint responds <span class="inline_code">501 Not Implemented</span>.</p>
+
 <h3>Reset</h3>
 
 <p>All async mocking state (publishers, subscribers, and recorded messages) is cleared when you call <span class="inline_code">PUT /mockserver/reset</span>, and when MockServer stops.</p>

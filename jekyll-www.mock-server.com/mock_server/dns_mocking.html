@@ -1,0 +1,200 @@
+---
+title: Mocking DNS
+description: Mock A, AAAA, CNAME, MX, SRV, TXT and PTR DNS records with MockServer's built-in UDP DNS server, matched and verified using the same expectation API as HTTP.
+shortTitle: DNS Mocking
+layout: page
+pageOrder: 4.7
+section: 'Protocols & Advanced'
+subsection: true
+sitemap:
+  priority: 0.8
+  changefreq: 'monthly'
+  lastmod: 2026-10-17T00:00:00+00:00
+---
+
+<a id="dns_quickstart" class="anchor" href="#dns_quickstart">&nbsp;</a>
+
+<h2>See it in action</h2>
+
+<p>MockServer can run a built-in UDP DNS server alongside its HTTP(S) ports, so a test can mock DNS resolution (an <span class="inline_code">A</span> record pointing a hostname at a test double, an <span class="inline_code">MX</span> record, a deliberately missing record, and so on) with the same expectation, matching and verification API used for HTTP. A DNS expectation matches on a <span class="inline_code">DnsRequestDefinition</span> (the queried name, record type and class) and responds with a <span class="inline_code">DnsResponse</span> action (answer/authority/additional records and a response code).</p>
+
+<ol>
+    <li><strong>Enable DNS mocking</strong> — the DNS server is off by default. Turn it on and (optionally) pick a port:</li>
+</ol>
+
+<pre class="prettyprint lang-java code"><code class="code">ClientAndServer mockServer = ClientAndServer.startClientAndServer(
+    configuration().dnsEnabled(true).dnsPort(5353)
+);</code></pre>
+
+<p>See <a href="/mock_server/configuration_properties.html#button_configuration_dns_enabled">DNS Configuration</a> for every way to set <span class="inline_code">dnsEnabled</span> / <span class="inline_code">dnsPort</span> (system property, environment variable, property file) and for what happens if MockServer cannot bind the port.</p>
+
+<ol start="2">
+    <li><strong>Create a DNS expectation</strong> — match a query by name (and, optionally, record type) and respond with one or more records:</li>
+</ol>
+
+<button id="button_dns_quickstart" class="accordion title"><strong>DNS Mocking Code Examples</strong></button>
+<div class="panel title">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+    <pre class="prettyprint lang-java code"><code class="code">import static org.mockserver.model.DnsRequestDefinition.dnsRequest;
+import static org.mockserver.model.DnsResponse.dnsResponse;
+import static org.mockserver.model.DnsRecord.aRecord;
+import static org.mockserver.model.DnsRecordType.A;
+
+new MockServerClient("localhost", 1080)
+    .when(
+        dnsRequest("example.com", A)
+    )
+    .respondWithDns(
+        dnsResponse()
+            .withAnswerRecord(aRecord("example.com", "127.0.0.1"))
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+    <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).respondWithDns(
+    { dnsName: "example.com", dnsType: "A" },
+    {
+        answerRecords: [
+            { name: "example.com", type: "A", value: "127.0.0.1" }
+        ],
+        responseCode: "NOERROR"
+    }
+).then(
+    function () { console.log("expectation created"); },
+    function (error) { console.log(error); }
+);</code></pre>
+        <p>See <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+        <p><strong>Unlike the other tabs on this page, this JavaScript example only answers the first matching DNS query.</strong> <span class="inline_code">respondWithDns</span> (and every other <span class="inline_code">respondWith...</span> convenience method in the JS client) defaults its own <span class="inline_code">times</span> argument to <span class="inline_code">{ remainingTimes: 1, unlimited: false }</span> when omitted — unlike the server's own default (unlimited) that the REST tab, Java, Python, Ruby, Go and .NET examples all get by leaving <span class="inline_code">times</span> out of the request entirely. Pass an explicit <span class="inline_code">times</span> argument (a number, or <span class="inline_code">{ unlimited: true }</span>) as the third argument to match more than once: <span class="inline_code">respondWithDns(requestMatcher, dnsResponse, { unlimited: true })</span>.</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+    <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, DnsRequestDefinition, DnsResponse, DnsRecord
+
+client = MockServerClient("localhost", 1080)
+client.when(
+    DnsRequestDefinition.dns_request("example.com", dns_type="A")
+).respond_with_dns(
+    DnsResponse(
+        answer_records=[DnsRecord.a_record("example.com", "127.0.0.1")],
+        response_code="NOERROR"
+    )
+)</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+    <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+client = MockServer::Client.new('localhost', 1080)
+client.when(
+  HttpRequest.dns_request('example.com', dns_type: 'A')
+).respond_with_dns(
+  DnsResponse.new(
+    answer_records: [DnsRecord.a_record('example.com', '127.0.0.1')],
+    response_code: 'NOERROR'
+  )
+)</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+    <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
+
+client := mockserver.New("localhost", 1080)
+client.Upsert(mockserver.Expectation{
+    HttpRequest: &amp;mockserver.HttpRequest{DnsName: "example.com", DnsType: "A"},
+    DnsResponse: &amp;mockserver.DnsResponse{
+        ResponseCode:  "NOERROR",
+        AnswerRecords: []mockserver.DnsRecord{mockserver.ARecord("example.com", "127.0.0.1")},
+    },
+})</code></pre>
+        <p>The Go client's fluent <span class="inline_code">Request()</span> builder has no DNS-matcher setter yet, so the DNS fields are set directly on the exported <span class="inline_code">HttpRequest</span> struct and sent via <span class="inline_code">Upsert</span> instead of <span class="inline_code">When(...).RespondDns(...)</span>.</p>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+    <pre class="prettyprint lang-csharp code"><code class="code">using MockServer.Client;
+using MockServer.Client.Models;
+
+using var client = new MockServerClient("localhost", 1080);
+client.When(
+    new HttpRequest { DnsName = "example.com", DnsType = "A" }
+).RespondWithDns(
+    DnsResponse.Response()
+        .WithResponseCode("NOERROR")
+        .WithAnswerRecord(DnsRecord.ARecord("example.com", "127.0.0.1"))
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+    <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+  "httpRequest": {
+    "dnsName": "example.com",
+    "dnsType": "A"
+  },
+  "dnsResponse": {
+    "answerRecords": [
+      { "name": "example.com", "type": "A", "value": "127.0.0.1" }
+    ],
+    "responseCode": "NOERROR"
+  }
+}'</code></pre>
+    </div>
+</div>
+
+<p>A non-blank <span class="inline_code">dnsName</span> under <span class="inline_code">httpRequest</span> is what makes an expectation a DNS matcher rather than an HTTP one — it is not a separate top-level JSON field, which is why the matcher is still sent under the <span class="inline_code">httpRequest</span> key.</p>
+
+<p><strong>Rust and PHP currently expose only the <span class="inline_code">dnsResponse</span> action builder</strong> (used, for example, with scenario state machines or an expectation built from imported JSON) — their <span class="inline_code">HttpRequest</span> type has no DNS-matcher fields at all yet, so they are not shown as separate tabs above; use the REST API form (or, in Rust, the client's raw JSON upsert) to set <span class="inline_code">dnsName</span>/<span class="inline_code">dnsType</span>/<span class="inline_code">dnsClass</span> directly. Go's <span class="inline_code">HttpRequest</span> struct does carry these fields directly (shown above via <span class="inline_code">Upsert</span>), even though its fluent <span class="inline_code">Request()</span> builder has no setter for them yet.</p>
+
+<a id="dns_record_types" class="anchor" href="#dns_record_types">&nbsp;</a>
+
+<h2>Supported Record Types</h2>
+
+<p>Each answer, authority or additional record (<span class="inline_code">org.mockserver.model.DnsRecord</span>) has a <span class="inline_code">name</span>, <span class="inline_code">type</span>, optional <span class="inline_code">dnsClass</span> (defaults to <span class="inline_code">IN</span>) and optional <span class="inline_code">ttl</span> (defaults to <span class="inline_code">300</span> seconds when omitted, as in every example on this page), plus type-specific fields:</p>
+
+<table class="d-table">
+    <thead>
+    <tr>
+        <th>Type</th>
+        <th>Fields</th>
+        <th>Java factory</th>
+        <th>Example value</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr><td><span class="inline_code">A</span></td><td><span class="inline_code">value</span> (IPv4 address)</td><td><span class="inline_code">DnsRecord.aRecord(name, ip)</span></td><td><span class="inline_code">127.0.0.1</span></td></tr>
+    <tr><td><span class="inline_code">AAAA</span></td><td><span class="inline_code">value</span> (IPv6 address)</td><td><span class="inline_code">DnsRecord.aaaaRecord(name, ip)</span></td><td><span class="inline_code">::1</span></td></tr>
+    <tr><td><span class="inline_code">CNAME</span></td><td><span class="inline_code">value</span> (target name)</td><td><span class="inline_code">DnsRecord.cnameRecord(name, cname)</span></td><td><span class="inline_code">alias.example.com</span></td></tr>
+    <tr><td><span class="inline_code">MX</span></td><td><span class="inline_code">priority</span>, <span class="inline_code">value</span> (exchange)</td><td><span class="inline_code">DnsRecord.mxRecord(name, priority, exchange)</span></td><td>priority <span class="inline_code">10</span>, <span class="inline_code">mail.example.com</span></td></tr>
+    <tr><td><span class="inline_code">SRV</span></td><td><span class="inline_code">priority</span>, <span class="inline_code">weight</span>, <span class="inline_code">port</span>, <span class="inline_code">value</span> (target)</td><td><span class="inline_code">DnsRecord.srvRecord(name, priority, weight, port, target)</span></td><td><span class="inline_code">_sip._tcp.example.com</span></td></tr>
+    <tr><td><span class="inline_code">TXT</span></td><td><span class="inline_code">value</span> (text)</td><td><span class="inline_code">DnsRecord.txtRecord(name, text)</span></td><td><span class="inline_code">v=spf1 -all</span></td></tr>
+    <tr><td><span class="inline_code">PTR</span></td><td><span class="inline_code">value</span> (pointer name)</td><td><span class="inline_code">DnsRecord.ptrRecord(name, pointer)</span></td><td><span class="inline_code">host.example.com</span></td></tr>
+    </tbody>
+</table>
+
+<p>A <span class="inline_code">DnsResponse</span> can also set <span class="inline_code">responseCode</span> (for example <span class="inline_code">NXDOMAIN</span> or <span class="inline_code">SERVFAIL</span> to mock a resolution failure) and carry separate <span class="inline_code">authorityRecords</span> and <span class="inline_code">additionalRecords</span> lists alongside <span class="inline_code">answerRecords</span>. See <a href="/mock_server/configuration_properties.html#button_configuration_dns_response_limits">DNS Response Size and Record Limits</a> for the UDP truncation behaviour and encoding failures.</p>
+
+<a id="dns_verification" class="anchor" href="#dns_verification">&nbsp;</a>
+
+<h2>Verifying DNS Requests</h2>
+
+<p>DNS queries are logged like any other request, so they can be verified with the same <span class="inline_code">verify(...)</span> API used for HTTP requests:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">import static org.mockserver.model.DnsRequestDefinition.dnsRequest;
+import static org.mockserver.model.DnsRecordType.A;
+import static org.mockserver.verify.VerificationTimes.once;
+
+mockServerClient.verify(
+    dnsRequest("example.com", A),
+    once()
+);</code></pre>
+
+<a id="dns_querying" class="anchor" href="#dns_querying">&nbsp;</a>
+
+<h2>Querying the Mock</h2>
+
+<p>Point a resolver at the DNS mock's host and UDP port, for example with <span class="inline_code">dig</span>:</p>
+
+<pre class="prettyprint code"><code class="code">dig @127.0.0.1 -p 5353 example.com A +short</code></pre>
+
+<p>Or configure it as the resolver for a client under test (for example by running the DNS listener on port 53 and pointing <span class="inline_code">/etc/resolv.conf</span> at it in a container — <span class="inline_code">resolv.conf</span> can't set a port — or a custom <span class="inline_code">Resolver</span> in Java/Go, or <span class="inline_code">dns.setServers([...])</span> in Node.js) so real DNS lookups in your application resolve against the mock during a test.</p>

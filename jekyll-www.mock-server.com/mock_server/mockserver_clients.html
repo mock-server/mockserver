@@ -103,6 +103,48 @@ new MockServerClient(&quot;localhost&quot;, 1080)
         VerificationTimes.atLeast(1)
     );</code></pre>
 
+<h3>Importing documents and expectations</h3>
+
+<p><span class="inline_code">importExpectations(json)</span> and <span class="inline_code">importExpectationsFromFile(path)</span> load one or more MockServer expectations (a single object or an array — the same shape produced by <span class="inline_code">retrieveActiveExpectations(...)</span>, written by <span class="inline_code">--persist</span>, or exported from the dashboard) and upsert them, creating or updating by <span class="inline_code">id</span>. <span class="inline_code">importDocument(json, format)</span> wraps <span class="inline_code">PUT /mockserver/import</span> to import a HAR, Postman collection, or Pact contract instead — <span class="inline_code">format</span> is one of <span class="inline_code">har</span>, <span class="inline_code">postman</span>, <span class="inline_code">pact</span>, or blank to auto-detect from the JSON shape:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">Expectation[] fromJson = mockServerClient.importExpectationsFromFile("fixtures/my-expectations.json");
+Expectation[] fromPostman = mockServerClient.importDocument(postmanCollectionJson, "postman");</code></pre>
+
+<p>The REST endpoint also accepts <span class="inline_code">format=wiremock</span>, <span class="inline_code">mountebank</span>, or <span class="inline_code">mockoon</span> to migrate stubs/imposters/environments from those tools, and <span class="inline_code">format=recording</span> to re-import a persisted NDJSON archive of recorded request/response pairs into the event log instead of creating expectations. <strong>Call the REST endpoint directly for all four of these — not <span class="inline_code">importDocument</span>.</strong> The three migration formats respond <span class="inline_code">{"expectations": [...], "warnings": [...]}</span> (so any foreign construct that could not be faithfully mapped is surfaced rather than silently dropped) so <span class="inline_code">importDocument</span>, which expects a plain expectation array, throws an <span class="inline_code">IllegalArgumentException</span> for them <em>after</em> the server has already applied the import. <span class="inline_code">recording</span> responds with recorded request/response pairs, which <span class="inline_code">importDocument</span> silently turns into <span class="inline_code">Expectation</span> objects that were never registered, so its return value is wrong rather than an error:</p>
+
+<pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/import?format=wiremock" -d @wiremock-stubs.json</code></pre>
+
+<h3>Operating mode and load scenarios</h3>
+
+<p><span class="inline_code">retrieveMode()</span> reads the current high-level operating mode (<span class="inline_code">GET /mockserver/mode</span>), the counterpart to <span class="inline_code">setMode(MockMode)</span>; <span class="inline_code">deleteLoadScenario(name)</span> removes a single registered load scenario (stopping it first if running) via <span class="inline_code">DELETE /mockserver/loadScenario/{name}</span>:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">MockMode currentMode = mockServerClient.retrieveMode();
+mockServerClient.deleteLoadScenario("checkout-burst");</code></pre>
+
+<h3>Replay and metrics</h3>
+
+<p><span class="inline_code">replay(HttpRequest)</span> re-issues a previously captured request to its upstream target (resolved from its <span class="inline_code">Host</span> header or explicit <span class="inline_code">socketAddress</span>) and returns the live upstream response — distinct from expectation matching, it is for re-running one recorded call against the real service. <span class="inline_code">scrapeMetrics()</span> wraps <span class="inline_code">GET /mockserver/metrics</span> and returns the server's response body as a <span class="inline_code">String</span> — the Prometheus exposition text when <span class="inline_code">metricsEnabled</span> is <span class="inline_code">true</span>, or <span class="inline_code">null</span> when it is <span class="inline_code">false</span> (the server answers <span class="inline_code">404</span> with no body), so check for <span class="inline_code">null</span> before using the result. Distinct from <span class="inline_code">retrieveMetrics()</span>, which returns the JSON counter snapshot via <span class="inline_code">PUT /mockserver/retrieve?type=METRICS</span>:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">HttpResponse upstreamResponse = mockServerClient.replay(
+    request().withMethod("GET").withPath("/orders/123").withHeader("Host", "api.example.com")
+);
+String prometheusText = mockServerClient.scrapeMetrics();</code></pre>
+
+<p>The full log entry body behind a truncated dashboard update frame (<span class="inline_code">GET /mockserver/logEntryBody?id=&lt;log entry id&gt;&amp;part=request|response</span>) has no dedicated Java client wrapper; call it directly if your tool needs an untruncated body by log entry id.</p>
+
+<h3>Control-plane authorisation and lifecycle</h3>
+
+<p><span class="inline_code">withControlPlaneJWT(String)</span> (or the <span class="inline_code">Supplier&lt;String&gt;</span> overload, re-evaluated on every request — useful for a short-lived token that is refreshed) attaches a JWT to every control-plane request when <a href="/mock_server/control_plane_authorisation.html">control plane authorisation</a> is enabled server-side:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">MockServerClient client = new MockServerClient("localhost", 1080)
+    .withControlPlaneJWT(() -> tokenCache.currentToken());</code></pre>
+
+<p>Lifecycle and connection-state methods: <span class="inline_code">hasStarted()</span> / <span class="inline_code">hasStopped()</span> poll (with optional attempts/timeout overloads) until the server answers or stops answering; <span class="inline_code">isRunning()</span> also polls (10 attempts, 500ms apart, by default — same as its <span class="inline_code">isRunning(attempts, timeout, timeUnit)</span> overload with explicit arguments) but is <span class="inline_code">@Deprecated</span> in favour of <span class="inline_code">hasStarted()</span> / <span class="inline_code">hasStopped()</span>; <span class="inline_code">stopAsync()</span> stops the server without blocking, returning a <span class="inline_code">Future&lt;MockServerClient&gt;</span>; <span class="inline_code">isSecure()</span> reports whether this client talks TLS; <span class="inline_code">remoteAddress()</span> returns the <span class="inline_code">InetSocketAddress</span> this client connects to.</p>
+
+<h3>Retrieving by expectation id</h3>
+
+<p>Every <span class="inline_code">retrieve...</span> family has an <span class="inline_code">*ById(expectationId)</span> variant that scopes the result to one expectation: <span class="inline_code">retrieveActiveExpectationsById</span>, <span class="inline_code">retrieveRecordedExpectationsById</span>, <span class="inline_code">retrieveRecordedRequestsById</span>, and <span class="inline_code">retrieveRecordedRequestsAndResponsesById</span> each additionally have a <span class="inline_code">Format</span> overload for the serialized-string form; <span class="inline_code">retrieveLogMessagesById</span> (returns the joined log text as a <span class="inline_code">String</span>) and <span class="inline_code">retrieveLogMessagesArrayById</span> (the same text split into a <span class="inline_code">String[]</span>) do not take a <span class="inline_code">Format</span> — there is only the one text representation for logs.</p>
+
 <a id="spring-boot-starter" class="anchor" href="#spring-boot-starter">&nbsp;</a>
 
 <h2>Spring Boot Starter</h2>
@@ -214,6 +256,37 @@ test('responds', async () =&gt; {
         httpResponse: { body: &quot;world&quot; }
     });
 });</code></pre>
+
+<h3>Closing callback WebSockets</h3>
+
+<p><span class="inline_code">client.close()</span> closes the callback WebSocket(s) opened for <span class="inline_code">mockWithCallback</span>, the callback/forwardCallback actions, and breakpoints, so they stop keeping the process alive. These WebSockets are tracked in a module-level registry keyed by <span class="inline_code">host:port[contextPath]</span>, not per client instance — so calling <span class="inline_code">close()</span> on <em>any</em> <span class="inline_code">mockServerClient(...)</span> instance pointed at the same <span class="inline_code">host</span>/<span class="inline_code">port</span>/<span class="inline_code">contextPath</span> closes the WebSocket(s) shared by <em>every</em> such instance in the current process, not just the one you called it on. It sends nothing to MockServer — the server-side expectations and breakpoints that use those WebSockets simply stop working until a later callback or breakpoint opens a new one. <span class="inline_code">client.reset()</span> also closes them (as <span class="inline_code">close()</span> does) in addition to clearing server-side state:</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">const mockServerClient = require('mockserver-client').mockServerClient;
+
+const client = mockServerClient("localhost", 1080);
+// ... use client for callbacks/breakpoints ...
+await client.close(); // stop the callback WebSocket(s) keeping the process alive</code></pre>
+
+<h3>Callback WebSocket timeout</h3>
+
+<p>The optional <span class="inline_code">options</span> argument to <span class="inline_code">mockServerClient(host, port, contextPath, tls, caCertPemFilePath, options)</span> accepts <span class="inline_code">callbackWebSocketTimeoutMillis</span>: how long a callback or breakpoint waits for its WebSocket to receive its client id before giving up (default <span class="inline_code">10000</span>). Also in <span class="inline_code">options</span>: <span class="inline_code">bearerToken</span> / <span class="inline_code">bearerTokenSupplier</span> for control-plane auth, and <span class="inline_code">clientCertPemFilePath</span> / <span class="inline_code">clientKeyPemFilePath</span> for mutual TLS.</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">const mockServerClient = require('mockserver-client').mockServerClient;
+
+const client = mockServerClient("localhost", 1080, undefined, false, undefined, {
+    callbackWebSocketTimeoutMillis: 30000
+});</code></pre>
+
+<h3>Package exports and module imports</h3>
+
+<p>Since 9.0.0 the package's <span class="inline_code">package.json</span> resolves every importable path through an explicit <a href="https://nodejs.org/api/packages.html#exports" target="_blank" rel="noopener noreferrer"><span class="inline_code">exports</span> map</a> rather than a bare <span class="inline_code">main</span> field — <span class="inline_code">require</span>/<span class="inline_code">import</span> of anything not listed there (e.g. an undocumented deep path into the package) now fails to resolve, where it may previously have worked by accident. The supported subpaths are <span class="inline_code">mockserver-client</span> (or <span class="inline_code">mockserver-client/index</span>), <span class="inline_code">mockserver-client/mockServerClient</span> (the module directly, bypassing the top-level <span class="inline_code">index.js</span> re-export), <span class="inline_code">mockserver-client/llm</span>, <span class="inline_code">mockserver-client/mcpMockBuilder</span>, <span class="inline_code">mockserver-client/a2aMockBuilder</span>, <span class="inline_code">mockserver-client/setupMockServer</span>, <span class="inline_code">mockserver-client/sendRequest</span>, <span class="inline_code">mockserver-client/webSocketClient</span>, and the types-only <span class="inline_code">mockserver-client/mockServer</span> / <span class="inline_code">mockserver-client/llmTypes</span>.</p> <!-- version-ref:keep -->
+
+<p><strong>Named ES-module imports now work</strong> &mdash; previously only the default import resolved correctly:</p>
+
+<pre class="prettyprint lang-javascript code"><code class="code">// now works (previously only the default import did):
+import { mockServerClient, MockMode, setupMockServer, llm, mcpMock, a2aMock } from 'mockserver-client';</code></pre>
+
+<p>TypeScript typings are published for both this client and the companion <a target="_blank" href="https://www.npmjs.org/package/mockserver-node" rel="noopener noreferrer">mockserver-node</a> launcher package, and <strong>both need <span class="inline_code">@types/node</span> installed</strong> in a consuming TypeScript project: <span class="inline_code">mockserver-client</span>'s own <span class="inline_code">mockServerClient.d.ts</span> references the ambient <span class="inline_code">Buffer</span> type (e.g. in <span class="inline_code">storeBinaryFile</span> and <span class="inline_code">uploadGrpcDescriptor</span>'s parameter types) without importing it, and <span class="inline_code">mockserver-node</span>'s typings use Node's own built-in types for the process/child-process APIs it wraps. If your <span class="inline_code">tsconfig.json</span> sets an explicit <span class="inline_code">"types"</span> array, <span class="inline_code">"node"</span> must be listed in it or these ambient declarations are not picked up. <span class="inline_code">import mockserver = require(...)</span> and <span class="inline_code">import * as mockserver from ...</span> work with or without <span class="inline_code">esModuleInterop</span>; a default import needs <span class="inline_code">esModuleInterop</span> enabled and is otherwise a compile error.</p>
 
 <a id="python-mockserver-client" class="anchor" href="#python-mockserver-client">&nbsp;</a>
 

@@ -1167,6 +1167,49 @@ data: [DONE]</code></pre>
   }
 }</code></pre>
 
+<h3>Java Client API</h3>
+
+<p>
+    The Java client's <span class="inline_code">Llm.conversation()</span> builder
+    (<span class="inline_code">org.mockserver.client.LlmConversationBuilder</span>) produces the same turn expectations
+    without hand-writing the JSON above. Each <span class="inline_code">turn()</span> block sets its match predicates
+    (<span class="inline_code">whenTurnIndex</span>, <span class="inline_code">whenLatestMessageContains</span>,
+    <span class="inline_code">whenLatestMessageMatches</span>, <span class="inline_code">whenLatestMessageRole</span>,
+    <span class="inline_code">whenContainsToolResultFor</span>, <span class="inline_code">whenSemanticMatch</span>) and its
+    response, chained with <span class="inline_code">andThen()</span>; <span class="inline_code">applyTo(...)</span> registers
+    every turn under a single auto-generated scenario name so turns are matched in order:
+</p>
+
+<pre class="prettyprint lang-java code"><code class="code">import static org.mockserver.client.Llm.conversation;
+import static org.mockserver.client.Llm.completion;
+import static org.mockserver.client.Llm.toolUse;
+import static org.mockserver.model.Provider.OPENAI;
+
+conversation()
+    .withPath("/v1/chat/completions")
+    .withProvider(OPENAI)
+    .withModel("gpt-4o")
+    .turn()
+        .whenTurnIndex(0)
+        .whenLatestMessageContains("weather")
+        .respondingWith(
+            completion()
+                .withText("I'll look up the weather for you.")
+                .withToolCall(toolUse("get_weather").withArguments("{\"location\": \"London\"}"))
+                .withStopReason("tool_use")
+        )
+    .andThen()
+    .turn()
+        .whenContainsToolResultFor("get_weather")
+        .respondingWith(completion().withText("The weather in London is 18C and sunny."))
+    .applyTo(mockServerClient);</code></pre>
+
+<p>
+    Add <span class="inline_code">.isolateBy(Llm.header("x-session-id"))</span> (or <span class="inline_code">Llm.queryParameter(...)</span> /
+    <span class="inline_code">Llm.cookie(...)</span>) before the first <span class="inline_code">turn()</span> to key conversation state per
+    session &mdash; see <a href="#session_isolation">Session Isolation</a> below.
+</p>
+
 <a id="session_isolation" class="anchor" href="#session_isolation">&nbsp;</a>
 <h2>Session Isolation</h2>
 
@@ -1561,6 +1604,46 @@ geminiLive()
 
 <p>
     An optional <code>errorKind</code> field (<code>OVERLOAD</code>, <code>RATE_LIMIT</code>, or <code>SERVER_ERROR</code>) on the LLM chaos profile lets you declare the error intent. MockServer emits the active provider's natural HTTP status <em>and</em> its provider-correct body without you having to pick the status manually. An explicit <code>errorStatus</code> still overrides the code while keeping the provider-correct body. A missing or unrecognised <code>errorKind</code> falls back to the generic body.
+</p>
+
+<a id="llm_failover" class="anchor" href="#llm_failover">&nbsp;</a>
+<h3>Failover / Retry Scripting (Java Client)</h3>
+
+<p>
+    The <span class="inline_code">chaos</span> profile above injects <em>probabilistic</em> failures. To test a specific,
+    deterministic retry sequence &mdash; "the first N attempts fail, then it succeeds" &mdash; the Java client's
+    <span class="inline_code">Llm.llmFailover()</span> builder (<span class="inline_code">org.mockserver.client.LlmFailoverBuilder</span>)
+    produces an ordered set of expectations that rely on MockServer's matching order and <span class="inline_code">Times</span>
+    exhaustion: the failure expectations are registered first with a limited <span class="inline_code">Times</span>, so they are
+    matched and consumed before the unlimited success expectation is reached. This lets you point a retry-capable client
+    (an SDK's own retry config, LiteLLM, an AI gateway) at MockServer and assert its failover/retry logic deterministically:
+</p>
+
+<pre class="prettyprint lang-java code"><code class="code">import static org.mockserver.client.Llm.llmFailover;
+import static org.mockserver.client.Llm.completion;
+import static org.mockserver.model.Provider.OPENAI;
+
+llmFailover()
+    .withPath("/v1/chat/completions")
+    .withProvider(OPENAI)
+    .withModel("gpt-4o")
+    .failWith(503)                                    // attempt 1 fails with 503 (generic default error body for this status, not provider-specific)
+    .failWith(429, "{\"error\":{\"type\":\"rate_limit_error\"}}") // attempt 2 fails with 429 and a custom body
+    .thenRespondWith(completion().withText("The answer is 42."))  // attempt 3+ succeeds
+    .applyTo(mockServerClient);                        // or .build() to get the Expectation[] without registering it</code></pre>
+
+<p>
+    <span class="inline_code">failWith(statusCode)</span> and <span class="inline_code">failWith(statusCode, errorBody)</span> add one
+    failed attempt; <span class="inline_code">failWith(statusCode, count)</span> adds <span class="inline_code">count</span>
+    consecutive failures with the same status. The no-<span class="inline_code">errorBody</span> form's default error body is
+    chosen by <span class="inline_code">statusCode</span> alone (429/500/502/503 each get their own error type and message in the same generic <span class="inline_code">{"error":{"type","message"}}</span> shape, anything
+    else a generic fallback) &mdash; it is <strong>not</strong> provider-specific, unlike the LLM chaos profile's
+    <span class="inline_code">errorKind</span> field described above. Pass an explicit <span class="inline_code">errorBody</span>
+    if you need a provider-correct error shape. Consecutive failures with the same status and body are coalesced into a single
+    expectation with <span class="inline_code">Times.exactly(count)</span>. <span class="inline_code">statusCode</span> must be
+    between 100 and 599. <span class="inline_code">build()</span> throws <span class="inline_code">IllegalStateException</span> if
+    the path, provider, at least one failure, or the success completion (<span class="inline_code">thenRespondWith(...)</span>)
+    is not set.
 </p>
 
 <a id="cached_reasoning_tokens" class="anchor" href="#cached_reasoning_tokens">&nbsp;</a>

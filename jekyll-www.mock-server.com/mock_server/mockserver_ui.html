@@ -904,6 +904,24 @@ sitemap:
     <li><strong>Export</strong> — download the cassette metadata as JSON.</li>
 </ul>
 
+<p>Under the hood, the <strong>List</strong> tab reads from (and <strong>Record</strong>/<strong>Load</strong> register into) an in-memory <em>cassette registry</em> — tracking metadata about cassette files, not their contents — via a small REST API, which you can also call directly:</p>
+
+<ul>
+    <li><span class="inline_code">GET /mockserver/cassettes</span> — lists every tracked cassette as <span class="inline_code">{"cassettes":[{"path","filename","expectationCount","origin","lastUsed"},...]}</span>.</li>
+    <li><span class="inline_code">PUT /mockserver/cassettes</span> — registers (or updates) a cassette entry from a JSON body <span class="inline_code">{"path", "filename"?, "expectationCount"?, "origin"?}</span> (<span class="inline_code">path</span> is required); responds <span class="inline_code">201 Created</span> with the stored entry.</li>
+    <li><span class="inline_code">DELETE /mockserver/cassettes</span> — removes the tracked entry for a cassette, identified by <span class="inline_code">path</span> as either a query parameter (<span class="inline_code">?path=...</span>) or a JSON body field; responds <span class="inline_code">200 OK</span> with <span class="inline_code">{"removed": true|false}</span>.</li>
+</ul>
+
+<pre class="code"><code class="code">curl -sf http://mockserver:1080/mockserver/cassettes
+
+curl -sf -X PUT http://mockserver:1080/mockserver/cassettes \
+  -H 'Content-Type: application/json' \
+  -d '{"path": "fixtures/openai.json", "expectationCount": 12, "origin": "recorded"}'
+
+curl -sf -X DELETE "http://mockserver:1080/mockserver/cassettes?path=fixtures/openai.json"</code></pre>
+
+<p>Registering a tracked entry does not, by itself, write or load the underlying file — that is what the <span class="inline_code">record_llm_fixtures</span> and <span class="inline_code">load_expectations_from_file</span> MCP tools (and the UI's Record/Load tabs) do; the registry is metadata the UI's List tab reads.</p>
+
 <h3>WASM Modules</h3>
 
 <p>The WASM Modules sub-tab uploads and manages <a href="/mock_server/wasm_rules.html">WASM custom-rule modules</a>. Give the module a name, choose a <code>.wasm</code> file, and click <strong>Upload</strong>; a table lists the uploaded modules, each with a delete action. Uploaded modules become available as the <strong>WASM module</strong> body-matcher type in the <a href="#ui_composer_section">Mocks</a> composer. WASM rules are off by default; on a server where they are off, the tab explains how to turn them on (<code>wasmEnabled=true</code>) instead of listing modules, and checks again when you press Refresh.</p>

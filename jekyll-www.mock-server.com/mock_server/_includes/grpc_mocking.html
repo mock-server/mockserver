@@ -58,6 +58,35 @@
 <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/grpc/descriptors" \
   --data-binary @service.dsc</code></pre>
 
+<p>The Java client wraps this as <span class="inline_code">mockServerClient.uploadGrpcDescriptor(descriptorSetBytes)</span>, which sends the raw descriptor set bytes as the request body and returns the client for chaining. A successful upload returns <span class="inline_code">201 Created</span> with <span class="inline_code">{"status":"loaded"}</span>; an empty body returns <span class="inline_code">400 Bad Request</span>.</p>
+
+<h3>Inspecting and Clearing Loaded Descriptors</h3>
+
+<p>List every service (and its methods) currently loaded from any descriptor source, or clear them all, via the REST API:</p>
+
+<pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/grpc/services"
+
+curl -v -X PUT "http://localhost:1080/mockserver/grpc/clear"</code></pre>
+
+<p><span class="inline_code">PUT /mockserver/grpc/services</span> returns <span class="inline_code">200 OK</span> with a pretty-printed JSON array, one entry per service, each listing its methods' names, input/output message types, and whether they are client- or server-streaming:</p>
+
+<pre class="prettyprint lang-json code"><code class="code">[
+  {
+    "name": "com.example.grpc.GreetingService",
+    "methods": [
+      {
+        "name": "Greeting",
+        "inputType": "com.example.grpc.HelloRequest",
+        "outputType": "com.example.grpc.HelloResponse",
+        "clientStreaming": false,
+        "serverStreaming": false
+      }
+    ]
+  }
+]</code></pre>
+
+<p><span class="inline_code">PUT /mockserver/grpc/clear</span> removes every loaded descriptor (from all three loading methods above) and returns <span class="inline_code">200 OK</span> with no body. The Java client exposes these as <span class="inline_code">mockServerClient.retrieveGrpcServices()</span> (returns the JSON as a <span class="inline_code">String</span>) and <span class="inline_code">mockServerClient.clearGrpcDescriptors()</span> (returns the client for chaining). Both endpoints, like the upload endpoint, are control-plane operations and are subject to <a href="/mock_server/control_plane_authorisation.html">control plane authorisation</a> when it is enabled.</p>
+
 <a id="grpc_docker" class="anchor" href="#grpc_docker">&nbsp;</a>
 
 <h3>Docker</h3>

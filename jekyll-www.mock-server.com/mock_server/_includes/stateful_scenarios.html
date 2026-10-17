@@ -1217,6 +1217,8 @@ curl -X PUT http://localhost:1080/mockserver/scenario/HealthFlow/trigger \
 
 <p>Multiple entries are evaluated independently &mdash; a single event can advance several scenarios at once.</p>
 
+<p>In Java, <span class="inline_code">withCrossProtocolScenario(CrossProtocolScenario)</span> (singular, used below) appends one entry; <span class="inline_code">withCrossProtocolScenarios(List&lt;CrossProtocolScenario&gt;)</span> (plural) replaces the whole <span class="inline_code">crossProtocolScenarios</span> list in one call.</p>
+
 <button class="accordion title"><strong>Cross-Protocol Trigger</strong> &mdash; a request to /events unlocks GET /api/conn-status by advancing a shared scenario</button>
 <div class="panel title">
     <p>The first expectation handles GET /events and carries a <span class="inline_code">crossProtocolScenarios</span> entry with <span class="inline_code">trigger: "HTTP_REQUEST"</span> that advances <span class="inline_code">ConnFlow</span> to <span class="inline_code">Connected</span>. The second expectation gates on that state, so it only matches after /events has been called. The same mechanism works with <span class="inline_code">WEBSOCKET_CONNECT</span>, <span class="inline_code">DNS_QUERY</span>, and <span class="inline_code">GRPC_REQUEST</span> triggers.</p>

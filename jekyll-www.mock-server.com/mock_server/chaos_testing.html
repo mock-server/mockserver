@@ -4224,6 +4224,21 @@ curl_close($ch);</code></pre>{% endraw %}
 
 <p>This experiment progressively degrades <code class="inline code">payments.svc</code>: first light errors and latency for one minute, then heavier errors for another minute, then a complete connection drop for 30 seconds. After the last stage completes, chaos is cleared automatically.</p>
 
+<p>The Java client wraps the same endpoint as <code class="inline code">mockServerClient.startChaosExperiment(experimentJson)</code>, where <code class="inline code">experimentJson</code> is the <code class="inline code">{name, loop?, stages[...]}</code> payload built as a JSON string:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">String experimentJson = "{" +
+    "\"name\": \"progressive-degradation\"," +
+    "\"loop\": false," +
+    "\"stages\": [" +
+        "{\"durationMillis\": 60000, \"profiles\": {\"payments.svc\": {\"errorStatus\": 429, \"errorProbability\": 0.1}}}" +
+    "]" +
+"}";
+
+String result = mockServerClient.startChaosExperiment(experimentJson);
+// returns {"status":"started","name":"progressive-degradation","stages":1,"loop":false}</code></pre>
+
+<p>It returns the server's <code class="inline code">{"status":"started",...}</code> JSON as a <code class="inline code">String</code>. A malformed or rejected experiment definition (invalid stage, unhealthy baseline, etc. — always <code class="inline code">400</code>) throws an <code class="inline code">IllegalArgumentException</code> carrying the server's error body; a <code class="inline code">403</code> (denied by <a href="/mock_server/control_plane_authorisation.html">control plane authorisation</a>, when enabled) throws a <code class="inline code">ClientException</code>. There is no <code class="inline code">chaosEnabled</code> property — chaos profiles and experiments are always available; only control-plane authorisation can gate them.</p>
+
 <a id="chaos_experiment_scheduling" class="anchor" href="#chaos_experiment_scheduling">&nbsp;</a>
 
 <h3>Scheduling the start (delayed / cron)</h3>

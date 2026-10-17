@@ -862,3 +862,28 @@ $client-&gt;reset();</code></pre>
         <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/control/put_reset" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
     </div>
 </div>
+
+<a id="clear_by_namespace" class="anchor" href="#clear_by_namespace">&nbsp;</a>
+
+<h2>Clearing by namespace (multi-tenancy)</h2>
+
+<p>When multiple teams or test suites share one MockServer instance, expectations can be scoped to a <strong>namespace</strong> (tenant) so each owner can clean up only its own expectations without disturbing anyone else's. An expectation with no namespace (the default) is <strong>global</strong> and is matched regardless of any request namespace.</p>
+
+<p>Add <code class="inline code">?namespace=&lt;name&gt;</code> to <code class="inline code">PUT /mockserver/clear</code> to clear only that namespace's expectations (the event log is not namespaced, so it is left untouched even with <code class="inline code">type=all</code>). The namespace can also be supplied as a header instead of the query parameter — see <a href="/mock_server/configuration_properties.html#button_configuration_match_namespace_header"><code class="inline code">matchNamespaceHeader</code></a> &mdash; the query parameter takes precedence when both are present.</p>
+
+<button id="button_client_clear_by_namespace" class="accordion">clear only one namespace's expectations</button>
+<div class="panel">
+    <button class="accordion inner">Java: MockServerClient</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clearByNamespace("team-checkout");</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/clear?type=expectations&amp;namespace=team-checkout"</code></pre>
+        <p>Or with the configured namespace header instead of the query parameter:</p>
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/clear?type=expectations" \
+  -H "X-MockServer-Namespace: team-checkout"</code></pre>
+    </div>
+</div>
+
+<p>To create an expectation scoped to a namespace in the first place, see <a href="/mock_server/creating_expectations.html#namespace"><code class="inline code">withNamespace(...)</code></a> on the Java client.</p>

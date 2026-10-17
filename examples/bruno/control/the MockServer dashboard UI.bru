@@ -1,0 +1,17 @@
+meta {
+  name: the MockServer dashboard UI
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/mockserver/dashboard
+  body: none
+  auth: inherit
+}
+
+docs {
+  Serves the dashboard single-page application (and its static assets, under the same path prefix) that streams and visualises captured traffic, expectations and logs over a WebSocket. Subject to control-plane authorisation when enabled, like other control-plane reads.
+  
+  Full API reference: https://www.mock-server.com/mock_server/mockserver_clients.html
+}

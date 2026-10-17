@@ -424,6 +424,8 @@ $client-&gt;verify(
         <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/verify/put_verify" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<p><strong>Since 9.0.0 (BREAKING):</strong> verifying with an OpenAPI request matcher counts only requests for the <strong>matched operation</strong> &mdash; the operation the request actually resolved to (and, when <span class="inline_code">operationId</span> is given, only requests matching that specific operation). Before 9.0.0 the OpenAPI matcher was ignored for verification and <em>every</em> recorded request counted, regardless of whether it matched the spec at all. <span class="inline_code">verifySequence</span> was not affected by this change. The two examples below show the un-scoped form (every request matching the spec) and the <span class="inline_code">operationId</span>-scoped form (only that one operation).</p> <!-- version-ref:keep -->
+
 <button id="button_verify_req_at_least_twice_by_openapi" class="accordion">verify requests received at least twice by openapi</button>
 <div class="panel">
     <button class="accordion inner">Java</button>
