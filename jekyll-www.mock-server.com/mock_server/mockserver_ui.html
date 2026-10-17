@@ -19,8 +19,10 @@ sitemap:
     <li><strong><a href="#ui_traffic_section">Traffic</a></strong> — every captured request in a master list, with a rich detail pane on the right for LLM and MCP traffic, a <strong>Replay</strong> button to re-issue a captured request, and a <strong>Compare</strong> toggle to diff two requests field-by-field</li>
     <li><strong><a href="#ui_sessions_section">Trace</a></strong> — related requests grouped into swim-lanes — including LLM agent runs — to follow a multi-step flow end to end, plus a <strong>Compare</strong> tab for diffing two captured runs side-by-side</li>
     <li><strong><a href="#ui_breakpoints_section">Breakpoints</a></strong> — pause, inspect, and manipulate live stream frames (SSE, gRPC, WebSocket, GraphQL subscription) and request/response exchanges; see <a href="/mock_server/interactive_breakpoints.html">Interactive Breakpoints</a></li>
-    <li><strong><a href="#ui_composer_section">Mocks</a></strong> — create or edit expectations of every kind (HTTP, gRPC, DNS, MCP, LLM), import them (OpenAPI, WSDL, HAR, Postman), and insert engine-aware template snippets without writing any code</li>
-    <li><strong><a href="#ui_chaos_section">Chaos</a></strong> — configure and inject HTTP, gRPC, and TCP faults (chaos experiments) that apply to all forwarded requests to a given upstream host or service. The HTTP fault set covers error responses, dropped connections, latency, body corruption, slow-response chunking, quotas/rate limits, count and time windows, gradual degradation, and a GraphQL error envelope, with a TTL so chaos auto-expires</li>
+    <li><strong><a href="#ui_audit_section">Audit</a></strong> — a chronological trail of control-plane mutations (who changed what expectation, configuration, or server state), separate from the request/response log</li>
+    <li><strong><a href="#ui_composer_section">Mocks</a></strong> — create or edit expectations of every kind (HTTP, gRPC, DNS, MCP, LLM), import them (Expectation JSON, OpenAPI, WSDL, HAR, Postman), and insert engine-aware template snippets without writing any code</li>
+    <li><strong><a href="#ui_scenarios_section">Scenarios</a></strong> — view and drive the state machines your scenario-bound mocks step through, with a diagram of the states a scenario has actually visited</li>
+    <li><strong><a href="#ui_chaos_section">Chaos</a></strong> — configure and inject HTTP, gRPC, and TCP faults that apply to all forwarded requests to a given upstream host or service, define multi-stage chaos experiments that progress through those faults automatically over time, and simulate a Kubernetes node drain / Spot reclamation with the preemption simulator. The HTTP fault set covers error responses, dropped connections, latency, body corruption, slow-response chunking, quotas/rate limits, count and time windows, gradual degradation, and a GraphQL error envelope, with a TTL so chaos auto-expires</li>
     <li><strong><a href="#ui_performance_section">Performance</a></strong> — create and run <a href="/mock_server/load_injection.html">load scenarios</a>: a stage-builder for VU and arrival-rate stages with ramp curves, live run status (current stage, target, active VUs), and a combined toggleable latency/throughput metrics graph</li>
     <li><strong><a href="#ui_optimise_section">LLM Optimise</a></strong> — analyse captured LLM traffic for cost, token, latency, and prompt-hygiene opportunities, and export an optimisation brief</li>
     <li><strong><a href="#ui_mcp_health_section">MCP Server Health</a></strong> — per-MCP-server latency and error rate for the MCP servers your proxied tools call, worst-first, so you can see which server is the real bottleneck</li>
@@ -29,7 +31,7 @@ sitemap:
     <li><strong><a href="#ui_library_section">Library</a></strong> — import expectations, export traffic, and manage cassette files, WASM modules, and gRPC descriptors</li>
     <li><strong><a href="#ui_drift_section">Drift</a></strong> — review mock drift records where stubbed responses diverge from the real upstream</li>
     <li><strong><a href="#ui_verification_section">Verify</a></strong> — assert that MockServer received the requests you expected (a single request a given number of times, or an ordered sequence) without writing test code</li>
-    <li><strong><a href="#ui_contract_section">Contract</a></strong> — run an OpenAPI spec's operations against a live service and validate every response against the contract</li>
+    <li><strong><a href="#ui_contract_section">Contract</a></strong> — run an OpenAPI spec's operations against a live service and validate every response against the contract, or validate traffic already recorded against the spec with no live service involved</li>
     <li><strong><a href="#ui_slo_section">SLO</a></strong> — assert service-level objectives (latency percentiles and error rate) against recorded traffic without writing test code</li>
     <li><strong><a href="#ui_cluster_section">Cluster</a></strong> — view the state-backend cluster this node participates in: node id, coordinator, and member roles</li>
     <li><strong><a href="#ui_metrics_section">Metrics</a></strong> — JVM, request-latency, chaos, expectations-by-type, and MCP-tool-call charts (shown when metrics are enabled)</li>
@@ -119,6 +121,11 @@ sitemap:
 
 <p>The live panels — Log Messages, Received Requests, Proxied Requests, and the Traffic list — show entries oldest-first, with the newest appended at the bottom, like a console in a build pipeline. Each of them has a <strong>Follow</strong> chip in its header, reading <strong>Following</strong> while it is on: the panel then stays pinned to the newest entries as they arrive. Turn it off and the view stays exactly where you left it, so you can read without the content moving. Scrolling up with the wheel or the keyboard turns Follow off for that panel, and scrolling back down to the bottom the same way turns it back on; clicking the chip works either way, and jumps you to the newest entries. The toolbar also has a master <strong>Follow new entries</strong> / <strong>Stop following new entries</strong> switch that sets every panel at once. <strong>Active Expectations</strong> is a set of registered mocks rather than a stream of events, so it keeps its own order and has no Follow chip.</p>
 
+<a id="ui_workspaces_section" class="anchor" href="#ui_workspaces_section">&nbsp;</a>
+<h3>Workspaces</h3>
+
+<p>A workspace bundles the active view and each panel's search term, so one browser tab can hold several independent investigations open at once — for example, Traffic filtered one way in one workspace and the Mocks composer open in another. Click the <strong>New Workspace</strong> icon in the title bar to create one; once a second workspace exists, a tab bar appears below the title bar to switch between them, double-click a tab to rename it, and close a tab to remove that workspace. The captured data itself (logs, expectations, received and proxied requests), the connection target, and the theme are shared across every workspace — a workspace is a different lens on one server's data, not a separate connection.</p>
+
 <h3>Clear and Reset</h3>
 
 <p>Click the clear icon in the title bar to access three options:</p>
@@ -158,7 +165,7 @@ sitemap:
         <tr><td>Server Clock</td><td>Freeze or advance the server's clock to test time-sensitive behaviour</td><td><a href="/mock_server/clock_control.html">Clock Control</a></td></tr>
         <tr><td>Explain Unmatched Requests</td><td>Show why a request did not match any expectation (closest-match diff); <strong>Preview Fix</strong> shows the smallest change that would make an expectation match, and <strong>Apply Fix</strong> makes it only when you select it</td><td><a href="/mock_server/troubleshooting_matching.html#suggested_fixes">Troubleshooting Matching</a></td></tr>
         <tr><td>Matcher Test Playground</td><td>Try a request against a candidate expectation and see whether, and why, it matches</td><td><a href="/mock_server/troubleshooting_matching.html">Troubleshooting Matching</a></td></tr>
-        <tr><td>Server Configuration</td><td>View and edit configuration properties at runtime</td><td><a href="/mock_server/configuration_properties.html">Configuration Properties</a></td></tr>
+        <tr><td>Server Configuration</td><td>View and edit configuration properties at runtime. Its <strong>Server Info</strong> tab shows the bound ports (with a control to bind another), the server version, a ready-to-copy proxy setup snippet (HTTPS proxy URL and shell / PowerShell environment variables, with a button to download the proxy's CA certificate), and the full effective configuration grouped by where each value came from (runtime, system property, environment variable, properties file, or default — plus an unrecognised-and-ignored group for any property name the server did not recognise)</td><td><a href="/mock_server/configuration_properties.html">Configuration Properties</a></td></tr>
         <tr><td>Operating Mode (SIMULATE / SPY / CAPTURE)</td><td>Controls how unmatched requests are handled — return 404, or forward to the real upstream and record</td><td><a href="/mock_server/isolating_single_service.html#mock_mode">Operating Mode</a></td></tr>
         <tr><td>Follow New Entries</td><td>Turn <strong>Follow</strong> on or off for every live panel at once (see <a href="#follow_new_entries">Following New Entries</a>)</td><td>—</td></tr>
     </tbody>
@@ -175,12 +182,16 @@ sitemap:
     <tbody>
         <tr><td>Import OpenAPI</td><td>Generate expectations from an OpenAPI / Swagger specification</td><td><a href="/mock_server/using_openapi.html">Using OpenAPI</a></td></tr>
         <tr><td>Import WSDL</td><td>Generate expectations from a WSDL (SOAP) document</td><td><a href="/mock_server/using_openapi.html#generate_expectations_from_wsdl">Generate Expectations From WSDL</a></td></tr>
+        <tr><td>Import GraphQL Schema</td><td>Generate expectations from a GraphQL SDL schema document; an optional endpoint path defaults to <code>/graphql</code></td><td><a href="/mock_server/graphql_mocking.html">GraphQL Mocking</a></td></tr>
         <tr><td>Pact Contract (export / verify)</td><td>Export expectations as a Pact contract, or verify against one</td><td><a href="/mock_server/pact_export.html">Pact Export</a></td></tr>
         <tr><td>Mock OIDC Provider</td><td>Mock an OpenID Connect / OAuth2 provider</td><td><a href="/mock_server/mocking_oauth2.html">Mocking OAuth2 / OIDC</a></td></tr>
-        <tr><td>AsyncAPI Broker Mock</td><td>Mock a Kafka / MQTT / AMQP message broker from an AsyncAPI spec</td><td><a href="/mock_server/asyncapi_messaging.html">AsyncAPI Messaging</a></td></tr>
+        <tr><td>Mock SAML Provider</td><td>Mock a SAML 2.0 identity provider; every field is optional and the server fills in a fully functional IdP when the form is left blank</td><td><a href="/mock_server/mocking_saml.html">Mocking SAML</a></td></tr>
+        <tr><td>Mock SCIM Provider</td><td>Mock a SCIM 2.0 provider serving <code>/scim/v2/Users</code> and <code>/scim/v2/Groups</code>: base path, ID strategy (UUID / auto-increment), filter and PATCH enforcement toggles, and optional bearer-token enforcement; every field is optional</td><td><a href="/mock_server/mocking_scim.html">Mocking SCIM</a></td></tr>
+        <tr><td>AsyncAPI Broker Mock</td><td>Mock a Kafka / MQTT / AMQP message broker from an AsyncAPI spec — load the spec, or tick <strong>Generate HTTP expectations</strong> to instead create plain HTTP expectations from its channels; a <strong>Verify Messages</strong> section below checks observed broker messages against a channel/count (and optional payload) assertion</td><td><a href="/mock_server/asyncapi_messaging.html">AsyncAPI Messaging</a></td></tr>
         <tr><td>Register CRUD Resource</td><td>Create a CRUD data store backed by mock expectations</td><td><a href="/mock_server/crud_data_store.html">CRUD Data Store</a></td></tr>
         <tr><td>Mock File Store</td><td>Serve files from a mock file store</td><td><a href="/mock_server/file_storage.html">File Storage</a></td></tr>
         <tr><td>Diff Two Requests</td><td>Compare two recorded requests side by side (dashboard-only tool)</td><td>&mdash;</td></tr>
+        <tr><td>Compare Against Baseline</td><td>Paste a known-good array of expectations as a baseline, and optionally a second array as the current state (when omitted, the server diffs the baseline against its own live expectations); reports expectations added, removed, and changed, keyed by <code>METHOD path</code> (dashboard-only tool)</td><td>&mdash;</td></tr>
     </tbody>
 </table>
 
@@ -356,6 +367,12 @@ sitemap:
 
 <p>The master list header also has a <strong>Compare</strong> toggle (pick exactly two requests to diff them field-by-field) and a <strong>Select</strong> toggle for bulk actions: tick any number of rows (or use the header checkbox to select all), then click <strong>Clear</strong> and confirm to remove those captured requests from the log. Because requests are cleared by matching their shape, identical requests captured alongside a selection may also be removed. Select and Compare are separate modes — turning one on turns the other off.</p>
 
+<a id="ui_traffic_promote_section" class="anchor" href="#ui_traffic_promote_section">&nbsp;</a>
+
+<h3>Promote to Mocks</h3>
+
+<p>A <strong>Promote to Mocks</strong> button in the Traffic header (enabled once at least one request has been proxied) turns recorded traffic into active mock expectations in one step: MockServer consolidates duplicate exchanges into reusable mocks, generalises volatile values, redacts sensitive headers and values (Authorization, API keys, cookies, and similar) so captured credentials are never baked into a mock, and activates the result. An optional method/path filter in the dialog lets you promote only a subset of what has been recorded; leaving both blank promotes everything. This is the quickest way to go from "recorded against the real service" to "serving the same responses as mocks" without hand-writing any expectations.</p>
+
 <h3>LLM Usage Strip</h3>
 
 <p>For any LLM request, a thin strip appears above the detail tabs showing the provider, model name, token counts (input and output), estimated cost, and stop reason. This lets you see the key usage metrics at a glance without switching tabs.</p>
@@ -437,6 +454,19 @@ sitemap:
 
 <p>Replay is distinct from <a href="/mock_server/persisting_expectations.html">cassette replay</a> (which loads saved expectations from a file) — it re-issues a single captured request to a live upstream and shows the live response.</p>
 
+<a id="ui_traffic_repeat_section" class="anchor" href="#ui_traffic_repeat_section">&nbsp;</a>
+
+<h3>Repeat Request</h3>
+
+<p>A <strong>Repeat…</strong> button sits next to <strong>Replay</strong> in the detail pane header for any captured request. Where Replay sends the request once, Repeat re-sends it a chosen number of times — useful for generating load against a single endpoint, or for checking that an upstream behaves consistently across many calls.</p>
+
+<ol>
+    <li>Select a captured request and click <strong>Repeat…</strong> to open the <em>Repeat Request</em> dialog. A warning names the method and path that will be re-sent, and calls out that a non-<code>GET</code> method may mutate state or incur costs (for example, LLM API charges) that a high iteration count would amplify.</li>
+    <li>Set <strong>Iterations</strong> (1 to 1000), <strong>Concurrency</strong> (1 to 20 requests in flight at once), and <strong>Delay (ms)</strong> between requests.</li>
+    <li>Click <strong>Start</strong>. A progress bar tracks requests sent, succeeded, and failed; click <strong>Cancel</strong> to stop early. Each iteration re-issues the request through <code>PUT /mockserver/replay</code>, so the fan-out happens from the browser while MockServer itself sends one request per iteration.</li>
+    <li>When it finishes, a summary reports how many succeeded and failed, with a <strong>View Them</strong> button that jumps back to Traffic filtered to the request's path. New traffic entries appear in the list as they are sent.</li>
+</ol>
+
 <a id="ui_sessions_section" class="anchor" href="#ui_sessions_section">&nbsp;</a>
 
 <h2>Trace</h2>
@@ -478,6 +508,22 @@ sitemap:
 <p>If you do not act on a paused item within the breakpoint timeout (<span class="inline_code">breakpointTimeoutMillis</span>, 30 seconds by default), MockServer continues it unchanged; the dashboard then removes it from the list and shows a notice saying so. If you had already clicked an action just as the timeout passed, the notice tells you that your decision was not applied.</p>
 
 <p>See <a href="/mock_server/interactive_breakpoints.html">Interactive Breakpoints</a> for the full matcher API reference, callback WebSocket protocol, and configuration details.</p>
+
+<a id="ui_audit_section" class="anchor" href="#ui_audit_section">&nbsp;</a>
+
+<h2>Audit</h2>
+
+<p>The Audit view shows the <strong>control-plane audit trail</strong> — a newest-first list of control-plane <em>mutations</em> — who changed what (register or clear an expectation, reset, a configuration change, and so on), with the method, path, operation, source address, principal, how the principal was established, and whether it was authorized. This is a separate, additional trail from the request/response log shown on the Dashboard and Traffic views: the audit trail never contains request/response traffic, and it never stores request headers or bodies.</p>
+
+<p>Recording is <strong>off by default</strong>. A status chip at the top of the view reads <strong>Audit Trail: On</strong> or <strong>Audit Trail: Off</strong>:</p>
+
+<ul>
+    <li>When off, click <strong>Enable Audit Trail</strong> to turn it on. Only changes made after enabling are recorded — nothing retroactive.</li>
+    <li>When on, a switch turns recording back off (this only stops recording; it is not destructive).</li>
+    <li>An <strong>Also record reads</strong> checkbox additionally records reads of control-plane endpoints — by default only mutations are recorded, though a forbidden read is always recorded regardless of this setting.</li>
+</ul>
+
+<p>The view does not poll; click <strong>Refresh</strong> to pull the latest entries. The same controls are available as configuration properties — <code>controlPlaneAuditEnabled</code> and <code>controlPlaneAuditReads</code> — for enabling the trail at startup instead of from the dashboard.</p>
 
 <a id="ui_composer_section" class="anchor" href="#ui_composer_section">&nbsp;</a>
 
@@ -629,6 +675,14 @@ sitemap:
 
 <p>All import operations call the relevant MockServer control-plane endpoint (<code>PUT /mockserver/expectation</code>, <code>PUT /mockserver/openapi</code>, <code>PUT /mockserver/wsdl</code>, or <code>PUT /mockserver/import?format=har|postman</code>) and report how many expectations were created. Import is additive — it does not clear existing expectations. See <a href="/mock_server/importing_expectations.html">Importing Expectations</a> for details on each format.</p>
 
+<a id="ui_scenarios_section" class="anchor" href="#ui_scenarios_section">&nbsp;</a>
+
+<h2>Scenarios</h2>
+
+<p>The Scenarios view is a standalone nav tab over the same panel shown as the <strong>Scenarios</strong> tab inside the <a href="#ui_composer_section">Mocks</a> composer — use whichever is convenient, they show the same data. It makes MockServer's <a href="/mock_server/stateful_scenarios.html">scenario state machines</a> legible, not just controllable: beyond the existing current-state (refresh) / set-state / trigger controls and a Mermaid diagram of the states actually observed, a <strong>Scenario Details</strong> section lists, for every scenario, each of its states and the mocks bound to it.</p>
+
+<p>Each scenario renders as an expandable card showing its states and, under every state, the bound mocks as <code>METHOD /path</code>, the state they match in, and the state they transition to (<code>state &rarr; newState</code>). Every bound mock has an <strong>Edit</strong> action that opens it in the Mocks composer with its scenario bindings intact, and a scenario-level <strong>Edit</strong> edits its one mock directly or offers a picker when several mocks share the scenario.</p>
+
 <a id="ui_chaos_section" class="anchor" href="#ui_chaos_section">&nbsp;</a>
 
 <h2>Chaos</h2>
@@ -693,6 +747,33 @@ sitemap:
 <p>The <strong>Active registrations</strong> panel lists each host with chaos in force and its remaining auto-revert countdown (or shows <em>No service-scoped chaos registered</em> when none is set). Each registration can be edited in place (Apply replaces the whole profile, so clearing a field removes that fault, and a time-to-live keeps counting down) or removed with its remove icon (trash), or use the section's <strong>Clear HTTP</strong> / <strong>Clear gRPC</strong> / <strong>Clear TCP</strong> button to remove everything in that section at once. Injected faults are also counted in the <a href="#ui_metrics_section">Metrics</a> view under <strong>HTTP Chaos Faults</strong>.</p>
 
 <p>To drive load alongside chaos — inject a fault and simultaneously apply load to verify resilience — see the <a href="#ui_performance_section">Performance</a> view.</p>
+
+<a id="ui_chaos_experiments_section" class="anchor" href="#ui_chaos_experiments_section">&nbsp;</a>
+
+<h3>Chaos Experiments</h3>
+
+<p>Below the chaos sections, the <strong>Experiments</strong> panel defines a <em>multi-stage</em> chaos experiment: an ordered list of stages that progress automatically, each applying a chaos profile to an upstream host for a fixed duration — for example, 30 seconds of added latency, then 30 seconds of error responses, with no manual intervention between stages.</p>
+
+<ul>
+    <li>Give the experiment a <strong>name</strong>, optionally turn on <strong>Loop</strong> to repeat the stage sequence indefinitely, then add one or more stages — each with a <strong>Duration ms</strong>, a <strong>Host</strong>, and the fault fields (error status/probability, latency, drop probability) to apply to that host for the stage.</li>
+    <li><strong>Start Experiment</strong> begins the run; a live status shows the experiment name, current stage, a progress bar for the active stage, and the total elapsed time. <strong>Stop</strong> ends it early.</li>
+    <li><strong>Save as Profile</strong> stores the experiment definition (name, loop setting and every stage) under the experiment's name, for one-click re-use later; SLO criteria can't be set in the dashboard, so add them through the REST API if you want an experiment to stop on an SLO breach; the saved-profiles list lets you click a chip to immediately start that saved experiment, or its delete icon to remove the saved profile.</li>
+    <li><strong>History</strong> (expand to load) lists past experiment runs — name, outcome, and when each one ended — up to the last 50.</li>
+    <li>If the experiment carries SLO criteria, a terminal <strong>verdict</strong> (pass/fail per objective) is shown once the run ends; a breach detected mid-run stops the experiment immediately with status <code>halted_by_slo_breach</code>, attaching a <code>FAIL</code> verdict. This is a separate safety mechanism from the <a href="/mock_server/configuration_properties.html#button_configuration_chaos_auto_halt">chaos auto-halt circuit-breaker</a> (status <code>halted_by_auto_halt</code>), which independently stops any chaos experiment or service-scoped chaos once too many destructive faults occur in a window, regardless of SLO criteria.</li>
+</ul>
+
+<a id="ui_preemption_section" class="anchor" href="#ui_preemption_section">&nbsp;</a>
+
+<h3>Preemption Simulation</h3>
+
+<p>The <strong>Preemption Simulation</strong> panel simulates a Kubernetes node drain, a Spot-instance reclamation, or a pre-<code>SIGTERM</code> sequence: MockServer cordons itself — turning away new data-plane requests while letting requests already in flight finish — without ever actually stopping the server. This is a simulation only; it never stops the JVM or event loops, and the control plane (<code>/mockserver/...</code>) stays reachable throughout so you can always observe and uncordon.</p>
+
+<ul>
+    <li>A mode selector offers <code>both</code> (reject new requests with <code>503</code> <em>and</em> signal HTTP/2 clients to stop opening streams via <code>GOAWAY</code>), <code>reject503</code> (503 only), or <code>goaway</code> (GOAWAY only, no 503).</li>
+    <li><strong>Drain ms</strong> — how long in-flight requests are given to finish before the cordon reports itself drained.</li>
+    <li><strong>TTL ms</strong> — an optional dead-man's switch that auto-uncordons after this many milliseconds, so a forgotten simulation cannot block traffic indefinitely.</li>
+    <li><strong>Start Preemption</strong> begins the cordon; the current-state panel shows the live state (<code>inactive</code> / <code>draining</code> / <code>drained</code>), the in-flight request count, and the remaining drain time. <strong>Clear Preemption</strong> uncordons immediately.</li>
+</ul>
 
 <a id="ui_performance_section" class="anchor" href="#ui_performance_section">&nbsp;</a>
 
@@ -860,11 +941,17 @@ sitemap:
 
 <h2>Contract</h2>
 
-<p>The Contract view runs an OpenAPI spec's operations against a live service and validates every response against the spec — contract testing without writing any test code. Switch to it using the <strong>Contract</strong> button in the navigation bar.</p>
+<p>The Contract view validates a live service, or traffic already recorded through MockServer, against an OpenAPI spec — contract testing without writing any test code. Switch to it using the <strong>Contract</strong> button in the navigation bar. A toggle at the top picks one of two modes; both take the spec the same way, as a URL, file path, or inline YAML/JSON document.</p>
 
 <img class="ui_image" src="/images/MockServerContract.png" alt="MockServer Contract Test">
 
-<p>Supply the <strong>OpenAPI spec</strong> as a URL, file path, or inline document, set the <strong>Target base URL</strong> of the service to exercise, and optionally narrow the run to a single <strong>operationId</strong>. Click <strong>Run contract test</strong> and MockServer calls each operation and checks the responses (status, headers, and body schema) against the contract, reporting any violations. See <a href="/mock_server/using_openapi.html">Using OpenAPI</a> for how MockServer works with OpenAPI specifications.</p>
+<h3>Live Contract Test</h3>
+
+<p>Set the <strong>Target base URL</strong> of the service to exercise, and optionally narrow the run to a single <strong>operationId</strong>. Click <strong>Run contract test</strong> and MockServer calls each operation of the live service and checks the responses (status, headers, and body schema) against the contract, reporting any violations. See <a href="/mock_server/using_openapi.html">Using OpenAPI</a> for how MockServer works with OpenAPI specifications.</p>
+
+<h3>Validate Recorded Traffic</h3>
+
+<p>This mode takes only the spec — no target URL, and no live service is contacted. Instead, MockServer locates every request/response pair it has already recorded (from proxying or mocking) and validates each one against the spec in place: the safer, CI-style counterpart to the live contract test, since it never issues a real request of its own. Results render as a table of method, path, matched operation, and any request/response validation errors, with pass/fail totals. If nothing has been recorded yet, the view prompts you to record or proxy some traffic first.</p>
 
 <a id="ui_slo_section" class="anchor" href="#ui_slo_section">&nbsp;</a>
 

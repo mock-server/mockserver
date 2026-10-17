@@ -64,7 +64,8 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
         <tr><td><a href="#verify_structured_output"><code>verify_structured_output</code></a></td><td>Validate recorded LLM responses' JSON output against a JSON Schema</td><td>High</td></tr>
         <tr><td><a href="#verify_cost_budget"><code>verify_cost_budget</code></a></td><td>Assert the total estimated USD cost of recorded LLM responses is within a budget</td><td>High</td></tr>
         <tr><td><a href="#detect_llm_drift"><code>detect_llm_drift</code></a></td><td>Replay a cassette against the live provider and report structural drift</td><td>High</td></tr>
-        <tr><td><a href="#export_optimisation_report"><code>export_optimisation_report</code></a></td><td>Turn captured LLM traffic into an optimisation brief covering both spend and agent design (Markdown, JSON, or CSV)</td><td>High</td></tr>
+        <tr><td><a href="#export_optimisation_report"><code>export_optimisation_report</code></a></td><td>Turn captured LLM traffic into an optimisation brief covering both spend and agent design (Markdown, JSON, CSV, or an eval/fine-tune dataset export)</td><td>High</td></tr>
+        <tr><td><a href="#diff_agent_runs"><code>diff_agent_runs</code></a></td><td>Prompt-level diff of two recorded agent runs &mdash; message, tool-call, and token/cost changes</td><td>High</td></tr>
         <tr><td><a href="#mock_adversarial_llm_response"><code>mock_adversarial_llm_response</code></a></td><td>Mock a hostile/malformed LLM response to test agent resilience</td><td>High</td></tr>
         <tr><td><a href="#run_mcp_contract_test"><code>run_mcp_contract_test</code></a></td><td>Check a target MCP server conforms to the protocol over Streamable HTTP</td><td>High</td></tr>
         <tr><td><a href="#list_mock_tools"><code>list_mock_tools</code></a></td><td>Generate MCP tool definitions from the current active mock expectations</td><td>High</td></tr>
@@ -1336,7 +1337,7 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
 
 <p>Snapshots LLM/MCP traffic recorded through MockServer's forwarding proxy into a committable, secret-free fixture file for deterministic replay. Converts SSE streaming responses (from APIs like Anthropic Claude, OpenAI, etc.) into MockServer's SSE response format for faithful event-by-event replay. Sensitive headers (Authorization, api-key, Cookie, etc.) are automatically redacted. Note that request and response bodies are <strong>not</strong> redacted &mdash; if your application places credentials in a request or response body, review fixture files before committing them to version control.</p>
 
-<p>The written fixture is <strong>automatically registered as a cassette</strong> (origin <code>recorded</code>), so it appears under <code>GET /mockserver/cassettes</code> and in the dashboard's <a href="/mock_server/mockserver_ui.html#ui_library_section">Cassettes</a> tab without a separate <code>PUT /mockserver/cassettes</code> call. Recording to the same path again updates that entry in place rather than adding a duplicate.</p>
+<p>The written fixture is <strong>automatically registered as a cassette</strong> (origin <code>recorded</code>), so it appears under <code>GET /mockserver/cassettes</code> and in the dashboard's <a href="/mock_server/mockserver_ui.html#ui_library_section">Cassettes</a> tab without a separate <code>PUT /mockserver/cassettes</code> call (<code>PUT</code> exists for tracking a cassette file produced some other way). Recording to the same path again updates that entry in place rather than adding a duplicate. Remove a tracked cassette with <code>DELETE /mockserver/cassettes</code>, passing its path either as the <code>?path=</code> query parameter or as a JSON body <code>{"path": "..."}</code>; this untracks the entry only, it does not delete the fixture file.</p>
 
 <table>
     <thead>
@@ -1387,7 +1388,7 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
 
 <p>Loads expectations from a JSON fixture file and adds them as active mock expectations in MockServer. Use this to replay LLM/MCP traffic previously recorded with <code class="code inline">record_llm_fixtures</code>. SSE streaming responses in the fixture are replayed with Server-Sent Events.</p>
 
-<p>The loaded fixture is <strong>automatically registered as a cassette</strong> (origin <code>loaded</code>), so it appears under <code>GET /mockserver/cassettes</code> and in the dashboard's <a href="/mock_server/mockserver_ui.html#ui_library_section">Cassettes</a> tab without a separate <code>PUT /mockserver/cassettes</code> call. Loading the same path again updates that entry in place rather than adding a duplicate.</p>
+<p>The loaded fixture is <strong>automatically registered as a cassette</strong> (origin <code>loaded</code>), so it appears under <code>GET /mockserver/cassettes</code> and in the dashboard's <a href="/mock_server/mockserver_ui.html#ui_library_section">Cassettes</a> tab without a separate <code>PUT /mockserver/cassettes</code> call. Loading the same path again updates that entry in place rather than adding a duplicate. See <a href="#record_llm_fixtures"><code>record_llm_fixtures</code></a> above for how to remove a tracked cassette with <code>DELETE /mockserver/cassettes</code>.</p>
 
 <table>
     <thead>
@@ -1817,8 +1818,11 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
         <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
     </thead>
     <tbody>
-        <tr><td><code>provider</code></td><td>string</td><td>Yes</td><td>LLM provider whose recorded requests to summarise</td></tr>
+        <tr><td><code>provider</code></td><td>string (enum)</td><td>Yes</td><td>LLM provider whose recorded requests to summarise, or <code>AUTO</code> to detect it from the recorded request paths &mdash; useful for proxied traffic where the provider is implicit in the upstream URL</td></tr>
         <tr><td><code>path</code></td><td>string</td><td>No</td><td>Restrict to requests on this path</td></tr>
+        <tr><td><code>isolationType</code></td><td>string (enum)</td><td>No</td><td>Scope the run to a single session by the isolation source the conversation was isolated on: <code>header</code>, <code>query_parameter</code>, or <code>cookie</code></td></tr>
+        <tr><td><code>isolationKey</code></td><td>string</td><td>No</td><td>The header/query-parameter/cookie name used to isolate the session (e.g. <code>x-agent-id</code>)</td></tr>
+        <tr><td><code>isolationValue</code></td><td>string</td><td>No</td><td>The value identifying the session (e.g. <code>agent-001</code>)</td></tr>
     </tbody>
 </table>
 
@@ -2029,7 +2033,7 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
         <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
     </thead>
     <tbody>
-        <tr><td><code>format</code></td><td>string (enum)</td><td>No</td><td><code>markdown</code> for the copy-paste optimisation brief (default), <code>json</code> for the structured report bundle, or <code>csv</code> for the per-call + totals spreadsheet export.</td></tr>
+        <tr><td><code>format</code></td><td>string (enum)</td><td>No</td><td><code>markdown</code> for the copy-paste optimisation brief (default), <code>json</code> for the structured report bundle, <code>csv</code> for the per-call + totals spreadsheet export, or an eval/fine-tune dataset export of the captured sessions: <code>openai-evals</code> (OpenAI-evals JSONL), <code>fine-tune</code> (chat fine-tune JSONL), or <code>promptfoo</code> (promptfoo test-suite JSON). All formats redact secrets.</td></tr>
         <tr><td><code>session</code></td><td>string</td><td>No</td><td>Optional session/grouping key filter (e.g. <code>host:api.openai.com</code>); default is all captured LLM traffic.</td></tr>
         <tr><td><code>host</code></td><td>string</td><td>No</td><td>Optional upstream host filter (e.g. <code>api.openai.com</code>).</td></tr>
         <tr><td><code>provider</code></td><td>string</td><td>No</td><td>Optional LLM provider filter (e.g. <code>OPENAI</code>, <code>ANTHROPIC</code>).</td></tr>
@@ -2052,6 +2056,40 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
 }</code></pre>
 
 <p>With <code>format: "markdown"</code> the result text carries a <code>brief</code> field (the Markdown document); with <code>format: "json"</code> it carries a structured <code>report</code> object; with <code>format: "csv"</code> it carries a <code>csv</code> field (per-call table plus totals/verdict summary). See <a href="/mock_server/ai_optimisation.html">LLM Optimisation</a> for the full signal catalogue and worked examples.</p>
+
+<a id="diff_agent_runs" class="anchor" href="#diff_agent_runs">&nbsp;</a>
+
+<h3>diff_agent_runs</h3>
+
+<p>A prompt-level diff between two recorded agent runs captured through MockServer &mdash; use it to see exactly what changed between a "before" run and an "after" run of the same agent (a prompt edit, a tool change, a model swap). It reconstructs each run's canonical conversation from recorded LLM traffic, normalises the prompts (the same normalisation as a conversation turn's <code>match.normalization</code>, above &mdash; whitespace collapsing and JSON key sorting are on by default, lowercasing and volatile-id stripping are off by default), and reports message additions / removals / edits, tool calls added or removed, and the token / cost delta. Deterministic and read-only &mdash; MockServer never calls an LLM, and message text is masked for credential shapes before it is compared or returned.</p>
+
+<table>
+    <thead>
+        <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>before</code></td><td>object</td><td>No</td><td>Selects the BEFORE run from captured LLM traffic by <code>session</code>, <code>host</code>, and/or <code>provider</code> (the same filter shape as <a href="#export_optimisation_report"><code>export_optimisation_report</code></a>). Omit to use all captured traffic.</td></tr>
+        <tr><td><code>after</code></td><td>object</td><td>No</td><td>Selects the AFTER run &mdash; same shape as <code>before</code>. Use a different filter from <code>before</code> (e.g. a different <code>session</code>) so the two sides are actually two different runs.</td></tr>
+        <tr><td><code>normalization</code></td><td>object</td><td>No</td><td>Optional prompt-normalisation options applied before diffing &mdash; the same fields and defaults as the turn-level <code>match.normalization</code> table above: <code>collapseWhitespace</code> (default <code>true</code>), <code>lowercase</code> (default <code>false</code>), <code>sortJsonKeys</code> (default <code>true</code>), <code>dropBuiltInVolatileFields</code> (default <code>false</code>), <code>dropVolatileFields</code> (array of string, none by default).</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Example request:</strong></p>
+
+<pre class="prettyprint code"><code class="code">{
+  "jsonrpc": "2.0",
+  "id": 52,
+  "method": "tools/call",
+  "params": {
+    "name": "diff_agent_runs",
+    "arguments": {
+      "before": { "session": "run-2026-10-01" },
+      "after": { "session": "run-2026-10-15" }
+    }
+  }
+}</code></pre>
+
+<p>The result reports <code>promptChanged</code>, <code>messageCountBefore</code>/<code>messageCountAfter</code>, a <code>messageDiffs</code> array (each with <code>changeType</code> &mdash; <code>UNCHANGED</code>/<code>ADDED</code>/<code>REMOVED</code>/<code>CHANGED</code> &mdash; <code>role</code>, <code>beforeText</code>, <code>afterText</code>), and <code>toolCallsAdded</code>/<code>toolCallsRemoved</code> arrays whose entries are <code>name(normalisedArguments)</code> fingerprint strings (e.g. <code>get_weather({"city":"paris"})</code>), not bare tool names &mdash; a call with the same name but different (normalised) arguments shows up as both added and removed. A <code>tokenDelta</code> object (input/output token and estimated USD cost totals for each side, and their deltas) is included only when <strong>both</strong> the before and after run have recorded token usage; otherwise the field is omitted.</p>
 
 <a id="low_level_tools" class="anchor" href="#low_level_tools">&nbsp;</a>
 
