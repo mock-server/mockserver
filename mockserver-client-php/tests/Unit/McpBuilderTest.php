@@ -167,6 +167,22 @@ class McpBuilderTest extends TestCase
         $this->assertStringContainsString('cost is ${esc.d}5 ${esc.h}1', $template);
     }
 
+    public function testVelocityEscapingOfTrailingMixedAndVeryLongBackslashRuns(): void
+    {
+        $run = str_repeat('\\', 100000);
+        $cases = [
+            'end\\\\' => 'end${esc.b}${esc.b}',
+            'a\\b\\$c#' => 'a\\b${esc.b}${esc.d}c${esc.h}',
+            $run . 'x' => $run . 'x',
+            $run . '$' => str_repeat('${esc.b}', 100000) . '${esc.d}',
+            $run => str_repeat('${esc.b}', 100000),
+        ];
+        foreach ($cases as $input => $expected) {
+            $this->assertSame($expected, McpEscaping::escapeVelocity((string) $input), 'input: ' . substr((string) $input, 0, 20));
+            $this->assertSame($expected, A2aEscaping::escapeVelocity((string) $input), 'input: ' . substr((string) $input, 0, 20));
+        }
+    }
+
     /**
      * Shared cross-client table: backslash runs before $, # or the end of the
      * value are escaped; other backslashes are left as-is.

@@ -250,6 +250,14 @@ describe('a2aMock escaping', function () {
         assert.ok(send.httpResponseTemplate.template.indexOf('a${esc.b}${esc.b}${esc.h}b') !== -1);
     });
 
+    it('Velocity-escapes very long backslash runs in the default task response', function () {
+        var run = '\\'.repeat(100000);
+        var plain = findByJsonRpc(a2aMock().withDefaultTaskResponse(run + 'x').build(), 'tasks/send')[0];
+        assert.ok(plain.httpResponseTemplate.template.indexOf(run + run + 'x') !== -1);
+        var meta = findByJsonRpc(a2aMock().withDefaultTaskResponse(run + '$').build(), 'tasks/send')[0];
+        assert.ok(meta.httpResponseTemplate.template.indexOf('${esc.b}'.repeat(200000) + '${esc.d}') !== -1);
+    });
+
     it('Velocity-escapes $ and # in a custom handler response', function () {
         var handler = findByJsonPath(a2aMock()
             .onTaskSend().matchingMessage('test.*').respondingWith('Price is $50 #discount').and()

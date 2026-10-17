@@ -61,6 +61,16 @@
         return quoted.substring(1, quoted.length - 1);
     };
 
+    var velocityMetacharacterEscape = function (metacharacter) {
+        if (metacharacter === "$") {
+            return "${esc.d}";
+        }
+        if (metacharacter === "#") {
+            return "${esc.h}";
+        }
+        return "";
+    };
+
     /**
      * Escape Velocity meta-characters so literal '$' and '#' in mock
      * content are not interpreted as Velocity references/directives.
@@ -72,14 +82,16 @@
         if (value === null || value === undefined) {
             return value;
         }
-        return String(value).replace(/(?<!\\)\\+(?=[$#]|$)|[$#]/g, function (match) {
-            if (match === "$") {
-                return "${esc.d}";
+        // group 2 consumes the metacharacter after a backslash run, is empty at
+        // the end and unset (empty alternative) otherwise, so no lookaround is needed
+        return String(value).replace(/(\\+)(?:([$#]|$)|)|[$#]/g, function (match, run, following) {
+            if (run === undefined) {
+                return velocityMetacharacterEscape(match);
             }
-            if (match === "#") {
-                return "${esc.h}";
+            if (following === undefined) {
+                return run;
             }
-            return "${esc.b}".repeat(match.length);
+            return "${esc.b}".repeat(run.length) + velocityMetacharacterEscape(following);
         });
     };
 

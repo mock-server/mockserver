@@ -31,6 +31,9 @@ module MockServer
       quoted[1...-1]
     end
 
+    VELOCITY_METACHARACTER_ESCAPES = { '$' => '${esc.d}', '#' => '${esc.h}' }.freeze
+    private_constant :VELOCITY_METACHARACTER_ESCAPES
+
     # Escape Velocity metacharacters so literal +$+ / +#+ survive rendering.
     # Velocity consumes backslashes written before a reference or directive, so
     # a run of backslashes followed by +$+, +#+ or the end of the value is
@@ -39,12 +42,16 @@ module MockServer
     def self.escape_velocity(value)
       return value if value.nil?
 
-      value.to_s.gsub(/(?<!\\)\\+(?=[$#]|\z)|[$#]/) do |match|
-        case match
-        when '$' then '${esc.d}'
-        when '#' then '${esc.h}'
-        else '${esc.b}' * match.length
-        end
+      # group 2 consumes the metacharacter after a run, is empty at the end and
+      # unset (empty alternative) otherwise, so no lookaround is needed
+      value.to_s.gsub(/(\\+)(?:([$#]|\z)|)|[$#]/) do |match|
+        run = Regexp.last_match(1)
+        next VELOCITY_METACHARACTER_ESCAPES[match] if run.nil?
+
+        following = Regexp.last_match(2)
+        next run if following.nil?
+
+        ('${esc.b}' * run.length) + VELOCITY_METACHARACTER_ESCAPES.fetch(following, '')
       end
     end
 

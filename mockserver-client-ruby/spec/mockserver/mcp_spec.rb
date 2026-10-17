@@ -135,6 +135,16 @@ RSpec.describe MockServer::MCP do
       expect(template).to include('cost is ${esc.d}5 ${esc.h}1')
     end
 
+    it 'Velocity-escapes trailing, mixed and very long backslash runs' do
+      expect(MockServer::MCP.escape_velocity('end\\\\')).to eq('end${esc.b}${esc.b}')
+      expect(MockServer::MCP.escape_velocity('a\\b\\$c#')).to eq('a\\b${esc.b}${esc.d}c${esc.h}')
+      expect(MockServer::MCP.escape_velocity("a\\\n")).to eq("a\\\n")
+      run = '\\' * 100_000
+      expect(MockServer::MCP.escape_velocity("#{run}x")).to eq("#{run}x")
+      expect(MockServer::MCP.escape_velocity("#{run}$")).to eq(('${esc.b}' * 100_000) + '${esc.d}')
+      expect(MockServer::MCP.escape_velocity(run)).to eq('${esc.b}' * 100_000)
+    end
+
     it 'Velocity-escapes backslashes only before $, # or the end of the value' do
       # shared cross-client table, asserted identically in all eight client builders
       {

@@ -182,6 +182,25 @@ def test_backslash_escaped_for_velocity_in_tool():
     assert "a${esc.b}${esc.b}${esc.d}b a${esc.b}${esc.b}${esc.h}b end${esc.b}${esc.b}" in tools_call_template
 
 
+def test_escape_velocity_handles_trailing_mixed_and_very_long_backslash_runs():
+    from mockserver.mcp import _escape_velocity
+
+    from mockserver.a2a import _escape_velocity as _a2a_escape_velocity
+
+    run = "\\" * 100_000
+    cases = {
+        "end\\\\": r"end${esc.b}${esc.b}",
+        r"a\b\$c#": r"a\b${esc.b}${esc.d}c${esc.h}",
+        "a\\\n": "a\\\n",
+        run + "x": run + "x",
+        run + "$": "${esc.b}" * 100_000 + "${esc.d}",
+        run: "${esc.b}" * 100_000,
+    }
+    for value, expected in cases.items():
+        assert _escape_velocity(value) == expected, value[:20]
+        assert _a2a_escape_velocity(value) == expected, value[:20]
+
+
 def test_escape_velocity_only_escapes_backslashes_before_metacharacters():
     from mockserver.mcp import _escape_velocity
 

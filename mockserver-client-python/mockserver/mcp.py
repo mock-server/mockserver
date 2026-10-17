@@ -49,16 +49,19 @@ def _escape_json(value: str | None) -> str:
     return quoted[1:-1]
 
 
-_VELOCITY_METACHARACTERS = re.compile(r"(?<!\\)\\+(?=[$#]|\Z)|[$#]")
+# group 2 consumes the metacharacter after a backslash run, is empty at the end
+# and unset (empty alternative) otherwise, so no lookaround is needed
+_VELOCITY_METACHARACTERS = re.compile(r"(\\+)(?:([$#]|\Z)|)|[$#]")
+_VELOCITY_METACHARACTER_ESCAPES = {"$": "${esc.d}", "#": "${esc.h}", "": ""}
 
 
 def _velocity_escape_match(match: re.Match) -> str:
-    text = match.group(0)
-    if text == "$":
-        return "${esc.d}"
-    if text == "#":
-        return "${esc.h}"
-    return "${esc.b}" * len(text)
+    run, following = match.group(1), match.group(2)
+    if run is None:
+        return _VELOCITY_METACHARACTER_ESCAPES[match.group(0)]
+    if following is None:
+        return run
+    return "${esc.b}" * len(run) + _VELOCITY_METACHARACTER_ESCAPES[following]
 
 
 def _escape_velocity(value: str | None) -> str | None:

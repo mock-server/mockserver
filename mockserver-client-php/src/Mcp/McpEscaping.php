@@ -44,19 +44,34 @@ final class McpEscaping
         if ($value === null) {
             return null;
         }
+        // group 2 consumes the metacharacter after a backslash run, is empty at the
+        // end and unset (empty alternative) otherwise, so no lookaround is needed
         return preg_replace_callback(
-            '/\\\\+(?=[$#]|\z)|[$#]/',
+            '/(\\\\+)(?:([$#]|\z)|)|[$#]/',
             static function (array $match): string {
-                if ($match[0] === '$') {
-                    return '${esc.d}';
+                [$whole, $run, $following] = $match;
+                if ($run === null) {
+                    return self::velocityMetacharacterEscape($whole);
                 }
-                if ($match[0] === '#') {
-                    return '${esc.h}';
+                if ($following === null) {
+                    return $run;
                 }
-                return str_repeat('${esc.b}', strlen($match[0]));
+                return str_repeat('${esc.b}', strlen($run)) . self::velocityMetacharacterEscape($following);
             },
-            $value
+            $value,
+            flags: PREG_UNMATCHED_AS_NULL
         );
+    }
+
+    private static function velocityMetacharacterEscape(string $metacharacter): string
+    {
+        if ($metacharacter === '$') {
+            return '${esc.d}';
+        }
+        if ($metacharacter === '#') {
+            return '${esc.h}';
+        }
+        return '';
     }
 
     /**

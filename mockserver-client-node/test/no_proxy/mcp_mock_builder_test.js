@@ -285,6 +285,26 @@ describe('mcpMock escaping', function () {
         assert.ok(template.indexOf('end${esc.b}${esc.b}"') !== -1, template);
     });
 
+    it('Velocity-escapes trailing, mixed and very long backslash runs', function () {
+        // JSON-escaped first, so each source backslash is doubled
+        var run = '\\'.repeat(100000);
+        var cases = [
+            ['end\\\\', 'end' + '${esc.b}'.repeat(4)],
+            ['a\\b\\$c#', 'a\\\\b${esc.b}${esc.b}${esc.d}c${esc.h}'],
+            [run + 'x', run + run + 'x'],
+            [run + '$', '${esc.b}'.repeat(200000) + '${esc.d}'],
+            [run, '${esc.b}'.repeat(200000)]
+        ];
+        cases.forEach(function (testCase) {
+            var call = findByJsonPath(
+                mcpMock('/mcp').withTool('t').respondingWith(testCase[0]).and().build(),
+                "@.method == 'tools/call'"
+            )[0];
+            var template = call.httpResponseTemplate.template;
+            assert.ok(template.indexOf('"text": "' + testCase[1] + '"') !== -1, testCase[0].slice(0, 20));
+        });
+    });
+
     it('matches the shared cross-client table through the builder', function () {
         // shared cross-client inputs; expected = escapeVelocity(escapeJson(input)), as the Java builder emits
         var cases = [
