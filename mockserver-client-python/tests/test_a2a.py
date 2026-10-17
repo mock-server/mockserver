@@ -162,6 +162,12 @@ def test_velocity_metacharacters_escaped_in_default_response():
     assert "${esc.d}100 off ${esc.h}sale" in template
 
 
+def test_backslash_escaped_for_velocity_in_default_response():
+    expectations = _dicts(a2a_mock().with_default_task_response("a\\#b"))
+    template = expectations[1]["httpResponseTemplate"]["template"]
+    assert "a${esc.b}${esc.b}${esc.h}b" in template
+
+
 def test_velocity_metacharacters_escaped_in_custom_handler():
     expectations = _dicts(
         a2a_mock()

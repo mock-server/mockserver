@@ -2,6 +2,7 @@
 
 require 'json'
 require 'uri'
+require_relative 'mcp'
 
 module MockServer
   # Fluent builder for mocking an A2A (Agent-to-Agent) agent.
@@ -45,11 +46,11 @@ module MockServer
     end
 
     # Escape Velocity metacharacters so literal +$+ / +#+ survive rendering.
+    # Shares the MCP builder's rules (backslash runs before +$+, +#+ or the end
+    # of the value are escaped too).
     # @api private
     def self.escape_velocity(value)
-      return value if value.nil?
-
-      value.to_s.gsub('$', '${esc.d}').gsub('#', '${esc.h}')
+      MCP.escape_velocity(value)
     end
 
     # @api private

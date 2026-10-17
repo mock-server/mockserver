@@ -47,11 +47,36 @@ func escapeJson(value string) string {
 }
 
 // escapeVelocity escapes Velocity meta-characters so literal '$' and '#' in
-// mock content are not interpreted as Velocity references/directives.
+// mock content are not interpreted as Velocity references/directives. Velocity
+// consumes backslashes written before a reference or directive, so a run of
+// backslashes followed by '$', '#' or the end of the value is escaped too;
+// other backslashes are literal to Velocity and left as-is.
 func escapeVelocity(value string) string {
-	value = strings.ReplaceAll(value, "$", "${esc.d}")
-	value = strings.ReplaceAll(value, "#", "${esc.h}")
-	return value
+	var sb strings.Builder
+	for i := 0; i < len(value); {
+		switch value[i] {
+		case '\\':
+			runEnd := i
+			for runEnd < len(value) && value[runEnd] == '\\' {
+				runEnd++
+			}
+			if runEnd == len(value) || value[runEnd] == '$' || value[runEnd] == '#' {
+				sb.WriteString(strings.Repeat("${esc.b}", runEnd-i))
+			} else {
+				sb.WriteString(value[i:runEnd])
+			}
+			i = runEnd
+			continue
+		case '$':
+			sb.WriteString("${esc.d}")
+		case '#':
+			sb.WriteString("${esc.h}")
+		default:
+			sb.WriteByte(value[i])
+		}
+		i++
+	}
+	return sb.String()
 }
 
 // escapeJsonPath escapes single quotes for safe inclusion inside a JSONPath

@@ -353,11 +353,42 @@ public class McpMockBuilder {
         }
     }
 
-    private static String escapeVelocity(String value) {
+    /**
+     * Escapes literal text for a Velocity template using the EscapeTool ($esc). Velocity consumes
+     * backslashes written before a reference or directive, so a run of backslashes followed by
+     * '$', '#' or the end of the value (where template text may follow) becomes "${esc.b}" each;
+     * other backslashes are literal to Velocity and are left as-is.
+     */
+    static String escapeVelocity(String value) {
         if (value == null) {
             return null;
         }
-        return value.replace("$", "${esc.d}").replace("#", "${esc.h}");
+        StringBuilder out = new StringBuilder(value.length());
+        int i = 0;
+        while (i < value.length()) {
+            char c = value.charAt(i);
+            if (c == '\\') {
+                int runEnd = i;
+                while (runEnd < value.length() && value.charAt(runEnd) == '\\') {
+                    runEnd++;
+                }
+                boolean beforeMetacharacter = runEnd == value.length() || value.charAt(runEnd) == '$' || value.charAt(runEnd) == '#';
+                for (int j = i; j < runEnd; j++) {
+                    out.append(beforeMetacharacter ? "${esc.b}" : "\\");
+                }
+                i = runEnd;
+                continue;
+            }
+            if (c == '$') {
+                out.append("${esc.d}");
+            } else if (c == '#') {
+                out.append("${esc.h}");
+            } else {
+                out.append(c);
+            }
+            i++;
+        }
+        return out.toString();
     }
 
     private static String validateAndSerializeJson(String json) {

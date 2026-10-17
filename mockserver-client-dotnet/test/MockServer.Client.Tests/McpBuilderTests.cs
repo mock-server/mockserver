@@ -181,6 +181,38 @@ public class McpBuilderTests
         callTemplate.Should().Contain("costs ${esc.d}5 ${esc.h}1");
     }
 
+    // Shared cross-client table: backslash runs before $, # or the end of the value are
+    // escaped; other backslashes are left as-is.
+    [Theory]
+    [InlineData(@"a\$b", @"a${esc.b}${esc.d}b")]
+    [InlineData(@"a\#b", @"a${esc.b}${esc.h}b")]
+    [InlineData(@"end\", @"end${esc.b}")]
+    [InlineData(@"\\$", @"${esc.b}${esc.b}${esc.d}")]
+    [InlineData(@"${esc.b}", @"${esc.d}{esc.b}")]
+    [InlineData(@"é\$ü", @"é${esc.b}${esc.d}ü")]
+    [InlineData(@"a\nb \""q\""", @"a\nb \""q\""")]
+    [InlineData(@"\\x", @"\\x")]
+    [InlineData("$#", "${esc.d}${esc.h}")]
+    [InlineData("", "")]
+    public void EscapeVelocity_EscapesBackslashesBeforeMetacharacters(string input, string expected)
+    {
+        McpMockBuilder.EscapeVelocity(input).Should().Be(expected);
+        MockServer.Client.A2a.A2aMockBuilder.EscapeVelocity(input).Should().Be(expected);
+    }
+
+    [Fact]
+    public void Mcp_EscapesBackslashBeforeVelocityMetacharacter()
+    {
+        var expectations = McpMockBuilder.McpMock()
+            .WithTool("price").RespondingWith(@"a\$b").And()
+            .Build();
+
+        var callTemplate = FindByJsonPathContaining(expectations, "tools/call")
+            .GetProperty("httpResponseTemplate").GetProperty("template").GetString()!;
+        // JSON-escaped "a\\$b": both backslashes precede '$', so all are escaped
+        callTemplate.Should().Contain("a${esc.b}${esc.b}${esc.d}b");
+    }
+
     [Fact]
     public void Mcp_InvalidInputSchema_Throws()
     {

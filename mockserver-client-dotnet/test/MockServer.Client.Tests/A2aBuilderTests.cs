@@ -305,4 +305,17 @@ public class A2aBuilderTests
             .GetProperty("httpResponseTemplate").GetProperty("template").GetString()!;
         template.Should().Contain("costs ${esc.d}5 ${esc.h}1");
     }
+
+    [Fact]
+    public void A2a_EscapesBackslashBeforeVelocityMetacharacterInTaskResponse()
+    {
+        var expectations = A2aMockBuilder.A2aMock()
+            .WithDefaultTaskResponse(@"a\#b")
+            .Build();
+
+        var template = FindByJsonRpcMethod(expectations, "tasks/send")
+            .GetProperty("httpResponseTemplate").GetProperty("template").GetString()!;
+        // JSON-escaped "a\\#b": both backslashes precede '#', so all are escaped
+        template.Should().Contain("a${esc.b}${esc.b}${esc.h}b");
+    }
 }

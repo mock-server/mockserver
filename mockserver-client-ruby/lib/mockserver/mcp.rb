@@ -32,11 +32,20 @@ module MockServer
     end
 
     # Escape Velocity metacharacters so literal +$+ / +#+ survive rendering.
+    # Velocity consumes backslashes written before a reference or directive, so
+    # a run of backslashes followed by +$+, +#+ or the end of the value is
+    # escaped too; other backslashes are literal to Velocity and left as-is.
     # @api private
     def self.escape_velocity(value)
       return value if value.nil?
 
-      value.to_s.gsub('$', '${esc.d}').gsub('#', '${esc.h}')
+      value.to_s.gsub(/(?<!\\)\\+(?=[$#]|\z)|[$#]/) do |match|
+        case match
+        when '$' then '${esc.d}'
+        when '#' then '${esc.h}'
+        else '${esc.b}' * match.length
+        end
+      end
     end
 
     # Escape single quotes for safe inclusion inside a JSONPath string literal.

@@ -336,13 +336,40 @@ public sealed class McpMockBuilder
 
     /// <summary>
     /// Escape Velocity meta-characters so literal <c>$</c> and <c>#</c> are not
-    /// interpreted as Velocity references/directives.
+    /// interpreted as Velocity references/directives. Velocity consumes backslashes
+    /// written before a reference or directive, so a run of backslashes followed by
+    /// <c>$</c>, <c>#</c> or the end of the value is escaped too; other backslashes
+    /// are left as-is.
     /// </summary>
     internal static string? EscapeVelocity(string? value)
     {
         if (value == null)
             return null;
-        return value.Replace("$", "${esc.d}").Replace("#", "${esc.h}");
+        var sb = new StringBuilder(value.Length);
+        var i = 0;
+        while (i < value.Length)
+        {
+            var c = value[i];
+            if (c == '\\')
+            {
+                var runEnd = i;
+                while (runEnd < value.Length && value[runEnd] == '\\')
+                    runEnd++;
+                var beforeMetacharacter = runEnd == value.Length || value[runEnd] == '$' || value[runEnd] == '#';
+                for (var j = i; j < runEnd; j++)
+                    sb.Append(beforeMetacharacter ? "${esc.b}" : "\\");
+                i = runEnd;
+                continue;
+            }
+            if (c == '$')
+                sb.Append("${esc.d}");
+            else if (c == '#')
+                sb.Append("${esc.h}");
+            else
+                sb.Append(c);
+            i++;
+        }
+        return sb.ToString();
     }
 
     /// <summary>Escape single quotes for safe inclusion inside a JSONPath string literal.</summary>

@@ -135,6 +135,32 @@ RSpec.describe MockServer::MCP do
       expect(template).to include('cost is ${esc.d}5 ${esc.h}1')
     end
 
+    it 'Velocity-escapes backslashes only before $, # or the end of the value' do
+      # shared cross-client table, asserted identically in all eight client builders
+      {
+        'a\\$b' => 'a${esc.b}${esc.d}b',
+        'a\\#b' => 'a${esc.b}${esc.h}b',
+        'end\\' => 'end${esc.b}',
+        '\\\\$' => '${esc.b}${esc.b}${esc.d}',
+        '${esc.b}' => '${esc.d}{esc.b}',
+        'é\\$ü' => 'é${esc.b}${esc.d}ü',
+        'a\\nb \\"q\\"' => 'a\\nb \\"q\\"',
+        '\\\\x' => '\\\\x',
+        '$#' => '${esc.d}${esc.h}',
+        '' => ''
+      }.each do |input, expected|
+        expect(MockServer::MCP.escape_velocity(input)).to eq(expected), "input: #{input}"
+        expect(MockServer::A2A.escape_velocity(input)).to eq(expected), "input: #{input}"
+      end
+
+      expectations = described_class.mcp_mock.with_tool('t').responding_with('a\\$b').and_then.build
+      call = expectations.find do |e|
+        e['httpRequest']['body'] && e['httpRequest']['body']['type'] == 'JSON_PATH'
+      end
+      # JSON-escaped "a\\$b": both backslashes precede '$', so all are escaped
+      expect(call['httpResponseTemplate']['template']).to include('a${esc.b}${esc.b}${esc.d}b')
+    end
+
     it 'raises on invalid input schema JSON' do
       expect do
         described_class.mcp_mock.with_tool('t').with_input_schema('{not json').and_then.build

@@ -64,13 +64,23 @@
     /**
      * Escape Velocity meta-characters so literal '$' and '#' in mock
      * content are not interpreted as Velocity references/directives.
-     * Mirrors Java: replace("$", "${esc.d}").replace("#", "${esc.h}").
+     * Velocity consumes backslashes written before a reference or directive,
+     * so a run of backslashes followed by '$', '#' or the end of the value is
+     * escaped too; other backslashes are left as-is. Mirrors Java.
      */
     var escapeVelocity = function (value) {
         if (value === null || value === undefined) {
             return value;
         }
-        return String(value).split("$").join("${esc.d}").split("#").join("${esc.h}");
+        return String(value).replace(/(?<!\\)\\+(?=[$#]|$)|[$#]/g, function (match) {
+            if (match === "$") {
+                return "${esc.d}";
+            }
+            if (match === "#") {
+                return "${esc.h}";
+            }
+            return "${esc.b}".repeat(match.length);
+        });
     };
 
     /**

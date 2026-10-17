@@ -871,6 +871,18 @@ mod tests {
     }
 
     #[test]
+    fn backslash_before_hash_escaped_in_default_response() {
+        let expectations = a2a_mock_default()
+            .with_default_task_response(r"a\#b")
+            .build();
+        let template = expectations[1]["httpResponseTemplate"]["template"]
+            .as_str()
+            .unwrap();
+        // JSON-escaped "a\\#b": both backslashes precede '#', so all are escaped
+        assert!(template.contains("a${esc.b}${esc.b}${esc.h}b"), "{template}");
+    }
+
+    #[test]
     fn velocity_metacharacters_escaped_in_custom_handler() {
         let expectations = a2a_mock_default()
             .on_task_send()

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MockServer\A2a;
 
+use MockServer\Mcp\McpEscaping;
+
 /**
  * Escaping/serialisation helpers ported 1:1 from the Java
  * {@code org.mockserver.client.A2aMockBuilder} so the produced template and
@@ -35,14 +37,12 @@ final class A2aEscaping
     /**
      * Escape Velocity meta-characters so literal {@code $} and {@code #} in mock
      * content are not interpreted as Velocity references/directives. Only applied
-     * to text that flows through a Velocity-templated response body.
+     * to text that flows through a Velocity-templated response body. Shares the
+     * MCP rules, including backslash runs before {@code $}, {@code #} or the end.
      */
     public static function escapeVelocity(?string $value): ?string
     {
-        if ($value === null) {
-            return null;
-        }
-        return str_replace(['$', '#'], ['${esc.d}', '${esc.h}'], $value);
+        return McpEscaping::escapeVelocity($value);
     }
 
     /**

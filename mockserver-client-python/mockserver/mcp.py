@@ -27,6 +27,7 @@ Example::
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 
 from mockserver.models import (
@@ -48,11 +49,28 @@ def _escape_json(value: str | None) -> str:
     return quoted[1:-1]
 
 
+_VELOCITY_METACHARACTERS = re.compile(r"(?<!\\)\\+(?=[$#]|\Z)|[$#]")
+
+
+def _velocity_escape_match(match: re.Match) -> str:
+    text = match.group(0)
+    if text == "$":
+        return "${esc.d}"
+    if text == "#":
+        return "${esc.h}"
+    return "${esc.b}" * len(text)
+
+
 def _escape_velocity(value: str | None) -> str | None:
-    """Escape Velocity metacharacters so literal ``$`` / ``#`` survive rendering."""
+    """Escape Velocity metacharacters so literal ``$`` / ``#`` survive rendering.
+
+    Velocity consumes backslashes written before a reference or directive, so a
+    run of backslashes followed by ``$``, ``#`` or the end of the value is
+    escaped too; other backslashes are literal to Velocity and left as-is.
+    """
     if value is None:
         return None
-    return value.replace("$", "${esc.d}").replace("#", "${esc.h}")
+    return _VELOCITY_METACHARACTERS.sub(_velocity_escape_match, value)
 
 
 def _escape_json_path(value: str | None) -> str:

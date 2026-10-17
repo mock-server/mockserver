@@ -300,6 +300,17 @@ class A2aBuilderTest extends TestCase
         $this->assertStringContainsString('cost is ${esc.d}5 ${esc.h}1', $template);
     }
 
+    public function testVelocityEscapingOfBackslashBeforeHashInTaskResponse(): void
+    {
+        $template = A2aMockBuilder::a2aMock()
+            ->withDefaultTaskResponse('a\\#b')
+            ->build()[1]
+            ->toArray()['httpResponseTemplate']['template'];
+
+        // JSON-escaped "a\\#b": both backslashes precede '#', so all are escaped
+        $this->assertStringContainsString('a${esc.b}${esc.b}${esc.h}b', $template);
+    }
+
     public function testCustomAgentCardPathAndUrl(): void
     {
         $agentCard = A2aMockBuilder::a2aMock('/agent')

@@ -196,6 +196,17 @@ public class A2aMockBuilderTest {
     }
 
     @Test
+    public void shouldEscapeBackslashesForVelocityInTaskResponse() {
+        Expectation[] expectations = a2aMock()
+            .withDefaultTaskResponse("a\\#b")
+            .build();
+
+        String template = expectations[1].getHttpResponseTemplate().getTemplate();
+        // JSON-escaped "a\\#b": both backslashes precede '#', so all are escaped for Velocity
+        assertThat(template, containsString("a${esc.b}${esc.b}${esc.h}b"));
+    }
+
+    @Test
     public void shouldEscapeVelocityMetacharactersInCustomHandler() {
         Expectation[] expectations = a2aMock()
             .onTaskSend()

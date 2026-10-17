@@ -8,12 +8,16 @@ import org.mockserver.client.McpMockBuilder;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.netty.MockServer;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.mockserver.client.McpMockBuilder.mcpMock;
 import static org.mockserver.stop.Stop.stopQuietly;
 
@@ -332,5 +336,55 @@ public class McpMockBuilderIntegrationTest {
         assertThat(response, containsString("HTTP/1.1 200"));
         assertThat(response, containsString("$100 off #sale"));
         assertJsonRpcId(response, 20);
+    }
+
+    private static final String BACKSLASH_TEXT = "a\\$b a\\#b \\\\ c\\\\$d \\${esc.d} \\#if(true)x#end \"q\"\n\ttab end\\";
+
+    private static JsonNode responseBody(String response) throws Exception {
+        assertThat(response, containsString("HTTP/1.1 200"));
+        return new ObjectMapper().readTree(response.substring(response.indexOf("\r\n\r\n") + 4));
+    }
+
+    @Test
+    public void shouldRenderBackslashBeforeVelocityMetacharactersExactly() throws Exception {
+        mcpMock()
+            .withServerName(BACKSLASH_TEXT)
+            .withTool("escapes")
+                .withDescription(BACKSLASH_TEXT)
+                .withInputSchema("{\"type\": \"object\", \"description\": \"say \\\"hi\\\" for \\\\$5\"}")
+                .respondingWith(BACKSLASH_TEXT)
+                .and()
+            .withResource("config://escapes")
+                .withName(BACKSLASH_TEXT)
+                .withMimeType("text/plain")
+                .withContent(BACKSLASH_TEXT)
+                .and()
+            .withPrompt("escapes")
+                .withDescription(BACKSLASH_TEXT)
+                .respondingWith("user", BACKSLASH_TEXT)
+                .and()
+            .applyTo(mockServerClient);
+
+        JsonNode initialize = responseBody(sendJsonRpcRequest("initialize", null, 30));
+        assertThat(initialize.at("/result/serverInfo/name").asText(), is(BACKSLASH_TEXT));
+
+        JsonNode toolsList = responseBody(sendJsonRpcRequest("tools/list", null, 31));
+        assertThat(toolsList.at("/result/tools/0/description").asText(), is(BACKSLASH_TEXT));
+        assertThat(toolsList.at("/result/tools/0/inputSchema/description").asText(), is("say \"hi\" for \\$5"));
+
+        JsonNode toolCall = responseBody(sendJsonRpcRequest("tools/call", "{\"name\": \"escapes\", \"arguments\": {}}", 32));
+        assertThat(toolCall.at("/result/content/0/text").asText(), is(BACKSLASH_TEXT));
+
+        JsonNode resourcesList = responseBody(sendJsonRpcRequest("resources/list", null, 33));
+        assertThat(resourcesList.at("/result/resources/0/name").asText(), is(BACKSLASH_TEXT));
+
+        JsonNode resourceRead = responseBody(sendJsonRpcRequest("resources/read", "{\"uri\": \"config://escapes\"}", 34));
+        assertThat(resourceRead.at("/result/contents/0/text").asText(), is(BACKSLASH_TEXT));
+
+        JsonNode promptsList = responseBody(sendJsonRpcRequest("prompts/list", null, 35));
+        assertThat(promptsList.at("/result/prompts/0/description").asText(), is(BACKSLASH_TEXT));
+
+        JsonNode promptGet = responseBody(sendJsonRpcRequest("prompts/get", "{\"name\": \"escapes\"}", 36));
+        assertThat(promptGet.at("/result/messages/0/content/text").asText(), is(BACKSLASH_TEXT));
     }
 }

@@ -175,6 +175,36 @@ def test_velocity_metacharacters_escaped_in_tool():
     assert "${esc.d}100 ${esc.h}result" in tools_call_template
 
 
+def test_backslash_escaped_for_velocity_in_tool():
+    expectations = _dicts(mcp_mock().with_tool("escapes").responding_with("a\\$b a\\#b end\\").and_())
+    tools_call_template = expectations[4]["httpResponseTemplate"]["template"]
+    # JSON-escaped; backslash runs before $ / # / end of value are escaped for Velocity
+    assert "a${esc.b}${esc.b}${esc.d}b a${esc.b}${esc.b}${esc.h}b end${esc.b}${esc.b}" in tools_call_template
+
+
+def test_escape_velocity_only_escapes_backslashes_before_metacharacters():
+    from mockserver.mcp import _escape_velocity
+
+    from mockserver.a2a import _escape_velocity as _a2a_escape_velocity
+
+    # shared cross-client table, asserted identically in all eight client builders
+    cases = {
+        r"a\$b": r"a${esc.b}${esc.d}b",
+        r"a\#b": r"a${esc.b}${esc.h}b",
+        "end\\": r"end${esc.b}",
+        r"\\$": r"${esc.b}${esc.b}${esc.d}",
+        r"${esc.b}": r"${esc.d}{esc.b}",
+        r"é\$ü": r"é${esc.b}${esc.d}ü",
+        r"a\nb \"q\"": r"a\nb \"q\"",
+        r"\\x": r"\\x",
+        "$#": "${esc.d}${esc.h}",
+        "": "",
+    }
+    for value, expected in cases.items():
+        assert _escape_velocity(value) == expected, value
+        assert _a2a_escape_velocity(value) == expected, value
+
+
 def test_single_quotes_escaped_in_json_path():
     expectations = _dicts(
         mcp_mock()

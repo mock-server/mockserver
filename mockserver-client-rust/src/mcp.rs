@@ -48,10 +48,46 @@ pub fn escape_json(value: &str) -> String {
 }
 
 /// Escape Velocity meta-characters so literal `$` / `#` in mock content are not
-/// interpreted as Velocity references/directives. Mirrors Java:
-/// `replace("$", "${esc.d}").replace("#", "${esc.h}")`.
+/// interpreted as Velocity references/directives. Velocity consumes backslashes
+/// written before a reference or directive, so a run of backslashes followed by
+/// `$`, `#` or the end of the value is escaped too; other backslashes are left
+/// as-is. Mirrors Java's `escapeVelocity`.
 pub fn escape_velocity(value: &str) -> String {
-    value.replace('$', "${esc.d}").replace('#', "${esc.h}")
+    let bytes = value.as_bytes();
+    let mut out = String::with_capacity(value.len());
+    let mut segment_start = 0;
+    let mut i = 0;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'\\' => {
+                let mut run_end = i;
+                while run_end < bytes.len() && bytes[run_end] == b'\\' {
+                    run_end += 1;
+                }
+                if run_end == bytes.len() || bytes[run_end] == b'$' || bytes[run_end] == b'#' {
+                    out.push_str(&value[segment_start..i]);
+                    out.push_str(&"${esc.b}".repeat(run_end - i));
+                    segment_start = run_end;
+                }
+                i = run_end;
+            }
+            b'$' => {
+                out.push_str(&value[segment_start..i]);
+                out.push_str("${esc.d}");
+                i += 1;
+                segment_start = i;
+            }
+            b'#' => {
+                out.push_str(&value[segment_start..i]);
+                out.push_str("${esc.h}");
+                i += 1;
+                segment_start = i;
+            }
+            _ => i += 1,
+        }
+    }
+    out.push_str(&value[segment_start..]);
+    out
 }
 
 /// Escape single quotes for safe inclusion inside a JSONPath string literal.

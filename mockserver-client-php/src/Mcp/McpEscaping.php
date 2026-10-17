@@ -34,14 +34,29 @@ final class McpEscaping
 
     /**
      * Escape Velocity meta-characters so literal {@code $} and {@code #} in mock
-     * content are not interpreted as Velocity references/directives.
+     * content are not interpreted as Velocity references/directives. Velocity
+     * consumes backslashes written before a reference or directive, so a run of
+     * backslashes followed by {@code $}, {@code #} or the end of the value is
+     * escaped too; other backslashes are left as-is.
      */
     public static function escapeVelocity(?string $value): ?string
     {
         if ($value === null) {
             return null;
         }
-        return str_replace(['$', '#'], ['${esc.d}', '${esc.h}'], $value);
+        return preg_replace_callback(
+            '/\\\\+(?=[$#]|\z)|[$#]/',
+            static function (array $match): string {
+                if ($match[0] === '$') {
+                    return '${esc.d}';
+                }
+                if ($match[0] === '#') {
+                    return '${esc.h}';
+                }
+                return str_repeat('${esc.b}', strlen($match[0]));
+            },
+            $value
+        );
     }
 
     /**

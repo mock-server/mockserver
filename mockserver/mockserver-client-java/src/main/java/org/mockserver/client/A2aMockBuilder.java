@@ -392,10 +392,7 @@ public class A2aMockBuilder {
     }
 
     private static String escapeVelocity(String value) {
-        if (value == null) {
-            return null;
-        }
-        return value.replace("$", "${esc.d}").replace("#", "${esc.h}");
+        return McpMockBuilder.escapeVelocity(value);
     }
 
     static class A2aSkillDefinition {

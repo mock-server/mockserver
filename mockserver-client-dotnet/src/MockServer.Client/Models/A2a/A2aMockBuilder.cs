@@ -498,14 +498,10 @@ public sealed class A2aMockBuilder
 
     /// <summary>
     /// Escape Velocity meta-characters so literal <c>$</c> and <c>#</c> are not interpreted as
-    /// Velocity references/directives.
+    /// Velocity references/directives. Shares the MCP builder's rules, including backslash runs
+    /// before <c>$</c>, <c>#</c> or the end of the value.
     /// </summary>
-    internal static string? EscapeVelocity(string? value)
-    {
-        if (value == null)
-            return null;
-        return value.Replace("$", "${esc.d}").Replace("#", "${esc.h}");
-    }
+    internal static string? EscapeVelocity(string? value) => MockServer.Client.Mcp.McpMockBuilder.EscapeVelocity(value);
 
     // --- internal definition holders ---------------------------------------
 

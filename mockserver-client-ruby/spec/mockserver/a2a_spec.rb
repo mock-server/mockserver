@@ -286,6 +286,12 @@ RSpec.describe MockServer::A2A do
       expect(template).to include('cost is ${esc.d}5 ${esc.h}1')
       expect(template).to include('\\"quoted\\"')
     end
+
+    it 'Velocity-escapes a backslash before # in the default task response' do
+      expectations = described_class.a2a_mock.with_default_task_response('a\\#b').build
+      template = find_json_rpc(expectations, 'tasks/send')['httpResponseTemplate']['template']
+      expect(template).to include('a${esc.b}${esc.b}${esc.h}b')
+    end
   end
 
   describe '#apply_to' do

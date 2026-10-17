@@ -8,12 +8,16 @@ import org.mockserver.client.A2aMockBuilder;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.netty.MockServer;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.mockserver.client.A2aMockBuilder.a2aMock;
 import static org.mockserver.stop.Stop.stopQuietly;
@@ -325,6 +329,30 @@ public class A2aMockBuilderIntegrationTest {
                 .withPath("/a2a/push-callback")
                 .withBody(containsStringJson("$100 off #sale"))
         );
+    }
+
+    @Test
+    public void shouldRenderBackslashBeforeVelocityMetacharactersExactly() throws Exception {
+        String text = "a\\$b a\\#b \\\\ c\\\\$d \\${esc.d} \\#if(true)x#end \"q\"\n\ttab end\\";
+        a2aMock()
+            .withDefaultTaskResponse(text)
+            .onTaskSend()
+                .matchingMessage("escapes")
+                .respondingWith(text)
+                .and()
+            .applyTo(mockServerClient);
+
+        String defaultParams = "{\"message\": {\"role\": \"user\", \"parts\": [{\"type\": \"text\", \"text\": \"Hello\"}]}}";
+        assertThat(taskText(sendJsonRpcRequest("tasks/send", defaultParams, 60)), is(text));
+
+        String handlerParams = "{\"message\": {\"role\": \"user\", \"parts\": [{\"type\": \"text\", \"text\": \"escapes\"}]}}";
+        assertThat(taskText(sendJsonRpcRequest("tasks/send", handlerParams, 61)), is(text));
+    }
+
+    private static String taskText(String response) throws Exception {
+        assertThat(response, containsString("HTTP/1.1 200"));
+        JsonNode body = new ObjectMapper().readTree(response.substring(response.indexOf("\r\n\r\n") + 4));
+        return body.at("/result/artifacts/0/parts/0/text").asText();
     }
 
     private static org.mockserver.model.StringBody containsStringJson(String substring) {

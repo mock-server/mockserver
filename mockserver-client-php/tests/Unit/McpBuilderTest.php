@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace MockServer\Tests\Unit;
 
+use MockServer\A2a\A2aEscaping;
 use MockServer\Llm\Role;
+use MockServer\Mcp\McpEscaping;
 use MockServer\Mcp\McpMockBuilder;
 use PHPUnit\Framework\TestCase;
 
@@ -163,6 +165,37 @@ class McpBuilderTest extends TestCase
 
         $template = end($expectations)->toArray()['httpResponseTemplate']['template'];
         $this->assertStringContainsString('cost is ${esc.d}5 ${esc.h}1', $template);
+    }
+
+    /**
+     * Shared cross-client table: backslash runs before $, # or the end of the
+     * value are escaped; other backslashes are left as-is.
+     */
+    public function testVelocityEscapingOfBackslashesBeforeMetaCharacters(): void
+    {
+        $cases = [
+            'a\\$b' => 'a${esc.b}${esc.d}b',
+            'a\\#b' => 'a${esc.b}${esc.h}b',
+            'end\\' => 'end${esc.b}',
+            '\\\\$' => '${esc.b}${esc.b}${esc.d}',
+            '${esc.b}' => '${esc.d}{esc.b}',
+            'é\\$ü' => 'é${esc.b}${esc.d}ü',
+            'a\\nb \\"q\\"' => 'a\\nb \\"q\\"',
+            '\\\\x' => '\\\\x',
+            '$#' => '${esc.d}${esc.h}',
+            '' => '',
+        ];
+        foreach ($cases as $input => $expected) {
+            $this->assertSame($expected, McpEscaping::escapeVelocity((string) $input), 'input: ' . $input);
+            $this->assertSame($expected, A2aEscaping::escapeVelocity((string) $input), 'input: ' . $input);
+        }
+
+        $expectations = McpMockBuilder::mcpMock()
+            ->withTool('echo')->respondingWith('a\\$b')->and()
+            ->build();
+        $template = end($expectations)->toArray()['httpResponseTemplate']['template'];
+        // JSON-escaped "a\\$b": both backslashes precede '$', so all are escaped
+        $this->assertStringContainsString('a${esc.b}${esc.b}${esc.d}b', $template);
     }
 
     public function testInvalidInputSchemaThrows(): void

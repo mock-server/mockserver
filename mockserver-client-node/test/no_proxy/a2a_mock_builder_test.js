@@ -245,6 +245,11 @@ describe('a2aMock escaping', function () {
         assert.ok(send.httpResponseTemplate.template.indexOf('${esc.d}100 off ${esc.h}sale') !== -1);
     });
 
+    it('Velocity-escapes a backslash before # in the default task response', function () {
+        var send = findByJsonRpc(a2aMock().withDefaultTaskResponse('a\\#b').build(), 'tasks/send')[0];
+        assert.ok(send.httpResponseTemplate.template.indexOf('a${esc.b}${esc.b}${esc.h}b') !== -1);
+    });
+
     it('Velocity-escapes $ and # in a custom handler response', function () {
         var handler = findByJsonPath(a2aMock()
             .onTaskSend().matchingMessage('test.*').respondingWith('Price is $50 #discount').and()

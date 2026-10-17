@@ -425,6 +425,41 @@ fn mcp_content_with_velocity_metachars_is_escaped() {
 }
 
 #[test]
+fn mcp_velocity_escapes_backslashes_before_metachars() {
+    // Shared cross-client table: backslash runs before $, # or the end of the
+    // value are escaped; other backslashes are left as-is.
+    let cases = [
+        (r"a\$b", r"a${esc.b}${esc.d}b"),
+        (r"a\#b", r"a${esc.b}${esc.h}b"),
+        (r"end\", r"end${esc.b}"),
+        (r"\\$", r"${esc.b}${esc.b}${esc.d}"),
+        (r"${esc.b}", r"${esc.d}{esc.b}"),
+        (r"é\$ü", r"é${esc.b}${esc.d}ü"),
+        (r#"a\nb \"q\""#, r#"a\nb \"q\""#),
+        (r"\\x", r"\\x"),
+        ("$#", "${esc.d}${esc.h}"),
+        ("", ""),
+    ];
+    for (input, expected) in cases {
+        assert_eq!(escape_velocity(input), expected, "input: {input}");
+    }
+
+    let expectations = mcp_mock("/mcp")
+        .with_tool("echo")
+        .responding_with(r"a\$b", false)
+        .and()
+        .build();
+    let call_template = expectations[4]["httpResponseTemplate"]["template"]
+        .as_str()
+        .unwrap();
+    // JSON-escaped "a\\$b": both backslashes precede '$', so all are escaped
+    assert!(
+        call_template.contains("a${esc.b}${esc.b}${esc.d}b"),
+        "{call_template}"
+    );
+}
+
+#[test]
 fn mcp_capabilities_only_for_present_features() {
     // tools capability flag with no tools still advertises tools/list
     let expectations = mcp_mock("/mcp").with_tools_capability().build();

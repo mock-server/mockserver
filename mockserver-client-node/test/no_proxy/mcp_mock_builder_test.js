@@ -272,6 +272,41 @@ describe('mcpMock escaping', function () {
         assert.ok(call.httpResponseTemplate.template.indexOf('a${esc.d}b${esc.h}c\\"d') !== -1);
     });
 
+    it('Velocity-escapes backslashes only before $, # or the end of the value', function () {
+        var call = findByJsonPath(
+            mcpMock('/mcp').withTool('t').respondingWith('a\\$b c\\#d e\\nf end\\').and().build(),
+            "@.method == 'tools/call'"
+        )[0];
+        // JSON-escaped first, so each source backslash is doubled; runs before $ / # / end are escaped
+        var template = call.httpResponseTemplate.template;
+        assert.ok(template.indexOf('a${esc.b}${esc.b}${esc.d}b') !== -1, template);
+        assert.ok(template.indexOf('c${esc.b}${esc.b}${esc.h}d') !== -1, template);
+        assert.ok(template.indexOf('e\\\\nf') !== -1, template);
+        assert.ok(template.indexOf('end${esc.b}${esc.b}"') !== -1, template);
+    });
+
+    it('matches the shared cross-client table through the builder', function () {
+        // shared cross-client inputs; expected = escapeVelocity(escapeJson(input)), as the Java builder emits
+        var cases = [
+            ['a\\$b', 'a${esc.b}${esc.b}${esc.d}b'],
+            ['a\\#b', 'a${esc.b}${esc.b}${esc.h}b'],
+            ['end\\', 'end${esc.b}${esc.b}'],
+            ['\\\\$', '${esc.b}${esc.b}${esc.b}${esc.b}${esc.d}'],
+            ['${esc.b}', '${esc.d}{esc.b}'],
+            ['é\\$ü', 'é${esc.b}${esc.b}${esc.d}ü'],
+            ['\\\\x', '\\\\\\\\x'],
+            ['$#', '${esc.d}${esc.h}']
+        ];
+        cases.forEach(function (testCase) {
+            var call = findByJsonPath(
+                mcpMock('/mcp').withTool('t').respondingWith(testCase[0]).and().build(),
+                "@.method == 'tools/call'"
+            )[0];
+            var template = call.httpResponseTemplate.template;
+            assert.ok(template.indexOf('"text": "' + testCase[1] + '"') !== -1, testCase[0] + ' -> ' + template);
+        });
+    });
+
     it('escapes single quotes inside the JSONPath matcher', function () {
         var call = mcpMock('/mcp').withTool("it's").respondingWith('x').and().build()
             .filter(function (e) { return e.httpRequest.body && e.httpRequest.body.type === 'JSON_PATH'; })[0];

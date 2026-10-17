@@ -239,6 +239,53 @@ public class McpMockBuilderTest {
     }
 
     @Test
+    public void shouldEscapeBackslashesBeforeVelocityMetacharacters() {
+        // shared cross-client table, asserted identically in all eight client builders
+        String[][] cases = {
+            {"a\\$b", "a${esc.b}${esc.d}b"},
+            {"a\\#b", "a${esc.b}${esc.h}b"},
+            {"end\\", "end${esc.b}"},
+            {"\\\\$", "${esc.b}${esc.b}${esc.d}"},
+            {"${esc.b}", "${esc.d}{esc.b}"},
+            {"é\\$ü", "é${esc.b}${esc.d}ü"},
+            {"a\\nb \\\"q\\\"", "a\\nb \\\"q\\\""},
+            {"\\\\x", "\\\\x"},
+            {"$#", "${esc.d}${esc.h}"},
+            {"", ""},
+        };
+        for (String[] testCase : cases) {
+            assertThat("input: " + testCase[0], McpMockBuilder.escapeVelocity(testCase[0]), is(testCase[1]));
+        }
+
+        // builder-level form of the same inputs (escapeVelocity(escapeJson(input))), mirrored in the Node tests
+        String[][] builderCases = {
+            {"a\\$b", "a${esc.b}${esc.b}${esc.d}b"},
+            {"a\\#b", "a${esc.b}${esc.b}${esc.h}b"},
+            {"end\\", "end${esc.b}${esc.b}"},
+            {"\\\\$", "${esc.b}${esc.b}${esc.b}${esc.b}${esc.d}"},
+            {"${esc.b}", "${esc.d}{esc.b}"},
+            {"é\\$ü", "é${esc.b}${esc.b}${esc.d}ü"},
+            {"\\\\x", "\\\\\\\\x"},
+            {"$#", "${esc.d}${esc.h}"},
+        };
+        for (String[] testCase : builderCases) {
+            String builtTemplate = mcpMock().withTool("t").respondingWith(testCase[0]).and().build()[4]
+                .getHttpResponseTemplate().getTemplate();
+            assertThat("input: " + testCase[0], builtTemplate, containsString("\"text\": \"" + testCase[1] + "\""));
+        }
+
+        Expectation[] expectations = mcpMock()
+            .withTool("escapes")
+                .respondingWith("a\\$b")
+                .and()
+            .build();
+
+        String template = expectations[4].getHttpResponseTemplate().getTemplate();
+        // JSON-escaped "a\\$b": both backslashes precede '$', so all are escaped for Velocity
+        assertThat(template, containsString("a${esc.b}${esc.b}${esc.d}b"));
+    }
+
+    @Test
     public void shouldEscapeSingleQuotesInToolNameForJsonPath() {
         Expectation[] expectations = mcpMock()
             .withTool("tool'name")
