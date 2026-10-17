@@ -845,7 +845,7 @@
             <dependency>
                 <groupId>io.github.classgraph</groupId>
                 <artifactId>classgraph</artifactId>
-                <version>4.8.198</version>
+                <version>5.0.0</version>
             </dependency>
 
             <!-- logging -->
@@ -1403,10 +1403,6 @@
                                     <relocation>
                                         <pattern>net.minidev</pattern>
                                         <shadedPattern>shaded_package.net.minidev</shadedPattern>
-                                    </relocation>
-                                    <relocation>
-                                        <pattern>nonapi.io</pattern>
-                                        <shadedPattern>shaded_package.nonapi.io</shadedPattern>
                                     </relocation>
                                     <relocation>
                                         <pattern>org.apache</pattern>

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - MockServer is no longer published to Chocolatey, SDKMAN! or winget; install the CLI with Homebrew, Scoop or asdf/mise instead
+- ClassGraph upgraded from 4.8.198 to 5.0.0. If you use the regular (not `-no-dependencies`) artifacts, three new transitive jars arrive with it (`classgraph-base`, `classgraph-vfs`, `classgraph-classpath`), and a project that pins `classgraph` to 4.x must stop doing so, because 5.x is not binary-compatible; for the same reason, another library in your build that uses the 4.x API can break if Maven resolves it to 5.0.0, so use the `-no-dependencies` artifacts there
 
 ### Fixed
 

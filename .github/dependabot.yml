@@ -55,6 +55,9 @@ updates:
       # like a working one: no PRs appear either way.
       - dependency-name: "com.graphql-java:graphql-java"
         versions: [">=27.0.0"]
+      # classgraph 6.x ships Java 25 bytecode (class file 69); the 5.x line is its Java 17 build.
+      - dependency-name: "io.github.classgraph:classgraph"
+        versions: [">=6.0.0"]
 
   # examples/java is the relocated example suite. It is deliberately NOT a module
   # of the /mockserver reactor (a `<module>../examples/java</module>` path escaped
@@ -107,6 +110,9 @@ updates:
       # like a working one: no PRs appear either way.
       - dependency-name: "com.graphql-java:graphql-java"
         versions: [">=27.0.0"]
+      # classgraph 6.x ships Java 25 bytecode (class file 69); the 5.x line is its Java 17 build.
+      - dependency-name: "io.github.classgraph:classgraph"
+        versions: [">=6.0.0"]
 
   - package-ecosystem: "maven"
     directory: "/mockserver/mockserver-maven-plugin"
@@ -148,6 +154,9 @@ updates:
       # like a working one: no PRs appear either way.
       - dependency-name: "com.graphql-java:graphql-java"
         versions: [">=27.0.0"]
+      # classgraph 6.x ships Java 25 bytecode (class file 69); the 5.x line is its Java 17 build.
+      - dependency-name: "io.github.classgraph:classgraph"
+        versions: [">=6.0.0"]
       # netty-tcnative-boringssl-static is version-locked to Netty (see the /mockserver
       # ecosystem above) — bumping it independently breaks dependencyConvergence (PR #2332).
       - dependency-name: "io.netty:netty-tcnative-boringssl-static"

@@ -17,6 +17,13 @@ public class FilePathTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
+    @Test
+    public void shouldExpandGlobToClasspathResources() {
+        List<String> result = FilePath.expandFilePathGlobs("org/mockserver/socket/*.pem");
+
+        assertThat(result, hasItem("org/mockserver/socket/CertificateAuthorityCertificate.pem"));
+    }
+
     // absolutePathFromClassPathOrPath
 
     @Test
