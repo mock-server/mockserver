@@ -2,8 +2,9 @@
 #
 # Runs one shard of mockserver-netty's integration tests (see scripts/buildkite_netty_it.sh
 # and the netty-it-shard-* profiles in mockserver-netty/pom.xml) on the archives built by
-# the ":maven: netty IT prebuild" step, then collects failing-test artefacts. The shard's
-# own exit code is preserved, so a failing shard fails its step and the build.
+# the ":maven: netty IT prebuild" step, then collects failing-test artefacts and, on any
+# exit, reports SharedEchoServerGuard firings. The shard's own exit code is preserved, so
+# a failing shard fails its step and the build.
 #
 # Usage: java-netty-it-shard.sh <proxy-http|mock|rest>
 
@@ -19,6 +20,8 @@ if ! buildkite-agent artifact download --step "${NETTY_IT_PREBUILD_STEP:-netty-i
   echo "+++ :bangbang: could not download the netty IT prebuild archives" >&2
   exit 1
 fi
+
+trap '"$SCRIPT_DIR/java-netty-it-echo-guard-report.sh" "$SHARD" || true' EXIT
 
 echo "--- :maven: mockserver-netty integration tests, shard ${SHARD}"
 # -m 12g as the reactor build, so each test fork gets the same default heap there.

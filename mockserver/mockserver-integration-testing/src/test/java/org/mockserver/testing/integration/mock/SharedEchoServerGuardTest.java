@@ -20,6 +20,9 @@ import org.mockserver.model.HttpResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -31,6 +34,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.Assert.fail;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -163,6 +167,36 @@ public class SharedEchoServerGuardTest {
         assertThat(second, containsString("open file descriptors: "));
         assertThat(second, not(containsString("thread dump (")));
         assertThat(second, containsString("thread dump: printed with the first"));
+    }
+
+    @Test
+    public void shouldBeTheHeaderTheNettyItShardReportGrepsFor() throws Exception {
+        // given
+        Path report = repositoryFile(".buildkite/scripts/steps/java-netty-it-echo-guard-report.sh");
+
+        // when
+        Process process = new ProcessBuilder("bash", report.toString(), "--print-header").redirectErrorStream(true).start();
+        boolean finished = process.waitFor(30, SECONDS);
+        if (!finished) {
+            process.destroyForcibly();
+        }
+        String output = new String(process.getInputStream().readAllBytes(), UTF_8).trim();
+
+        // then
+        assertThat("report finished", finished, equalTo(true));
+        assertThat("--print-header exit code, output: " + output, process.exitValue(), equalTo(0));
+        assertThat(output, equalTo(SharedEchoServerGuard.DIAGNOSTIC_HEADER));
+    }
+
+    private static Path repositoryFile(String relativePath) {
+        for (Path directory = Paths.get("").toAbsolutePath(); directory != null; directory = directory.getParent()) {
+            Path candidate = directory.resolve(relativePath);
+            if (Files.isRegularFile(candidate)) {
+                return candidate;
+            }
+        }
+        fail(relativePath + " not found above " + Paths.get("").toAbsolutePath());
+        return null;
     }
 
     private static HttpResponse sendTo(NettyHttpClient client, EchoServer echoServer, boolean secure, String path) throws Exception {

@@ -112,6 +112,18 @@ steps:
         - exit_status: 255  # agent forced shutdown
           limit: 2
 
+  # The netty IT shards' SharedEchoServerGuard firing report and its EXIT trap in
+  # java-netty-it-shard.sh; SharedEchoServerGuardTest checks the header it greps for.
+  - label: ":mag: netty IT echo-guard report fixture checks"
+    command: ".buildkite/scripts/test/netty-it-echo-guard-report-test.sh"
+    timeout_in_minutes: 5
+    retry:
+      automatic:
+        - exit_status: -1   # agent lost (e.g. Spot reclamation)
+          limit: 2
+        - exit_status: 255  # agent forced shutdown
+          limit: 2
+
   # Baseline-freshness assertion for the daily perf-regression control. It lives HERE,
   # in mockserver-infra, ON PURPOSE: a check that lives inside the system it monitors
   # (the perf pipeline) dies with it, so it sits in a DIFFERENT pipeline. It keys off
