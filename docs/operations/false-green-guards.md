@@ -318,8 +318,8 @@ shape was judged against that bar.
   there is no low-false-positive signature to grep for. The real defense already
   shipped: a structural contract test asserting the codec against hand-authored,
   schema-derived expectations (`LlmCodecStructuralContractTest`). A generic
-  regeneration/mutation gate is the separately-declined pitest proposal (Gap #5 in
-  `docs/plans/test-coverage-gaps.md`).
+  regeneration/mutation gate is the separately-declined pitest proposal — declined in
+  commit `adf935e66` (2026-08-17).
 - **A guard whose own precondition can silently fail** (a gate whose toolchain was
   absent so it never ran; a `nullglob` scoping bug that returned success when the
   build produced nothing). *Declined:* "this bash can fail open" is not detectable

@@ -1,46 +1,14 @@
 # UI competitor-inspired feature ideas — residue after the 2026-07 build
 
-All six items from the original backlog shipped in 2026-07 (`0f6565a90..50fae90e8`), each as
-its own commit with an adversarial review. What remains here is the **residue**: one deferred
-sub-feature, one instruction that turned out to be wrong and must not be retried, and a set
-of small follow-ups the reviews surfaced.
+**Outcome.** All six items from the original backlog shipped in 2026-07. What remains open:
+one deferred sub-feature (per-tab connection params), one instruction that turned out to be
+wrong and must not be retried (chaos operator search), and a handful of small follow-ups the
+reviews surfaced. Re-verified against `mockserver-ui` code 2026-10-18 — all still unimplemented
+as described below.
 
 ---
 
-## Shipped, with deviations worth knowing
-
-| # | Item | Outcome |
-|---|---|---|
-| 1 | GraphQL operation awareness | Shipped in full |
-| 2 | Host focus / pin | Shipped as a collapsible host list, not a sidebar — a second vertical column starved the rows in a master/detail split that resizes to 260px |
-| 3 | Named network-condition presets | Shipped, but **one fault per preset** (see below) |
-| 4 | Multi-tab workspaces | Shipped **except per-tab connection params** (see below) |
-| 5 | Inline execute-and-show-response | Shipped; cookie matchers are declared unexercisable rather than fired |
-| 6 | Filter-DSL unification | Shipped for breakpoints and verification; **chaos deliberately not swapped** (see below) |
-
-### Item 3 — presets set one fault, not a combination
-
-`TcpChaosHandler.channelRead` is first-match-wins with an early return per branch
-(`down > reset_peer > limit_data > slicer > bandwidth > latency`), documented as contract in
-`TcpChaosProfile.java` and `chaos_testing.html`. A preset carrying both a latency and a
-bandwidth value would display a number the engine never applies. Presets therefore set
-exactly one fault, enforced by a discriminated union and a test citing the handler's order.
-**If the engine ever composes faults, that test breaks deliberately** — at which point
-combination presets become possible.
-
-### Item 5 — cookies cannot be exercised from the dashboard
-
-`Cookie` is a forbidden request-header name: `fetch` accepts it on a standalone `Headers`
-object and strips it silently when the `Request` is constructed. Planting via
-`document.cookie` was tried and withdrawn — an unescaped `; domain=` in a matcher value
-created a domain-scoped cookie the cleanup could not delete, which survived and reached
-sibling subdomains. The widget now names cookie matchers as unexercisable and points at
-curl. Revisiting this needs a same-origin-only design with fail-closed name/value
-validation; it is not worth it for a convenience affordance.
-
----
-
-## Do not retry: item 6 step 3 for chaos — REFUTED
+## Do not retry: chaos operator search — REFUTED
 
 The original plan said to add an `OperatorSearchField` to the chaos host-select. **This is
 wrong and was deliberately not done.**
@@ -65,7 +33,28 @@ request), not a UI change.
 
 ---
 
-## Deferred: per-tab connection params (item 4's third sub-feature)
+## Do not retry: planting cookies via `document.cookie`
+
+Tried and withdrawn while building inline execute-and-show-response: an unescaped `; domain=`
+in a matcher value created a domain-scoped cookie the cleanup could not delete, which survived
+and leaked to sibling subdomains. The dashboard names cookie matchers as unexercisable from the
+UI rather than retrying this. Revisiting this needs a same-origin-only design with fail-closed
+name/value validation; it is not worth it for a convenience affordance.
+
+---
+
+## Note: network-condition presets set one fault, not a combination
+
+`TcpChaosHandler.channelRead` is first-match-wins with an early return per branch, documented as
+contract in `TcpChaosProfile.java` and `chaos_testing.html`. A preset carrying both a latency and
+a bandwidth value would display a number the engine never applies, so presets set exactly one
+fault, enforced by a discriminated union and a test citing the handler's order. **If the engine
+ever composes faults, that test breaks deliberately** — at which point combination presets become
+possible.
+
+---
+
+## Deferred: per-tab connection params (Multi-tab workspaces' third sub-feature)
 
 Workspaces carry view and search terms. They do **not** carry a connection target, so the
 plan's "target different MockServer instances from one window" value is not yet delivered.
@@ -128,7 +117,8 @@ finishing it needs:
   is raised. Do not virtualize preemptively.
 - **Monaco idle prefetch** — `JsonEditorLazy.tsx` loads Monaco on first use with no
   `requestIdleCallback` prefetch. Marginal, since it is already behind a lazy import.
-- **`ConfigurationDialog`** edits 18 curated properties out of ~100. This is deliberate: only
+- **`ConfigurationDialog`** edits 17 curated properties plus 3 bespoke controls (20 total) out
+  of ~100. This is deliberate: only
   properties safe to change at runtime and meaningful to a typical user are exposed.
 
 ---
@@ -139,6 +129,6 @@ finishing it needs:
 `d55d7077d` because labelled tabs in the app bar's flexible nav region stopped the bar
 fitting at typical widths. This is a closed decision.
 
-The workspace tab bar (item 4) is a different concept and respects that constraint: it is its
+The workspace tab bar (Multi-tab workspaces) is a different concept and respects that constraint: it is its
 own row below the app bar, does not exist until a second workspace does, and costs the app
 bar a single bare icon button in the fixed utility cluster.

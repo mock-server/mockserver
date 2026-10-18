@@ -1,17 +1,22 @@
 # Security Defaults — A Future Major Release
 
-**Status:** Open. DEF-2 and DEF-3 (the Velocity/JavaScript template RCE defaults) shipped
-2026-07-27 in response to
-[GHSA-7pwj-xvc2-hfpc](https://github.com/mock-server/mockserver-monorepo/security/advisories/GHSA-7pwj-xvc2-hfpc)
-and are removed from this plan; evidence of what shipped is in `changelog.md` and the advisory, not
-here. DEF-4 (TLSv1/TLSv1.1 off by default) also shipped, in 8.0.0 (commit 387f904a0:
-`tlsAllowInsecureProtocols` defaults to `false` and `tlsProtocols` to `TLSv1.2,TLSv1.3`), and is removed
-too. The remaining five items are still open: their defaults are still the insecure values below. The "ship every flip in one release" goal below was deliberately broken for the two
-template items, because leaving a reported RCE default in place until the next major release was not
-defensible; the rest still travel together. Insecure-by-default configuration values to flip in a single major
-release.
+**Status:** Open. Five insecure-by-default configuration values (DEF-1, DEF-5, DEF-6, DEF-7,
+DEF-8) still flip together in a single future major release — their defaults are still the
+insecure values below. (DEF-2, DEF-3 and DEF-4 shipped earlier and are no longer tracked here;
+see `changelog.md`.) DEF-2 and DEF-3 (the Velocity/JavaScript template RCE defaults) shipped
+ahead of this bundle in response to a reported vulnerability (GHSA-7pwj-xvc2-hfpc), deliberately
+breaking Goal 1 ("ship every flip in one release") for those two items because leaving a reported
+RCE default in place until the next major release was not defensible. There is a precedent for
+breaking Goal 1 again, but DEF-5's case is not quite the same shape: GHSA-jg86-hv4g-8h78 (fixed
+9.0.0; see [release-9-follow-ups.md](../release-9-follow-ups.md) F6) was a bypass of
+`forwardProxyBlockPrivateNetworks`'s own enforcement when a user had already opted in — a true
+default would not by itself have mitigated it, since the bug was in the check, not in the
+default being off. It still raises DEF-5's priority: the advisory shows the SSRF path is
+actively probed; users who never opted in have no SSRF protection at all, so a true default
+protects far more users now that the check itself is fixed. The owner should weigh moving DEF-5
+ahead of this release on that basis, not on the DEF-2/DEF-3 precedent being identical.
 **Created:** 2026-05-26 (supersedes `security-remediation.md`)
-**Last verified against code:** 2026-10-14
+**Last verified against code:** 2026-10-18
 **Scope:** Configuration default changes only. All underlying mitigations (timeouts, validators, body limits, secure RNG, XXE blocks) have already shipped and are wired behind these properties; only the defaults remain.
 
 ## Goals
