@@ -9,8 +9,8 @@ set -euo pipefail
 # rolling baseline in S3, refreshed by the DAILY perf pipeline. If that pipeline
 # stops firing, or fires but its run breaks, the baseline silently goes stale and
 # every subsequent comparison measures an ancient number while still reporting
-# green. That is the exact decay this programme exists to eliminate (a JMH backstop
-# in this repo went dark for four days unnoticed).
+# green — the decay this check exists to catch (a JMH backstop in this repo once went
+# dark for days unnoticed).
 #
 # WHAT IT KEYS OFF (and what it deliberately does NOT)
 # ----------------------------------------------------
@@ -43,25 +43,12 @@ set -euo pipefail
 # that never measured (guard skip, cancelled before perf-run finished, perf-run refused
 # for its image revision) is ignored.
 #
-# NOT DETECTED: a scheduled build that goes GREEN while writing no fresh baseline.
-# perf-test-compare.sh currently has two such paths — an invalid run annotates an
-# error and then `exit 0` WITHOUT persisting (perf-test-compare.sh:160-172), and
-# the persist itself is NON-FATAL (`aws s3 cp ... || echo "WARNING: failed to
-# persist ..."`, perf-test-compare.sh:179), so an S3 write failure also leaves the
-# build `passed`. A green-but-didn't-write build is therefore NOT caught here; it
-# is the PRODUCER's responsibility to make those paths fatal (that producer fix is
-# being made separately). This check cannot cover the gap itself, because confirming
-# a write would need to READ the object, and that needs perf-bucket S3 access the
-# `trigger` queue does not have — terraform/buildkite-agents (main.tf / build-secrets
-# .tf) grant the trigger queue ONLY the Buildkite API tokens; the `perf` queue role
-# holds the perf-results grant. A fail-closed S3 read on this queue would be a
-# PERMANENT false red (the "control removed because it turned the pipeline red"
-# failure mode the plan warns about), so the earlier object-content check was
-# dropped. Once the producer makes the two paths above fatal, a failed-to-write run
-# surfaces here as NOT_PASSED and the gap closes to whatever compare still allows;
-# until then it is an explicit, known seam — recorded here rather than hidden behind
-# a false reassurance. Producer liveness needs only the API token the trigger queue
-# already has.
+# NOT DETECTED: a scheduled build that passes without writing a fresh baseline. compare
+# exits 1 on an invalid run and on a failed S3 write, but exits 0 without persisting when
+# the run is baseline_eligible:false (diagnostics, tuned config, non-default rig, opt-in
+# workload, release comparison) or the agent has no aws CLI. Confirming the write would
+# need perf-bucket S3 reads, which the trigger queue lacks; a fail-closed read here would
+# be a permanent false red. Liveness needs only the API token this queue already has.
 #
 # WHERE IT RUNS
 # -------------

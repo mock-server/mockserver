@@ -136,7 +136,7 @@ fi
 # --- 1. gather this run's result ----------------------------------------------
 RESULT="$WORK/result.json"
 # The default is the daily run's result. The perf-xl multi-k6 arm's own compare step names its
-# arm-only result instead (item 44); the daily run's supplementary artifacts are never merged into it.
+# arm-only result instead; the daily run's supplementary artifacts are never merged into it.
 RESULT_ARTIFACT="${PERF_COMPARE_RESULT_ARTIFACT:-perf-result.json}"
 if ! [[ "$RESULT_ARTIFACT" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*\.json$ ]]; then
   annotate "error" ":no_entry: **Perf compare: unusable result artifact name** — \`PERF_COMPARE_RESULT_ARTIFACT\` is \`${RESULT_ARTIFACT}\`."
@@ -147,15 +147,8 @@ if command -v buildkite-agent >/dev/null 2>&1; then
   # FAIL CLOSED, like every other precondition in this script. A missing result is
   # the most fundamental failure there is — there is nothing to compare, nothing to
   # persist, and no way to tell "the run did not measure" from "the run was fine"
-  # except by saying so. This used to `exit 0`: a silent green with no annotation,
-  # the one unguarded path in a file whose header declares it fails closed.
-  #
-  # It was unreachable while a positional `- wait: ~` gated this step, because a
-  # failed `run + sample` skipped compare outright. The explicit depends_on wiring
-  # in perf-test-guard.sh keeps that guarantee (perf-run is a fail-closed edge), but
-  # the guarantee now rests on Buildkite's dependency semantics rather than on the
-  # step never starting. So this path is made loud rather than left as a silent
-  # green that only a correct reading of those semantics keeps unreachable.
+  # except by saying so. perf-test-guard.sh's fail-closed perf-run edge should keep
+  # this unreachable, but that rests on Buildkite's dependency semantics, so it is loud.
   if ! buildkite-agent artifact download "$RESULT_ARTIFACT" "$WORK/"; then
     annotate "error" ":no_entry: **Perf compare found NO RESULT to compare** — \`${RESULT_ARTIFACT}\` was not uploaded by this build.
 
@@ -205,7 +198,7 @@ fi
 if [ -f "$WORK/perf-microbench.json" ]; then
   jq -s '.[0] * .[1]' "$RESULT" "$WORK/perf-microbench.json" > "$WORK/merged.json" && mv "$WORK/merged.json" "$RESULT"
 fi
-# Merge the promoted dark-benchmark results (item 15b) — same shape, under
+# Merge the promoted dark-benchmark results — same shape, under
 # `microbench_extra`. Consumed NON-GATING below (notify-only: no baseline history
 # yet), so a regression on one annotates but does NOT fail the build.
 if [ -f "$WORK/perf-microbench-extra.json" ]; then
@@ -239,7 +232,7 @@ fi
 # is not yet known, so setting a build-FAILING threshold now would be guessing). The
 # TWO axes are consumed differently by the `metrics` jq below: the THROUGHPUT axis
 # (.h2_multiplex) is recorded but NOT read there, so it never flags; the PER-CONNECTION
-# MEMORY axis (.h2_connection_memory, item 11) IS read there (surfaced notify-only per
+# MEMORY axis (.h2_connection_memory) IS read there (surfaced notify-only per
 # run against its h2_connection_memory.*.bytes_per_connection budget), so it annotates
 # a move but — being non-gating — cannot fail the build.
 if [ -f "$WORK/perf-h2-multiplex.json" ]; then
@@ -271,7 +264,7 @@ fi
 HISTORY_PREFIX="runs"; [ "$RUN_QUEUE" = "perf" ] || HISTORY_PREFIX="runs-${RUN_QUEUE}"
 KEY="${HISTORY_PREFIX}/${BRANCH}/${TS//:/-}__${COMMIT:0:10}.json"
 
-# --- 1b. validity gate (item: refuse to baseline a compromised measurement) ---
+# --- 1b. validity gate: refuse to baseline a compromised measurement ---------
 # The run's own `validity` block records whether the measurement RIG was sound
 # (client had CPU headroom, k6 dropped no iterations, resource samples captured,
 # latency metrics present). Baselining an invalid run would poison the rolling
@@ -279,19 +272,11 @@ KEY="${HISTORY_PREFIX}/${BRANCH}/${TS//:/-}__${COMMIT:0:10}.json"
 # perf-test-run.sh always carries the block; an ABSENT block (older producer or a
 # truncated run) is treated as invalid on purpose.
 #
-# FAIL THE BUILD (exit 1), do not exit 0. Rationale (asked to decide + justify):
-# the user's model is "a failing pipeline IS the notification, checked regularly",
-# so a GREEN daily build asserts "measured, and OK". An invalid run measured
-# nothing trustworthy — a green square there is a false green (the exact failure
-# mode this programme keeps finding), and it is consistent with perf-test-run.sh
-# already refusing (exit 1) to emit an unrecordable config and with item 0's
-# principle of never emitting a result that misrepresents what it measured. The
-# counter-argument — a transient rig blip (a noisy cloud neighbour dropping k6
-# iterations) fires an unactionable red — is real but weaker here: this is the
-# DAILY run, not a per-commit gate; agent-loss/Spot transients are already caught
-# by the pipeline's exit -1/255 auto-retry (a DIFFERENT signal from rig-invalidity);
-# and a validity failure that recurs IS actionable (the rig needs attention). The
-# silent-staleness a green invalid run causes is worse than a loud, investigable red.
+# FAIL THE BUILD (exit 1), do not exit 0: a failing pipeline IS the notification,
+# so a green daily build must mean "measured, and OK", and an invalid run measured
+# nothing trustworthy. A transient rig blip can fire an unactionable red, but this is
+# a daily run, agent loss is already auto-retried, and a recurring failure is
+# actionable; a green invalid run silently stales the baseline, which is worse.
 VALID="$(jq -r '.validity.valid // "absent"' "$RESULT")"
 if [ "$VALID" != "true" ]; then
   FAILED_CHECKS="$(jq -r '
@@ -397,7 +382,7 @@ The SUT image's own build age (\`.Created\` = \`${IMG_CREATED}\`, **${IMG_AGE}d*
   exit 1
 fi
 
-# --- 1c. baseline eligibility (part C: keep an instrumented run out of the series) ---
+# --- 1c. baseline eligibility: keep an instrumented run out of the series ---------
 # A PERF_JVM_DIAGNOSTICS=deep run is a VALID measurement (it passed the validity gate
 # above) but tier-2 instrumentation (GC file logging / NMT / JFR) depresses throughput
 # BY DESIGN, so persisting it would silently shift the baseline series the tier split
@@ -406,7 +391,7 @@ fi
 # comparing. Placed AFTER the validity gate so an invalid deep run still reds; a run
 # with no baseline_eligible field (older producer) defaults to eligible, unchanged.
 # An arm-only result is never baseline_eligible; the multi-k6 arm's is persisted when it is a member
-# of the published series instead (item 44). A trial, another rule or another rig is recorded, green.
+# of the published series instead. A trial, another rule or another rig is recorded, green.
 if [ "$ARM_MODE" = true ]; then
   SERIES_JSON="$(jq -c -f "$SCRIPT_DIR/lib/perf-rw-multik6-series.jq" "$RESULT" 2>/dev/null)" || SERIES_JSON=""
   if ! jq -es 'length == 1 and (.[0] | type) == "array"' <<<"$SERIES_JSON" >/dev/null 2>&1; then
@@ -449,11 +434,8 @@ This run set \`baseline_eligible: false\` (\`PERF_JVM_DIAGNOSTICS=${DIAG_TIER}\`
 fi
 
 # --- 2. persist this run to S3 (history) --------------------------------------
-# FATAL on failure. A failed S3 write used to only WARN and continue, leaving the
-# build GREEN having stored nothing: the baseline then silently stops refreshing
-# while every later comparison reports OK against an ever-staler window — invisible
-# rot, the worst kind of false green. A run that could not be recorded must go RED so
-# the storage failure is investigated, not accumulate silently.
+# FATAL on failure: a green build that stored nothing silently stops the baseline
+# refreshing while every later comparison reports OK against an ever-staler window.
 HAVE_AWS=false
 if command -v aws >/dev/null 2>&1 && [ -z "${PERF_BASELINE_DIR:-}" ]; then
   HAVE_AWS=true
@@ -472,8 +454,8 @@ if [ "$HAVE_AWS" = true ] && command -v buildkite-agent >/dev/null 2>&1; then
   fi
 fi
 
-# --- 2b. laptop profile PRESENCE assertion (item 8) ---------------------------
-# Two axes, exactly as 15b separated them: laptop VALUES stay notify-only, but
+# --- 2b. laptop profile PRESENCE assertion ---------------------------
+# Two axes: laptop VALUES stay notify-only, but
 # laptop PRESENCE is loud. `laptop_attempted:true` means the producer tried to
 # measure the profile; if `.laptop` is then empty or missing a docker sub-item, the
 # measurement failed wholesale (renamed image, docker/create error, producer
@@ -506,7 +488,7 @@ The run set \`laptop_attempted: true\` but its \`.laptop\` block is missing dock
   fi
 fi
 
-# --- 2c. serving per-core PRESENCE assertion (item 18) ------------------------
+# --- 2c. serving per-core PRESENCE assertion ------------------------
 # Same two-axis split as the laptop gate: serving_percore VALUES stay notify-only,
 # but PRESENCE is loud. `serving_percore_attempted:true` means the producer tried
 # to run the per-core sweep; if `.serving_percore` then carries NEITHER a measured
@@ -540,7 +522,7 @@ The run set \`serving_percore_attempted: true\` but its \`.serving_percore\` blo
     exit 1
   fi
   # A curve that stops before C=16 is EXPECTED on a box that cannot host it, but it
-  # must be VISIBLE IN THE ANNOTATION, not silent (item 18): surface the ceiling of
+  # must be VISIBLE IN THE ANNOTATION, not silent: surface the ceiling of
   # the ladder and any skipped rungs so an early-ending curve never reads as
   # "measured to 16". Any failure-typed skip alongside measured points is called out
   # separately (a rung broke mid-run even though others succeeded).
@@ -556,7 +538,7 @@ The run set \`serving_percore_attempted: true\` but its \`.serving_percore\` blo
   fi
 fi
 
-# --- 2d. serving multi-process PRESENCE assertion (item 18, client rig) -------
+# --- 2d. serving multi-process PRESENCE assertion (client rig) -------
 # Mirror of the serving_percore presence gate (2c): serving_multiproc VALUES stay
 # notify-only, but PRESENCE is loud. `serving_multiproc_attempted:true` means the
 # producer tried to run the multi-process sweep; if `.serving_multiproc` then carries
@@ -606,7 +588,7 @@ The run set \`serving_multiproc_attempted: true\` but its \`.serving_multiproc\`
   fi
 fi
 
-# --- 2e. hardware matrix PRESENCE assertion (item 27) --------------------------
+# --- 2e. hardware matrix PRESENCE assertion --------------------------
 # Mirror of 2c for .serving_hw_matrix: VALUES are notify-only, PRESENCE is loud. An
 # attempted matrix with no measured point and no infeasible-only skip failed
 # wholesale; so did one whose points ALL lack a healthy ceiling with none OOM-killed (the
@@ -745,7 +727,7 @@ else
 :warning: **This run records no instance type**, so hardware-sensitive metrics cannot be matched to same-machine history and report \`no-baseline\` rather than compare across an unknown machine."
 fi
 
-# Honest history (item: handle the existing history honestly). Every run stored
+# Honest history. Every run stored
 # before the self-describing-result change has no `config` block (schema_version
 # < 2) and an unusable instance_type, so we CANNOT confirm it was configured like
 # this run (same JVM/GC/heap/log-level/hardware). Do NOT silently fold such runs
@@ -828,7 +810,7 @@ def metrics:
     ( {name:($k+".time_per_op"),        value:$v.time_per_op,        bkey:"microbench.*.time_per_op"},
       {name:($k+".alloc_bytes_per_op"), value:$v.alloc_bytes_per_op, bkey:"microbench.*.alloc_bytes_per_op"} ) ),
   ((.microbench_extra // {}) | to_entries[] | .key as $k | .value as $v |
-    # Promoted dark benchmarks (item 15b): identical JMH shape to .microbench, but a
+    # Promoted dark benchmarks: identical JMH shape to .microbench, but a
     # SEPARATE budget key so they can be NOTIFY-ONLY while .microbench gates. They
     # have no baseline history yet; their perf-budgets.json entries omit `gating`
     # (-> non-gating), so a flagged regression annotates just as loudly but does NOT
@@ -840,7 +822,7 @@ def metrics:
     ( {name:($k+".time_per_op"),        value:$v.time_per_op,        bkey:"microbench_extra.*.time_per_op"},
       {name:($k+".alloc_bytes_per_op"), value:$v.alloc_bytes_per_op, bkey:"microbench_extra.*.alloc_bytes_per_op"} ) ),
   ((.laptop // {}) | to_entries[] | .key as $k | .value as $v |
-    # Laptop startup / footprint profile (item 8), keyed by variant: docker_ready,
+    # Laptop startup / footprint profile, keyed by variant: docker_ready,
     # injvm, mem_256m/512m/1g, init_0/1000/10000, image. Each variant carries only the
     # subset of these metrics it measures; the others are null and drop out via the
     # `select(.value != null)` in $headmetrics (e.g. docker_ready emits no rss_mb,
@@ -860,10 +842,10 @@ def metrics:
       {name:($k+".rss_mb"),           value:$v.rss_mb,           bkey:"laptop.*.rss_mb"},
       {name:($k+".threads"),          value:$v.threads,          bkey:"laptop.*.threads"},
       {name:($k+".compressed_bytes"), value:$v.compressed_bytes, bkey:"laptop.*.compressed_bytes"} ) ),
-  # item 17 — N parallel MockServer instances on one host (the laptop / MockServerExtension
+  # N parallel MockServer instances on one host (the laptop / MockServerExtension
   # profile), notify-only. TWO shapes under .laptop_parallel, each a list of per-N runs
   # (n in {1,4,8,16,32}); keyed laptop_parallel.<shape>_<N>.<metric> so the SAME laptop.*.<metric>
-  # wildcard budgets that item 8 uses cover every N of every shape — no new namespace. Head-driven
+  # wildcard budgets the laptop profile uses cover every N of every shape — no new namespace. Head-driven
   # like every other optional profile: an absent/disabled .laptop_parallel (opt-in
   # PERF_LAPTOP_PARALLEL, off by default) makes both `// []` fall through, so this emits ZERO
   # metrics rather than a fail-closed missing-budget trip — the serving_percore/streaming pattern.
@@ -872,7 +854,7 @@ def metrics:
   # _median suffix), so each raw field is mapped to its leaf here, exactly as serving_percore.*
   # maps .healthy_ceiling_rps. dir "up" throughout (more heap / threads / sockets / RSS / latency
   # is worse). NOTIFY-ONLY: the laptop.*.<metric> budgets omit `gating`, so a flag annotates but
-  # NEVER fails the build until >=10 runs of history let a MAD-derived floor be set (the item 8 rule).
+  # NEVER fails the build until >=10 runs of history let a MAD-derived floor be set (the laptop-profile rule).
   # IN-JVM shape (InJvmParallelBench.java): one JVM, N instances, stores sized off the whole host.
   ((.laptop_parallel.injvm.runs // []) | .[] | ("laptop_parallel.injvm_" + (.n|tostring)) as $pk |
     ( {name:($pk+".cold_ready_ms"),        value:.coldReadyMs,       bkey:"laptop.*.cold_ready_ms"},
@@ -893,10 +875,10 @@ def metrics:
       {name:($pk+".threads_per_container"), value:.threads_per_container_median,bkey:"laptop.*.threads_per_container"},
       {name:($pk+".total_threads"),         value:.agg_threads,                 bkey:"laptop.*.total_threads"} ) ),
   ((.tls_handshake // {}) | to_entries[] | .key as $k | .value as $v |
-    # item 14 — TLS/mTLS/native-absent inbound-handshake cost (proxy.js handshake
+    # TLS/mTLS/native-absent inbound-handshake cost (proxy.js handshake
     # mode). Keyed by arm: tls13, mtls, jdk. handshake_p50/p95_ms is the TLS
     # handshake time (dir up = worse) — the provider-sensitive COST signal (forcing
-    # the JDK provider moved p50 +51% in build 290; the handshake RATE did not move).
+    # the JDK provider moves p50 markedly while the handshake RATE does not).
     # cpu_ms_per_handshake + alloc_kb_per_handshake are the per-handshake server cost
     # the run step samples (null on an image predating jvm_memory_allocated_bytes, so
     # they drop out via the select(.value != null) in $headmetrics).
@@ -931,7 +913,7 @@ def metrics:
   {name:"path_coverage.h2_ladder.rig_valid_peak_achieved_rps",
    value:((.path_coverage.h2_ladder // {}).rig_valid_peak_achieved_rps),
    bkey:"path_coverage.h2_ladder.rig_valid_peak_achieved_rps"},
-  # item 11 — HTTP/2 per-connection heap-delta (org.mockserver.benchmark.Http2Connection-
+  # HTTP/2 per-connection heap-delta (org.mockserver.benchmark.Http2Connection-
   # MemoryBenchmark), merged into the run under .h2_connection_memory by the h2-multiplex
   # step and keyed by shape: conn_1x1, conn_10x10, conn_100x10 (N connections x M concurrent
   # in-flight streams). The figure is bytes_per_connection = (loaded heap - baseline heap) / N,
@@ -959,7 +941,7 @@ def metrics:
      | select((.value | type) == "object" and (.value | has("bytes_per_connection")))
      | .key as $k | .value as $v |
     ( {name:("h2_connection_memory."+$k+".bytes_per_connection"), value:$v.bytes_per_connection, bkey:"h2_connection_memory.*.bytes_per_connection"} ) ),
-  # item 12 — LLM/SSE streaming under concurrency. The .streaming block is a FLAT
+  # LLM/SSE streaming under concurrency. The .streaming block is a FLAT
   # object (not per-arm), so a CURATED subset of its scalars is budgeted here with
   # EXACT bkeys (like rig_valid_peak_achieved_rps / forward.error_rate, not the wildcard arm
   # families). All NON-GATING (their perf-budgets.json entries omit gating) and
@@ -967,15 +949,15 @@ def metrics:
   # full-baseline else-branch like tls_handshake. A skipped streaming profile
   # leaves every value null, and nulls drop out of $headmetrics — so a skip emits
   # zero streaming metrics rather than a fail-closed missing-budget error. The four
-  # item-12 measurements distilled to comparable scalars:
-  #   match_*_p95_ms + match_p95_ratio  — the within-run hot-path A/B (#4): does a
+  # streaming measurements distilled to comparable scalars:
+  #   match_*_p95_ms + match_p95_ratio  — the within-run hot-path A/B: does a
   #     concurrent match p95 inflate while streams run (ratio dir up = worse).
-  #   intertoken_error_*_p95/p99_ms + _ratio — the fidelity distribution (#1): the
+  #   intertoken_error_*_p95/p99_ms + _ratio — the fidelity distribution: the
   #     idle run is the client-jitter FLOOR, the load run the server drift, ratio
   #     = load/idle (dir up = worse). The p99 is the headline (the tail, not mean).
-  #   heap_bytes_per_stream — heap per open stream (#2), an upper bound (dir up).
+  #   heap_bytes_per_stream — heap per open stream, an upper bound (dir up).
   #   *_error_rate — delivery soundness (a broken arm measured nothing).
-  # The item-12 CallerRunsPolicy counter (#3) is deliberately ABSENT — MockServer
+  # A CallerRunsPolicy counter is deliberately ABSENT — MockServer
   # exposes none and it does not fire under load (see the run step / report).
   ( {name:"streaming.match_baseline_p95_ms",        value:((.streaming // {}).match_baseline_p95_ms),        bkey:"streaming.match_baseline_p95_ms"},
     {name:"streaming.match_under_stream_p95_ms",     value:((.streaming // {}).match_under_stream_p95_ms),     bkey:"streaming.match_under_stream_p95_ms"},
@@ -987,7 +969,7 @@ def metrics:
     {name:"streaming.intertoken_error_load_p99_ms",  value:((.streaming // {}).intertoken_error_load_p99_ms),  bkey:"streaming.intertoken_error_load_p99_ms"},
     {name:"streaming.intertoken_error_p95_ratio",    value:((.streaming // {}).intertoken_error_p95_ratio),    bkey:"streaming.intertoken_error_p95_ratio"},
     {name:"streaming.heap_bytes_per_stream",         value:((.streaming // {}).heap_bytes_per_stream),         bkey:"streaming.heap_bytes_per_stream"} ),
-  # item 13 — clustered state under load. The headline metric is the per-arm RATIO
+  # Clustered state under load. The headline metric is the per-arm RATIO
   # (clustered / in-memory control), measured within ONE run against two targets that
   # differ ONLY in state backend. Keyed by arm op under .clustered_state.arms, so a
   # wildcard bkey (clustered_state.*.<metric>) covers every arm. Rides the FULL
@@ -1004,7 +986,7 @@ def metrics:
       {name:("clustered_state."+$k+".p95_ratio"),          value:$v.p95_ratio,          bkey:"clustered_state.*.p95_ratio"},
       {name:("clustered_state."+$k+".throughput_ratio"),   value:$v.throughput_ratio,   bkey:"clustered_state.*.throughput_ratio"},
       {name:("clustered_state."+$k+".clustered_error_rate"),value:$v.clustered_error_rate,bkey:"clustered_state.*.clustered_error_rate"} ) ),
-  # item 18 — req/s per core for the SERVING path. One point per pinned core-count
+  # Req/s per core for the SERVING path. One point per pinned core-count
   # C under .serving_percore.points; keyed serving_percore.<C>c.<metric> so a
   # wildcard bkey (serving_percore.*.<metric>) covers every C. NOT part of
   # .behaviours, so it does not touch the k6 arm-set fingerprint. rig_valid_peak_achieved_rps
@@ -1022,14 +1004,14 @@ def metrics:
       {name:($pc+".rps_per_core"),          value:.rps_per_core,          bkey:"serving_percore.*.rps_per_core"},
       {name:($pc+".rig_valid_peak_achieved_rps"), value:.rig_valid_peak_achieved_rps, bkey:"serving_percore.*.rig_valid_peak_achieved_rps"},
       {name:($pc+".healthy_ceiling_p50_ms"),value:.healthy_ceiling_p50_ms,bkey:"serving_percore.*.healthy_ceiling_p50_ms"} ) ),
-  # item 27 — hardware matrix, one point per cores x memory limit, keyed
+  # Hardware matrix, one point per cores x memory limit, keyed
   # serving_hw_matrix.<key>.<metric> (key e.g. 2c-1g). Notify-only; the p50-gated two
   # are keyed on the sweep latency-window fingerprint (latfam), like serving_percore.
   ((.serving_hw_matrix.points // []) | .[] | ("serving_hw_matrix." + (.key // ((.cores|tostring) + "c"))) as $hk |
     ( {name:($hk+".healthy_ceiling_rps"),   value:.healthy_ceiling_rps,   bkey:"serving_hw_matrix.*.healthy_ceiling_rps"},
       {name:($hk+".rig_valid_peak_achieved_rps"), value:.rig_valid_peak_achieved_rps, bkey:"serving_hw_matrix.*.rig_valid_peak_achieved_rps"},
       {name:($hk+".healthy_ceiling_p50_ms"),value:.healthy_ceiling_p50_ms,bkey:"serving_hw_matrix.*.healthy_ceiling_p50_ms"} ) ),
-  # item 18 (client rig) — multi-process aggregate throughput vs process count. Unlike
+  # Multi-process aggregate throughput vs process count. Unlike
   # serving_percore (one point per pinned core-count), this emits TWO FLAT scalars with
   # EXACT bkeys (like rig_valid_peak_achieved_rps / forward.error_rate, not a wildcard
   # arm family), distilled from the per-N .serving_multiproc.points + .scaling verdict:
@@ -1066,7 +1048,7 @@ def metrics:
   # continuously with the server ceiling. Non-gating (perf-budgets.json gating:false).
   # saturation_rps (the knee) is ladder-QUANTISED, so it is recorded but NOT budgeted here.
   ( {name:"rig_valid_peak_achieved_rps", value:(.rig_valid_peak_achieved_rps), bkey:"rig_valid_peak_achieved_rps"} ),
-  # item 44 — the published headline: the p99-bounded ceiling of the perf-xl multi-k6 arm, under the rule
+  # The published headline: the p99-bounded ceiling of the perf-xl multi-k6 arm, under the rule
   # its .headline_rule names. Only an arm-only result carries one (a daily run leaves {}), so it
   # compares against runs-perf-xl/ alone, keyed on that rule (latfam).
   ( {name:"serving_rw_multik6.healthy_ceiling_rps", value:((.serving_rw_multik6 // {}).headline.healthy_ceiling_rps),
@@ -1143,7 +1125,7 @@ def mainelsfp: ((.config // {}).event_log_budget.method // "fixed-268435456");
 def mainelsmetric($m): ($m.bkey | startswith("behaviours.")) or $m.bkey == "rig_valid_peak_achieved_rps"
   or (($m.bkey | startswith("tls_handshake.")) and ($m.name | startswith("tls13.")));
 
-# JMH methodology fingerprint of the HEAD run (item 15c baseline-discontinuity guard).
+# JMH methodology fingerprint of the HEAD run (baseline-discontinuity guard).
 # microbench / microbench_extra metrics are only comparable against baseline runs
 # measured under the SAME .config.jmh — a methodology change (e.g. -f1 6s warmup ->
 # -f2 4s warmup) can shift absolute timings, which against a differently-measured
@@ -1374,7 +1356,7 @@ COUNT="$(printf '%s' "$RESULT_CMP" | jq -r '.count')"
 GATING_COUNT="$(printf '%s' "$RESULT_CMP" | jq -r '.gating_count')"
 NONGATING_COUNT="$(printf '%s' "$RESULT_CMP" | jq -r '.nongating_count')"
 
-# microbench baseline discontinuity (item 15c): when the head run's JMH methodology
+# microbench baseline discontinuity: when the head run's JMH methodology
 # fingerprint (.config.jmh) differs from some/all baseline runs, only the matching
 # subset is comparable for microbench(_extra) metrics. Surface that VISIBLY — a
 # skipped comparison that looks like a clean pass is the false green we avoid.
@@ -1481,7 +1463,7 @@ EXTRA="$(jq -r '
     + (if ($tail|length) > 0 then "\n\n**Where the tail is** (share of requests over 5 ms per rung; notify-only): k6 after the settle window, beside two MockServer histograms: the request handler (decoded request to response hand-off) and the transport (decoded request head to the last response byte written to the socket, so it adds aggregation, encoding, the write and a slow reader). A client tail with no transport tail is outside MockServer once it has read the request: the rig, the network, the kernel, or the event loop not yet reading the socket. Tell those apart with k6 CPU against its pin (the excluded-rung reasons) and per-worker event-loop CPU (the deep run ceiling per-thread table).\n\n| Offered rps | k6 > 5 ms | Handler > 5 ms | Transport > 5 ms |\n|---:|---:|---:|---:|\n" + ($tail|join("\n")) else "" end))
 ' "$RESULT" 2>/dev/null || echo "")"
 
-# item 12 — surface the streaming caveats in the RENDERED annotation, not only in
+# Surface the streaming caveats in the RENDERED annotation, not only in
 # source comments (the reviewer's MINOR): heap_bytes_per_stream is an UPPER BOUND
 # dominated by log-ring retention, and the match A/B + absolute drift are measured
 # against a deliberately-constrained SUT (a relative tripwire near the scheduler
@@ -1493,23 +1475,18 @@ if printf '%s' "$RESULT_CMP" | jq -e '[.rows[]?.name | select(startswith("stream
 :information_source: **Streaming (item 12) metric notes:** \`streaming.heap_bytes_per_stream\` is an **upper bound** — it includes the streamed response bodies retained in the event-log ring, not just per-connection state. \`streaming.match_*_p95_ms\` / \`match_p95_ratio\` and the absolute \`intertoken_error_*\` are measured against a **deliberately CPU-/thread-constrained** SUT so the scheduler sits near its knee: they are RELATIVE tripwires (a regression pushes the ratio up), not absolute production figures. The idle-vs-load \`intertoken_error_p95_ratio\` normalises against the client-jitter floor, so it stays meaningful regardless of saturation."
 fi
 
-# item 13 — SURFACE a skipped clustered A/B (the reviewer's MAJOR: a dark skip
-# reads as a clean pass). compare is head-driven, so when the run took the
-# absent-image / revision-mismatch / disabled skip branch it emits ZERO
-# clustered_state metrics and no other signal — item 13 could then skip on every run
-# for months with the build green and only a buried stderr WARNING. It does NOT fail
+# SURFACE a skipped clustered A/B (a dark skip reads as a clean pass). compare is
+# head-driven, so when the run took the absent-image / revision-mismatch / disabled
+# skip branch it emits ZERO clustered_state metrics and no other signal — the A/B
+# could skip on every run for months with only a buried stderr WARNING. It does NOT fail
 # the build — it annotates. The attempted-but-produced-nothing case is a DIFFERENT
 # gate: it is caught by the run's clustered_metrics_present validity check, which REDs
 # before this step. Only fires for the NEW producer's explicit skip
 # (clustered_attempted:false); a pre-feature run (key absent) is exempt.
 #
-# WHAT CHANGED, and what it means for this note: the clustered image IS now published
-# on every master merge (java-docker-push-snapshot.sh) and PULLED up front by
-# perf-test-run.sh, so "not yet published to the perf queue" is no longer the expected
-# state — a skip now means a real breakage. The run therefore emits
-# `clustered_skip_reason` and this note REPORTS it instead of guessing. It is still
-# notify-only: see the STILL-NOTIFY-ONLY note below for why, and what would have to
-# be true to make it gate.
+# The clustered image is published on every master merge and pulled up front by
+# perf-test-run.sh, so a skip means a real breakage; the note REPORTS the run's
+# `clustered_skip_reason`. Still notify-only: see the STILL-NOTIFY-ONLY note below.
 CLU_NOTE=""
 CLU_ATTEMPTED_HEAD="$(jq -r 'if has("clustered_attempted") then (.clustered_attempted|tostring) else "absent" end' "$RESULT" 2>/dev/null || echo absent)"
 CLU_ROWS="$(printf '%s' "$RESULT_CMP" | jq '[.rows[]?.name | select(startswith("clustered_state."))] | length' 2>/dev/null || echo 0)"

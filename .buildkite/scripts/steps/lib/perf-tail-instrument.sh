@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tail-attribution instrumentation for scripts/rw-multi-k6-sweep.sh (performance programme item 44):
+# Tail-attribution instrumentation for scripts/rw-multi-k6-sweep.sh:
 # each k6 process's Go GC trace and per-second series, the quiet seconds the GC-masked figure reads, and
 # a host kernel-counter sampler. Report-only:
 # nothing here gates a run, and every function fails soft. Defines functions only; bash 3.2 compatible.

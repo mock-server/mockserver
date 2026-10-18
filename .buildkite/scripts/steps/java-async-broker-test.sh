@@ -3,68 +3,19 @@
 # Run the AsyncAPI live-broker integration suites (Kafka, Kafka+Avro, AMQP,
 # MQTT 3.1.1, MQTT 5) against real brokers via Testcontainers.
 #
-# WHY THIS STEP EXISTS
+# The main build collects these Failsafe ITs but has no Docker socket, so their
+# Assume guard skips every test there while the job goes green. This step gives
+# them the socket and fails closed via assert-suite-ran.sh below. It is separate
+# (not `-s` on java-build.sh) for the same reason as java-cloud-store-test.sh.
 #
-#   The five *LiveBrokerIntegrationTest suites already ran in the main build —
-#   Failsafe's **/*IntegrationTest.java include matches them and the main build
-#   runs `clean install`, which reaches `verify`. But the main build deliberately
-#   has NO Docker socket, so their Assume gate was never satisfied and they
-#   SKIPPED EVERY TEST ON EVERY BUILD while the job still went green. Verified
-#   from Buildkite: the `:maven: build` job passed (exit 0) in mockserver-java
-#   builds #1580 and #1583, each reporting
+# TESTCONTAINERS_RYUK_CONTAINER_PRIVILEGED=false: the agents' userns-remapped
+# dockerd rejects Testcontainers' default privileged Ryuk. Keep that exact name;
+# TESTCONTAINERS_RYUK_PRIVILEGED is read by nothing.
 #
-#     failsafe:integration-test @ mockserver-async
-#     Tests run: 5, Failures: 0, Errors: 0, Skipped: 5
-#
-#   (Both builds failed overall, on the separate cloud blob-store step — a green
-#   job that tested nothing is exactly the false positive removed here.)
-#
-#   That is the same false positive `java-cloud-store-test.sh` was created to
-#   remove for the cloud blob-store suites: a suite being *collected* is not the
-#   same as a suite *testing anything*.
-#
-#   Run locally against real brokers the same five suites execute 24 tests in
-#   ~75s wall clock, all passing — so this is cheap and genuinely green, not a
-#   gate that needs the suites fixed first.
-#
-# WHY A SEPARATE STEP rather than `-s` on java-build.sh:
-#
-#   Identical reasoning to java-cloud-store-test.sh — run-in-docker.sh withholds
-#   the Docker socket from PR builds and `exit 0`s the whole step when one is
-#   requested. Adding `-s` to java-build.sh would make the ENTIRE Java reactor
-#   silently exit 0 on every PR build, trading a narrow false positive for a
-#   total one. Splitting keeps the main build socket-free and confines the
-#   PR-build socket skip to this module, where it is announced in the log.
-#
-# WHY TESTCONTAINERS_RYUK_CONTAINER_PRIVILEGED=false:
-#
-#   Carried over from java-cloud-store-test.sh and required here for the same
-#   reason — this is the second Testcontainers-Java step on these agents, and the
-#   failure is not self-announcing. Testcontainers-Java starts its Ryuk reaper
-#   with Privileged=true by default (TestcontainersConfiguration.isRyukPrivileged()
-#   defaults `ryuk.container.privileged` to "true"), and the elastic-ci-stack
-#   agents run dockerd with user-namespace remapping, which rejects privileged
-#   containers outright:
-#
-#     BadRequestException: Status 400: privileged mode is incompatible with
-#     user namespaces...
-#
-#   Ryuk reaps through the mounted socket and does not need privileged mode, so
-#   dropping only that flag keeps container cleanup working. NOTE the exact
-#   variable name: Testcontainers maps a property to an env var by uppercasing,
-#   replacing dots and prefixing TESTCONTAINERS_, so `ryuk.container.privileged`
-#   becomes TESTCONTAINERS_RYUK_CONTAINER_PRIVILEGED. The intuitive-looking
-#   TESTCONTAINERS_RYUK_PRIVILEGED is read by nothing and silently has no effect.
-#
-# WHY -m 7g AND NOT 4g:
-#
-#   Same defect, same fix as java-cloud-store-test.sh (see its header for the
-#   measurements). `mockserver/.mvn/jvm.config` pins the Maven JVM to
-#   `-Xms2048m -Xmx6144m` and mvnw prepends jvm.config to MAVEN_OPTS, so the JVM
-#   running the `-am` dependency build below is permitted a 6g heap; under a 4g
-#   cgroup the kernel OOM-kills it (exit 137) before any test runs, which
-#   silently removes exactly the coverage the assert-suite-ran.sh guard exists to
-#   guarantee. 7g matches every other step that runs ./mvnw from mockserver/.
+# -m 7g: mockserver/.mvn/jvm.config grants Maven -Xmx6144m, so a 4g cgroup
+# OOM-kills the -am build before any test runs.
+# Rationale and rejected alternatives: docs/infrastructure/ci-cd.md
+# ("Gates That Must Fail Closed").
 # ──────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -72,24 +23,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 MODULE="mockserver-async"
 
-# Image names are the single source of truth in test-container-images.properties,
-# resolved via test-images.sh (so the pre-pull list can no longer drift from the
-# suites' DockerImageName.parse(...) calls — both read the same file).
-# ecr-pull-through-login.sh optionally logs the host daemon in to the ECR
-# pull-through cache and sets MOCKSERVER_TEST_IMAGE_REGISTRY; when unset (default,
-# forks, cache not yet applied) test_image resolves the public names unchanged.
+# Image names come from test-container-images.properties via test-images.sh, the
+# same file the suites read. ecr-pull-through-login.sh may set
+# MOCKSERVER_TEST_IMAGE_REGISTRY; unset, test_image resolves the public names.
 #   cp-kafka           -> Kafka / KafkaAvro / KafkaSecurity / AsyncApiControlPlane
 #   rabbitmq           -> Amqp
 #   eclipse-mosquitto  -> Mqtt / Mqtt5 / MqttTls / MqttTlsHandshake
 source "$SCRIPT_DIR/../lib/test-images.sh"
 source "$SCRIPT_DIR/../lib/ecr-pull-through-login.sh"
 
-# Pre-pull the broker images (with retry + backoff) on the host daemon BEFORE
-# Maven runs, so a slow/throttled registry fails fast with a clear message
-# instead of surfacing ~5 minutes in as an opaque Testcontainers
-# RemoteDockerImage / ContainerFetchException timeout. The suites pull these
-# through the mounted socket, so warming the host cache here means they never
-# re-pull.
+# Pre-pull on the host daemon (with retry) before Maven runs, so a throttled
+# registry fails fast here rather than minutes later as an opaque Testcontainers
+# ContainerFetchException. The suites pull through the mounted socket, so they
+# then hit the warm host cache.
 "$SCRIPT_DIR/../lib/pre-pull-images.sh" \
   "$(test_image cp-kafka)" \
   "$(test_image rabbitmq)" \

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fixture tests for the multi-k6 arm's default k6 runtime (performance programme item 31):
+# Fixture tests for the multi-k6 arm's default k6 runtime:
 # lib/perf-k6-runtime.sh, and the harness resolving it (PERF_RW_TEST_RESOLVE_ONLY) against a stub
 # `docker` on PATH, so no Docker is needed.
 # Run: .buildkite/scripts/test/perf-k6-runtime-test.sh

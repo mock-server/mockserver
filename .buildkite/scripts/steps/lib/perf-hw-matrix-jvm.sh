@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# Hardware-matrix knee diagnostics (performance programme item 51), sourced by
+# Hardware-matrix knee diagnostics, sourced by
 # lib/perf-percore.sh; report-only, never a gate.
 # GC time and count, event-log drops (summed over every reason) and evictions from the metrics scrape the sampler already
 # makes, plus the SUT cgroup's memory.events and PSI totals (us) when the host exposes them

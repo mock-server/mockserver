@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fixture tests for the multi-k6 arm's tail attribution files (performance programme item 44):
+# Fixture tests for the multi-k6 arm's tail attribution files:
 # lib/perf-tail-instrument.sh (gctrace CSV, per-second series, host kernel sampler shape, fail-soft and
 # lifecycle), the harness wiring (stub docker, nothing started), scripts/rw-tail-attribution.py on
 # synthetic bundles, and the GC-masked figure on rows trimmed from a real bundle. No Docker. Run: .buildkite/scripts/test/perf-tail-instrument-test.sh
@@ -608,7 +608,7 @@ PERCORE_RUN="$(awk 'index($0, "run_point_multik6() {") == 1 {on = 1} on {print} 
 check "the hardware matrix keeps the whole-rung rule for its recorded p99-bounded ceiling" "yes" \
   "$(grep -qE '(^|[[:space:]])PERF_RW_HEADLINE_RULE=unmasked_p99([[:space:]]|$)' <<<"$PERCORE_RUN" && echo yes || echo no)"
 STEPS="$REPO_ROOT/.buildkite/scripts/steps"
-# Item 44: the masked figure reaches compare and publish only through the published-series path.
+# The masked figure reaches compare and publish only through the published-series path.
 # The run step, the daily transform and the hardware matrix still never read it.
 check "only the published-series path reads the run's .gc_masked block" \
   "perf-test-compare.sh perf-rw-multik6-series.jq perf-website-figures-rw.jq " \

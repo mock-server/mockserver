@@ -27,7 +27,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 # PERF_RUN_ARM=rw_multik6|hw_matrix measures ONE opt-in arm on the provenance-checked SUT and skips
 # every other phase. The result keeps the full schema with the other blocks empty, is never
 # baseline-eligible, and is uploaded under a PERF_RUN_NAME prefix that the daily compare never
-# downloads. The multi-k6 arm's own compare step reads its result by name (item 44).
+# downloads. The multi-k6 arm's own compare step reads its result by name.
 # Arms and workloads inherited from the build env are other measurements, so they are forced off.
 PERF_RUN_ARM="${PERF_RUN_ARM:-}"
 case "$PERF_RUN_ARM" in
@@ -121,19 +121,19 @@ if [ -n "$PERF_RELEASE_COMPARISON" ]; then
   echo "--- release comparison: measuring MockServer ${PERF_RELEASE_COMPARISON} ($MOCKSERVER_IMAGE); the result is recorded but never baselined or published"
 fi
 # The SUT runs the -graaljs snapshot variant so the JavaScript response-template
-# arm (regression.js item 15a) has the GraalVM JS engine available; the engine is
+# arm (regression.js) has the GraalVM JS engine available; the engine is
 # an OPTIONAL dependency absent from the plain image, and a JS template without it
 # fails loud (500). The extra jars are inert for every non-JS arm (loaded lazily
 # only when a JS template renders), so the match/forward/velocity/mustache/large
 # numbers are unaffected. Overridable; if you point this at a NON-graaljs image,
 # also set PERF_JS_TEMPLATE=false or regression.js aborts the run loudly.
 MOCKSERVER_IMAGE="${MOCKSERVER_IMAGE:-mockserver/mockserver:mockserver-snapshot-graaljs}"
-# item 15a — enable the JavaScript template arm (default on; the SUT image above
-# carries GraalJS). item 15d — server-side path of the file-backed response body.
+# Enable the JavaScript template arm (default on; the SUT image above carries
+# GraalJS), and the server-side path of the file-backed response body.
 PERF_JS_TEMPLATE="${PERF_JS_TEMPLATE:-true}"
 FILE_BODY_CONTAINER_PATH="/perf-files/large-file-body.json"
 
-# --- OPT-IN workload extension (memory-optimisation programme unit 21) ----------
+# --- OPT-IN workload extension (unmatched-proxy concurrency) --------------------
 # The default run measures the mock/forward/template paths and is UNCHANGED by this
 # block: PERF_WORKLOAD is empty by default, so every branch guarded on it is skipped
 # and the published curve + rolling baseline are byte-for-byte comparable.
@@ -141,7 +141,7 @@ FILE_BODY_CONTAINER_PATH="/perf-files/large-file-body.json"
 # When set to "forward" it runs ONE extra, non-baseline pass AFTER the normal
 # measurement: it makes the run's upstream SLOW (PERF_UPSTREAM_DELAY_MS) and
 # re-drives proxy.js's UNMATCHED-proxy arm (absolute-URI, which is
-# handleUnmatchedProxyForward — the path unit 21 changed; the MATCHED /forward arm
+# handleUnmatchedProxyForward — the path this workload exists for; the MATCHED /forward arm
 # is already async and shows nothing) at elevated concurrency, so
 # offered_rate x upstream_latency exceeds the blocking action-handler pool and the
 # ~poolSize in-flight cap becomes visible as a delivery_ratio drop / p99 blow-up.
@@ -237,7 +237,7 @@ require_dns_hostname() {
     return 1
   fi
 }
-# item 12 — the background k6 that drives the streaming concurrency load, and a
+# The background k6 that drives the streaming concurrency load, and a
 # DEDICATED, deliberately CONSTRAINED SUT it drives (low CPU + a small
 # action-handler pool) so the scheduler saturates at a modest, DETERMINISTIC
 # concurrency regardless of the agent's core count — otherwise on the pinned
@@ -245,7 +245,7 @@ require_dns_hostname() {
 # nothing happens (see the streaming phase's header for the full rationale).
 STREAM_K6="mockserver-perf-k6-stream-${RUN_ID}"
 STREAM_SUT="mockserver-perf-stream-sut-${RUN_ID}"
-# item 13 — clustered state under load (within-run A/B). A single in-memory-backend
+# Clustered state under load (within-run A/B). A single in-memory-backend
 # control SUT and a two-node Infinispan/JGroups cluster, all on the SAME clustered
 # image so the ONLY variable is the state backend; regression.js (unchanged) runs
 # against each and the metric is the per-arm ratio (clustered / control), the
@@ -273,7 +273,7 @@ cov_validate_env || exit 1
 # label), or set PERF_CLUSTERED=false to skip the A/B entirely.
 CLU_IMAGE="${PERF_CLUSTERED_IMAGE:-mockserver/mockserver:mockserver-snapshot-clustered}"
 SAMPLE_INTERVAL="${PERF_SAMPLE_INTERVAL:-5}"
-# Hard memory bound for the SUT (item: measure growth against a realistic heap).
+# Hard memory bound for the SUT, so growth is measured against a realistic heap.
 # Unbounded on a 32 GB box, the GraalJS image's MaxRAMPercentage=45 yields a ~14 GB heap that barely
 # GCs, so a slow leak is invisible and the "live set" is unobservable. A bounded
 # heap that actually cycles is what the documented central-deployment guidance
@@ -282,33 +282,16 @@ SAMPLE_INTERVAL="${PERF_SAMPLE_INTERVAL:-5}"
 SERVER_MEMORY="${PERF_SERVER_MEMORY:-2g}"
 
 # --- event-log body-byte budget: the OOM guard that keeps the run alive ---------
-# WHY THIS EXISTS (build #249 died here). MockServer records every request AND its
-# response in a COUNT-bounded event-log ring of maxLogEntries entries, holding the
-# FULL body of each. On the 2 GB GraalJS SUT the heap is MaxRAMPercentage=45% ~= 0.9 GiB, so
-# maxLogEntries = min(heapKB/8, 250000) ~= 115,500. An entry lives for the ring's
-# residence = maxLogEntries / total_ACHIEVED_insertion_rps, and — this is the trap —
-# residence LENGTHENS without bound as achieved throughput FALLS. The MB-scale
-# regression arms (large_1mb/large_10mb/large_file, k6 item 15d) then retain, per arm,
-# roughly rate x residence x body:
-#     arm          rate     body     @ residence 172 s (total ~901 rps, healthy)
-#     large_10mb   0.1/s    10 MB    -> 0.1 x 172 x 10 MB  ~= 172 MB
-#     large_1mb    0.5/s     1 MB    -> 0.5 x 172 x  1 MB  ~=  86 MB
-#     large_file   0.5/s    ~1 MB    -> 0.5 x 172 x  1 MB  ~=  86 MB   (its ~1 MB RESPONSE)
-#     large(4KB)   200/s     4 KB    -> 200 x 172 x  4 KB  ~= 137 MB
-# ~480 MB of large bodies looks safe under 0.9 GiB — but ONLY at residence 172 s. When
-# the SUT contends (the pre-fix JavaScript contagion, or the EXTRA body throughput the
-# 2026-09-17 dispatch-pool fixes eec183f7e/7fbae1350 now ADMIT), total achieved rps
-# collapses, residence 2x/4x/10x, and every figure above scales with it — there is no
-# upper bound as achieved rps -> 0. Two back-to-back protocol passes (http then
-# https_h2) compound it. That is what pushed retention past the heap in build #249 and
-# killed the container mid-run, so the second (https_h2) pass could not even seed
-# ("no such host").
+# The event log is COUNT-bounded and holds full bodies, so the MB-scale regression arms
+# retain rate x residence x body, and residence (maxLogEntries / achieved rps) grows
+# without bound as the SUT slows. No per-arm rate keeps that bounded (a run once OOMed
+# mid-pass this way); arithmetic in docs/code/performance-measurement.md, "k6 load-shape sizing".
 # THE FIX: bound RETENTION, not rate. maxEventLogSizeInBytes is MockServer's own OOM
 # guard, on by default (heap/20 at ERROR): it evicts oldest-first by body bytes, so no rate x
 # residence product can run away. The main SUT runs at that shipped default (main_els_guard
 # confirms it from the gauge); PERF_MAX_EVENT_LOG_BYTES overrides it and marks the run tuned.
 # The upstream, path-coverage and clustered SUTs keep HARNESS_FIXED_EVENT_LOG_BYTES (none
-# measures the out-of-the-box figure). growth.js must fill the ~115.5k count ring (#2329), which
+# measures the out-of-the-box figure). growth.js must fill the ~115.5k count ring, which
 # a heap-derived byte cap stops first, so its phase runs at GROWTH_EVENT_LOG_BYTES (scope_growth_event_log_budget).
 PERF_MAX_EVENT_LOG_BYTES_SET="${PERF_MAX_EVENT_LOG_BYTES:+set}"
 PERF_MAX_EVENT_LOG_BYTES="${PERF_MAX_EVENT_LOG_BYTES:-}"
@@ -485,7 +468,7 @@ diag_jvm_opts() {
 # shellcheck source=lib/perf-java-opts.sh
 . "$SCRIPT_DIR/lib/perf-java-opts.sh"
 
-# item 15d — file-backed response body arm. Generate a ~1 MB JSON file on the host
+# File-backed response body arm. Generate a ~1 MB JSON file on the host
 # and mount it read-only into the SUT so a FILE-body expectation can serve it (the
 # FileBodyMaterialiser path). World-readable so the container's non-root user can
 # read it. Only the SUT gets the mount; the upstream does not need it.
@@ -656,9 +639,7 @@ upload_diag_bundle() {
   # $DIAG_DIR being 0777 governs the DIRECTORY, not the files created in it. Every host-side read
   # below then fails with "Permission denied", and both failures are SILENT-but-wrong rather than
   # loud: `wc -c` falls through to `|| echo 0` so the log reports a 2 GB dump as "0 MiB", and the
-  # gzip fails into `|| continue` so the dump is never uploaded at all. Observed on build 302, where
-  # the bundle carried a 0 MiB dump for a real 2.02 GiB file and the liveness question it existed to
-  # answer could not be answered. chmod from a throwaway container (running as root, same trick the
+  # gzip fails into `|| continue` so the dump is never uploaded at all. chmod from a throwaway container (running as root, same trick the
   # histogram sidecar already uses) before anything on the host touches them.
   if [ -n "$(ls -d "$DIAG_DIR"/*/heapdump.hprof 2>/dev/null)" ]; then
     docker run --rm -v "$DIAG_DIR:/diag" --entrypoint sh "$PERF_HISTO_JDK_IMAGE" \
@@ -754,7 +735,7 @@ cleanup() {
   [ -n "$INFO_LOG_PID" ] && kill "$INFO_LOG_PID" >/dev/null 2>&1 || true
   declare -F stop_info_els_sampler >/dev/null && stop_info_els_sampler
   [ -n "${HS_CPU_PID:-}" ] && kill "$HS_CPU_PID" >/dev/null 2>&1 || true
-  # The item 14 handshake SUTs (deterministic names from RUN_ID) — removed here too
+  # The handshake SUTs (deterministic names from RUN_ID) — removed here too
   # so an early exit before the proxy block's own cleanup never leaks them.
   docker rm -f "$SERVER" "$UPSTREAM" "$SWEEP_K6" "$STREAM_K6" "$STREAM_SUT" \
     "$INFO_SERVER" "$INFO_SWEEP_K6" "${STEADY_K6:-}" \
@@ -778,7 +759,7 @@ trap 'LOAD_JFR_DUMP_DEADLINE_S=20 cleanup' INT TERM
 # shellcheck disable=SC2046  # intentional word-splitting of the id list
 docker rm -f $(docker ps -aq --filter name=mockserver-perf- 2>/dev/null) >/dev/null 2>&1 || true
 
-# --- validity accumulation (item: validity blocks on every result) ------------
+# --- validity accumulation (a validity block on every result) -----------------
 # Each measurement phase appends a check {name, ok, detail}; the assembled result
 # carries a `validity` object, and perf-test-compare.sh REFUSES to baseline a run
 # whose validity is absent or false — rather than silently comparing a compromised
@@ -886,21 +867,10 @@ else
   exit 1
 fi
 
-# THE GUARD. The cpusets below are chosen to be disjoint — but "disjoint" has to
-# mean disjoint in PHYSICAL cores, and for a long time it did not.
-#
-# On the c5.4xlarge this queue used to run, the defaults asked for 6 (server) + 1
-# (upstream) + 6 (k6) = 13 cores on a box with 16 vCPU but only EIGHT physical
-# cores. Thirteen into eight does not go, so k6 necessarily ran on the sibling
-# threads of cores the server was already saturating. Every throughput figure the
-# rig produced was therefore a measurement of a server sharing silicon with its own
-# load generator, and it is the main reason "the client saturates first" blocked
-# the knee for so long (k6 read 600.9% against its 600% pin on a VALID run).
-#
-# Nothing caught it because the check above was `_NPROCESSORS_ONLN >= 16`, which
-# counts LOGICAL cpus — the one number that cannot detect this. So the check now
-# resolves real topology and fails the run rather than quietly producing a figure
-# that means something other than it claims.
+# THE GUARD. The cpusets below must be disjoint in PHYSICAL cores, not just logical
+# cpus: a logical-cpu count cannot tell a server sharing hyperthread siblings with its
+# own load generator from a clean rig, which silently caps the measured knee. So the
+# run resolves real topology and fails rather than publish a shared-silicon figure.
 # Thin wrapper preserving this run's call site (assert_cpusets_physically_disjoint
 # || exit 1 below): it hands this run's three cpuset globals to the shared,
 # generalised checker in lib/perf-cpu-topology.sh. The proof itself — /sys topology
@@ -927,13 +897,10 @@ if [ "$CORES" -ge 16 ]; then
   # left IDLE, which is also what keeps the published "six real cores" honest.
   #
   # k6 spans cores 7-23 (seventeen cores) so the client keeps headroom above the
-  # server's ceiling and the knee measured is the SERVER's, not the load generator's.
-  # Thirteen cores was not enough: the client fell below the 95%-achieved threshold at
-  # 48k offered while the same server served it cleanly with seventeen. Cores 7-10 were
-  # previously held free so a ten-vCPU server arm (server=0-9, upstream=10) would need
-  # no k6 move, but that arm cannot be measured on this box at all — it leaves only
-  # thirteen cores for the client, which is the amount already shown to be too few, so
-  # it needs k6 on a separate machine regardless. A wider server arm still overrides
+  # server's ceiling and the knee measured is the SERVER's, not the load generator's
+  # (thirteen client cores proved too few at 48k offered). A ten-vCPU server arm would
+  # leave too few client cores on this box, so it needs k6 on another machine. A wider
+  # server arm still overrides
   # PERF_SERVER_CPUS and the guard re-proves disjointness for whatever is active.
   #
   # Changing this cpuset breaks comparability of the stored saturation series and
@@ -1107,15 +1074,14 @@ else
 fi
 require_dns_hostname "$UPSTREAM_HOSTPORT" || exit 1
 
-# --- SUT image freshness: pull the mutable tag before measuring (part D) --------
+# --- SUT image freshness: pull the mutable tag before measuring ----------------
 # MOCKSERVER_IMAGE is a MUTABLE tag (mockserver-snapshot-graaljs) rebuilt on every
 # master merge. With no pull, `docker run` silently uses whatever layer set the
-# agent happens to have cached — build #264 measured an entirely cached image with
-# nothing tying it to the commit under test. Pull ONCE up front rather than
+# agent happens to have cached, with nothing tying it to the commit under test. Pull ONCE up front rather than
 # `--pull always` on each of the ~6 `docker run` calls below: --pull always would
 # re-query the registry per container (upstream, SUT, stream SUT, clustered nodes,
 # INFO SUT) for the same tag; a single pull freshens the shared local image once.
-# DECISION (part D asked to argue it): pull, don't skip. Cost is one pull (seconds)
+# Pull, don't skip. Cost is one pull (seconds)
 # against a 45-60 min run — negligible — and it does add a registry-availability
 # dependency, but the FIRST-ever run already needs the registry, and a registry
 # outage is better surfaced loudly here than by silently measuring a stale image.
@@ -1155,7 +1121,7 @@ if [ -n "$LAG_REFUSAL" ]; then
   exit 1
 fi
 
-# --- item 13: pull the CLUSTERED image here too, beside the SUT pull -----------
+# --- pull the CLUSTERED image here too, beside the SUT pull -----------
 # THE FIX for a harness that never measured: the clustered A/B block guards on
 # `docker image inspect "$CLU_IMAGE"`, and NOTHING in the perf flow ever pulled or
 # built that image — so on a scale-to-zero perf agent (a fresh box every run) the
@@ -1737,8 +1703,7 @@ fi
 # reader must see both. This deliberately STOPS treating image-lag — a snapshot tag
 # that trails master (mockserver-java rebuilds it only for its own paths) — as a failure: a lagging image was
 # measured correctly and is attributable to the commit it was built from, which is
-# exactly what this result now records (build #284's three-docs-commit lag was a false
-# alarm under the old equality check). A forced master run is the exception: it is refused at
+# exactly what this result now records. A forced master run is the exception: it is refused at
 # the image pull unless the harness commit is served this image (snapshot_equivalent).
 # Three outcomes, and provenance STILL fails
 # closed in the ones that matter:
@@ -1830,7 +1795,7 @@ else
   fi
 fi
 
-# --- baseline eligibility (part C): keep an INSTRUMENTED run out of the baseline
+# --- baseline eligibility: keep an INSTRUMENTED run out of the baseline
 # PERF_JVM_DIAGNOSTICS=deep (GC file log + NMT + JFR) and =gc (GC file log only) add diagnostics
 # that cost throughput BY DESIGN, so a deep run that completes must be RECORDED but
 # NOT persisted into the baseline history — otherwise it silently shifts the series,
@@ -1844,7 +1809,7 @@ fi
 # direction is to over-exclude, never to contaminate the baseline.
 BASELINE_ELIGIBLE="true"
 # Why the run is not eligible, one token per cause, recorded as .baseline_ineligible_reasons. Compare
-# persists a perf-xl arm-only result only when its sole reason is arm_only (item 44).
+# persists a perf-xl arm-only result only when its sole reason is arm_only.
 INELIGIBLE_REASONS=""
 mark_ineligible() { BASELINE_ELIGIBLE="false"; INELIGIBLE_REASONS="${INELIGIBLE_REASONS} $1"; }
 OBSERVED_INSTRUMENTATION="$(grep -o 'StartFlightRecording\|NativeMemoryTracking\|Xlog:gc' <<<"$JAVA_TOOL_OPTS_VAL" | sort -u | paste -sd, - || true)"
@@ -1858,7 +1823,7 @@ if [ "$CONFIG_PROFILE" != "default" ]; then
   mark_ineligible config_profile
   echo "--- baseline eligibility: NOT eligible (config_profile=$CONFIG_PROFILE, soBacklog=$SO_BACKLOG_VAL) — a tuned run is recorded but NOT persisted to the default-configuration baseline"
 fi
-# The opt-in remote-write arm (item 31) drives the SUT for several more minutes
+# The opt-in remote-write arm drives the SUT for several more minutes
 # between the published sweep and growth, so a run carrying it is a trial.
 if [ "${PERF_SERVING_RW_MULTIK6:-false}" = "true" ] && ! arm_only; then
   mark_ineligible rw_multik6_in_run
@@ -2354,17 +2319,11 @@ SWEEP_ERR_EPS="${PERF_SWEEP_ERROR_EPS:-0.01}"
 # dropped_iterations are forgiven either when the VU pool was PINNED (a server-side
 # knee — see $pool_pinned) OR, when the pool was NOT pinned, only if they are BELOW
 # this fraction of the rung's intended iterations — never on the fraction alone.
-# 0.01 = 1% is DERIVED, not picked: it sits above the largest
-# recorded blip (build #322's 2,000 rung, 133 drops = 0.44%, client 13.6% CPU) with
-# >2x margin and below the smallest recorded genuine shortfall (build #347's 8,000
-# rung at 1.83%; native 16k at 2.5%; build #290 16k at 3.3%) with >1.8x margin, and
-# it means a rig-valid rung delivered >=99% of offered — 5x tighter than the 0.95
-# "clean" (knee) rule, so it can never admit a rung the knee logic would call short.
-# NOTE the figures above were recorded under the OLD ramping pool (preAllocatedVUs
-# 200 -> maxVUs 4000); the fixed per-rung pool landed later in fa18ac3de. That shift
-# only makes this filter MORE conservative - under the new pools build #347's 8,000
-# rung HAS headroom (peak 301 < pool 640), so it is the FRACTION term that correctly
-# excludes it at 1.83%, which is exactly why this threshold must stay below that.
+# 0.01 = 1% is DERIVED, not picked: above the largest recorded harmless blip and
+# below the smallest recorded genuine shortfall, each with margin (figures in
+# docs/code/performance-measurement.md, "k6 load-shape sizing"). It must stay below the
+# smallest genuine shortfall, and it means a rig-valid rung delivered >=99% of offered,
+# tighter than the 0.95 knee rule, so it never admits a rung the knee logic calls short.
 # shellcheck disable=SC2034  # read by lib/perf-derive-saturation.sh
 SWEEP_DROP_TOL="${PERF_SWEEP_DROP_TOL:-0.01}"
 # Occupancy KNEE threshold for the drop discriminator (see derive_saturation). A
@@ -2482,7 +2441,7 @@ else
   # drops, low errors). If EVERY rung was excluded the rig was compromised
   # throughout and no server figure is trustworthy. PROVOCATION (observed false):
   # a synthetic ladder with the k6 CPU above 85% of pin at every rung yields
-  # rig_valid_rungs=0 and this check false (see the item's can-it-fail evidence).
+  # rig_valid_rungs=0 and this check false.
   #
   # KEYED OFF THE RUNG COUNT, NOT off rig_valid_peak_achieved_rps > 0. Those are not the same
   # question. A rung can be rig-valid and still achieve 0 rps (a server that is down
@@ -2491,11 +2450,7 @@ else
   # is actually named for: did ANY rung measure cleanly?
   #
   # The failure message now REPORTS the per-rung exclude_reason rather than asserting a
-  # cause. The old text named "client CPU-pinned / VU-starved / erroring" unconditionally,
-  # and that mis-diagnosed build #322: its 2,000 rung dropped 133 iterations (~0.4%), the
-  # zero-tolerance no_drops clause excluded every rung, and the build failed pointing at
-  # client CPU that was in fact 13.6% utilised. Each rung already carries the real reason;
-  # print it instead of guessing.
+  # cause: a fixed message once blamed client CPU on a run whose client was 13.6% busy.
   RIG_VALID_RUNGS="$(jq -r '.rig_valid_rungs // 0' <<<"$SATURATION_JSON")"
   # A server-headroom test that did not run on every rung is said so, not left implicit.
   SRV_TEST="$(jq -r '.server_headroom_test // "off"' <<<"$SATURATION_JSON")"
@@ -2635,12 +2590,12 @@ if ! arm_only; then
   dump_ceiling_jfr "$SWEEP_RUNGS_JSON" "$SATURATION_RPS"
 fi
 
-# --- OPT-IN item 31: this ladder from N k6 processes merged in Prometheus
+# --- OPT-IN: this ladder from N k6 processes merged in Prometheus
 # (scripts/rw-multi-k6-sweep.sh), against THIS SUT so both methods measure one server. On the
 # default ladder it runs its own, which continues past 64k; an explicit PERF_RW_RATES, else an
 # explicit K6_SWEEP_RATES (e.g. the allocation profile's short ladder), overrides that.
 # Excluded from the daily run's validity; the harness exits 2 on its own gates. Published only
-# from the perf-xl arm-only step (item 44), never from inside this run.
+# from the perf-xl arm-only step, never from inside this run.
 SERVING_RW_MULTIK6_JSON='{}'
 SERVING_RW_MULTIK6_ATTEMPTED=false
 if [ "${PERF_SERVING_RW_MULTIK6:-false}" = "true" ]; then
@@ -3021,9 +2976,9 @@ fi
 FORWARD_JSON="$(cat "$OUT_DIR/forward.json" 2>/dev/null || echo '{}')"
 abort_if_sut_died
 
-# --- proxy.js: item 9a (forward proxy) + item 14 (TLS/mTLS handshake) ----------
-# ONE run, TWO phases (the plan: item 14 shares item 9a's containers and run):
-#   9a  forward mode — MockServer AS A PROXY. The k6 container gets HTTP_PROXY /
+# --- proxy.js: forward proxy + TLS/mTLS handshake -----------------------------
+# ONE run, TWO phases (the handshake phase shares the forward phase's containers and run):
+#   forward mode — MockServer AS A PROXY. The k6 container gets HTTP_PROXY /
 #       HTTPS_PROXY pointed at the SUT, so an http:// upstream target becomes an
 #       absolute-URI forward and an https:// target a CONNECT tunnel carrying TLS
 #       through the SUT to the upstream already started for the run (MockServer may
@@ -3034,7 +2989,7 @@ abort_if_sut_died
 #       baseline ONCE (intended: the arm set changed). The SUT is NOT reset/seeded
 #       for this — an absolute-URI/CONNECT request addressed to the UPSTREAM is
 #       proxied regardless of the SUT's own expectations.
-#   14  handshake mode — MockServer's INBOUND TLS handshake cost, which the
+#   handshake mode — MockServer's INBOUND TLS handshake cost, which the
 #       https_h2 regression run reuses-away to ~0. k6 hits three DISTINCT SUTs with
 #       noConnectionReuse (a fresh TCP+TLS handshake every iteration): TLS 1.3
 #       server-only (the main SUT), mTLS-required, and native-provider-absent (the
@@ -3055,7 +3010,7 @@ cleanup_proxy() {
 PROXY_FWD_JSON='{}'
 HANDSHAKE_JSON='{}'
 if [ "${PERF_PROXY_PROFILE:-true}" = "true" ]; then
-  # -- 9a: forward-proxy latency arms (behaviours) --
+  # -- forward-proxy latency arms (behaviours) --
   echo "--- proxy.js (item 9a: forward-proxy — absolute-URI + CONNECT tunnel)"
   # shellcheck disable=SC2046
   docker run --rm --network "$NETWORK" $(cpuset_arg "$K6_CPUS") \
@@ -3251,19 +3206,19 @@ if [ "${PERF_PROXY_PROFILE:-true}" = "true" ]; then
 fi
 
 abort_if_sut_died
-# --- OPT-IN workload: unmatched-proxy concurrency (unit 21) ---------------------
+# --- OPT-IN workload: unmatched-proxy concurrency --------------------------------
 # Skipped entirely unless PERF_WORKLOAD=forward, so the default run is unchanged.
 # Runs AFTER the normal measurement and is never baseline-eligible (the
 # config_profile flip above already excludes it). Re-uses the run's existing
 # upstream; no new long-lived container.
 #
-# Unit 21 — make the UNMATCHED-proxy in-flight cap visible. The default proxy arm
+# Make the UNMATCHED-proxy in-flight cap visible. The default proxy arm
 # hits a fast upstream (in-flight ~0.04, far below the ~poolSize cap), so it cannot
 # show it. Re-seed the upstream /simple with a server-side delay so
 # offered_rate x latency exceeds the blocking action-handler pool, then re-drive
-# proxy.js's absolute-URI arm (= handleUnmatchedProxyForward, the path unit 21
-# changed) at elevated concurrency. delivery_ratio < 1 / p99 blow-up on the
-# forward_absolute arm is the cap; a pre-21 vs post-21 image A/B reads it.
+# proxy.js's absolute-URI arm (= handleUnmatchedProxyForward, the path that carries the in-flight
+# cap) at elevated concurrency. delivery_ratio < 1 / p99 blow-up on the
+# forward_absolute arm is the cap; an image A/B across the cap change reads it.
 #
 # FAIL-CLOSED: adds a validity check asserting the server actually served via the
 # FORWARDED path and reached the SLOW upstream — proven by the forward_absolute p50
@@ -3276,10 +3231,10 @@ if [ "$PERF_WORKLOAD" = "forward" ] && [ "$PERF_NETWORK_MODE" != host ]; then
   WL_FWD_RATE="${PERF_WORKLOAD_FORWARD_RATE:-500}"
   WL_FWD_VUS="${PERF_WORKLOAD_FORWARD_VUS:-256}"
   WL_FWD_DURATION="${PERF_WORKLOAD_FORWARD_DURATION:-1m}"
-  # CRITICAL — reset the SUT first. A prior phase (the item-14 handshake block)
+  # CRITICAL — reset the SUT first. A prior phase (the TLS handshake block)
   # seeds a persistent /simple MOCK on the SUT; without this reset the proxied
   # absolute-URI GET /simple MATCHES that mock (HttpActionHandler) and is served
-  # locally, so handleUnmatchedProxyForward (unit 21's path) is never reached and
+  # locally, so handleUnmatchedProxyForward (the capped path) is never reached and
   # the run measures the mock. Resetting clears it so /simple is UNMATCHED and
   # therefore forwarded. Safe for later phases: each (streaming, clustered,
   # per-core sweep) seeds its own SUT in setup(); none rely on this SUT's state.
@@ -3349,21 +3304,21 @@ abort_if_sut_died
 run_path_coverage
 abort_if_sut_died
 
-# --- item 8: laptop startup + footprint profile (notify-only) -----------------
-# Runs LAST, after every k6 phase, so the box is quiet: the docker sub-items (8a
-# ready-median-of-9, idle RSS + threads at --memory 256m/512m/1g, 8d compressed
+# --- laptop startup + footprint profile (notify-only) -----------------
+# Runs LAST, after every k6 phase, so the box is quiet: the docker sub-items
+# (ready-median-of-9, idle RSS + threads at --memory 256m/512m/1g, compressed
 # image size) launch their own throwaway containers and need only docker + the SUT
-# image. The in-JVM sub-items (8b/8c) — the number a MockServerExtension suite
+# image. The in-JVM sub-items — the number a MockServerExtension suite
 # actually pays per test class, and init-file scaling — need a shaded jar and a
 # JDK; the jar is docker-cp'd out of the SUT image (path fixed by the Dockerfile)
-# and bench_laptop.py SKIPS 8b/8c loudly if a jar or `java` is unavailable (e.g. a
+# and bench_laptop.py SKIPS the in-JVM sub-items loudly if a jar or `java` is unavailable (e.g. a
 # JRE-only agent). Emits a `laptop` block merged into result.json; every metric is
 # notify-only (laptop.*.<metric> budgets omit `gating`). NON-FATAL by construction:
 # the SUT ($SERVER) is still running-but-idle here, so its per-container cgroup RSS
 # never pollutes a laptop container's own `docker stats` reading, and a laptop
 # measurement failure must never lose the k6/growth result the run exists for.
 LAPTOP_JSON='{}'
-# Record INTENT separately from success (the 15b two-axis split): `laptop_attempted`
+# Record INTENT separately from success (values vs presence): `laptop_attempted`
 # says the producer tried to measure the profile this run, so compare can tell
 # "attempted and failed wholesale" (an empty/incomplete `.laptop` → RED) apart from
 # "profile disabled" (never attempted → silent). Without it, `laptop: {}` means both.
@@ -3405,7 +3360,7 @@ if [ "${PERF_LAPTOP_PROFILE:-true}" = "true" ]; then
   fi
 fi
 
-# --- item 17: N parallel instances on one host (laptop / MockServerExtension profile) ---
+# --- N parallel instances on one host (laptop / MockServerExtension profile) ---
 # OPT-IN (PERF_LAPTOP_PARALLEL=true), OFF by default: this spins {1,4,8,16,32} MockServer
 # instances twice (an in-JVM shape and a container shape), so it is a deliberately-scheduled
 # research profile, NOT added to every daily run — the serving_percore opt-in pattern. Every
@@ -3413,7 +3368,7 @@ fi
 # regression annotates but never fails the build. Merged into result.json under `.laptop_parallel`
 # with two sub-shapes {injvm, container}, each a list of per-N runs; perf-test-compare.sh keys them
 # laptop_parallel.<shape>_<N>.<metric> against the laptop.* wildcard budgets. NON-FATAL by
-# construction (like the item 8 laptop / streaming profiles): the SUT ($SERVER) is idle here, and
+# construction (like the laptop / streaming profiles): the SUT ($SERVER) is idle here, and
 # a measurement failure must never cost the k6/growth result its baseline place — on any failure the
 # block simply stays {} and compare (head-driven) emits zero laptop_parallel metrics, no
 # missing-budget trip. NOT an add_check for the same reason the laptop block is not.
@@ -3423,7 +3378,7 @@ if [ "${PERF_LAPTOP_PARALLEL:-false}" = "true" ]; then
   LP_COUNTS="${PERF_LAPTOP_PARALLEL_COUNTS:-1,4,8,16,32}"
   LP_INJVM='{}'
   LP_CONTAINER='{}'
-  # in-JVM shape: needs a jar-with-dependencies on the classpath (reuse the one the item 8 block
+  # in-JVM shape: needs a jar-with-dependencies on the classpath (reuse the one the laptop block
   # already extracted into $LAPTOP_JAR) and a JDK on PATH. Single-file source launch prints the
   # block as `BENCH_JSON {...}` on stdout; a JRE-only agent or a missing jar SKIPS this shape.
   if [ -n "${LAPTOP_JAR:-}" ] && command -v java >/dev/null 2>&1; then
@@ -3457,9 +3412,9 @@ if [ "${PERF_LAPTOP_PARALLEL:-false}" = "true" ]; then
 fi
 
 abort_if_sut_died
-# --- item 12: LLM/SSE streaming under concurrency -----------------------------
+# --- LLM/SSE streaming under concurrency -----------------------------
 # Drive STREAMING.concurrency concurrent SSE streams (streaming.js, constant-vus)
-# while measuring the four item-12 metrics. Two of them k6 CANNOT see (it buffers
+# while measuring the four streaming metrics. Two of them k6 CANNOT see (it buffers
 # SSE), so they are taken server-side HERE, aligned to k6's phase timeline:
 #   - inter-token delay error: a tiny single-threaded reader
 #     (tools/sse-fidelity-reader.py) times consecutive `data:` lines. Run IDLE (the
@@ -3474,8 +3429,8 @@ abort_if_sut_died
 #     idle floor, over the concurrency. INCLUDES the streaming log-ring retention
 #     (bounded small by config.js STREAMING's arithmetic), so it is an upper bound
 #     on per-connection state, which the report states plainly.
-# The other two (match-p95 A/B, stream delivery) come from k6's own result. item
-# 12's CallerRunsPolicy counter is NOT emitted: MockServer exposes none, and the
+# The other two (match-p95 A/B, stream delivery) come from k6's own result. A
+# CallerRunsPolicy counter is NOT emitted: MockServer exposes none, and the
 # policy does not fire under load (ScheduledThreadPoolExecutor's DelayedWorkQueue
 # is unbounded, so CallerRunsPolicy fires only at shutdown — see the report).
 # BEST-EFFORT / NON-FATAL like the proxy/laptop profiles: a failure defaults the
@@ -3488,40 +3443,12 @@ if [ "${PERF_STREAMING:-true}" = "true" ]; then
     # SET — so a script-side default here would never reach k6 (config.js supplies the real
     # default). Keeping one would be a value that looks like configuration and configures nothing.
     S_SETTLE="${K6_STREAM_SETTLE:-10s}"
-    # Default concurrency 1200 (not config.js's light-local 100), at delay 20 ms
-    # against the dedicated 1-CPU / 2-scheduler-thread / 2-event-loop-thread SUT
-    # below. WHY IT IS NOT 300 ANY MORE, which is the useful part of this comment:
-    # 300 WAS past the knee and measured 8.0x and 3.9x — until 3d7a2f9c8 ("stop
-    # keeping a parsed copy of every logged JSON body") cut retained heap per log
-    # entry by roughly 7x (429 MB -> 61 MB over 20,000 entries; 1,840,013 Jackson
-    # tree nodes -> 0). Far less allocation means far less GC competing with the two
-    # action-handler threads, which moved the knee well beyond 300: the first
-    # post-fix CI run (build 290) read a match A/B ratio of 1.056 at concurrency 300
-    # — a control proving nothing. The product got faster and the calibration went
-    # stale; that is the ONLY reason this number changed.
-    #
-    # 600 is measured ON CI, which is what makes it trustworthy. The laptop curve
-    # (~2.0 at 300, ~2.6 at 600, ~4.5 at 900, min 6.08 at 1200) led to a default of
-    # 1200 via an extrapolation that turned out to be WRONG IN SHAPE: CI was assumed
-    # to need MORE concurrency than a laptop for the same ratio, because at 300 CI
-    # read 1.056 where the laptop read ~2.0. In fact CI has a far SHARPER knee — the
-    # laptop's own contention had flattened its curve. Measured on CI:
-    #     300  -> 1.056  (below the knee; the control proved nothing)
-    #     600  -> 2.536  (just past it — where the design wants to sit)
-    #     1200 -> 93.8   (deep in collapse, ~40x past the knee)
-    #
-    # THE KNEE IS BOX-DEPENDENT, which is exactly why the CI figure governs: those figures come from a developer laptop, where the same concurrency
-    # 300 read ~2.0 against CI's 1.056 on identical code. A 1-CPU quota buys
-    # different real throughput on a dedicated CI core than on a contended laptop
-    # vCPU, so CI needs MORE concurrency than the laptop for the same ratio. 1200
-    # was chosen because even at the worst observed box sensitivity (CI reading
-    # about half the laptop at matched concurrency) it still extrapolates to ~3x,
-    # clear of the ~1.6x near-knee band; 900 would not survive that.
-    #
-    # RETENTION at 1200/20ms: start rate ~300/s, ~500/s total, maxLogEntries ~96000
-    # => residence ~192 s exceeds the 90 s window, so ~300 x 90 x 200 events x ~30 B
-    # ~= 166 MB — still far under the ~768 MB heap of the 1 GB SUT (and no OOM was
-    # observed at 1200 in any run).
+    # Default concurrency 600 (config.js's 100 is a light local default), at delay 20 ms
+    # against the dedicated 1-CPU / 2-scheduler-thread / 2-event-loop-thread SUT below:
+    # just past the CI knee, where the match A/B control means something. The knee is
+    # box-dependent and sharp on CI, so recalibrate ON CI (not a laptop) after any change
+    # that moves per-request allocation. Curve, history and retention arithmetic:
+    # docs/code/performance-measurement.md, "k6 load-shape sizing".
     S_CONC="${K6_STREAM_CONCURRENCY:-600}"; S_DELAY="${K6_STREAM_DELAY_MS:-20}"; S_PATH="${K6_STREAM_PATH:-/stream}"
     # No `sl` for S_LOAD on purpose: the under-load sample is taken INSIDE the load
     # window (STREAM_LOAD_START + sst + 3), not after it, so its duration is never needed.
@@ -3633,7 +3560,7 @@ if [ "${PERF_STREAMING:-true}" = "true" ]; then
 fi
 
 abort_if_sut_died
-# --- item 13: clustered state under load (within-run A/B) ---------------------
+# --- clustered state under load (within-run A/B) ---------------------
 # The StateBackend SPI + Infinispan backend move expectation reads and event-log
 # writes onto a network for the central deployment the owner named; no number
 # existed for what that costs. This block runs regression.js UNCHANGED against two
@@ -3694,8 +3621,8 @@ abort_if_sut_died
 # adds no retention risk beyond the control's, per node.
 #
 # BEST-EFFORT / NOTIFY-ONLY like streaming/laptop: a failure defaults the block to
-# {} and never costs the k6/growth result its baseline place. BUT — item 8's lesson
-# — an empty block must not read as both "off" and "broken". So `clustered_attempted`
+# {} and never costs the k6/growth result its baseline place. BUT an empty block
+# must not read as both "off" and "broken". So `clustered_attempted`
 # turns true ONLY once the clustered image is present and we start forming the
 # cluster; from then a cluster that forms but produces nothing (view < 2, state did
 # not cross, or a null ratio) makes the `clustered_metrics_present` validity check
@@ -3813,7 +3740,7 @@ JGROUPS_XML
     # carries the fixed harness maxEventLogSizeInBytes body-byte OOM guard (below), because
     # the MB arms run here too, on a 0.9 GiB clustered
     # heap. The budget is identical on control and cluster, so it evicts symmetrically
-    # and cannot bias the within-run clustered/control ratio item 13 measures.
+    # and cannot bias the within-run clustered/control ratio this profile measures.
     # The JGroups discovery string, and the guard that validates WHAT ACTUALLY GOES TO DNS.
     #
     # It must use the short network ALIASES, not the container names. The names are
@@ -4255,7 +4182,7 @@ if [ "$PERF_LARGE_HEAP_PROFILE" = "true" ]; then
 fi
 
 abort_if_sut_died
-# --- item 18: req/s per core for the SERVING path -----------------------------
+# --- req/s per core for the SERVING path -----------------------------
 # Pin ONE SUT to C cores in {1,2,4,8,16} and drive the sweep ladder against it
 # from a k6 on DISJOINT cores, recording rig_valid_peak_achieved_rps, healthy_ceiling_rps
 # and rps_per_core per C (lib/perf-percore.sh does the work + the C=16 feasibility
@@ -4301,7 +4228,7 @@ if [ "${PERF_SERVING_PERCORE:-false}" = "true" ]; then
   fi
 fi
 
-# --- item 27: throughput by hardware size (cores x container memory) ----------
+# --- throughput by hardware size (cores x container memory) ----------
 # lib/perf-percore.sh in hw_matrix mode (multi-k6 client per point); opt-in (~50 min), manual
 # builds only, notify-only.
 # Every other container of this run is paused, and its samplers stopped, for the matrix:
@@ -4363,7 +4290,7 @@ if jq -e '.baseline_eligible == false' <<<"$SERVING_HW_MATRIX_JSON" >/dev/null 2
   echo "--- baseline eligibility: NOT eligible (.serving_hw_matrix.baseline_eligible=false) — the hardware matrix marked its placement non-baseline"
 fi
 
-# --- item 18 (client rig): multi-process aggregate throughput vs process count -
+# --- multi-process aggregate throughput vs process count (client rig) -
 # The single-process serving sweep (serving_percore above, and the main .sweep) is
 # CLIENT-LIMITED: one k6 process serialises internally (arrival-rate executor +
 # metrics pipeline + Go GC) and cannot saturate the widened client core pool, so
@@ -4371,11 +4298,10 @@ fi
 # the SAME offered-rate ladder from N INDEPENDENT k6 processes pinned to DISJOINT
 # cores and reports the AGGREGATE client-sound ceiling per process-count, plus a
 # scaling verdict that discriminates a per-process CLIENT limit (aggregate ceiling
-# rises with N) from a SHARED-PATH / server limit (ceiling flat vs N). It is the
-# instrument the programme owes for "a client rig that can saturate the server".
+# rises with N) from a SHARED-PATH / server limit (ceiling flat vs N).
 # DEFAULT OFF (opt-in): like serving_percore it spins up and tears down its OWN
 # pinned SUT(s) and several k6 processes (many extra container lifecycles), so it is
-# scheduled DELIBERATELY (the plan's Tier-3 classification), enabled by setting
+# scheduled DELIBERATELY, enabled by setting
 # PERF_SERVING_MULTIPROC=true on a manual/scheduled build, NOT added to every daily
 # regression run. Every serving_multiproc.* metric is NOTIFY-ONLY (perf-budgets.json
 # omits `gating`). Records INTENT (`serving_multiproc_attempted`) separately from
@@ -4425,15 +4351,8 @@ TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 # an empty / placeholder / garbage value silently defeats the cross-hardware baseline
 # guard — the instance_type:"" bug the config block cites as its worked example.
 #
-# THIS WAS LIVE, NOT HYPOTHETICAL. The perf ASG launch template
-# (lt-01f1ac1070d561f50) sets HttpTokens=required, HttpPutResponseHopLimit=2 — the
-# agents REQUIRE IMDSv2. The original UNAUTHENTICATED GET therefore got a 401 on
-# every perf run: `curl -s` returned "" (empty body, exit 0) and the old
-# `|| echo fallback` never fired, so EVERY stored baseline point carries
-# instance_type:"" (confirmed on runs/master/2026-09-10T04-15-15Z__42193bc4f6.json).
-# The whole series has been unqualified by hardware since inception, invisibly,
-# because the failure wrote a falsy value at exit 0 — exactly the defect item 0's
-# control exists to catch.
+# The perf agents REQUIRE IMDSv2 (HttpTokens=required), so an unauthenticated GET gets
+# a 401 and `curl -s` returns "" at exit 0 — a falsy value no `|| fallback` catches.
 #
 # The fix is the IMDSv2 two-step: PUT /latest/api/token for a short-lived session
 # token, then the metadata GET carrying it in X-aws-ec2-metadata-token. Then VALIDATE
@@ -4532,7 +4451,7 @@ elif [ "$PERF_RUN_ARM" = hw_matrix ]; then
     add_check "arm_hw_matrix_measured" false "hardware matrix measured no usable point: $(jq -r '.error_detail // .error // ([(.points // [], .skipped // [])[] | (.key // "?") + "=" + (.status // .type // "?")] | join(", "))' <<<"$SERVING_HW_MATRIX_JSON" 2>/dev/null || echo "no result block")"
   fi
 fi
-# item 12 — streaming presence. Only asserted when the profile was ATTEMPTED
+# Streaming presence. Only asserted when the profile was ATTEMPTED
 # (PERF_STREAMING on AND python3 present); a deliberately-skipped profile is not a
 # validity failure. When attempted, the match A/B ratio must be present — a null
 # ratio means the streaming run produced no comparable latency and the .streaming
@@ -4550,7 +4469,7 @@ if [ "${PERF_STREAMING:-true}" = "true" ] && command -v python3 >/dev/null 2>&1;
     add_check "streaming_metrics_present" false "streaming profile attempted but match_p95_ratio is null — streaming.js produced no comparable match latency this run"
   fi
 fi
-# item 13 — clustered A/B presence + GENUINENESS. Only asserted when ATTEMPTED
+# Clustered A/B presence + GENUINENESS. Only asserted when ATTEMPTED
 # (PERF_CLUSTERED on AND the clustered image present) — a disabled/absent-image run
 # is a green skip, not a failure. When attempted, ALL of: the candidate cluster
 # formed a >=2 view, state actually crossed the network (an A-only expectation
@@ -4691,7 +4610,7 @@ jq -n \
     # regression (http + https_h2) + proxy.js FORWARD arms all live in .behaviours
     # (same shape), so the compare step behaviours.* budgets cover them with no jq
     # change. Adding the two forward_*_proxy arms grows the k6 arm-set fingerprint,
-    # so compare resets the k6 baseline ONCE (intended — see item 9a). CONSEQUENCE
+    # so compare resets the k6 baseline ONCE (intended — see the forward-proxy arms). CONSEQUENCE
     # for whoever reads the first post-landing runs: because the fingerprint changed,
     # ALL behaviours.* arms (the existing match/forward/template/large arms included)
     # go :new: / no-baseline and are NOT flagged until MIN_BASELINE arm-set-matching
@@ -4699,28 +4618,28 @@ jq -n \
     # compare step "k6 behaviour baseline reset" note. (These arms are notify-only,
     # so no GATING coverage is lost; forward.error_rate and the JMH gates are
     # unaffected as they are not behaviours.* and not fingerprint-filtered.)
-    # item 13 — the clustered A/B raw per-arm latencies land here too (distinct
+    # The clustered A/B raw per-arm latencies land here too (distinct
     # <op>_clustered / <op>_clustered_control keys), so the existing behaviours.*
     # budgets cover them with no new key. Adding these arms GROWS the k6 arm-set
     # fingerprint, so compare resets the k6 behaviour baseline ONCE — the same
-    # self-healing, notify-only reset the item 9a forward-proxy arms already trigger
+    # self-healing, notify-only reset the forward-proxy arms already trigger
     # (no GATING coverage lost). The headline metric — the RATIO — is in
     # .clustered_state (below), which rides the FULL baseline, not this fingerprint.
     # When the clustered profile is disabled/skipped, both objects are {}, so no arms
     # are added and the fingerprint is unchanged.
     behaviours: (($http[0].behaviours // {}) + ($https[0].behaviours // {}) + ($proxyfwd.behaviours // {}) + $clu_ctrl + $clu_cand),
-    # item 14 — TLS/mTLS/native-absent handshake cost (proxy.js handshake mode +
+    # TLS/mTLS/native-absent handshake cost (proxy.js handshake mode +
     # per-SUT CPU/alloc augmentation above). NOT part of .behaviours, so it does not
     # touch the k6 fingerprint; compare reads it as its own non-gating metric family.
     tls_handshake: ($handshake.tls_handshake // {}),
     # Path coverage: .arms, .h2_ladder, .problems; {} when disabled. Not .behaviours.
     path_coverage: $path_coverage,
-    # item 12 — LLM/SSE streaming under concurrency: the match-p95 A/B, the
+    # LLM/SSE streaming under concurrency: the match-p95 A/B, the
     # server-side inter-token delay-error distribution (idle vs load) and heap per
     # open stream. NOT part of .behaviours, so it does not touch the k6 fingerprint;
     # compare reads a CURATED subset as its own non-gating metric family.
     streaming: $streaming,
-    # item 13 — clustered state under load: the per-arm ratio (clustered / in-memory
+    # Clustered state under load: the per-arm ratio (clustered / in-memory
     # control) measured in this run, plus the cluster-genuineness proof (2-node view,
     # state-crossed-the-network, control-is-single-node). NOT part of .behaviours, so
     # it does not touch the k6 fingerprint; compare reads .clustered_state.arms.* as
@@ -4774,7 +4693,7 @@ jq -n \
         if ($forward_exit|tonumber) == 0 then "passed"
         elif ($forward.forward_guard.error_rate) == null then "infra_error"
         else "breached" end) }),
-    # OPT-IN workload result (PERF_WORKLOAD=forward): the unit-21 slow-upstream
+    # OPT-IN workload result (PERF_WORKLOAD=forward): the slow-upstream
     # proxy concurrency pass. {} on a default run. Its own fail-closed
     # served-via-upstream check rides .validity (added above), so this block is
     # head-driven data for the reader, not a second gate.
@@ -4785,40 +4704,40 @@ jq -n \
     # "Rung-onset exclusion"). {} on a default run.
     steady_experiment: $steady,
     validity: $validity,
-    # Part C — baseline eligibility. false for any non-default run (PERF_JVM_DIAGNOSTICS
+    # Baseline eligibility. false for any non-default run (PERF_JVM_DIAGNOSTICS
     # gc or deep, a tuned server, a non-default rig, …): perf-test-compare.sh records it but
     # refuses to persist/compare it (and stays GREEN — a deliberate run, not a failure), so
     # instrumentation overhead can never silently shift the baseline series. A run with
     # no baseline_eligible field (older producer) is treated as eligible, unchanged.
     baseline_eligible: $baseline_eligible,
     baseline_ineligible_reasons: $baseline_ineligible_reasons,
-    # Item 8 laptop startup/footprint profile (notify-only). `{}` when the profile
+    # Laptop startup/footprint profile (notify-only). `{}` when the profile
     # was disabled or its measurement failed; compare iterates head metrics, so an
     # empty object simply emits zero laptop.* metrics (no missing-budget trip). The
     # separate `laptop_attempted` flag lets compare RED a wholesale failure (attempted
     # but empty/docker-incomplete) instead of mistaking it for a disabled profile.
     laptop: ($laptop.laptop // {}),
     laptop_attempted: $laptop_attempted,
-    # item 17 — N parallel instances (laptop / MockServerExtension profile), notify-only and
+    # N parallel instances (laptop / MockServerExtension profile), notify-only and
     # OPT-IN (PERF_LAPTOP_PARALLEL). `{}` when disabled or when a shape was skipped/failed;
     # compare iterates .laptop_parallel.<shape>.runs, so an empty object emits zero laptop.*
     # metrics (head-driven, no missing-budget trip) — the serving_percore / streaming pattern.
-    # No *_attempted flag by design: unlike the item 8 laptop and serving_percore presence gates
-    # (which RED a wholesale producer failure), item 17 is a deliberately-scheduled research
+    # No *_attempted flag by design: unlike the laptop and serving_percore presence gates
+    # (which RED a wholesale producer failure), laptop_parallel is a deliberately-scheduled research
     # profile whose absence is the normal daily state, so a presence gate would add a RED path
     # with no daily signal to guard. A shape that runs but measures nothing simply emits nothing.
     laptop_parallel: $laptop_parallel,
-    # item 18 — req/s per core for the SERVING path. `{}` when the profile was
+    # Req/s per core for the SERVING path. `{}` when the profile was
     # disabled or its measurement failed; compare iterates .serving_percore.points,
     # so an empty object emits zero serving_percore.* metrics (no missing-budget
     # trip). serving_percore_attempted lets compare RED a wholesale failure
     # (attempted but no points) apart from a disabled profile — the laptop split.
     serving_percore: $serving_percore,
     serving_percore_attempted: $serving_percore_attempted,
-    # item 27 — hardware matrix; `{}` when disabled or failed (serving_percore pattern).
+    # Hardware matrix; `{}` when disabled or failed (serving_percore pattern).
     serving_hw_matrix: $serving_hw_matrix,
     serving_hw_matrix_attempted: $serving_hw_matrix_attempted,
-    # item 18 (client rig) — multi-process aggregate throughput vs process count.
+    # Multi-process aggregate throughput vs process count.
     # `{}` when the profile was disabled or its measurement failed; compare reads
     # .serving_multiproc.points / .scaling head-driven, so an empty object emits zero
     # serving_multiproc.* metrics (no missing-budget trip). serving_multiproc_attempted
@@ -4826,8 +4745,8 @@ jq -n \
     # skip) apart from a disabled profile — the serving_percore / laptop split.
     serving_multiproc: $serving_multiproc,
     serving_multiproc_attempted: $serving_multiproc_attempted,
-    # item 31 — opt-in remote-write multi-k6 ladder; `{}` when disabled. Compared and
-    # published only from the perf-xl arm-only result (item 44), never from a daily run.
+    # Opt-in remote-write multi-k6 ladder; `{}` when disabled. Compared and
+    # published only from the perf-xl arm-only result, never from a daily run.
     serving_rw_multik6: $serving_rw_multik6,
     serving_rw_multik6_attempted: $serving_rw_multik6_attempted,
     # Plan open question 5 — the INFO-log-level PUBLICATION arm. The two PUBLISHED
@@ -4855,7 +4774,7 @@ cat "$RESULT_JSON"
 # Standalone sweep artifact (also embedded under .sweep in result.json above).
 cp "$OUT_DIR/sweep.json" "$REPO_ROOT/perf-sweep.json" 2>/dev/null || echo '{}' > "$REPO_ROOT/perf-sweep.json"
 # Standalone serving per-core artifact (also embedded under .serving_percore).
-# Emitted only when the profile ran; the website's serving per-core chart (item 19)
+# Emitted only when the profile ran; the website's serving per-core chart
 # and a dated trend read this file, mirroring perf-sweep.json / inject-percore.json.
 if [ -f "$OUT_DIR/serving-percore.json" ]; then
   cp "$OUT_DIR/serving-percore.json" "$REPO_ROOT/serving-percore.json" 2>/dev/null || true

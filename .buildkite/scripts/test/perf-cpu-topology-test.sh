@@ -236,7 +236,7 @@ check "c6i same: k6 on node 0, marked non-baseline" "8-13,72-77;14-19,78-83;20-2
   "$(q '"\(.k6 | join(";"))|\(.placement.layout)|\(.placement.k6_node)|\(.placement.baseline_eligible)"')"
 place "$C6I" 128 PERF_K6_NUMA_NODE=same PERF_RW_K6_CORES_PER_PROC=6
 check "c6i other at the same-socket arm's 6 cores per process (A/B parity)" "0" "$RC"
-# The same-socket A/B (item 44) as the perf-xl arm step runs it: perf-test-run.sh passes its SUT and upstream.
+# The same-socket A/B as the perf-xl arm step runs it: perf-test-run.sh passes its SUT and upstream.
 place "$C6I" 128 PERF_K6_NUMA_NODE=same PERF_RW_SERVER_CPUS=0-5 PERF_RW_UPSTREAM_CPUS=6
 check "c6i same, SUT and upstream passed in: k6 on node 0, disjoint, a non-baseline trial" \
   "0|8-13,72-77;14-19,78-83;20-25,84-89;26-31,90-95|numa_same_node|false|same|true" \

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Default k6 runtime for scripts/rw-multi-k6-sweep.sh (performance programme item 31): each rung's
+# Default k6 runtime for scripts/rw-multi-k6-sweep.sh: each rung's
 # gracefulStop and the Go GC limit of every measured k6 process. Defines functions only.
 # Rationale: docs/code/performance-measurement.md, "k6 heap and GC".
 # Tests: .buildkite/scripts/test/perf-k6-runtime-test.sh

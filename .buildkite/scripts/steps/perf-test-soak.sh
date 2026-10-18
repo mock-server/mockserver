@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# WEEKLY soak step (perf queue) — item 10 of the performance programme.
+# WEEKLY soak step (perf queue).
 #
 # Runs soak.js for a long duration (default 2h) against a MockServer with a
 # BOUNDED heap, to surface slow degradation that a 2-minute regression run cannot:
 # data-plane p99 DRIFT as the event log fills and stays full, connection/fd leaks
-# over hours, and — item 10b — the COST of `verify` / `retrieveRecordedRequests`
+# over hours, and the COST of `verify` / `retrieveRecordedRequests`
 # against a FULL log (the central-deployment pattern; an O(n) ring regression
 # bites hardest here).
 #
@@ -18,7 +18,7 @@ set -euo pipefail
 #   2. a PRESENCE ASSERTION after k6: the soak-result.json must exist AND its
 #      match / verify / retrieve arms must each carry samples, AND the server's own
 #      counters must show the event log reached a bound and evicted. A soak that
-#      "ran" but produced no 10b measurement fails here, LOUD — it is never a
+#      "ran" but produced no verify/retrieve measurement fails here, LOUD — it is never a
 #      green with an empty result block.
 #
 # The step also refuses to measure an image with no usable revision label, and fails
@@ -61,12 +61,12 @@ MOCKSERVER_IMAGE="${MOCKSERVER_IMAGE:-mockserver/mockserver:mockserver-snapshot}
 # observable (an unbounded MaxRAMPercentage heap barely GCs and hides a leak).
 SERVER_MEMORY="${PERF_SERVER_MEMORY:-2g}"
 # Event-log ring: leave at the DEFAULT (never shrink it — a shrunk ring never
-# fills at scale and would hide the very O(n) regression 10b exists to catch).
+# fills at scale and would hide the very O(n) regression the verify/retrieve arms exist to catch).
 # Overridable ONLY for a short local proof run (a small ring fills in seconds).
 MAX_LOG_ENTRIES="${MOCKSERVER_MAX_LOG_ENTRIES:-}"
 
 # Soak shape (pass-through to soak.js via K6_* — defaults in k6/lib/config.js and
-# soak.js). Two hours is the item-10 target.
+# soak.js). Two hours is the target duration.
 SOAK_DURATION="${K6_SOAK_DURATION:-2h}"
 SOAK_WINDOW="${K6_SOAK_WINDOW:-5m}"
 # Windows starting before this are never a drift reference. Long enough for JIT, the connection
@@ -82,15 +82,10 @@ SOAK_RATE="${K6_SOAK_RATE:-200}"
 # scenarios": p95 25 ms, p99 100 ms. Those were calibrated for a SHORT load test against a nearly
 # empty event log. This soak runs for two hours against a log that reaches its bound (at the default
 # budgets the byte budget, well below maxLogEntries) early in the warm-up and stays full, so it
-# measures a different subject and the inherited numbers do not describe it. Build #340 - the
-# first VALID soak, on the fixed harness - measured the match arm at p95 62.644 ms and p99
-# 96.051 ms. The p95 gate therefore reds this build every week on a number that was never about
-# this scenario, while p99 "passes" with 4% headroom, which is not a pass so much as a coin toss
-# on a contended agent.
+# measures a different subject and the inherited numbers do not describe it.
 #
-# These values are PROVISIONAL and derived from a SINGLE valid run, so they are set with enough
-# headroom to stop a false weekly red without pretending to be calibrated: roughly 2x the one
-# observation each. They are not a licence to regress - a genuine blowout still crosses them.
+# These values are PROVISIONAL, roughly 2x the first valid soak's figures (see
+# docs/code/performance-measurement.md, soak absolute gates). They are not a licence to regress - a genuine blowout still crosses them.
 #
 # REPLACE THEM WITH REAL ONES. This step already states the plan: the soak result is withheld from
 # the baseline compare "until ~8 weekly runs of variance exist (~2 months)". That same accumulation
@@ -408,12 +403,12 @@ MATCH_SAMPLES="$(jq -r '.soak.match.samples // 0' "$K6_RESULT")"
 VERIFY_SAMPLES="$(jq -r '.soak.verify.samples // 0' "$K6_RESULT")"
 RETRIEVE_SAMPLES="$(jq -r '.soak.retrieve.samples // 0' "$K6_RESULT")"
 [ "$MATCH_SAMPLES" -gt 0 ] 2>/dev/null || fail_soak "soak match arm produced 0 samples — the data-plane load never ran"
-# The 10b arms are the whole point of this item; an empty verify/retrieve arm is a
+# The verify/retrieve arms are the point of the soak; an empty one is a
 # silent-nothing result, not a pass.
 [ "$VERIFY_SAMPLES" -gt 0 ] 2>/dev/null || fail_soak "soak 10b verify arm produced 0 samples — event-log verification cost was NOT measured"
 [ "$RETRIEVE_SAMPLES" -gt 0 ] 2>/dev/null || fail_soak "soak 10b retrieve arm produced 0 samples — event-log retrieval cost was NOT measured"
 [ "$SAMPLE_ROWS" -gt 0 ] 2>/dev/null || fail_soak "no server metric samples captured — occupancy trajectory is empty"
-# The 10b measurement is only meaningful against a FULL log. "Full" is the server's own word: it
+# The verify/retrieve measurement is only meaningful against a FULL log. "Full" is the server's own word: it
 # evicted entries, and its retained gauges say which bound (entry count or byte budget) did it.
 EVENT_LOG_STATE="$(jq -r '"filled=\(.filled) binding=\(.binding) retained \(.retained_entries_end)/\(.max_retained_entries) entries, \(.retained_bytes_end)/\(.max_retained_bytes) bytes, evicted \(.evicted_log_entries)"' <<<"$EVENT_LOG_JSON")"
 case "$(jq -r '"\(.filled) \(.binding)"' <<<"$EVENT_LOG_JSON")" in
@@ -429,13 +424,9 @@ DRIFT_JSON="$(jq -c --argjson ref_n "$SOAK_DRIFT_REF_WINDOWS" --argjson late_n "
   || fail_soak "match-arm drift was not computed: $(jq -r '.match.reason // "unknown"' <<<"$DRIFT_JSON")"
 
 # --- DIAGNOSTIC GUARD: "the SUT is answering, but with 404s" ---------------------
-# Build 324's first-ever soak reported a 54.2% match error rate that was
-# SELF-INFLICTED: the create arm PUT a distinct unbounded /simple expectation each
-# call, which filled maxExpectations and then EVICTED the seeded /simple match
-# expectation, so the SUT correctly 404'd most match requests. Every presence
-# assertion above PASSED (all arms had samples; the log had filled) while
-# three-quarters of the match arm was a 404 — a false-green shape the presence
-# checks cannot see. This guard catches exactly it: a HIGH match failure rate
+# A harness that evicts its own seeded /simple match expectation (as an unbounded
+# create arm once did) makes the SUT correctly 404 most match requests while every
+# presence assertion above still passes. This guard catches that shape: a HIGH match failure rate
 # (http_req_failed, which counts completed non-2xx responses) combined with ~ZERO
 # transport errors (requests that never completed) means the SUT was UP and
 # ANSWERING but returning non-2xx (almost always 404). A genuinely DOWN SUT shows a

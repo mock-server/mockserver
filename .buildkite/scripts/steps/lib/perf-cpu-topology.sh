@@ -155,7 +155,7 @@ phys_core_count() {
   printf '%s' "$keys" | sort -u | sed '/^$/d' | wc -l | tr -d ' '
 }
 
-# --- NUMA placement (performance programme items 31 / 44: the two-socket perf-xl rig) ---------
+# --- NUMA placement (the two-socket perf-xl rig) ---------------------------------------------
 # Disjoint physical cores are not enough on a two-socket host: a cpuset that straddles nodes
 # splits one role across two LLCs and remote memory, and a k6 on the SUT's socket competes with
 # it for memory bandwidth and LLC. Everything below reads the node map from sysfs

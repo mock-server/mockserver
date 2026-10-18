@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fixture tests for the SUT receive-queue sampler (performance programme item 44):
+# Fixture tests for the SUT receive-queue sampler:
 # lib/perf-sut-recvq.sh and its python engine, lib/perf-sut-recvq.py, against a fake /proc
 # (hand-made and kernel-format tables) and stub nsenter/ss, and its wiring into
 # scripts/rw-multi-k6-sweep.sh. No Docker needed.

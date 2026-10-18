@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SUT socket receive-queue sampler for scripts/rw-multi-k6-sweep.sh (performance programme item 44):
+# SUT socket receive-queue sampler for scripts/rw-multi-k6-sweep.sh:
 # at a fixed interval, the Recv-Q of every TCP socket in the SUT container's network namespace, read
 # from the host. Bytes waiting there have reached the socket but not MockServer's event loop. The
 # python engine (perf-sut-recvq.py) samples sub-second; this file's shell loop is its fallback.

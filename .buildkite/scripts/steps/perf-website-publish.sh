@@ -65,9 +65,8 @@ set -euo pipefail
 # Never republish a stale/unverifiable number, and never blank the page:
 #   * S3 unreachable / denied / empty      -> exit non-zero, touch NOTHING.
 #   * newest run is not self-describing     -> exit non-zero, touch NOTHING.
-#     (schema_version < 2 predates item 0: no config block, so the knee curve's
-#      provenance line cannot be recorded — publishing it recreates exactly the
-#      un-provenanced claim this item exists to kill. NOTE: schema version and the
+#     (schema_version < 2 has no config block, so the knee curve's provenance
+#      line cannot be recorded — publishing it would make an un-provenanced claim. NOTE: schema version and the
 #      regression.js fix date are INDEPENDENT axes — a schema>=2 run can still be
 #      pre-fix — so the behaviours artefact is gated SEPARATELY by the post-fix
 #      marker in lib/perf-website-figures.jq, NOT by schema version.)
@@ -88,7 +87,7 @@ set -euo pipefail
 #   single_k6  (default) the daily run on the perf queue: runs/<branch>/, the charts, the
 #              per-behaviour table and the hardware matrix.
 #   rw_multik6 the perf-xl multi-k6 arm, whose GC-masked p99-bounded ceiling the page headline
-#              is published from (item 44): runs-perf-xl/<branch>/, only from a member of the
+#              is published from: runs-perf-xl/<branch>/, only from a member of the
 #              series (lib/perf-rw-multik6-series.jq), and it rewrites only the data file. Its
 #              first patch switches the page from the single-k6 headline to this one.
 # Each source judges and rewrites its own part of the data file (lib/perf-website-assemble.jq),
@@ -110,7 +109,7 @@ MOVE_PCT="${PUBLISH_MOVE_PCT:-10}"
 LAT_MULT="${PUBLISH_LAT_MULT:-3}"
 KEEP_FRAC="${PUBLISH_KEEP_FRAC:-0.95}"
 # Date floor for publishing per-behaviour percentiles: the regression.js tail fix
-# (Finding 3) merged 2026-09-16, and schema>=2 does NOT imply post-fix, so a run
+# merged on this date, and schema>=2 does NOT imply post-fix, so a run
 # older than this is withheld unless it carries an explicit config.regression_js_fixed
 # stamp. See lib/perf-website-figures.jq's post-fix gate.
 BEH_FIX_DATE="${PUBLISH_REGRESSION_FIX_DATE:-2026-09-16}"
@@ -319,7 +318,7 @@ fi
 SWEEP_AT=".sweep"
 if [ "$RW" = true ]; then
   SWEEP_AT=".serving_rw_multik6.sweep"
-  # Only a member of the published series reaches the page (item 44). Compare persists only
+  # Only a member of the published series reaches the page. Compare persists only
   # members, so this refuses an object that reached runs-perf-xl/ some other way.
   SERIES_JSON="$(jq -c -f "$SERIES_FILTER" "$WORK/run.json" 2>"$WORK/series.err")" || SERIES_JSON=""
   if ! jq -es 'length == 1 and (.[0] | type) == "array"' <<<"$SERIES_JSON" >/dev/null 2>&1; then
@@ -407,7 +406,7 @@ assemble_final() {
 $(head -c 600 "$WORK/assemble.err" 2>/dev/null)
 \`\`\`"
 }
-# The hardware-size table (item 27) comes only from a manual matrix run, so a daily
+# The hardware-size table comes only from a manual matrix run, so a daily
 # run carries none: keep the committed table rather than blanking it. It has its own
 # source block, so the page still says which run measured it.
 # HW_ORIGIN is display text only; decisions test HW_FRESH (a matrix from this run, live or offline).

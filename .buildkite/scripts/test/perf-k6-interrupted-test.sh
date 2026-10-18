@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fixture tests for lib/perf-k6-interrupted.sh (performance programme item 31), no Docker needed.
+# Fixture tests for lib/perf-k6-interrupted.sh, no Docker needed.
 # The fixtures are trimmed rw-multi-k6 process logs from real grafana/k6 1.7.1 runs: one clean,
 # one against a SUT delaying every response 2 s with a 1 s gracefulStop (interruptions).
 # Run: .buildkite/scripts/test/perf-k6-interrupted-test.sh

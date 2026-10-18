@@ -1,52 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# HTTP/2 multiplex benchmark step (perf queue) — answers the open question from
-# issue #2669: what does giving every HTTP/2 stream its own child channel cost
-# under concurrency? Two attempts to measure this on the dev laptop failed (memory
-# pressure), so it belongs on a quiet CI agent, which is here.
+# HTTP/2 multiplex benchmark step (perf queue): the cost of a child channel per
+# HTTP/2 stream. Two axes, jq-merged into perf-h2-multiplex.json:
+#   1. Http2StreamChannelBenchmark — N streams over ONE h2c connection, N = 1, 10, 100
+#      (the server caps MAX_CONCURRENT_STREAMS at 100) -> .h2_multiplex.
+#   2. Http2ConnectionMemoryBenchmark — heap per connection for C x S shapes, with the
+#      event log cleared before each sample -> .h2_connection_memory.
 #
-# TWO axes, both from issue #2669's HTTP/2-multiplex migration, both emitted into
-# perf-h2-multiplex.json and persisted into the S3 run history by perf-test-compare.sh:
-#
-#   1. THROUGHPUT / LATENCY (org.mockserver.benchmark.Http2StreamChannelBenchmark):
-#      N concurrent streams over ONE h2c connection, sweeping N = 1, 10, 100 (the
-#      server caps MAX_CONCURRENT_STREAMS at 100, so 100 is the single-connection
-#      ceiling). Emits {h2_multiplex:{streams_<N>:{throughput_rps, p50_us, ...}}}.
-#
-#   2. PER-CONNECTION MEMORY (org.mockserver.benchmark.Http2ConnectionMemoryBenchmark,
-#      programme item 11): a CONNECTIONS axis — N connections x M concurrent in-flight
-#      streams, shapes 1x1, 10x10, 100x10 — recording the heap delta per established
-#      connection, exactly what the 8.0.0 changelog warned the multiplex migration
-#      changed. The event log is cleared before each heap sample so the delta measures
-#      connection + stream child-channel state, not logged bodies. Emits
-#      {h2_connection_memory:{conn_<C>x<S>:{bytes_per_connection, ...}}}. The two JSON
-#      objects are jq-merged into the single perf-h2-multiplex.json artifact below.
-#
-# NOTIFY-ONLY, and there is deliberately NO build-FAILING threshold on either axis:
-# run-to-run variance on real build agents is unknown, so a gating threshold now would
-# be guessing. They are recorded so a gating threshold can be added later once variance
-# is known. The bytes_per_connection budget key (h2_connection_memory.*.bytes_per_connection
-# in perf-budgets.json) is committed NON-GATING but is now SURFACED per run: the daily
-# compare's metrics jq reads .h2_connection_memory and annotates each shape's
-# bytes_per_connection notify-only against that budget, so a move is visible every build
-# but cannot red the pipeline (see the item-11 clause in perf-test-compare.sh).
-#
-# The dated per-connection numbers here are a TREND signal for the current build. The
-# one-time pre-8.0.0-vs-8.0.0 comparison that actually answers the changelog is the
-# optional cross-version arm at the end of this script (H2_MEM_COMPARE_IMAGES), which
-# drives an identical external client against two server images and diffs container RSS.
-#
-# The harness self-validates and exits NON-ZERO (code 2) on any integrity breach
-# (incomplete run, non-200/body mismatch, sub-µs latency, impossible throughput).
-# That failure is HARNESS-VALIDATION and is intentionally distinct from "perf got
-# slower" (which never fails — there is no threshold). A non-zero exit here means
-# the measurement is untrustworthy and MUST surface as a red build, so this step
-# has no soft_fail. Before the sweep we run the harness `selftest` (server-free)
-# to prove every gate still fires.
-#
-# Heavy (builds mockserver-netty + boots a real server), so it runs only in the
-# scheduled/manual perf pipeline on the dedicated box.
+# NOTIFY-ONLY: no threshold fails the build (variance is not yet characterised);
+# compare annotates bytes_per_connection against its non-gating budget. A NON-zero
+# exit means the harness self-validation failed (an untrustworthy measurement, not a
+# slowdown), so it must stay red: no soft_fail. The selftest runs first to prove
+# every gate still fires. H2_MEM_COMPARE_IMAGES adds an optional cross-version arm.
+# See docs/code/performance-measurement.md.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
@@ -60,7 +27,7 @@ H2_BENCH_STREAMS="${H2_BENCH_STREAMS:-1,10,100}"
 H2_BENCH_REQUESTS_PER_STREAM="${H2_BENCH_REQUESTS_PER_STREAM:-500}"
 H2_BENCH_WARMUP_REQUESTS="${H2_BENCH_WARMUP_REQUESTS:-200}"
 
-# Per-connection memory axis (item 11). shapes = connections x streams; repeats gives
+# Per-connection memory axis. shapes = connections x streams; repeats gives
 # the sample spread; delay holds the matched responses open so the streams stay in flight.
 H2_MEM_SHAPES="${H2_MEM_SHAPES:-1x1,10x10,100x10}"
 H2_MEM_REPEATS="${H2_MEM_REPEATS:-5}"

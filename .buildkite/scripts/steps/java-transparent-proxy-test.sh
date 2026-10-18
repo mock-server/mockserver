@@ -6,58 +6,16 @@
 #   TproxyEndToEndIntegrationTest          (iptables TPROXY / IP_TRANSPARENT,    --cap-add=NET_ADMIN)
 #   EbpfOriginalDestinationEndToEndIntegrationTest (pinned BPF map read path,    --privileged)
 #
-# WHY THIS STEP EXISTS
+# OPT-IN (RUN_TRANSPARENT_PROXY_E2E=true): the suites shell out to the `docker`
+# CLI, which the maven CI image lacks, and need NET_ADMIN/--privileged sibling
+# containers, which the agents' userns-remapped dockerd rejects. On these agents
+# they can only SKIP, so a fail-closed assert would be permanently red without
+# testing anything; by default the step prints a loud notice instead. Set the
+# flag only on an agent with the docker CLI, the socket and privilege support.
 #
-#   These three suites were named *EndToEndIT. Surefire collects **/*Test.java and
-#   Failsafe collects **/*IntegrationTest.java, so a class ending `IT` matched
-#   NEITHER — they were never compiled into a run set and never executed on any
-#   build (a grep of real CI logs finds zero occurrences). Renaming them to
-#   *EndToEndIntegrationTest lets Failsafe collect them. This step then RUNS them
-#   and asserts they actually executed, so "collected" can no longer masquerade as
-#   "tested" (the same false positive java-cloud-store-test.sh and
-#   java-async-broker-test.sh remove for their Docker-gated suites).
-#
-# WHY IT IS OPT-IN (RUN_TRANSPARENT_PROXY_E2E) AND NOT WIRED TO RUN BY DEFAULT
-#
-#   Unlike the cloud/async suites (which talk to the Docker daemon via docker-java
-#   over the mounted socket), these suites shell out to the `docker` CLI to build
-#   and run a SIBLING container, and they need real kernel privilege inside it:
-#
-#     * The maven CI image (docker_build/maven/Dockerfile) does NOT ship the
-#       `docker` CLI binary, so `DockerCliTestSupport.isDockerAvailable()` returns
-#       false and every suite SKIPS on the current agents.
-#     * The elastic-ci-stack build agents run dockerd with user-namespace
-#       remapping, which REJECTS `--privileged` outright ("privileged mode is
-#       incompatible with user namespaces"). The eBPF suite needs --privileged, so
-#       even with a docker CLI present it would be refused and SKIP (the suites
-#       detect this via DockerCliTestSupport.containerStartRejected(...) and skip
-#       cleanly rather than error).
-#
-#   A fail-closed assert-suite-ran over suites that can only SKIP would turn the
-#   pipeline PERMANENTLY RED without testing anything — the exact anti-pattern
-#   DockerAvailability's javadoc calls out: "a fail-closed assertion is only safe
-#   once the suite can actually pass." So by default this step does NOT run them;
-#   it prints a LOUD, EXPANDED notice making the untested state VISIBLE on every
-#   build (not a silent green that pretends coverage).
-#
-#   To actually exercise them, run this step on an agent that (a) has the `docker`
-#   CLI, (b) mounts the Docker socket, and (c) permits NET_ADMIN / --privileged
-#   sibling containers (i.e. a daemon WITHOUT user-namespace remapping, or a
-#   dedicated privileged queue), and set RUN_TRANSPARENT_PROXY_E2E=true. Then the
-#   assert-suite-ran guard below fails closed if any suite skipped instead of
-#   running.
-#
-# WHY -m 7g AND NOT 4g:
-#
-#   Same defect, same fix as java-cloud-store-test.sh (see its header for the
-#   measurements). `mockserver/.mvn/jvm.config` pins the Maven JVM to
-#   `-Xms2048m -Xmx6144m` and mvnw prepends jvm.config to MAVEN_OPTS, so the JVM
-#   running the `-am` dependency build below is permitted a 6g heap; under a 4g
-#   cgroup the kernel OOM-kills it (exit 137) before any test runs. This step is
-#   opt-in today, so it has not been observed failing that way — the limit is
-#   corrected here so it does not bite the first time someone sets
-#   RUN_TRANSPARENT_PROXY_E2E=true. 7g matches every other step that runs
-#   ./mvnw from mockserver/.
+# -m 7g: mockserver/.mvn/jvm.config grants Maven -Xmx6144m, so a 4g cgroup
+# OOM-kills the -am build. See docs/infrastructure/ci-cd.md ("Gates That Must
+# Fail Closed") for both decisions.
 # ──────────────────────────────────────────────────────────────────────
 set -euo pipefail
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The published headline is the perf-xl multi-k6 arm's GC-masked ceiling (item 44). This checks the
+# The published headline is the perf-xl multi-k6 arm's GC-masked ceiling. This checks the
 # path from the arm's result to the page data:
 #   1. lib/perf-rw-multik6-series.jq: which results are members of the published series
 #   2. perf-test-compare.sh with PERF_COMPARE_RESULT_ARTIFACT: only a member is persisted (bash 4+)

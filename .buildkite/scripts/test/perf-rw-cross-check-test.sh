@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Fixture tests for the rw-multi-k6 same-requests cross-check (lib/perf-rw-cross-check.jq,
-# performance programme item 31), no Docker needed. The base rung is a real rig rung (item 52):
+# Fixture tests for the rw-multi-k6 same-requests cross-check (lib/perf-rw-cross-check.jq),
+# no Docker needed. The base rung is a real rig rung:
 # by_time dropped about one push interval of steady requests, so its p99 is far from the
 # published one while by_tag, over the same requests, agrees. Its by_tag-at-the-cut figures
 # are synthetic (that run predates the query): by_time less 6 settle requests in flight.

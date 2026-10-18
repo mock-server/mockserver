@@ -2,8 +2,7 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# perf-percore.sh — req/s per core for the SERVING path (performance-programme
-# item 18). Emits a self-describing `serving_percore` JSON block (stdout, or the
+# perf-percore.sh — req/s per core for the SERVING path. Emits a self-describing `serving_percore` JSON block (stdout, or the
 # file named by $1) that perf-test-run.sh merges into result.json under
 # `.serving_percore` and copies out as the `serving-percore.json` artifact.
 #
@@ -23,17 +22,16 @@ set -euo pipefail
 #                           region p50, below the first rung where that fails.
 #                           This is NOT re-implemented here: each C's
 #                           sweep is fed as a synthetic run to the ONE authoritative
-#                           implementation, lib/perf-website-figures.jq (Finding 1;
-#                           the same definition render_perf_charts.py carries), and
-#                           .headline.healthy_ceiling_rps is read back out. Reusing
-#                           the filter, not copying its arithmetic, is deliberate:
-#                           the programme forbids a third divergent copy of the
-#                           ceiling rule.
+#                           implementation, lib/perf-website-figures.jq (the same
+#                           definition render_perf_charts.py carries), and
+#                           .headline.healthy_ceiling_rps is read back out. Do not
+#                           copy its arithmetic here: a third divergent copy of the
+#                           ceiling rule is exactly what reuse prevents.
 #   * rps_per_core        — healthy_ceiling_rps / C. The HEALTHY ceiling, not the
 #                           degraded peak, is the honest "req/s per core you can
 #                           actually serve". (peak_per_core is also emitted.)
 #
-# THE C=16 PREREQUISITE (item 18 calls it easy to miss). At C=16 the SUT wants 16
+# THE C=16 PREREQUISITE (easy to miss). At C=16 the SUT wants 16
 # cores and the k6 client needs its OWN disjoint cores, so the rung is only
 # feasible on a box with >=16 + K6_MIN_CORES cores. On anything smaller the curve
 # STOPS at the largest feasible C and SAYS SO: every requested-but-infeasible C is
@@ -42,7 +40,7 @@ set -euo pipefail
 # A ladder that silently ends early reads as "measured to 16" to a skimmer — so it
 # must never silently end early.
 #
-# PINNING (item 17's lever, reconfirmed here). `--cpuset-cpus` is the reliable
+# PINNING. `--cpuset-cpus` is the reliable
 # pin: it changes what the container's JVM sees via Runtime.availableProcessors(),
 # which sizes actionHandlerThreadCount()=max(5,availableProcessors()) and the pools
 # derived from it. `--cpus` (CFS quota) does NOT surface in the processor count, so
@@ -69,7 +67,7 @@ set -euo pipefail
 # and perf-test-compare.sh). This harness only measures; it never fails a build on
 # a throughput number.
 #
-# HARDWARE MATRIX MODE (item 27): PERF_PERCORE_MODE=hw_matrix runs the same procedure
+# HARDWARE MATRIX MODE: PERF_PERCORE_MODE=hw_matrix runs the same procedure
 # over PERF_HW_MATRIX ("cores:memory[:control]") and emits `serving_hw_matrix`. Each point
 # also sets a container memory limit (no swap, no -Xmx, as in a user's container) and
 # records resolved heap/log bounds, peak memory, OOM state and any lower-bound reasons.
@@ -166,14 +164,13 @@ case "$K6_NUMA_NODE" in other|same) ;; *) echo "ERROR: PERF_K6_NUMA_NODE='$K6_NU
 PLACEMENT_ONLY="${PERF_PERCORE_TEST_PLACEMENT_ONLY:-}"
 case "$PLACEMENT_ONLY" in ""|true) ;; *) echo "ERROR: PERF_PERCORE_TEST_PLACEMENT_ONLY='$PLACEMENT_ONLY' (expected empty or true)" >&2; exit 2 ;; esac
 
-# The core ladder item 18 names. C=16 is included so the artifact records it as
+# The core ladder. C=16 is included so the artifact records it as
 # skipped-with-reason on a box that cannot host it, rather than omitting the rung.
 CORE_LADDER="${PERF_PERCORE_CORES:-1,2,4,8,16}"
 # k6 needs its own cores, and to measure the SERVER's ceiling the client must have
 # MORE capacity than the server — otherwise the ladder measures the client, not the
-# serving path (proven the hard way: an earlier 6-core client cap made k6 itself the
-# bottleneck at C=1, drove k6 to 85% of its pin with dropped iterations, and produced
-# a non-monotonic curve). So the client gets ALL spare cores by default: one thread on
+# serving path (a capped client becomes the bottleneck even at C=1 and bends the
+# curve). So the client gets ALL spare cores by default: one thread on
 # every physical core the SUT does not use, minus a small reserve for the
 # kernel/docker/sampler (see select_cpusets). K6_MIN_CORES is the floor below which a rung
 # is skipped (the client would be too weak to be trusted); K6_MAX_CORES defaults to
@@ -190,17 +187,8 @@ K6_RESERVE="${PERF_PERCORE_RESERVE_CORES:-1}"
 # RUNG whose achieved rate held at or above keep x offered (see the derivation below), so the
 # ceiling can only ever take a rung's value and its resolution IS the rung spacing. On the old
 # doubling ladder (250,500,1000,2000,4000,8000,16000,32000) that meant a factor-of-two uncertainty:
-# a server whose true ceiling is 7,900 rps reported 4,000.
-#
-# That is not hypothetical. Build #358 reported 4000 / 8000 / 4000 / 4000 across C=1/2/4/8 and the
-# non-monotonicity read like a server curve; it was quantisation noise. Build #364 re-ran with the
-# ladder below and measured 6000 flat at every core count - and 6000 IS NOT A RUNG of the doubling
-# ladder, so the old default would have reported 4000 again: a 50% understatement of the same
-# server. The refinement paid for itself on its first run.
-#
-# Cost is one rung x (step + gap) each, so the sweep grows from ~8.5 to ~15 minutes across the four
-# feasible core counts - cheap for the first curve this item can actually interpret. The extra
-# resolution is concentrated in the 2k-8k region where the ceilings actually cluster.
+# a server whose true ceiling is 7,900 rps reported 4,000. The extra rungs sit in the 2k-8k region
+# where the ceilings cluster; each costs one (step + gap). History: docs/code/performance-measurement.md.
 SWEEP_RATES="${PERF_PERCORE_SWEEP_RATES:-500,1000,1500,2000,3000,4000,5000,6000,7000,8000,10000,12000,16000,32000}"
 # The single-client matrix ladder spaces rungs 6-17% apart from 8,000 req/s up and 12-100%
 # below that, so a ceiling is only resolved to one rung (the memory verdict allows for it).
@@ -956,8 +944,8 @@ for PI in "${!P_CORES[@]}"; do
   fi
 
   # Feasibility: the SUT needs C cores AND k6 needs >= K6_MIN_CORES on DISJOINT
-  # cores (with K6_RESERVE held back for the box). The whole point of item 18's
-  # prerequisite: at C=16 on a <18-core box this is false and the point is skipped
+  # cores (with K6_RESERVE held back for the box). The C=16 prerequisite:
+  # at C=16 on a <18-core box this is false and the point is skipped
   # with a reason rather than measured wrong (shared cores) or silently omitted.
   read -r SCPU KCPU k6w <<<"$(select_cpusets "$C")"
   if [ "$HW_CLIENT" = multik6 ]; then
@@ -1188,10 +1176,8 @@ for PI in "${!P_CORES[@]}"; do
   # headroom (< 85% of its pin) and error_rate <= eps, but NOT "no dropped iterations".
   # That difference is deliberate and is explained at the $rig_valid line below -- with
   # client CPU headroom, drops mean the SERVER could not keep up, which is the signal
-  # this ladder is here to capture rather than a reason to discard the rung. (This
-  # comment previously claimed the two blocks matched EXACTLY, which was false and led a
-  # reader to treat a valid ceiling reading as a false green because it carried drops.)
-  # perf-test-run.sh:1185 does include $no_drops; do not "restore" it here. rig_valid_peak_achieved_rps
+  # this ladder is here to capture rather than a reason to discard the rung.
+  # The perf-test-run.sh block does include $no_drops; do not "restore" it here. rig_valid_peak_achieved_rps
   # = max achieved over rig-valid rungs. p95/p99 are SUPPRESSED to null on any rung
   # whose post-settle sample count < MIN_TAIL_SAMPLES (the repo rule) so a low-C, low-rate rung
   # never reports a tail that is really just its max.
@@ -1261,10 +1247,10 @@ for PI in "${!P_CORES[@]}"; do
             # count-bounded ring before eviction = maxLogEntries / achieved_rps.
             # LENGTHENS as rps falls (long at low C). retained bytes ~ constant.
             retention_residence_s:(if $ach > 0 then (($maxlog / $ach) * 1000 | round) / 1000 else null end),
-            # --- VU-pool diagnostics passed through from sweep.js (item 18 open
-            # question). vus_active_max is the peak CONCURRENT VUs this rung used —
-            # if it is ~1-2 while dropped_iterations>0, the 200-VU pool was NOT the
-            # constraint (198 VUs idle) and the drops need another explanation; a max
+            # --- VU-pool diagnostics passed through from sweep.js.
+            # vus_active_max is the peak CONCURRENT VUs this rung used —
+            # if it is far below the pool of the rung while dropped_iterations>0, the pool was
+            # NOT the constraint (VUs idle) and the drops need another explanation; a max
             # ABOVE the preAllocatedVUs pool is the only per-rung proof the pool grew.
             # (Whole-run pool growth is in the top-level .vus_diagnostics block, not
             # here — k6 shares initialised VUs across rungs whose reservations overlap,
@@ -1331,7 +1317,7 @@ for PI in "${!P_CORES[@]}"; do
           retained_bytes_estimate:($maxlog * $body),
           note:"count-bounded ring: retained bytes ~ maxLogEntries*body (≈constant vs rate); residence = maxLogEntries/achieved_rps lengthens as rps falls (see .ladder[].retention_residence_s)"
         },
-        # VU-pool diagnostics for this C, straight from sweep.js (item 18). Records
+        # VU-pool diagnostics for this C, straight from sweep.js. Records
         # the pool CONFIG the sweep ran with (preallocated_vus/max_vus) plus the k6
         # whole-run VU gauges (vus_concurrent_overall_max, vus_initialized_global_max,
         # vus_initialized_baseline and the vus_pool_grew bottom line)
@@ -1354,7 +1340,7 @@ for PI in "${!P_CORES[@]}"; do
         drive_rate:'"$POINT_WARMUP_RATE"', drive_p50_ms:$wup_p50, drive_achieved_rps:$wup_ach,
         # first vs second measured rung p50: if the FIRST rung is systematically
         # slower than the second AFTER the warm-up, the transient was not fully
-        # removed — surfaced, not averaged away (item 18 warm-up-is-bias rule).
+        # removed — surfaced, not averaged away (warm-up is bias, not noise).
         first_rung_p50_ms:$r1, second_rung_p50_ms:$r2,
         first_rung_slower_than_second:(($r1 != null) and ($r2 != null) and ($r1 > $r2))
       }' <<<"$AGG")"
@@ -1458,7 +1444,7 @@ jq -nc \
       log_level:"ERROR",
       points:($points | sort_by(.cores, .memory_limit_bytes))
     } else {
-      # explicit, un-skimmable statement of where the curve ends and why (item 18).
+      # explicit, un-skimmable statement of where the curve ends and why.
       curve_complete_to_16:(($points | map(.cores) | max // 0) >= 16),
       points:($points | sort_by(.cores))
     } end

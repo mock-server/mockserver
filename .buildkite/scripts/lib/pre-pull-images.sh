@@ -3,45 +3,15 @@
 # Pre-pull the container images a Docker-gated Testcontainers suite needs,
 # with bounded retry + exponential backoff, BEFORE Maven runs.
 #
-# WHY THIS EXISTS
+# Testcontainers pulls lazily behind an Awaitility wait, so a slow or throttled
+# registry kills the suite minutes in with an opaque ContainerFetchException
+# (initializationError). Pulling here fails fast, names the image and registry,
+# and warms the host daemon cache that Testcontainers reaches through the socket.
 #
-#   Testcontainers pulls each backing image lazily, inside RemoteDockerImage,
-#   behind an Awaitility wait. When a registry is slow or throttled (quay.io
-#   from the elastic-ci-stack agents is the observed case) that wait expires
-#   and the suite dies ~5 minutes in with an opaque
-#
-#     org.testcontainers.containers.ContainerFetchException: Can't get Docker
-#     image: RemoteDockerImage(imageName=adobe/s3mock:...)
-#     Caused by: ...ConditionTimeoutException: ... was not fulfilled within ...
-#
-#   reported as initializationError before any test logic runs. Pulling the
-#   images here first turns that into a fast, clearly-attributed failure that
-#   names the image and registry, and — on success — warms the host daemon's
-#   image cache so Testcontainers (default PullPolicy pulls only when the image
-#   is absent locally) never pulls again and never exercises that wait.
-#
-# WHY A PRE-PULL AND NOT A RETRY AROUND MAVEN
-#
-#   Retrying an image *pull* is safe: a pull cannot turn a failing test green —
-#   it only populates the daemon's image cache. Retrying the Maven invocation
-#   itself is forbidden in this repo because it converts real test failures into
-#   false greens; the sibling step headers and assert-suite-ran.sh exist for
-#   exactly that reason. This warms the cache, then gets out of the way.
-#
-# WHY IT MIRRORS run-in-docker.sh's PR-SOCKET GATE
-#
-#   run-in-docker.sh withholds the Docker socket on PR builds (host-root
-#   breakout risk) and exit-0s the socket step. Such a step never pulls anything
-#   on a PR, so this pre-pull must skip on a PR too — otherwise it would newly
-#   couple PR builds to registry availability and could fail a PR for an image
-#   its skipped step never uses. ALLOW_PR_DOCKER_SOCKET=true overrides, exactly
-#   as it does in run-in-docker.sh.
-#
-# WHERE IT RUNS
-#
-#   On the HOST agent, which owns the docker CLI and daemon. Testcontainers in
-#   the run-in-docker container reaches that same daemon through the mounted
-#   socket, so images warmed here are already present when the suite starts.
+# Retrying a pull is safe; retrying Maven is NOT (it turns real failures green).
+# Skips on PR builds, mirroring run-in-docker.sh's PR socket gate (and its
+# ALLOW_PR_DOCKER_SOCKET override), so PRs are not coupled to registry uptime
+# for a step that will not run.
 #
 # USAGE
 #   pre-pull-images.sh <image> [<image> ...]
@@ -82,11 +52,9 @@ prePullImage() {
     registry="docker.io (Docker Hub)"
   fi
 
-  # Already cached: skip the registry entirely. Testcontainers' default pull policy is
-  # pull-if-absent, so an image the daemon already holds would never have been fetched
-  # by the suite either. Without this a transient registry outage would fail a step that
-  # used to run green off the local cache - turning a mitigation into a new failure mode.
-  # Tags here are pinned, so a cached image is the image the suite wants.
+  # Already cached: skip the registry. Testcontainers pulls only if absent, so the
+  # suite would not have fetched it either, and a registry outage must not fail a
+  # step that can run off the cache. Tags are pinned, so a cached image is correct.
   if docker image inspect "$image" >/dev/null 2>&1; then
     echo "--- :docker: ${image} already cached; skipping pull"
     return 0

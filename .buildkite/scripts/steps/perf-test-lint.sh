@@ -28,11 +28,11 @@ echo "--- shellcheck on the perf shell libs (catches mangled embedded jq)"
 # quoting stays BALANCED and `bash -n` reports it valid. jq then receives
 # mangled text and the step dies at that line mid-run.
 #
-# Build 347 is the worked example: perf-percore.sh carried k6's and pool's on
+# The worked example: perf-percore.sh carried k6's and pool's on
 # adjacent comment lines inside the result-assembly jq program. bash -n passed,
 # an authoritative review passed, and the per-core ladder still died with
 #   syntax error near unexpected token `$sweep[0].vus_diagnostics'
-# AFTER the ladder had run -- so item 18's curve was lost while every check was
+# AFTER the ladder had run -- so the per-core curve was lost while every check was
 # green.
 #
 # SC1073/SC1072 DO catch it -- verified against that exact broken file, and

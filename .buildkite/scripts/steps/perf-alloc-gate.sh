@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# PER-MERGE allocation backstop (performance-programme item 16).
+# PER-MERGE allocation backstop.
 # =============================================================================
 #
 # WHAT: runs the three JMH ALLOCATION benchmarks at PINNED representative params

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fixture tests for the hardware matrix (performance programme item 27), no Docker needed:
+# Fixture tests for the hardware matrix, no Docker needed:
 #   1. lib/perf-hw-matrix-rw.jq: each lower-bound reason from a synthetic rw-multi-k6 result;
 #   2. lib/perf-website-figures.jq: the hw_matrix display fields (scaling, peak, reason text);
 #   3. perf-website-publish.sh: a lower-bound headline plus a new matrix (live or re-assembled

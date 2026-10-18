@@ -264,12 +264,11 @@ fi
 # :snapshot-clustered — the Infinispan/JGroups image variant.
 #
 # WHY IT IS PUSHED HERE, from THIS job, rather than built where it is consumed:
-# the daily perf run's item-13 clustered A/B (perf-test-run.sh) measures the
+# the daily perf run's clustered A/B (perf-test-run.sh) measures the
 # clustered/in-memory state-backend ratio. The run is ATTRIBUTED to the SUT
 # (graaljs) image's own org.opencontainers.image.revision, so the clustered image
 # MUST come from the same commit or the ratio is filed under code it never ran —
-# a silently meaningless comparison, which is exactly the defect class the perf
-# programme exists to avoid. Building it in the SAME job as the SUT image, from
+# a silently meaningless comparison. Building it in the SAME job as the SUT image, from
 # the SAME $SHADED_JAR and the SAME $SOURCE_COMMIT stamp, makes that pairing a
 # property of the build rather than a coincidence of two pipelines; perf-test-run.sh
 # then VERIFIES it by comparing the two images' revision labels and refuses to

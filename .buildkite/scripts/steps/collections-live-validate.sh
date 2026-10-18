@@ -4,40 +4,15 @@ set -euo pipefail
 # Fires every example in the generated Postman collection at a LIVE MockServer and fails if any
 # example body is rejected as malformed (400/415/500).
 #
-# WHY THIS EXISTS SEPARATELY FROM collections-validate.sh
-# -------------------------------------------------------
-# collections-validate.sh regenerates the collections and diffs them against the committed copies.
-# That proves the generator is deterministic and the committed artifacts are current. It proves
-# NOTHING about whether the documented examples actually work: an endpoint whose requestBody is
-# `required: true` with no `example` generates a bodyless request, the committed collection contains
-# that bodyless request, regeneration reproduces it exactly, and the gate is green — while every user
-# who imports the collection and hits that endpoint gets a 400. That is not hypothetical; it shipped
-# for `/mockserver/baseline/compare` and `/mockserver/pact/import` and was caught only by a reviewer
-# running the examples by hand. A gate that can be green while the artifact it guards is broken is
-# the failure mode this check closes.
+# collections-validate.sh only proves the committed collections match the generator. A required
+# requestBody with no `example` generates a bodyless request that regenerates identically and passes
+# there, yet 400s for every user; this step catches that by running the examples for real.
 #
-# WHY IT DOES NOT USE run-in-docker.sh -s
-# ---------------------------------------
-# test_collections.py can start its own MockServer via `docker run`, which would need the Docker
-# socket (-s) mounted into the python container. run-in-docker.sh ALWAYS withholds -s from PR builds
-# by design, so that shape would silently degrade to "cannot start a server" on exactly the builds
-# that most need checking — the same class of defect as the cloud-storage contract suites that
-# skipped on 100% of CI builds because a step script omitted -s and reported green anyway.
-#
-# Instead the MockServer container is started HERE, by the step script running directly on the agent,
-# and the python runs against it on a shared user-defined bridge network with --base-url. No socket is
-# mounted, so this behaves identically on PR and mainline builds.
-#
-# WHY A USER-DEFINED BRIDGE NETWORK RATHER THAN HOST NETWORKING (--network=host)
-# -----------------------------------------------------------------------------
-# The infra Buildkite agents run a user-namespace-remapped Docker daemon, which rejects host networking
-# ("cannot share the host's network namespace when user namespaces are enabled") and privileged
-# containers — the same hazard AGENTS.md documents for the Ryuk reaper. A user-defined bridge network
-# works under user-namespace remapping AND on a plain daemon, so it is correct in both environments.
-# MockServer joins the bridge under a known NAME; the python checker joins the SAME bridge and reaches
-# it as http://<name>:1080 via Docker's embedded DNS (container-name resolution only works on a
-# user-defined bridge, not the default bridge). The host port publish is kept solely for the host-side
-# readiness curl below, which runs directly on the agent, not in a container.
+# MockServer is started HERE, on the agent, not by test_collections.py via `docker run`: that would
+# need the Docker socket, which run-in-docker.sh withholds on PR builds, silently skipping the check.
+# Both containers join a user-defined bridge network (name resolution, and it works on the agents'
+# userns-remapped daemon, which rejects --network=host). The host port publish exists only for the
+# readiness curl below.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
