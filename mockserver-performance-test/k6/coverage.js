@@ -21,7 +21,7 @@
 //   download   HTTP_PROXY at the SUT: large proxied (non-SSE) response bodies
 //              (download_<n>mib); the run step samples RSS and direct memory.
 //
-// Measured-window shape is regression.js's (Finding 3): warmup, staggered starts,
+// Measured-window shape is regression.js's: warmup, staggered starts,
 // preAllocatedVUs == maxVUs, a settle window tagged op:<op>_settle and excluded from
 // the percentiles, and MIN_TAIL_SAMPLES suppression.
 //

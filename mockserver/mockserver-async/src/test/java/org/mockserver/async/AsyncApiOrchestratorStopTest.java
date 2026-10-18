@@ -28,8 +28,7 @@ import static org.hamcrest.Matchers.is;
  *
  * <p>The blocking publisher below is what makes this discriminating. A publisher that returns
  * immediately would pass whether or not {@code stop()} waits, because the race window would be too
- * small to observe — the same "fixture chosen around the bug" trap that has recurred in this
- * programme. Here the publish takes a known, deliberately long time, so "did stop() wait?" is
+ * small to observe — a fixture chosen around the bug. Here the publish takes a known, deliberately long time, so "did stop() wait?" is
  * directly observable rather than inferred from timing luck.
  *
  * <p><strong>The assertion counts starts against completions rather than asking "did some publish

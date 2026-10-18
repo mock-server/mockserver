@@ -1,4 +1,4 @@
-// Clustered per-request-CROSSING arm (item 13, MAJOR-1 fix).
+// Clustered per-request-CROSSING arm.
 //
 // regression.js (run unchanged alongside this, against the same two targets)
 // measures the clustered MEMBERSHIP steady-state overhead: its arms seed
@@ -6,7 +6,7 @@
 // cache, so NOTHING crosses the JGroups network on the request path — the ratio
 // there is ~1.0 and answers "what does merely being a clustered member cost".
 //
-// This script measures the OTHER half of item 13 — what "moving expectation
+// This script measures the OTHER half of the clustered A/B — what "moving expectation
 // reads/writes onto a network" actually costs PER REQUEST — by driving a
 // workload that DOES cross the network on every matched request:
 //
@@ -18,8 +18,8 @@
 //   that CAS is a local ConcurrentHashMap swap; on the CLUSTER it is a SYNCHRONOUS
 //   REPL_SYNC round trip (InfinispanKeyValueStore.compareAndSet -> cache.replace,
 //   replicated to the peer before returning). So the clustered/control ratio for
-//   THIS arm is the real per-request network cost — the number item 13 exists to
-//   find. The contrast with regression.js's ~1.0 non-crossing arms is the result.
+//   THIS arm is the real per-request network cost — the number the clustered A/B
+//   exists to find. The contrast with regression.js's ~1.0 non-crossing arms is the result.
 //
 // Emits the SAME {proto, behaviours:{<op>_<proto>:{...}}} shape as regression.js
 // so perf-test-run.sh's ratio machinery and the .behaviours merge treat the

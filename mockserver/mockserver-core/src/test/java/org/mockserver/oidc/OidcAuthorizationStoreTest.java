@@ -93,7 +93,7 @@ public class OidcAuthorizationStoreTest {
         assertThat(store.consumeCode("fresh"), is(notNullValue()));
     }
 
-    // --- Wave 2: device-code TTL + single-use semantics ---
+    // --- device-code TTL + single-use semantics ---
 
     private static OidcAuthorizationStore.DeviceCode newDeviceCode() {
         return new OidcAuthorizationStore.DeviceCode("USER-CODE", "openid", 0);

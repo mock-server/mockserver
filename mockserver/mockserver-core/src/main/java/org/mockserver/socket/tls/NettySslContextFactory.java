@@ -78,7 +78,7 @@ public class NettySslContextFactory {
      */
     static final AtomicBoolean BUNDLED_CA_WARNING_LOGGED = new AtomicBoolean(false);
 
-    // ---- Wave 3, item 4: cheap, time-bounded re-check of a user-supplied FIXED server certificate ----
+    // ---- cheap, time-bounded re-check of a user-supplied FIXED server certificate ----
     // Self-generated leaves self-renew via KeyAndCertificateFactory#certificateNeedsRenewal(); fixed
     // certificates are validated once at build and then pinned into the cached SslContext, so a
     // long-running server would silently keep serving one that expired (or ignore a rotated replacement

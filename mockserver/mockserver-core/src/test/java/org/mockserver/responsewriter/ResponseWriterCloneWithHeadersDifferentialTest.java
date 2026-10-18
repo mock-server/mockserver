@@ -25,7 +25,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
- * Differential proof for unit 18a item 3: {@code addConnectionHeader} now copies only the headers
+ * Differential proof that {@code addConnectionHeader} now copies only the headers
  * (via {@link HttpResponse#cloneWithHeaders()}) instead of taking a full deep {@link
  * HttpResponse#clone()}. This asserts, over an adversarial corpus, that the narrowed copy produces
  * byte-for-byte-identical wire output to the full clone, and that the caller's response is never
@@ -86,7 +86,7 @@ public class ResponseWriterCloneWithHeadersDifferentialTest {
         // body declaring a non-utf8 charset, no content-type header
         corpus.add(response().withStatusCode(200)
             .withBody("£©", StandardCharsets.ISO_8859_1));
-        // cookies (Set-Cookie) — the field item 3 stops deep-copying
+        // cookies (Set-Cookie) — the field addConnectionHeader stops deep-copying
         corpus.add(response().withStatusCode(200)
             .withHeader("content-type", "text/plain")
             .withCookie("session", "abc123")

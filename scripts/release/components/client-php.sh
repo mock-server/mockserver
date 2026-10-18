@@ -21,15 +21,14 @@
 #     publish. Each push is wrapped in `retry` to ride out transient git/network
 #     errors and HARD-fails the step if it ultimately fails.
 #   - The `git subtree split` runs INSIDE the pinned Maven container, because the
-#     release-agent host git lacks the git-subtree subcommand (release build #51
-#     died with `git: 'subtree' is not a git command`). The container writes the
+#     release-agent host git lacks the git-subtree subcommand. The container writes the
 #     split commit to a temp branch in the SHARED, bind-mounted .git; the host
 #     then resolves that branch's sha and PUSHES it (the host — not a container —
 #     holds the mirror push credentials via `git config http.extraheader`). The
 #     Maven image (already pinned in _lib.sh) ships git-subtree at
 #     /usr/lib/git-core/git-subtree, so `git subtree` works with no apt install.
-#   - A missing or invalid composer.json is a real prerequisite failure and now
-#     HARD-fails (it used to silent-skip).
+#   - A missing or invalid composer.json is a real prerequisite failure and
+#     HARD-fails.
 #   - Packagist *indexing* (the package appearing on packagist.org) is
 #     webhook-driven and genuinely lags, so that — and only that — is
 #     retry-then-tolerate with a :warning: (the mirror push, i.e. the real

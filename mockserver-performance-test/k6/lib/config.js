@@ -146,28 +146,16 @@ export const REGRESSION = {
   rate: num('K6_REG_RATE', 200), // offered req/s PER behaviour
   duration: env('K6_REG_DURATION', '2m'), // measured window (per behaviour)
   warmup: env('K6_REG_WARMUP', '30s'), // pre-measurement server warmup window
-  // preAllocatedVUs == maxVUs ON PURPOSE. The whole VU pool is created before the
-  // run, and because there is NO headroom above it, the constant-arrival-rate
-  // executor can NEVER allocate a VU mid-measurement. Mid-run allocation was the
-  // Finding 3 feedback loop: a cold/contended request piles up iterations, k6
-  // ramps preAllocatedVUs -> maxVUs, EACH new VU opens a fresh connection, the
-  // connection storm slows the core-limited server further, which piles up more
-  // iterations — a ~1 s (to multi-second) tail that MORE VUs only worsen.
-  // Equalising the two forbids that ramp: the pool is fixed, so the connection
-  // count is bounded and stable, and if a transient ever exceeds it k6 DROPS
-  // iterations (counted, and surfaced by the delivery_ratio guard) instead of
-  // manufacturing a storm. 200 rps at sub-ms latency needs ~1 VU by Little's law,
-  // so 50 is almost entirely transient headroom for the JIT-cold first cohort.
-  // It is a RAISE of the old preAllocatedVUs (20 -> 50) and, more importantly, a
-  // LOWERING of maxVUs (200 -> 50) to remove the ramp — reproductions showed the
-  // tail GROWS with pool size (a larger fixed pool = more concurrent connections
-  // hammering the core-limited SUT), so the fix is a modest EQUAL pool, not a
-  // large one. Keep K6_REG_PRE_VUS and K6_REG_MAX_VUS equal if overriding.
+  // preAllocatedVUs == maxVUs ON PURPOSE: with no headroom the executor can never
+  // allocate a VU (open a connection) mid-measurement, which on a core-limited SUT
+  // compounds into a connection storm and a multi-second tail. A transient beyond
+  // the pool is dropped and counted instead. Keep K6_REG_PRE_VUS and K6_REG_MAX_VUS
+  // equal, and modest: the tail grows with pool size. See
+  // docs/code/performance-measurement.md ("k6 load-shape sizing").
   preAllocatedVUs: num('K6_REG_PRE_VUS', 50),
   maxVUs: num('K6_REG_MAX_VUS', 50),
-  // The four measured scenarios start staggered by this gap (op index x stagger)
-  // so their VU-allocation / connection-open transients do NOT superimpose into
-  // one connection storm on the shared, core-limited SUT (Finding 3 root cause).
+  // Scenario starts are staggered (op index x stagger) so their connection-open
+  // transients do not superimpose on the shared, core-limited SUT.
   stagger: env('K6_REG_STAGGER', '5s'),
   // Per-scenario settle window at the start of the measured window whose requests
   // are tagged op:<op>_settle and thus EXCLUDED from the measured latency
@@ -182,76 +170,27 @@ export const REGRESSION = {
   // (the medians and tail must move by ~this delay). Used by the sensitivity
   // check that guards against the settle exclusion silently hiding regressions.
   matchDelayMs: num('K6_REG_MATCH_DELAY_MS', 0),
-  // --- item 15a: template-engine arms --------------------------------------
-  // The `template` arm exercises VELOCITY (always on the classpath). A Mustache
-  // arm (jmustache is a NON-optional core dep, so it runs on the stock image) is
-  // always added. The JavaScript arm needs the GraalJS engine, which is an
-  // OPTIONAL dependency present ONLY in the -graaljs image variant — so it is
-  // OFF by default here (a bare `k6 run regression.js` against a stock server
-  // must not manufacture a broken 100%-error arm). perf-test-run.sh turns it ON
-  // and runs the SUT on the -graaljs image; regression.js then probes the arm in
-  // setup() and FAILS LOUDLY if the engine is absent (never a silent zero arm).
+  // --- template-engine arms --------------------------------------------------
+  // The JavaScript arm needs GraalJS, present only in the -graaljs image, so it is
+  // off by default (a stock server would give a 100%-error arm). perf-test-run.sh
+  // turns it on with the -graaljs SUT; regression.js fails loudly if it is absent.
   jsTemplate: bool('K6_REG_JS_TEMPLATE', false),
-  // The Mustache + JavaScript arms run at a REDUCED rate, not the full 200 rps of
-  // the velocity `template` arm. Adding two more full-rate template arms to the
-  // core-limited (2-CPU) SUT is a large perturbation of the historical
-  // match/forward/template/large arms for what is a cheap latency measurement;
-  // 50 rps over the measured window is thousands of samples per percentile while
-  // keeping the added CPU contention modest. Each arm still tracks its own
-  // per-arm regression history — the cross-engine rate need not match velocity.
+  // The Mustache + JavaScript arms run below the 200 rps velocity arm so they do not
+  // perturb the historical arms on the core-limited SUT; each keeps its own history.
   templateArmRate: num('K6_REG_TEMPLATE_ARM_RATE', 50),
-  // --- item 15d: body-size axis on `large` ---------------------------------
-  // `large` stays the 4 KB point (unchanged, preserves baseline history). The
-  // 1 MB / 10 MB arms POST a JSON body of the target size matched on a small
-  // fixed marker (ONLY_MATCHING_FIELDS), so the DECODE/transfer cost scales with
-  // size while match cost stays constant. Offered at reduced rates + small VU
-  // pools so the byte-rate and run length stay bounded (the invariant
-  // preAllocatedVUs == maxVUs from Finding 3 is preserved per arm).
-  // NOTE the ceiling: MockServer rejects a REQUEST body larger than
-  // MOCKSERVER_MAX_REQUEST_BODY_SIZE (default 10 * 1024 * 1024 = 10,485,760 B)
-  // with 413. buildLargeJson overshoots its target by up to one token + wrapper,
-  // so a 10 * 1024 * 1024 target lands just OVER the limit → a 100%-error arm.
-  // Keep the 10 MB point in DECIMAL MB (10,000,000 B ≈ 9.54 MiB), comfortably
-  // under the 10 MiB cap. Override K6_REG_LARGE_10MB_BYTES only alongside a
-  // raised MOCKSERVER_MAX_REQUEST_BODY_SIZE on the SUT.
+  // --- body-size axis: `large` stays 4 KB; 1 MB / 10 MB POST a JSON body matched on
+  // a small marker, so decode cost scales with size and match cost does not.
+  // Keep 10 MB DECIMAL: buildLargeJson overshoots its target, so a 10 MiB target
+  // exceeds MOCKSERVER_MAX_REQUEST_BODY_SIZE (default 10 MiB) and every request 413s.
+  // Override K6_REG_LARGE_10MB_BYTES only with a raised limit on the SUT.
   large1mbBytes: num('K6_REG_LARGE_1MB_BYTES', 1000 * 1000),
   large10mbBytes: num('K6_REG_LARGE_10MB_BYTES', 10 * 1000 * 1000),
-  // MEMORY CEILING — retained-heap arithmetic, and why RATE ALONE WAS NOT ENOUGH.
-  // MockServer records every request (and its response) in an in-memory event-log
-  // ring of `maxLogEntries` entries, holding the FULL body of each. On the 2 GB CI
-  // GraalJS SUT the heap is MaxRAMPercentage=45% ≈ 0.9 GiB, so maxLogEntries =
-  // min(heapKB/8, 250000) ≈ 115,500. The ring is COUNT-bounded, so an entry lives for
-  // the last `maxLogEntries / total_ACHIEVED_rps` seconds (the residence), and the
-  // steady-state bytes an arm retains at rate r with body B are r × residence × B.
-  //   PER ARM (at residence 172 s, i.e. total ACHIEVED ≈ 901 rps, a HEALTHY server):
-  //     large_10mb @ 0.1 rps → 0.1 × 172 × 10 MB ≈ 172 MB
-  //     large_1mb  @ 0.5 rps → 0.5 × 172 ×  1 MB ≈  86 MB
-  //     large_file @ 0.5 rps → 0.5 × 172 ×  1 MB ≈  86 MB   (its ~1 MB RESPONSE)
-  //     large(4KB) @ 200 rps → 200 × 172 ×  4 KB ≈ 137 MB
-  //   ~480 MB of large bodies looks safe under 0.9 GiB — BUT residence is NOT a
-  // constant. residence = maxLogEntries / total_ACHIEVED_rps, and achieved rps is not
-  // the offered 901: when the server contends it falls, and residence LENGTHENS
-  // WITHOUT BOUND (2×/4×/10× → ∞ as achieved rps → 0), scaling every figure above
-  // with it. That is not hypothetical — build #249 died exactly here: the JavaScript
-  // contagion (since fixed) depressed throughput, residence blew up, the MB bodies
-  // stacked across the http→https_h2 passes, and the container OOMed before the second
-  // pass could seed. The 2026-09-17 dispatch-pool fixes (eec183f7e/7fbae1350) make it
-  // WORSE, not better: freeing the pool admits MORE body throughput. So a per-arm rate
-  // is the WRONG lever — no rate keeps r × residence × B bounded once residence runs
-  // away. RETENTION is bounded at the SERVER instead: maxEventLogSizeInBytes, a body-byte
-  // budget on by default (the main SUT runs at the shipped heap-derived value, the other
-  // SUTs at a fixed 256 MiB), evicts oldest-first so TOTAL retained body bytes never
-  // exceed the budget REGARDLESS of residence. These rates stay low only to
-  // keep per-arm CPU/GC contention on the core-limited SUT modest (so they don't shift
-  // the historical arms' latencies) and the run length bounded — NOT as the OOM guard.
-  // The warmup NEVER touches these arms (regression.js excludes them from warmupOp),
-  // so nothing accumulates before measurement either.
-  // `growth` needs the default ~115,500-entry ring to fill (issue #2329 O(n) eviction),
-  // so the COUNT bound cannot be shrunk. A /simple entry weighs ~1.3 KB, so a heap-derived
-  // byte budget would bind first; perf-test-run.sh therefore raises the budget to 256 MiB
-  // for the growth phase only, where its ~150 MB fill stays under it. Raising these rates is now
-  // safe from OOM (the budget caps retention); raise them only if the added SUT
-  // contention is acceptable, and shrink the budget only alongside a smaller heap.
+  // These rates are NOT the OOM guard. The event-log ring holds full bodies and is
+  // count-bounded, so retained bytes scale with residence (maxLogEntries / achieved
+  // rps), which grows without bound as the server slows. The SUT's
+  // maxEventLogSizeInBytes budget bounds retention; the rates stay low only to limit
+  // contention and run length. The warmup never touches these arms. Arithmetic and
+  // the growth-phase budget override: docs/code/performance-measurement.md.
   large1mbRate: num('K6_REG_LARGE_1MB_RATE', 1),
   large1mbTimeUnit: env('K6_REG_LARGE_1MB_TIME_UNIT', '2s'), // 0.5 rps
   large10mbRate: num('K6_REG_LARGE_10MB_RATE', 1),
@@ -265,8 +204,7 @@ export const REGRESSION = {
   // not a silent zero). When set, regression.js probes it in setup() and fails
   // loudly if the server cannot read the file (a FILE body 500s when unreadable).
   fileBodyPath: env('K6_REG_FILE_BODY_PATH', ''),
-  // Low for the same event-log reason (see the arithmetic above): the ~1 MB file
-  // RESPONSE is recorded per request. 0.5 rps × ~172 s × 1 MB ≈ 86 MB retained.
+  // Low for the same contention reason as the large_* arms (~1 MB response each).
   fileBodyRate: num('K6_REG_FILE_BODY_RATE', 1),
   fileBodyTimeUnit: env('K6_REG_FILE_BODY_TIME_UNIT', '2s'), // 0.5 rps
   fileBodyVUs: num('K6_REG_FILE_BODY_VUS', 8),
@@ -279,15 +217,10 @@ export const REGRESSION = {
   resultPath: env('K6_RESULT_PATH', 'regression-result.json'),
 };
 
-// Throughput-vs-latency sweep tunables (sweep.js). Offers load at an ascending
-// LADDER of fixed arrival rates and records, per rate step, the ACHIEVED
-// throughput, latency percentiles, and error rate — the data series plotted as a
-// load-vs-latency "knee" curve. Unlike load.js (one ramp) the ladder is a set of
-// discrete constant-arrival-rate steps, each staggered after the previous (plus a
-// short gap so percentiles do not bleed across steps), and each request is tagged
-// with its step's offered rate so per-step percentiles are computed in the
-// summary. At the top of the ladder k6 may drop iterations (VU-starved) — that is
-// expected and is part of showing the knee, so there are NO aborting thresholds.
+// Throughput-vs-latency sweep tunables (sweep.js): an ascending ladder of fixed
+// arrival-rate rungs, each tagged with its offered rate, recording achieved rps,
+// latency percentiles and errors per rung. k6 dropping iterations at the top of the
+// ladder is expected (it shows the knee), so there are NO aborting thresholds.
 export const SWEEP = {
   // Ascending ladder of offered arrival rates (req/s). Comma-separated.
   rates: env('K6_SWEEP_RATES', '500,1000,2000,4000,8000,16000,32000')
@@ -300,70 +233,12 @@ export const SWEEP = {
   // runs and still counts toward achieved/error/drop figures). Sized to cover the
   // rung-onset transient; see docs/code/performance-measurement.md.
   settle: env('K6_SWEEP_SETTLE', '3s'),
-  // Finding-3 no-mid-run-allocation invariant, applied PER RUNG (sizing helper in
-  // sweep.js: poolForRate). Each ladder rung gets its OWN fixed pool where
-  // preAllocatedVUs == maxVUs, so no executor can allocate a VU (open a fresh
-  // connection) mid-run — the old 200 -> 4,000 ramp (a 20x storm) is gone, and a
-  // transient that exceeds a rung's pool is DROPPED (counted) rather than
-  // compounding into a connection storm.
-  //
-  // WHY PER RUNG, NOT ONE FLAT POOL — the trap a single number falls into on a
-  // 500 -> 64,000 CI ladder (build #347; the CI ladder tops at 64k via
-  // perf-test-run.sh, not the 32k local default above):
-  //   * rig_valid (perf-test-run.sh) requires dropped_iterations == 0. A pool
-  //     sized for the LOW rungs (e.g. a flat 512) would undersize a near-knee rung
-  //     the server can still serve CLEANLY, making it drop -> flip from rig-valid
-  //     to rig-invalid -> silently lower rig_valid_peak_achieved_rps and the
-  //     published knee. A pool sized for the TOP rung (e.g. a flat 4,000) would
-  //     open thousands of connections on the trusted low rungs — the storm the
-  //     invariant exists to prevent, corrupting their latency.
-  //   * So the pool SCALES with the rung's offered rate, floored and capped:
-  //       pool = clamp(ceil(rate * vuPerRps), vuFloor, vuCeiling)
-  //     The factor is DERIVED from the measured ramped peaks, not guessed. Their
-  //     peak/rate ratios FALL as rate rises (build #347): 34/500=0.068,
-  //     128/2000=0.064, 216/4000=0.054, 301/8000=0.038, 1283/32000=0.040. A single
-  //     linear factor is therefore dominated by the low rungs, so vuPerRps is taken
-  //     from the WORST (highest) ratio 0.068 plus ~18% margin => 0.08. That makes
-  //     the factor alone clear every measured peak; the floor and ceiling are then
-  //     pure safety. A fixed pool cannot exceed the ramped peak (no storm to
-  //     compound), so the measured peaks are an UPPER bound on real fixed-pool
-  //     demand and the margins below are conservative.
-  //   * vuFloor 96 covers the low rungs the factor would otherwise leave marginal.
-  //     500 (measured peak 34) and 1,000 (UNMEASURED; interpolated 65-81 between
-  //     the 500 and 2,000 rows) both floor to 96 — above 81 with margin. 64 was too
-  //     low for 1k, so it was raised.
-  //   * vuCeiling 2048 caps k6 pre-initialisation (k6 pre-inits the peak sum of the
-  //     pools of rungs whose reservations overlap — see sweep.js
-  //     plannedVusBaseline) on the high rungs, where the falling ratio makes
-  //     a flat 0.08 over-provision (32k -> 2560, 48k -> 3840, 64k -> 5120). 2048
-  //     still exceeds the 32,000 rung's measured peak (1,283) with ~60% margin, and
-  //     48k/64k sit above the ~36k knee so they saturate and are EXCLUDED from
-  //     rig_valid regardless of pool.
-  //   * PER-RUNG MARGIN (pool vs measured[M]/interpolated[I] ramped peak):
-  //       500 -> 96  vs 34[M]        (+182%)
-  //       1,000 -> 96 vs ~65-81[I]   (+18-48%; interpolated, no #347 row)
-  //       2,000 -> 160 vs 128[M]     (+25%)
-  //       4,000 -> 320 vs 216[M]     (+48%)
-  //       8,000 -> 640 vs 301[M]     (+113%)
-  //       16,000 -> 1280 vs ~628[I]  (+104%; interpolated 8k<->32k, spans the knee)
-  //       32,000 -> 2048(cap) vs 1283[M] (+60%)
-  //       48,000 -> 2048(cap) — above knee, saturated, excluded from rig_valid
-  //       64,000 -> 2048(cap) — above knee, saturated, excluded from rig_valid
-  //     Every MEASURED rung is covered with >=25% margin; the two interpolated
-  //     rungs (1k, 16k) are flagged as such with their basis.
-  //   * SAFETY CLAIM (narrow and correct): every rung's pool EXCEEDS that rung's
-  //     measured (or interpolated) peak demand, so no measured rung is under-served;
-  //     and a FIXED pool cannot compound a storm the way the old ramp did, so it
-  //     removes the storm-induced drops. (It is NOT claimed that 2048 <= old 4,000
-  //     makes this "less rig-limiting" — a lower ceiling could in principle give a
-  //     rung fewer VUs than the old ramp could allocate; the coverage-with-margin
-  //     above is what makes it safe, not the ceiling comparison.)
-  //   * HONEST RESIDUAL: the recorded per-rung demand at 32k-64k is
-  //     storm-contaminated (it came from the very ramp being removed), so the CLEAN
-  //     fixed-pool residence at those rungs is unmeasured. The reasoning shows the
-  //     budgeted metric is protected under any plausible clean residence, but a real
-  //     run should confirm the boundary rung stays rig_valid (0 drops,
-  //     vus_active_max < its pool) and 48k/64k still show the knee.
+  // Per-rung fixed pool (preAllocatedVUs == maxVUs, sized by sweep.js poolForRate):
+  //   pool = clamp(ceil(rate * vuPerRps), vuFloor, vuCeiling)
+  // One flat pool cannot work: sized for low rungs it starves near-knee rungs into
+  // drops (rig-invalid); sized for the top it storms the low rungs. The factor,
+  // floor and ceiling were derived from measured per-rung VU peaks; re-derive them
+  // before changing any of the three (docs/code/performance-measurement.md).
   vuPerRps: num('K6_SWEEP_VUS_PER_KRPS', 80) / 1000, // VUs per offered rps (0.08)
   vuFloor: num('K6_SWEEP_VU_FLOOR', 96),
   vuCeiling: num('K6_SWEEP_VU_CEILING', 2048),
@@ -376,7 +251,7 @@ export const SWEEP = {
   // via ALPN, but the sweep is HTTP by default (the headline knee curve).
   proto: env('PROTO', baseUrl.startsWith('https') ? (bool('K6_HTTP2', true) ? 'https_h2' : 'https') : 'http'),
   resultPath: env('K6_SWEEP_RESULT_PATH', 'sweep-result.json'),
-  // Opt-in knobs for scripts/rw-multi-k6-sweep.sh (item 31); defaults are the published method.
+  // Opt-in knobs for scripts/rw-multi-k6-sweep.sh; defaults are the published method.
   windowMode: env('K6_SWEEP_WINDOW_MODE', 'vu_tag'), // vu_tag | wallclock (no window tag)
   leanSummary: bool('K6_SWEEP_LEAN_SUMMARY', false), // counts only; no percentile submetrics
   vuDiagnostics: bool('K6_SWEEP_VU_DIAGNOSTICS', true),
@@ -390,13 +265,10 @@ export const SWEEP = {
   gracefulStop: String(env('K6_SWEEP_GRACEFUL_STOP', '')).trim() || null,
 };
 
-// Resource-growth scenario tunables (growth.js). A sustained constant-load run
-// whose purpose is to surface "X increases over time" regressions (e.g. issue
-// #2329: O(n) log eviction once the request log fills to maxLogEntries). The
-// rate is high enough to fill the DEFAULT ~115.5k log within the run; low-rate
-// latency probes at the start and end measure the latency slope, paired with the
-// CPU/heap trajectory sampled by perf-test-run.sh. Do NOT shrink maxLogEntries
-// for this run — a smaller log would never fill and would hide the bug.
+// Resource-growth scenario tunables (growth.js): sustained load that fills the
+// default ~115.5k-entry request log, with latency probes at the start and end, to
+// surface "X increases over time" regressions (e.g. O(n) eviction once the log is
+// full). Do NOT shrink maxLogEntries for this run: a log that never fills hides it.
 export const GROWTH = {
   rate: num('K6_GROWTH_RATE', 800), // fill load (req/s) — fills the ~115.5k log in ~70s
   // Keep K6_GROWTH_DURATION >= 3 × K6_GROWTH_PROBE so the first/last probe
@@ -419,17 +291,11 @@ export const FORWARD = {
   forwardSelf: bool('K6_FORWARD_SELF', false),
 };
 
-// Forward-path load-shape tunables (forward.js). This scenario is a dedicated
-// REGRESSION GUARD for the upstream connection-pool default
-// (`mockserver.forwardConnectionPoolEnabled`, default true). It drives the
-// FORWARD path (every request opens an outbound upstream connection unless they
-// are pooled) at a sustained high rate — the level where the OLD per-request
-// behaviour exhausted ephemeral ports and threw BindException, surfacing as a
-// spike in `http_req_failed`. The error-rate threshold is the key gate: if
-// pooling regresses, failures climb and the gate trips. Latency gates are
-// secondary (forward adds a network hop, so the bounds are looser than the
-// data-plane match path). Peak default is 1500 rps — the rate that broke the
-// old default (21%/68% errors before the pool fix).
+// Forward-path load-shape tunables (forward.js): a regression guard for the
+// upstream connection pool (mockserver.forwardConnectionPoolEnabled). Unpooled, each
+// forwarded request opens an outbound connection, and at the 1500 rps peak that
+// exhausts ephemeral ports (BindException). The error-rate gate is the signal;
+// latency bounds are looser than the match path because of the extra hop.
 export const FORWARD_LOAD = {
   startRate: num('K6_FWD_START_RATE', 100),
   peakRate: num('K6_FWD_PEAK_RATE', 1500),
@@ -445,56 +311,28 @@ export const FORWARD_LOAD = {
   p99: num('K6_FWD_P99_MS', 200),
 };
 
-// Proxy-path + TLS-handshake scenario tunables (proxy.js — performance-programme
-// items 9a and 14). ONE file, TWO modes selected by K6_PROXY_MODE because the two
-// workloads need MUTUALLY EXCLUSIVE process-global settings and so cannot share a
-// k6 process:
-//   forward   — MockServer AS A FORWARD PROXY. k6 is pointed at the upstream and
-//               routed THROUGH MockServer via the HTTP_PROXY / HTTPS_PROXY env the
-//               run step sets on the k6 container: an http:// target becomes an
-//               absolute-URI GET to the proxy (absolute-URI forwarding), an https://
-//               target becomes a CONNECT tunnel carrying TLS through the SUT to the
-//               upstream (MockServer may terminate that TLS itself with a generated
-//               cert — see expectations.js getProxiedConnect). Connections are REUSED
-//               (keep-alive), like a real proxy
-//               client. Emits a .behaviours object (op_proto keys) so
-//               perf-test-compare.sh picks the arms up with ZERO script changes
-//               (its metric loop iterates .behaviours | to_entries[]).
-//   handshake — MockServer's INBOUND TLS handshake cost (item 14). k6 hits the SUT
-//               directly over HTTPS with noConnectionReuse:true so EVERY iteration
-//               pays a fresh TCP+TLS handshake (the https_h2 regression run reuses
-//               one connection per VU, so handshake cost is amortised to ~0 and
-//               appears in no measured number). No proxy env here — a proxy env
-//               would tunnel these and defeat the measurement. Emits a .tls_handshake
-//               object; perf-test-run.sh augments each arm with server CPU + JVM
-//               allocation per handshake sampled across the arm's window.
-//
-// Both modes clone regression.js's FIXED measured-window shape (Finding 3): a
-// warmup scenario, STAGGERED scenario starts, preAllocatedVUs == maxVUs (no mid-run
-// VU/connection ramp), a K6_PROXY_SETTLE exclusion window tagged op:<op>_settle, the
-// MIN_TAIL_SAMPLES tail suppression, and the heavy/warm load-time contract. Copying
-// a pre-fix regression.js revision would reintroduce the four-orders-of-magnitude
-// tail bug, so these are cloned from the current (post-2026-09-16) shape.
+// Proxy-path + TLS-handshake scenario tunables (proxy.js). Two modes, selected by
+// K6_PROXY_MODE, because they need mutually exclusive process-global settings:
+//   forward   — k6 targets the upstream THROUGH MockServer via HTTP_PROXY/HTTPS_PROXY
+//               (absolute-URI GET for http://, CONNECT tunnel for https://), keep-alive.
+//               Emits .behaviours, so perf-test-compare.sh picks the arms up unchanged.
+//   handshake — direct HTTPS with noConnectionReuse, so every iteration pays a fresh
+//               TCP+TLS handshake. No proxy env (it would tunnel and defeat that).
+// Both clone regression.js's measured-window shape (warmup, stagger, equal VU pool,
+// settle exclusion, MIN_TAIL_SAMPLES); copy from the current regression.js, not an
+// older revision, or the connection-storm tail comes back.
 export const PROXY = {
   mode: env('K6_PROXY_MODE', 'forward'),
   // --- forward mode ---------------------------------------------------------
-  // Offered req/s per proxy arm. Retained-heap arithmetic (the same event-log ring
-  // reasoning as REGRESSION's large_* arms): a PROXIED request is still recorded in
-  // the SUT's count-bounded log ring, holding request + response bodies. Here the
-  // bodies are TINY — the forward arms GET /simple, whose upstream response body is
-  // ~8 bytes ("UPSTREAM") and request is header-only — so at r rps the retained
-  // bytes are r × residence × ~200 B (entry + small body). With residence ≈
-  // maxLogEntries/total_rps and total forward rps ≈ 400 (2 arms × 200), residence ≈
-  // 115500/400 ≈ 290 s and retention ≈ 400 × 290 × 200 B ≈ 23 MB — negligible
-  // against the 0.9 GiB SUT heap, so no rate throttling / heavy flag is needed. (This
-  // is why the forward arms relay a SMALL body deliberately: a proxy relaying MB
-  // bodies would need the same rate-bounding the large_* arms use.)
+  // Offered req/s per proxy arm. Bodies are deliberately tiny, so log-ring retention
+  // is negligible at this rate; a proxy arm relaying MB bodies would need the large_*
+  // arms' treatment.
   rate: num('K6_PROXY_RATE', 200),
   duration: env('K6_PROXY_DURATION', '2m'),
   warmup: env('K6_PROXY_WARMUP', '30s'),
   stagger: env('K6_PROXY_STAGGER', '5s'),
   settle: env('K6_PROXY_SETTLE', '10s'),
-  // preAllocatedVUs == maxVUs — the Finding-3 no-mid-run-allocation invariant.
+  // preAllocatedVUs == maxVUs: no mid-run VU allocation (see REGRESSION).
   preAllocatedVUs: num('K6_PROXY_PRE_VUS', 50),
   maxVUs: num('K6_PROXY_MAX_VUS', 50),
   // The upstream the proxy forwards/tunnels to (host:port), reachable on the run's
@@ -504,7 +342,7 @@ export const PROXY = {
   // /simple response so a run can prove the proxy percentiles still track a real
   // slowdown. Applied by seeding the UPSTREAM, so it exercises the relay path.
   matchDelayMs: num('K6_PROXY_MATCH_DELAY_MS', 0),
-  // --- handshake mode (item 14) ---------------------------------------------
+  // --- handshake mode --------------------------------------------------------
   // Fresh-handshake rate per arm. Kept modest (each iteration opens a new TCP+TLS
   // connection, so this is also the connection-open rate) to avoid ephemeral-port
   // exhaustion on the client while still yielding thousands of handshakes over the
@@ -532,58 +370,16 @@ export const PROXY = {
   resultPath: env('K6_PROXY_RESULT_PATH', 'proxy-result.json'),
 };
 
-// LLM/SSE streaming-under-concurrency scenario tunables (streaming.js —
-// performance-programme item 12). MockServer streams an httpSseResponse by
-// scheduling each event's per-token delay onto the SHARED action-handler pool
-// (Scheduler: a ScheduledThreadPoolExecutor sized actionHandlerThreadCount()).
-// The concern the plan raises is that many concurrent streams flood that small
-// pool with delayed writeEvent tasks; when the pool cannot service them on time
-// the per-token timing DRIFTS (a fidelity loss, because the streaming feature's
-// correctness claim IS a timing claim) and the writeAndFlush each task hands to
-// a Netty event loop adds event-loop pressure that a concurrent plain `match`
-// pays for. This scenario drives that concurrency and measures the fallout.
-//
-// WHAT THIS FILE MEASURES vs WHAT THE RUN STEP MEASURES. k6 cannot read an SSE
-// body incrementally (http.get buffers the whole response), so k6 here does two
-// things it CAN do honestly: (1) SUSTAIN the concurrency — a constant-VUs arm
-// where each VU holds one long-lived GET /stream open, so ~concurrency streams
-// are always in flight; and (2) the within-run match A/B (item 12's 4th metric)
-// — a fixed-rate `match` arm measured FIRST alone (baseline) and then AGAIN
-// while the streams run (under load), so the p95 ratio shows whether streaming
-// steals the hot path. The two fidelity/retention metrics k6 cannot see are
-// taken server-side by perf-test-run.sh: inter-token delay error via a dedicated
-// single-stream timing reader (tools/sse-fidelity-reader.py) run idle THEN under
-// this load (the idle run is the client-jitter FLOOR / positive control that
-// proves the error growth is the server, not the reader), and heap-per-open-
-// stream via the metrics-endpoint heap FLOOR sampled with the streams open minus
-// an idle baseline.
-//
-// MEASURED-WINDOW HYGIENE — cloned from the FIXED regression.js shape (Finding 3,
-// post-2026-09-16): staggered scenario starts, preAllocatedVUs == maxVUs (no
-// mid-run allocation) on the fixed-rate arms, a settle exclusion tagged
-// op:<op>_settle, MIN_TAIL_SAMPLES tail suppression, and the heavy/warm load-time
-// contract. The STREAMING arm is `heavy` (no warm): warming it at the ~warmup
-// rate would open thousands of long-lived streams at once (a connection + log
-// storm), so it is deliberately not warmed — it is the load, not a measured-
-// latency arm, and its cold first cohort lands in the excluded settle window.
-//
-// RETAINED-HEAP ARITHMETIC (the OOM shape the programme hit: long-lived streams +
-// recorded bodies). Every matched stream request is recorded in MockServer's
-// count-bounded event-log ring (maxLogEntries entries, holding the request + the
-// response action, whose events list is the streamed body). An entry lives for
-// residence ≈ maxLogEntries / total_offered_rps seconds — which LENGTHENS as
-// total rps falls, so a low stream-start rate does NOT help retention, it hurts.
-// On the 2 GB CI SUT maxLogEntries = min(heapKB/8, 250000) ≈ 115,500. Stream-start
-// rate = concurrency / stream_duration_s where stream_duration_s ≈ tokens ×
-// delay: at the defaults (concurrency 100, tokens 200, delay 20 ms ⇒ 4 s/stream)
-// that is 25 streams/s; with the match arm at 200 rps total_rps ≈ 225, residence
-// ≈ 115500/225 ≈ 510 s (the ring does not fill inside the window). Retained
-// streaming bytes ≈ stream_start_rate × min(residence, window_s) × tokens ×
-// bytesPerToken. At the defaults over a ~90 s window: 25 × 90 × 200 × ~30 B ≈
-// 13.5 MB, plus match entries ≈ 200 × 90 × ~200 B ≈ 3.6 MB — negligible against
-// the 0.9 GiB heap. bytesPerToken is kept tiny on purpose (a short "t<idx>" data
-// field); RAISE concurrency/tokens/delay only with the product above re-checked
-// against PERF_SERVER_MEMORY, exactly as regression.js's large_* arms.
+// LLM/SSE streaming-under-concurrency scenario tunables (streaming.js). Each SSE
+// token's delay is scheduled on the SHARED action-handler pool, so many concurrent
+// streams can delay tokens (a fidelity loss) and steal event-loop time from `match`.
+// k6 cannot read SSE incrementally, so it only SUSTAINS the concurrency (constant
+// VUs, one open stream each) and runs the match A/B (match alone, then under the
+// streams). Token-timing error and heap per stream are measured server-side by
+// perf-test-run.sh. The streaming arm is `heavy` and deliberately never warmed: it
+// is the load, and warming would open thousands of streams at once. Raise
+// concurrency/tokens/delay only after re-checking retained heap
+// (docs/code/performance-measurement.md, "k6 load-shape sizing").
 export const STREAMING = {
   // The SSE endpoint (seeded by expectations.js with `tokens` events each carrying
   // a DETERMINISTIC per-event delay — no jitter — so inter-token delay error is a
@@ -594,31 +390,17 @@ export const STREAMING = {
   // the LLM streaming default the plan calls out. stream_duration ≈ tokens × delay.
   tokens: num('K6_STREAM_TOKENS', 200),
   delayMs: num('K6_STREAM_DELAY_MS', 20),
-  // Concurrency: the number of streams held open simultaneously == the constant-VUs
-  // pool of the streaming arm (each VU holds exactly one open GET /stream). This is
-  // the knob that floods the scheduler pool. The bare-`k6 run` default is 100 (a
-  // light, safe local default); the CI run step (perf-test-run.sh) OVERRIDES it to
-  // 1200 -- raised from 300 after 3d7a2f9c8 cut per-log-entry allocation ~7x, which
-  // moved the knee past 300 and left the control reading 1.056 (see that step's own
-  // comment for the measured ratio-vs-concurrency curve) -- and drives it against a
-  // DEDICATED SUT with BOTH pools constrained (action-
-  // handler + event-loop) on 1 CPU so the scheduler sits past its knee — otherwise
-  // on a many-core SUT the pool
-  // (actionHandlerThreadCount = max(5, cores)) never saturates and the match A/B +
-  // absolute inter-token drift cannot move (they read ~1.0 / the client-jitter
-  // floor every run, a tripwire placed where nothing happens). The match A/B and
-  // absolute drift are therefore RELATIVE tripwires against that constrained SUT,
-  // not absolute production figures; heap_bytes_per_stream and the idle-vs-load
-  // inter-token ratio normalise against a floor so they stay meaningful unsaturated.
+  // Streams held open at once (= the streaming arm's VUs); the knob that floods the
+  // scheduler pool. perf-test-run.sh overrides the light local default and runs a
+  // dedicated SUT with both pools constrained on 1 CPU, because on a many-core SUT
+  // the pool never saturates and the metrics cannot move. The A/B and drift are
+  // therefore RELATIVE tripwires against that SUT, not production figures.
   concurrency: num('K6_STREAM_CONCURRENCY', 100),
-  // The concurrent plain-match arm (the within-run A/B). Offered at a FIXED rate,
-  // measured once alone (match_baseline) then again during the stream load
-  // (match_under_stream). Its p95 ratio is item 12's "steals the hot path" metric.
+  // The concurrent plain-match arm (the within-run A/B), at a FIXED rate, measured
+  // alone (match_baseline) then during the streams (match_under_stream).
   matchRate: num('K6_STREAM_MATCH_RATE', 200),
-  // preAllocatedVUs == maxVUs for the FIXED-RATE match arms (Finding-3 invariant).
-  // The streaming arm is constant-VUs (its VU count IS the concurrency), so it has
-  // no ramp to forbid. 200 rps at sub-ms match latency needs ~1 VU (Little's law),
-  // so 50 is transient headroom.
+  // preAllocatedVUs == maxVUs for the fixed-rate match arms (see REGRESSION). The
+  // streaming arm is constant-VUs, so it has no ramp to forbid.
   matchPreAllocatedVUs: num('K6_STREAM_MATCH_PRE_VUS', 50),
   matchMaxVUs: num('K6_STREAM_MATCH_MAX_VUS', 50),
   // Per-phase durations. The baseline match phase runs alone first; then the stream

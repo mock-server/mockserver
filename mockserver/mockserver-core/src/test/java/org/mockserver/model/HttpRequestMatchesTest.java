@@ -7,7 +7,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
- * Pins the semantics of the {@link HttpRequest#matches} overloads (unit 12): the method must equal
+ * Pins the semantics of the {@link HttpRequest#matches} overloads: the method must equal
  * the given method AND the path must equal one of the given paths. The one-, two- and three-arg
  * overloads and the varargs form must all agree, and the method is tested once (a method mismatch
  * short-circuits before any path comparison).

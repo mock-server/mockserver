@@ -477,7 +477,7 @@ public class SamlProviderGeneratorTest {
         assertThat(publishedCertB64, is(generated.getCertificateBase64()));
     }
 
-    // --- Wave 3: configurable signing algorithm ---
+    // --- configurable signing algorithm ---
 
     @Test
     public void ecdsaSigningAlgorithmProducesResponseThatVerifiesAgainstMetadataCert() throws Exception {
@@ -520,7 +520,7 @@ public class SamlProviderGeneratorTest {
             signature.validate(valContext));
     }
 
-    // --- Wave 3: Single Logout (SLO) ---
+    // --- Single Logout (SLO) ---
 
     @Test
     public void metadataPublishesSingleLogoutServiceWithPostBinding() throws Exception {
@@ -593,7 +593,7 @@ public class SamlProviderGeneratorTest {
         assertThat(response.getStatusCode(), is(404));
     }
 
-    // --- Wave 3: negative-test flags ---
+    // --- negative-test flags ---
 
     @Test
     public void expiredAssertionFlagPutsConditionsNotOnOrAfterInThePast() throws Exception {

@@ -60,33 +60,10 @@ import java.util.function.BooleanSupplier;
  * {@code .buildkite/scripts/steps/assert-suite-ran.sh}, which fails the build when a report shows
  * zero tests or all-skipped.
  * <p>
- * COVERAGE: all nine Docker-gated suites are covered — the three cloud blob-store contract suites by
- * {@code java-cloud-store-test.sh}, the five {@code *LiveBrokerIntegrationTest} suites in
- * {@code mockserver-async} by {@code java-async-broker-test.sh}, and
- * {@code MockServerContainerIntegrationTest} in {@code mockserver-testcontainers} by
- * {@code java-testcontainers-test.sh}. That last suite was previously named
- * {@code MockServerContainerIT} — a class ending {@code IT} matched neither Surefire
- * ({@code **}{@code /*Test.java}) nor Failsafe ({@code **}{@code /*IntegrationTest.java}), so it
- * executed nowhere and needed no assertion. Renaming it to {@code *IntegrationTest} makes Failsafe
- * collect it, so it now runs — and, like every other Docker-gated suite, would otherwise SKIP
- * silently in the socket-free main build, so it gets its own socket-bearing step with an
- * {@code assert-suite-ran.sh} guard (see {@code docs/code/client-and-integrations.md}).
- * <p>
- * WHY THE ASYNC STEP EXISTS — a diagnosis worth keeping, because the failure was invisible. Those
- * five suites WERE invoked in the main build (Failsafe's include matches them, and the main build
- * runs {@code clean install}, which reaches {@code verify}) but SKIPPED EVERY TEST ON EVERY RUN,
- * because the main build deliberately runs without a Docker socket — the socket-bearing work is
- * split into its own step since {@code run-in-docker.sh} exit-0s a socket step on PR builds.
- * Confirmed from Buildkite: the {@code :maven: build} job passed (exit 0) in mockserver-java builds
- * #1580 and #1583, each reporting
- * {@code failsafe:integration-test @ mockserver-async → Tests run: 5, Skipped: 5}. (Both builds
- * failed overall, on the separate cloud blob-store step — a green job that tested nothing is exactly
- * the false positive being removed here.)
- * <p>
- * The lesson generalises: "collected" is not "executed", and an include pattern is not evidence a
- * suite tests anything. Note also the ordering — adding {@code assert-suite-ran.sh} over those five
- * BEFORE supplying the socket would have turned the pipeline permanently red rather than closing a
- * gap. A fail-closed assertion is only safe once the suite can actually pass.
+ * The CI steps that do this are listed in {@code docs/infrastructure/ci-cd.md} ("Gates That Must
+ * Fail Closed"). Add the assertion only once the step can actually run the suite: a fail-closed
+ * assertion is only safe once the suite can actually pass, and before that it turns the pipeline
+ * permanently red rather than closing a gap.
  */
 public final class DockerAvailability {
 

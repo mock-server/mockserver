@@ -1,9 +1,8 @@
-// Proxy-path + TLS-handshake scenario — performance-programme items 9a and 14.
+// Proxy-path + TLS-handshake scenario.
 //
-// item 9a (the largest genuinely uncovered area the mandate names): drive
-// MockServer IN PROXY MODE rather than as a mock — absolute-URI forwarding and a
+// Forward mode: drive MockServer IN PROXY MODE rather than as a mock — absolute-URI forwarding and a
 // CONNECT tunnel carrying HTTPS, both to the upstream the run already starts.
-// item 14: MockServer's INBOUND TLS/mTLS handshake cost, which the https_h2
+// Handshake mode: MockServer's INBOUND TLS/mTLS handshake cost, which the https_h2
 // regression run amortises to ~0 by reusing one connection per VU.
 //
 // TWO modes (K6_PROXY_MODE), run as SEPARATE k6 invocations because they need
@@ -12,14 +11,13 @@
 //   forward    k6 run -e K6_PROXY_MODE=forward   ... proxy.js   (HTTP_PROXY/HTTPS_PROXY set on the k6 container)
 //   handshake  k6 run -e K6_PROXY_MODE=handshake ... proxy.js   (K6_HS_*_URL per arm, K6_HS_CLIENT_CERT/KEY for mTLS)
 //
-// NAMING TRAP (performance-programme): ForwardPathBenchmark measures the LOAD
+// NAMING TRAP: ForwardPathBenchmark measures the LOAD
 // GENERATOR's outbound render path, NOT proxying. This file is what actually
 // benchmarks the proxy.
 //
-// MEASURED-WINDOW HYGIENE — cloned verbatim in shape from the FIXED regression.js
-// (post-2026-09-16), NOT a pre-fix revision. Finding 3 (latency percentiles wrong
-// by four orders of magnitude) lived in the SCENARIO SHAPE, so all of its defences
-// are carried here: (1) STAGGER — scenarios start K6_PROXY_STAGGER apart so their
+// MEASURED-WINDOW HYGIENE — cloned in shape from the CURRENT regression.js, whose
+// scenario shape is what keeps percentiles honest (an older shape had tails four
+// orders of magnitude out), so all of its defences are carried here: (1) STAGGER — scenarios start K6_PROXY_STAGGER apart so their
 // connection-open transients do not superimpose; (2) PRE-ALLOCATE —
 // preAllocatedVUs == maxVUs, so the executor NEVER allocates a VU (a fresh
 // connection) mid-measurement, forbidding the connection-storm ramp; (3) SETTLE —
@@ -27,8 +25,8 @@
 // from the percentiles (load still runs; only the known start artefact is dropped),
 // with settle_excluded + delivery_ratio reported for audit. Plus warm-every-path
 // (a cold heavy path at full rate is the storm's trigger) and the MIN_TAIL_SAMPLES
-// tail suppression. Starting from a pre-fix revision would silently reintroduce the
-// bug.
+// tail suppression. Starting from an older revision would silently reintroduce the
+// tail bug.
 //
 import exec from 'k6/execution';
 import { CONFIG, PROXY } from './lib/config.js';
@@ -110,7 +108,7 @@ if (MODE === 'forward') {
   throw new Error(`proxy.js: unknown K6_PROXY_MODE "${MODE}" (expected 'forward' or 'handshake')`);
 }
 
-// Fail-loud contract check on the warm/heavy invariant (Finding 3): a heavy arm
+// Fail-loud contract check on the warm/heavy invariant: a heavy arm
 // must NOT declare warm; every non-heavy arm MUST declare a warm(). Both throw at
 // init so a silent regression becomes a loud one.
 for (const arm of ARMS) {

@@ -3,19 +3,16 @@ package org.mockserver.test;
 /**
  * Size-parameterised, deterministic response bodies for HTTP/2 integration tests.
  *
- * <p><b>Why this exists.</b> Four HTTP/2 defects (GitHub #2641, #2667, #2669, #2683) all shipped while
- * every HTTP/2 test was green, for one structural reason: <b>every HTTP/2 test used a response body
- * smaller than the {@value #FLOW_CONTROL_WINDOW_BYTES}-byte flow-control window</b> — including the one
- * literally named {@code shouldForwardHttp2RequestWithLargeBodyViaConnectProxy} at 50,000 bytes. A body
- * that fits in the peer's first window is delivered without any {@code WINDOW_UPDATE}, so the
- * {@code writePendingBytes()} flush those defects live in is never exercised, and the whole family of
- * bugs — whose failure mode is a <b>silent hang</b>, not a wrong answer — is invisible. See
+ * <p><b>Why this exists.</b> A body that fits in the peer's first
+ * {@value #FLOW_CONTROL_WINDOW_BYTES}-byte flow-control window is delivered without any
+ * {@code WINDOW_UPDATE}, so the {@code writePendingBytes()} flush is never exercised and its defects —
+ * whose failure mode is a <b>silent hang</b> — are invisible to the test. See
  * {@code docs/code/netty-pipeline.md} ("Testing convention: an HTTP/2 test MUST use a response body
  * larger than the flow-control window").
  *
  * <p><b>What this gives you.</b> A named set of sizes ({@link Size#SMALL}, {@link Size#OVER_WINDOW},
  * {@link Size#LARGE}) so a new HTTP/2 test crosses the window <b>by construction</b> — the author picks
- * {@code OVER_WINDOW} without having to know the 65,535-byte history or type a magic number. Bodies are
+ * {@code OVER_WINDOW} without having to know the window size or type a magic number. Bodies are
  * <b>deterministic and distinguishable</b>: the content is stamped throughout with a caller-supplied
  * marker, so a mis-routed body (delivered on the wrong h2 stream) or a truncated body fails an
  * <em>equality</em> assertion, not merely a length check.
@@ -44,8 +41,8 @@ public final class Http2FlowControlBodies {
      * connection window and many DATA frames.
      *
      * <p><b>DO NOT shrink {@code OVER_WINDOW} to at or below {@value #FLOW_CONTROL_WINDOW_BYTES}.</b>
-     * Doing so silently restores the blind spot that hid #2641/#2667/#2669/#2683 for four releases and
-     * makes every test built on it incapable of catching the regression it exists to lock. The static
+     * Doing so makes every test built on it incapable of catching the flow-control hang it exists to
+     * lock. The static
      * initialiser below fails the build if that invariant is ever broken, so an accidental shrink
      * cannot compile-and-pass — it errors loudly at class load.
      */

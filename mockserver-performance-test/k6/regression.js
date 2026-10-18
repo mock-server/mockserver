@@ -7,14 +7,14 @@
 //   match             — static mock match + response (data-plane hot path)
 //   forward           — forward action to a DEDICATED upstream MockServer
 //   template          — Velocity response template (dynamic response generation)
-//   template_mustache — Mustache response template          (item 15a)
+//   template_mustache — Mustache response template
 //   template_javascript — GraalJS response template — only on a -graaljs image,
-//                       enabled via K6_REG_JS_TEMPLATE     (item 15a)
+//                       enabled via K6_REG_JS_TEMPLATE
 //   large             — ~4 KB JSON body decode + match
-//   large_1mb         — 1 MB JSON body decode + marker match (item 15d)
-//   large_10mb        — 10 MB JSON body decode + marker match (item 15d)
+//   large_1mb         — 1 MB JSON body decode + marker match
+//   large_10mb        — 10 MB JSON body decode + marker match
 //   large_file        — response served from a file (FileBodyMaterialiser) —
-//                       enabled via K6_REG_FILE_BODY_PATH   (item 15d)
+//                       enabled via K6_REG_FILE_BODY_PATH
 //
 // Each arm's op becomes the metric key <op>_<proto>, and perf-test-compare.sh
 // consumes it with NO change (its metric loop iterates over .behaviours), as a
@@ -69,11 +69,11 @@ import {
 // metric loop iterates .behaviours), the exec function k6 runs, and an optional
 // per-arm offered rate / VU pool (the byte-heavy `large_*` arms run slower and
 // with a small pool so the byte-rate and run length stay bounded). Optional arms
-// (item 15a JavaScript, item 15d file-backed) are appended only when their
+// (JavaScript template, file-backed body) are appended only when their
 // server-side capability is enabled; seedRegression seeds exactly the same set.
 //
 // `warm` (when present) touches the arm's path during the warmup window so it is
-// JIT-warm before measurement (Finding 3 — a cold heavy path at FULL rate piles
+// JIT-warm before measurement (a cold heavy path at FULL rate piles
 // up VUs into a connection storm). CRITICAL: the warmup scenario runs at ~50/s
 // with maxVUs:100 — far above any per-arm throttle — so an arm warmed there is
 // driven at 50/s regardless of its measured rate. That is fine for the small-body
@@ -82,8 +82,7 @@ import {
 // warmup and, because the ~115.5k-entry log ring does not evict inside that window,
 // accumulate multiple GB of retained bodies and OOM the SUT before measurement
 // even starts. So the MB-scale arms are DELIBERATELY not warmed (no `warm`): at
-// <=2 rps a cold first cohort cannot form a connection storm (Finding 3's whole
-// premise), and it lands inside the excluded settle window anyway, so the
+// <=2 rps a cold first cohort cannot form a connection storm, and it lands inside the excluded settle window anyway, so the
 // measured percentiles are unaffected.
 const ARMS = [
   { op: 'match', exec: 'matchOp', warm: () => getSimple({ op: 'warmup' }) },
@@ -299,7 +298,7 @@ export function warmupOp() {
   // left cold (the 4 KB body decode+match, and the GraalJS template with its
   // Truffle cold-start) runs hundreds of ms to seconds on its first cohort, piles
   // up VUs and produces a multi-second tail that MORE VUs only worsen (the
-  // connection storm) — warming it here collapses that tail (Finding 3).
+  // connection storm) — warming it here collapses that tail.
   //
   // Warm every NON-heavy arm. The `heavy: true` MB-scale large_* arms are skipped:
   // this warmup scenario runs at ~50/s (far above their <=2 rps throttle), so

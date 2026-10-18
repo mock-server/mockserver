@@ -152,7 +152,49 @@ step when one is requested. Adding `-s` to the main build would therefore make t
 **entire Java reactor** silently exit 0 on every PR build — trading a narrow false
 positive for a total one. The split keeps the main build socket-free and confines
 the PR-build socket skip to the three cloud modules, where it is announced in the
-log rather than hidden behind an `Assume`.
+log rather than hidden behind an `Assume`. `java-async-broker-test.sh` is split out
+the same way: its five `*LiveBrokerIntegrationTest` suites were collected by
+Failsafe in the main build but skipped every test there (mockserver-java builds
+#1580 and #1583 reported `Tests run: 5, Failures: 0, Errors: 0, Skipped: 5` on a
+passing `:maven: build` job). Run against real brokers they execute 24 tests in
+about 75 s.
+
+**Why the Docker-socket Testcontainers steps set
+`TESTCONTAINERS_RYUK_CONTAINER_PRIVILEGED=false`:** Testcontainers-Java starts its
+Ryuk reaper with `Privileged=true` by default
+(`TestcontainersConfiguration.isRyukPrivileged()`), and the elastic-ci-stack agents
+run dockerd with user-namespace remapping, which rejects it:
+`BadRequestException: Status 400: privileged mode is incompatible with user
+namespaces`. Ryuk reaps through the mounted socket and does not need privilege, so
+dropping only that flag keeps cleanup on abnormal JVM exit. The variable name
+matters: Testcontainers maps `ryuk.container.privileged` to
+`TESTCONTAINERS_RYUK_CONTAINER_PRIVILEGED`; the intuitive
+`TESTCONTAINERS_RYUK_PRIVILEGED` is read by nothing (confirmed locally — Ryuk still
+came up privileged). Rejected alternatives:
+
+- `TESTCONTAINERS_RYUK_DISABLED=true` — also passes the probe, but containers leak
+  whenever the JVM dies without running its shutdown hooks.
+- Disabling userns remap on the agent daemon — it is a deliberate security boundary
+  of the elastic-ci-stack AMI that the repo builds around (`run-in-docker.sh
+  --harden`, the ownership workaround in `vscode-test.sh`).
+- Running Ryuk in the host namespace, as the error suggests — Testcontainers-Java
+  exposes no setting for it.
+
+**Why those steps use `-m 7g`, not 4g:** at 4g the cloud step intermittently died
+with exit 137 in its first command, the `-am` dependency build, so the contract
+suites never ran (build #1755). `mockserver/.mvn/jvm.config` pins the Maven JVM to
+`-Xms2048m -Xmx6144m` and mvnw prepends it to `MAVEN_OPTS`, overriding container
+ergonomics (verified under `--memory=4g`: ergonomics alone would pick a 1 GiB
+`MaxHeapSize`; with jvm.config it is 6 GiB). With `-T 1C` building upstream modules
+concurrently in that JVM, live heap climbs toward 6g and the 4g cgroup kills it —
+hence intermittent. 7g is what every other `./mvnw` step uses (`java-build.sh`,
+`java-deploy-snapshot.sh`, `maven-plugin-build.sh`, `ui-java-codegen-compile.sh`,
+`helm-integration-test.sh`); it clears the 6g Xmx plus native overhead, and the
+sibling Testcontainers containers run on the host daemon, outside this cgroup.
+Rejected: capping the heap (`MAVEN_OPTS=-Xmx3g` — works mechanically, since the
+last `-Xmx` wins, but under-provisions the reactor and diverges from every other
+Maven step), and dropping `-T 1C` (only makes the OOM rarer; 6g Xmx in a 4g cgroup
+is a defect at any parallelism).
 
 The `mockserver-infra` pipeline (`pipeline-infra.yml`) runs lightweight validation
 steps in Docker: opencode config lint, the **AI eval gate**, shell-script lint,
@@ -168,7 +210,10 @@ gate fixtures** (`perf-preflight-gate-test.sh`, which also fails when a gating b
 (`collections-validate.sh`) regenerates the Postman and Bruno collections from the
 OpenAPI spec and fails if the committed `examples/postman/**` or `examples/bruno/**`
 have drifted — so `examples/` and `jekyll-www.mock-server.com/mockserver-openapi.yaml`
-also route to this pipeline.
+also route to this pipeline. Regeneration proves nothing about whether the examples work, so
+`collections-live-validate.sh` also fires every Postman example at a live MockServer and fails on a
+400/415/500. A bodyless request for a required body had shipped for `/mockserver/baseline/compare`
+and `/mockserver/pact/import`, green under the drift check, until a reviewer ran the examples by hand.
 
 It also runs the **perf baseline-freshness assertion** (`perf-baseline-freshness.sh`,
 `trigger` queue). This is a decay detector for the daily perf-regression control:
@@ -315,6 +360,48 @@ This pattern avoids a fixed multi-step pipeline definition (which would always r
 | `perf-test-compare.sh` | `perf` | Merge artifacts + S3 persist + rolling median+MAD compare + Buildkite annotation. With `PERF_COMPARE_RESULT_ARTIFACT` (the `perfxl-rw-multik6-persist` step) it reads the multi-k6 arm's own result instead and persists it to `runs-perf-xl/<branch>/` only when it is a member of the published series |
 | `perf-website-publish.sh` | `perf` | Tail step, `soft_fail`, non-gating. Acts only on the run this build's compare step persisted (the `perf-baseline-persisted-key` meta-data), and only when that run is still the newest under `runs/<branch>/` in S3; otherwise it leaves the figures unchanged with an info annotation (a scheduled build that persisted nothing soft-fails). From that run it regenerates `perf_figures.json` + chart data/PNGs; when the committed figures have drifted, emits the refresh as a `git format-patch` build artifact (the perf queue has no git/gh credentials, so it cannot push). Applying the patch is a manual step — see [Published Figures → Publishing a run's figures](../code/performance-measurement.md#published-figures). With `PERF_PUBLISH_SOURCE=rw_multik6` (the `perfxl-rw-multik6-publish` step) it does the same for the published headline from `runs-perf-xl/<branch>/` and the `perf-xl-persisted-key` meta-data, rewriting only `perf_figures.json` |
 | `lib/perf-budgets-validate.sh` | — | Sourced by the compare and allocation gates to schema-check `perf-budgets.json` before either compares anything (a quoted number in that file does not error in jq, it silently disables the budget). Runs its own `--self-test` on every build |
+
+#### Step dependency graph
+
+The uploaded steps are ordered with `depends_on` and step keys, not a positional `- wait: ~`:
+
+```mermaid
+flowchart LR
+  run["perf-run"] -->|hard| compare["perf-compare"]
+  micro["perf-microbench"] -.->|"allow_failure: true"| compare
+  h2["perf-h2multiplex"] -.->|"allow_failure: true"| compare
+  compare -->|hard| publish["publish"]
+  alloc["perf-allocprofile\n(no edges)"]
+```
+
+- **Not a `wait`.** A `wait` fails closed on any prior failure, and two of the parallel steps
+  are notify-only: they go red on a harness self-validation failure, not a slowdown. Under a
+  `wait` that red skipped compare and discarded a valid run — build 306: `run + sample` passed,
+  `HTTP/2 multiplex` failed, and a valid result (`validity.valid: true`, `peak_achieved_rps`
+  2000.1) was dropped, with compare and publish ending `waiting_failed`.
+- **Why compare still waits for the notify-only steps.** It merges microbench's artifacts
+  best-effort (`|| true`). Without the edge it could start before microbench uploads and
+  persist a day with no `.microbench.*.time_per_op` rows — a gating metric vanishing without
+  anything going red.
+- **The property name.** Inside a `depends_on` entry it is `allow_failure`. The step-level
+  `allow_dependency_failure` is rejected there ("not a valid property on the `depends_on`
+  configuration"), which fails the pipeline upload so no steps run. Two reviews passed the
+  wrong name before a throwaway pipeline (mockserver-infra build 1932) rejected it; build 1936
+  then proved both directions (the `allow_failure` dependent ran after its dependency failed;
+  the plain dependent did not).
+- **Publish has no git credentials.** The perf stack's only application data grant is the
+  perf-results S3 policy; the GitHub token comes from `read_release_secrets`, attached to the
+  release stack alone. An earlier comment claimed otherwise, and build 325 died at `git push`
+  ("could not read Username for https://github.com"); publish now emits a patch artifact.
+
+**Step timeouts.** `perf-run` grew 45 → 60 minutes for the INFO-log-level arm (a second SUT
+re-running `regression.js` and `sweep.js`, estimated at ~10 minutes) and 60 → 70 for the
+path-coverage phase (~8 minutes); the guard raises it to 160 for `PERF_SERVING_HW_MATRIX` and by
+20 for `PERF_SERVING_RW_MULTIK6`. `perf-microbench` grew 30 → 50 when it took on `run-scaling.sh`
+(8 `MatchingBenchmark` combos plus 10 `CandidateIndexBenchmark` combos after a second module
+build, ~12–18 minutes), then 50 → 70 for the promoted dark benchmarks and the move to `-f 2`
+(laptop JMH time ~6 → ~16 minutes, ~20–25 minutes more on the box, where JMH runs 2–3× slower).
+The pinned proxy-path invocation added ~2 minutes on a laptop and ~5–6 on the box within that cap.
 
 #### The perf-xl steps (opt-in)
 

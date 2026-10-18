@@ -106,7 +106,7 @@ public class ConfigurationEnforcementClassificationTest {
             "org.mockserver.configuration.ConfigurationInstanceEnforcementTest#shouldEnforceRateLimitMaxNamedQuotasFromConfigurationInstance");
         ENFORCEMENT_VERIFIED.put("maxEventLogSizeInBytes",
             "org.mockserver.log.MockServerEventLogCaptureTest#shouldCapRetainedEntriesByByteBudget");
-        // certificate-hardening SAN cap (Wave 1): the enforcement site addSubjectAlternativeName(..) reads
+        // certificate-hardening SAN cap: the enforcement site addSubjectAlternativeName(..) reads
         // the instance value, so an instance-set cap bounds the SAN set and evicts oldest-dynamic-first —
         // proven behaviourally rather than merely round-tripped through a getter.
         ENFORCEMENT_VERIFIED.put("maxSubjectAlternativeNames",
@@ -170,7 +170,7 @@ public class ConfigurationEnforcementClassificationTest {
             "org.mockserver.mock.action.http.ForwardCircuitBreakerTest#shouldAllowAllRequestsWhenDisabled");
         ENFORCEMENT_VERIFIED.put("forwardProxyHttp2Enabled",
             "org.mockserver.mock.action.http.HttpForwardActionHttp2Test#shouldPreserveHttp2WhenFlagEnabledAndInboundIsHttp2");
-        // Wave 3 item 1: an instance-set value flips HTTPS endpoint identification (host name verification)
+        // An instance-set value flips HTTPS endpoint identification (host name verification)
         // on the outbound client engine for the JVM/CUSTOM validating trust managers
         ENFORCEMENT_VERIFIED.put("forwardProxyTLSHostnameVerificationEnabled",
             "org.mockserver.socket.tls.NettySslContextFactoryTest#shouldEnableHttpsEndpointIdentificationForJvmTrustWhenHostnameVerificationEnabledOnConfigurationInstance");

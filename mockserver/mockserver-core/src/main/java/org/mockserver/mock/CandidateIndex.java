@@ -54,7 +54,7 @@ import static org.mockserver.mock.SortableExpectationId.EXPECTATION_SORTABLE_PRI
  * global total order, so a higher-priority fallthrough expectation still wins over
  * a lower-priority bucketed one.
  *
- * <p><b>Incremental (per-mutation) maintenance — G1.</b> The index is maintained
+ * <p><b>Incremental (per-mutation) maintenance.</b> The index is maintained
  * INCREMENTALLY: {@link #onAdded}/{@link #onRemoved} update one bucket in O(1) as each
  * matcher enters or leaves the store. They are driven by a mutation listener the
  * {@code RequestMatchers} wires onto the backing {@code CircularPriorityQueue}, so every

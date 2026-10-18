@@ -42,7 +42,7 @@ public class JvmMetricsCollector implements MultiCollector {
     // samples measures net retention, not churn), this is a monotonically rising
     // COUNTER, so (sample_end - sample_start) is exactly the bytes allocated in the
     // window — the only faithful basis for an allocation-per-operation figure (e.g.
-    // the TLS-handshake allocation cost the performance programme measures under
+    // the TLS-handshake allocation cost the perf harness measures under
     // load). Sourced from HotSpot's com.sun.management ThreadMXBean; absent on a JVM
     // that does not implement it, in which case the metric is simply not emitted
     // (never a fabricated zero). Exposed as a gauge for parity with the other

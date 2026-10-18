@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockserver.configuration.Configuration.configuration;
 
 /**
- * Resilience tests for the certificate-hardening programme (Wave 1). Instance-only — these do not
+ * Resilience tests for certificate hardening. Instance-only — these do not
  * mutate any process-global static state, so they run in the parallel test phase.
  *
  * <p>Covers: SAN-set growth bound and hostname normalisation (C3), torn key/cert state on a mid-flight

@@ -37,26 +37,14 @@ fi
 log_debug "Starting Maven build (foreground)..."
 set +e
 # -Djava.security.egd is supplied via .mvn/maven.config (file:/dev/./urandom)
-# -B --no-transfer-progress: CI runs on a non-TTY log; without batch mode Maven's
-# interactive transfer-progress monitor emits one dot per line, flooding the build
-# log. These flags are applied here (CI-scoped) rather than in .mvn/maven.config so
-# local developer `./mvnw` keeps its live download progress.
-# -P clustered-libs activates a package-bound `dependency:copy-dependencies` in
-# mockserver-state-infinispan that stages that module's Infinispan runtime classpath
-# (Infinispan, JGroups, ProtoStream, ...) into target/clustered-libs — the /libs/*
-# classpath the `-clustered` Docker image mounts. It is activated HERE, inside the
-# reactor build, for the reason the profile's own pom comment gives: copy-dependencies
-# works on the ALREADY-RESOLVED dependency set, so the org.mock-server siblings come
-# from the in-session reactor and nothing is resolved against ~/.m2. A later standalone
-# `-pl mockserver-state-infinispan` invocation would need a populated ~/.m2 and fails
-# closed on a clean agent. Cost is a file copy of ~160 already-resolved jars (seconds);
-# it is inert for every other module. The staged directory is uploaded as a Buildkite
-# artifact (pipeline-java.yml) and consumed by java-docker-push-snapshot.sh to build
-# the `mockserver-snapshot-clustered` image from the SAME commit as the other snapshot
-# images — which is what lets the perf harness's item-13 clustered A/B run at all.
-# -Dmockserver.shadeSourcesJar=false: nothing downstream of this step reads the
-# shaded *-no-dependencies -sources.jar files, which are slow to build; the snapshot
-# deploy and the release build their own and keep the pom default (true).
+# -B --no-transfer-progress: stops the non-TTY CI log filling with progress dots; kept
+# out of .mvn/maven.config so local ./mvnw keeps live download progress.
+# -P clustered-libs stages mockserver-state-infinispan's runtime classpath into
+# target/clustered-libs for the -clustered snapshot image (java-docker-push-snapshot.sh).
+# It must run inside this reactor build: a later standalone -pl run would resolve
+# siblings from ~/.m2 and fail on a clean agent.
+# -Dmockserver.shadeSourcesJar=false: nothing downstream reads the slow shaded
+# -sources.jar files; the snapshot deploy and the release build their own.
 ./mvnw -B --no-transfer-progress -T 1C clean install ${1:-} -P "$PROFILES" -Dmockserver.shadeSourcesJar=false -Dmockserver.testOutput=quiet -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO "-Dmockserver.testArgLine=-Dmockserver.maxLogEntries=10000 -Dmockserver.maxExpectations=5000"
 MVN_EXIT=$?
 log_debug "Maven exited with code=$MVN_EXIT"
@@ -82,24 +70,10 @@ fi
 # ──────────────────────────────────────────────────────────────────────
 # Whole-reactor configuration-reachability guard (ConfigurationCallSiteGuardTest).
 #
-# The guard scans compiled .class output across EVERY reactor module to prove no
-# enforcement site reads a configuration value only from the static
-# ConfigurationProperties store (such a read is unreachable from
-# PUT /mockserver/configuration even though the value round-trips through the DTO).
-# Because it scans built classes, its coverage is only complete once the WHOLE
-# reactor has been compiled — and under `-T 1C` netty's own test phase runs long
-# before the modules downstream of it (junit-rule, junit-jupiter, spring, async,
-# blob-*, state-infinispan, testcontainers, k8s-webhook) are built. Running it in
-# netty's test phase therefore silently scanned only a subset; it is excluded from
-# that phase (mockserver-netty/pom.xml) and run HERE instead, after the reactor
-# `clean install` above has populated every module's target/classes in this same
-# container. The test itself asserts every module it SHOULD cover was actually
-# scanned, so an incomplete tree fails loudly rather than narrowing scope silently.
-#
-# Only run it when the reactor build passed (a failed build is already red), and
-# fold its exit into MVN_EXIT so a guard violation turns the whole build red.
-# (still inside the `set +e` region opened before the reactor build above, so a
-# guard failure is captured in GUARD_EXIT rather than aborting the script.)
+# It scans compiled classes of EVERY reactor module, so it runs here, after the
+# whole reactor is built, not in netty's test phase (under -T 1C that ran before the
+# downstream modules existed). Runs only if the reactor passed; its exit folds into
+# MVN_EXIT. Still inside the `set +e` region, so a failure lands in GUARD_EXIT.
 if [ "$MVN_EXIT" -eq 0 ]; then
     log_debug "Running whole-reactor configuration-callsite guard..."
     # jacoco:prepare-agent only adds the coverage agent: the parent pom defaults argLine to empty,
@@ -116,22 +90,11 @@ fi
 # ──────────────────────────────────────────────────────────────────────
 # Build the relocated examples/ suite standalone.
 #
-# examples/java was removed as a `<module>` of the mockserver reactor
-# (mockserver/pom.xml) so that /mockserver is a self-contained Maven directory:
-# a module path that escaped Dependabot's directory:"/mockserver" scope made
-# Dependabot abort EVERY grouped core update with "No pom.xml!". The examples
-# must still stay compiled AND tested, so they are built here — in the SAME
-# container, immediately after the reactor `install` that populated ~/.m2 with
-# the SNAPSHOT artifacts they depend on (mockserver-netty-no-dependencies,
-# mockserver-client-java-no-dependencies, mockserver-testing) and the parent POM
-# they inherit (../../mockserver/pom.xml). This ordering guarantee is exactly why
-# the invocation lives here rather than in a separate Buildkite step, which would
-# not share this container's freshly-installed local repo.
-#
-# Only build the examples when the reactor build itself passed, and fold the
-# examples exit code into MVN_EXIT so an examples compile/test break turns the
-# whole build red (the silent-stop this guards against). Mirrors the reactor's
-# test-output flags for a consistent, quiet CI log.
+# examples/java is outside the reactor (a module path escaping Dependabot's
+# "/mockserver" directory made it abort every grouped update). It must build in THIS
+# container, straight after the reactor install that put its SNAPSHOT dependencies in
+# ~/.m2; a separate step would not share that local repo. Runs only if the reactor
+# passed; its exit folds into MVN_EXIT so a break turns the build red.
 if [ "$MVN_EXIT" -eq 0 ]; then
     log_debug "Building relocated examples/ suite standalone (mvn -f ../examples/java/pom.xml)..."
     ./mvnw -B --no-transfer-progress -f ../examples/java/pom.xml clean install ${1:-} -Dmockserver.testOutput=quiet -DredirectTestOutputToFile=true -Dmockserver.testLogLevel=INFO "-Dmockserver.testArgLine=-Dmockserver.maxLogEntries=10000 -Dmockserver.maxExpectations=5000"

@@ -38,8 +38,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
- * Concurrency regression test for the forwarding client's blocking proxy paths (memory-optimisation
- * programme unit 21). The unmatched-proxy forward ({@code handleUnmatchedProxyForward}) and the
+ * Concurrency regression test for the forwarding client's blocking proxy paths. The unmatched-proxy forward ({@code handleUnmatchedProxyForward}) and the
  * proxy-pass reverse-proxy route ({@code handleProxyPass}) each used to block the issuing scheduler
  * thread on {@code responseFuture.getHttpResponse().get(...)} for the whole upstream round trip. That
  * pins one bounded scheduler-pool thread per in-flight forward, so sustained proxy concurrency was

@@ -44,8 +44,8 @@ import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
- * Completion-guarantee regression test for the forwarding client's async proxy paths (memory-optimisation
- * programme unit 21b). Unit 21 replaced the blocking {@code responseFuture.getHttpResponse().get(maxFutureTimeout)}
+ * Completion-guarantee regression test for the forwarding client's async proxy paths. An earlier
+ * change replaced the blocking {@code responseFuture.getHttpResponse().get(maxFutureTimeout)}
  * on three forward paths with an async scheduler continuation. That removed the only bound on a connected-but-
  * silent upstream when {@code maxSocketTimeout=0} disables the read timeout (also true of pooled channels, which
  * carry none): the response future never completes, the continuation never runs, and the client hangs forever.

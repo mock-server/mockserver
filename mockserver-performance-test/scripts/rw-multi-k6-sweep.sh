@@ -7,8 +7,8 @@ trap 'LAST_ERR="exit $? at line $LINENO: $BASH_COMMAND"; echo ":x: rw-multi-k6: 
 
 # rw-multi-k6-sweep.sh [out.json] — the sweep.js ladder from N independent k6 processes
 # started at one instant, merged in Prometheus (native histograms). Opt-in; its perf-xl
-# ceiling is what the page headline switches to (item 44). Design, env knobs and degrade tests:
-# docs/code/performance-measurement.md (item 31).
+# ceiling is what the page headline switches to. Design, env knobs and degrade tests:
+# docs/code/performance-measurement.md (`rw-multi-k6-sweep.sh` section).
 # Invariants: every gate is fail-closed (a failed check -> "valid": false, exit 2), and the
 # healthy ceiling and rig validity come from the shared libs, never a copy of their rules.
 
@@ -89,7 +89,7 @@ fi
 if [ "$K6_GOGC" = off ] && [ "$K6_GOMEMLIMIT" = off ]; then
   echo ":x: PERF_RW_K6_GOGC=off needs a GOMEMLIMIT (leave PERF_RW_K6_GOMEMLIMIT unset for the derived one): with both off Go never collects" >&2; exit 2
 fi
-# Report-only tail attribution files (item 44): each k6 process's per-second series and GC trace, and
+# Report-only tail attribution files: each k6 process's per-second series and GC trace, and
 # host kernel counters sampled over the main ladder (lib/perf-tail-instrument.sh). Never a gate.
 TAIL_INSTRUMENT="${PERF_RW_TAIL_INSTRUMENT:-true}"
 case "$TAIL_INSTRUMENT" in true|false) ;; *) echo ":x: PERF_RW_TAIL_INSTRUMENT must be true or false" >&2; exit 2 ;; esac
@@ -154,7 +154,7 @@ fi
 # The GC-masked figure (.gc_masked): a rung with fewer quiet seconds than this states no figure.
 GC_MASK_MIN_QUIET_S="${PERF_RW_GC_MASK_MIN_QUIET_S:-3}"
 [[ "$GC_MASK_MIN_QUIET_S" =~ ^[1-9][0-9]{0,3}$ ]] || { echo ":x: PERF_RW_GC_MASK_MIN_QUIET_S='$GC_MASK_MIN_QUIET_S' must be a whole number of seconds from 1" >&2; exit 2; }
-# Which p99 the headline's bound reads (item 44): the GC-masked one, or the whole rung's. The hardware
+# Which p99 the headline's bound reads: the GC-masked one, or the whole rung's. The hardware
 # matrix passes unmasked_p99, as its k6 runs at GOGC 400, where too few seconds are quiet.
 HEADLINE_RULE="${PERF_RW_HEADLINE_RULE:-gc_masked_p99}"
 case "$HEADLINE_RULE" in
@@ -309,7 +309,7 @@ k6_runtime_json() { # the result's .config.k6_runtime
      note:"applied to every measured k6 process (xcheck and main phases); Go and k6 defaults are GOGC 100, GOMEMLIMIT off and gracefulStop 30s; vu_ceiling caps each rung pool of ceil(rate x 0.08) VUs per process; null = not resolved before an abort"}'
 }
 # The result's .method.ab: the opt-in A/B knobs set (null = not set). Any of them makes the run a trial,
-# never one of item 44's counting runs (docs/code/performance-measurement.md, "Tail attribution files").
+# never a counting run (docs/code/performance-measurement.md, "Tail attribution files").
 ab_json() {
   jq -nc --arg numa "$K6_NUMA_NODE" --arg gogc "${PERF_RW_K6_GOGC:-}" --arg gomem "${PERF_RW_K6_GOMEMLIMIT:-}" \
     --arg cpp "${PERF_RW_K6_CORES_PER_PROC:-}" --arg vuc "${PERF_RW_K6_VU_CEILING:-}" \
@@ -1072,7 +1072,7 @@ soft merge_main merge_phase main "$WINDOW_MODE" main-merged
     "$(prom_url)/api/v1/query" | jq -c '[.data.result[] | {name:.metric.__name__, proc:.metric.proc, rate:.metric.rate, series:(.value[1]|tonumber)}]' \
     > "$WORK/prom-series-inventory.json"; } 2>/dev/null || true
 
-# --- tail attribution files (report-only, item 44; never a gate) ------------------
+# --- tail attribution files (report-only; never a gate) --------------------------
 # main-k6-gc.csv (every gctrace cycle), main-k6-timeseries.csv (per process and second, from Prometheus
 # range queries over the ladder) and tail-instrument.json (what each holds, or why it is empty).
 k6_prom_ranges() { # from_s to_s out_file -> {reqs, over_5ms, over_bound, iterations, dropped, vus: matrix | null, failed: [...]}
@@ -1244,7 +1244,7 @@ headline_for() { # a SYNTH-shaped run
 headline_of() { headline_for "$SYNTH"; }
 soft_capture HEADLINE null headline headline_of
 
-# --- GC-masked figure (item 44; never a validity gate) ---------------------------
+# --- GC-masked figure (never a validity gate) -----------------------------------
 # .gc_masked: per rung, the requests pushed in seconds where no k6 process was in or just after a GC
 # cycle (lib/perf-tail-instrument.sh), with p99 from the native histograms over those seconds, and the
 # ceiling the rule above gives on that p99. Its queries bypass promq, so a failure here is a null
@@ -1341,9 +1341,9 @@ if ! jq -e 'type == "object"' >/dev/null 2>&1 <<<"$GC_MASKED"; then
   GC_MASKED="$(gc_masked_unavailable "the GC-masked figure could not be assembled")"
 fi
 
-# --- the headline rule (item 44) ---------------------------------------------------
+# --- the headline rule ------------------------------------------------------------
 # gc_masked_p99: the ceiling is .gc_masked's, a rung without a masked figure fails the bound, and a
-# missing figure gives no headline, never the whole-rung one. condition_3 is item 44's criterion (3)
+# missing figure gives no headline, never the whole-rung one. condition_3 is the headline rule's criterion (3)
 # under this rule. Docs: performance-measurement.md, "The headline rule".
 headline_by_rule() { # -> {headline, rule}
   jq -nc --arg rule "$HEADLINE_RULE" --argjson unmasked "$HEADLINE" --argjson g "$GC_MASKED" --arg bound "$P99_MAX_MS" '

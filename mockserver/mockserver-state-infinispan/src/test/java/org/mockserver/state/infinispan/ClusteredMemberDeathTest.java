@@ -18,10 +18,10 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Performance-programme item 13 negative control: <b>kill a cluster member
+ * Clustered-state negative control: <b>kill a cluster member
  * mid-run and record the survivor's behaviour</b>.
  * <p>
- * This is the in-JVM counterpart to the perf harness's clustered A/B (item 13 in
+ * This is the in-JVM counterpart to the perf harness's clustered A/B (in
  * {@code perf-test-run.sh}). That harness measures the per-request cost of
  * membership and forms/breaks a cluster to prove its genuineness gate can red
  * ({@code PERF_CLU_BREAK=cluster} starts node B in a different cluster so the view
@@ -47,8 +47,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * removed before the peer dies — the fleet then holds the value nowhere — the same
  * assertion goes red. That degrade is documented on
  * {@link #survivorKeepsReplicatedStateAfterPeerIsKilledMidRun()} and is exercised by
- * evicting the survivor's replicas immediately before the kill; see the programme
- * plan's item-13 acceptance row for the recorded run.
+ * evicting the survivor's replicas immediately before the kill.
  * <p>
  * No Docker, no external service: the cluster forms in-JVM over the built-in
  * JGroups loopback stack, exactly as {@link ClusteredTwoNodeTest} does.
@@ -104,7 +103,7 @@ class ClusteredMemberDeathTest {
      * {@code -Dmemberdeath.degrade=evict-survivor}: the survivor's replicas are
      * evicted just before the kill, so after node A is gone the value lives nowhere
      * and every "survivor still has it" assertion fails. That is the deliberate
-     * change whose red is recorded in the item-13 acceptance row.
+     * change that turns this test red.
      */
     @Test
     void survivorKeepsReplicatedStateAfterPeerIsKilledMidRun() {

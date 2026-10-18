@@ -46,7 +46,7 @@ public class Metrics {
     private static final Map<Name, Gauge> metrics = new ConcurrentHashMap<>();
     // Request-latency histogram. Null until metrics are enabled, so
     // observeRequestDurationSeconds() is a no-op when metrics are off (the
-    // caller on the request hot path pays nothing — see the Part A/C tension).
+    // caller on the request hot path pays nothing).
     private static volatile Histogram requestDurationSeconds;
     // Per-route (method-labeled) histogram, registered only when route labels are enabled.
     private static volatile Histogram requestDurationByMethodSeconds;

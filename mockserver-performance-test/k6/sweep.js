@@ -24,53 +24,17 @@
 //     -e K6_SWEEP_RESULT_PATH=/tmp/sweep-result.json .../sweep.js
 //
 // ---------------------------------------------------------------------------
-// VU-POOL DIAGNOSTICS (performance-programme item 18 open question).
-// The per-core serving curve pins flat because at the 8,000-rps rung the server
-// delivers ~0.93-0.94 of offered — just under the 0.95 ceiling rule — everywhere,
-// and the shortfall is `dropped_iterations` (k6 arrival-rate iterations that never
-// started because no VU was free). Little's law says the VU demand at the lower
-// rungs is tiny (one or two VUs out of a 200-VU pool), yet those rungs STILL drop
-// iterations. A pool shortage is arithmetically impossible there, so the drops are
-// unexplained; the standing hypothesis is a transient server stall (the same rungs
-// show p99.9 of 66-90 ms against a 0.18 ms p50) that blocks the in-flight VUs while
-// the arrival rate keeps producing iterations.
-//
-// To let the NEXT run settle it WITHOUT changing what is measured, each rung also
-// records (all additive fields; existing consumers ignore unknown keys):
-//   * vus_active_*        — the CONCURRENCY the rung actually used (were the other
-//                           198 VUs really idle?). Sampled from k6's execution API
-//                           at the start of every iteration, tagged by rung. If a
-//                           rung's peak stays below preAllocatedVUs, its pool was
-//                           never the constraint (idle VUs), so a pool shortage
-//                           cannot explain its drops.
-//   * vus_diagnostics     — a WHOLE-RUN block (not per rung): did the initialized
-//                           VU pool ever grow past its baseline, and how much
-//                           concurrency did the whole ladder ever demand? k6
-//                           initializes VUs up front to its PLANNED peak (see
-//                           plannedVusBaseline) and reuses them across rungs whose
-//                           reservations do not overlap, so the baseline is that
-//                           planned peak, not the sum of the pools; growth is any
-//                           excess above it (impossible with a fixed per-rung pool,
-//                           so it now reads as a fix-verification).
-//   * stalls / stall_*    — count of deep-tail requests (> K6_SWEEP_STALL_MS) and
-//                           the VU concurrency at those moments — the stall
-//                           hypothesis's own signature.
-//   * stall_time_buckets  — WHEN within the rung the stalls fell (clustered => a
-//                           transient stall; uniform => a steady limit). This is
-//                           a proxy for drop timing: k6 CANNOT timestamp a dropped
-//                           iteration (a drop never runs VU code, by definition),
-//                           but if drops are stall-driven they cluster when stalls
-//                           cluster, and stalls DO run VU code.
-// POOL NOW MEASURED AND SIZED PER RUNG (was: "DELIBERATELY NOT CHANGED — measure
-// first"). Build #347 supplied the measurement the earlier note waited for: the
-// ramp DID fire and the per-rung peaks (216 VUs at 4,000 rps, 301 at 8,000, 1,283
-// at the 32,000 saturation rung) sized it. Each rung now gets a FIXED pool
-// (preAllocatedVUs == maxVUs) scaled to its offered rate — see poolForRate and the
-// lib/config.js rationale for why a single flat pool cannot serve the 500 -> 64,000
-// CI ladder without either storming the low rungs or client-capping (and silently
-// invalidating) the high ones. The diagnostics below stay: they now VERIFY the fix
-// (expect vus_pool_grew=false always, and vus_active_max < the rung's own pool on
-// every sub-knee rung).
+// VU-POOL DIAGNOSTICS. Each rung also records (additive fields; consumers ignore
+// unknown keys) what explains a rung dropping iterations:
+//   * vus_active_*       — the concurrency the rung actually used, sampled at the start of
+//                          every iteration. Below the rung's pool, the pool was not the limit.
+//   * vus_diagnostics    — whole run: did the initialised pool grow past k6's planned peak
+//                          (plannedVusBaseline)? With fixed per-rung pools it must not.
+//   * stalls / stall_*   — deep-tail requests (> K6_SWEEP_STALL_MS) and the concurrency then.
+//   * stall_time_buckets — when within the rung the stalls fell (clustered = transient
+//                          stall). A proxy for drop timing: k6 cannot timestamp a drop.
+// Pools are fixed and sized per rung (poolForRate; derivation in
+// docs/code/performance-measurement.md, "k6 load-shape sizing"); these diagnostics verify that.
 // ---------------------------------------------------------------------------
 import { Trend, Counter, Gauge } from 'k6/metrics';
 import exec from 'k6/execution';
@@ -120,7 +84,7 @@ if (SETTLE_SECONDS >= STEP_SECONDS) {
   throw new Error(`sweep.js: K6_SWEEP_SETTLE (${SWEEP.settle}) must be shorter than K6_SWEEP_STEP (${SWEEP.step}) or no rung has a measured latency window.`);
 }
 
-// Opt-in multi-process remote-write mode (item 31); every default below reproduces
+// Opt-in multi-process remote-write mode; every default below reproduces
 // the single-process published method exactly.
 if (!['vu_tag', 'wallclock'].includes(SWEEP.windowMode)) {
   throw new Error(`sweep.js: K6_SWEEP_WINDOW_MODE must be vu_tag or wallclock, got "${SWEEP.windowMode}"`);
@@ -132,13 +96,9 @@ const START_AT_MS = SWEEP.startAtMs > 0 ? SWEEP.startAtMs : 0;
 // lean summary then keeps the rung-start submetric, which the default summary always keeps.
 const RECORD_RUNG_START = WALLCLOCK || START_AT_MS > 0;
 
-// Finding-3 invariant made unbreakable: within every rung preAllocatedVUs ==
-// maxVUs, so no rung's executor can allocate a VU (a fresh connection) mid-run —
-// the 200 -> 4,000 ramp that made this the LAST arrival-rate script to be
-// equalised. The pool is sized PER RUNG (see poolForRate): a single flat pool
-// cannot serve a 500 -> 64,000 CI ladder without either storming the low rungs or
-// capping the high rungs' throughput (which would silently move rig_valid — see
-// lib/config.js for the full argument).
+// Within every rung preAllocatedVUs == maxVUs, so no executor can allocate a VU (a
+// fresh connection) mid-run. The pool is sized PER RUNG (poolForRate): one flat pool
+// would either storm the low rungs or cap the high ones and silently move rig_valid.
 
 // Optional FLAT override: K6_SWEEP_PRE_VUS / K6_SWEEP_MAX_VUS force one pool on
 // every rung. If EITHER is set, BOTH must be set and equal (a ramp is forbidden);
@@ -313,7 +273,7 @@ function sweepThresholds() {
     // k6, not MockServer, ran out of headroom, so its achieved throughput is a
     // client ceiling and must be EXCLUDED from the derived saturation point.
     t[`dropped_iterations{scenario:rate_${rate}}`] = ['count>=0'];
-    // VU-pool diagnostics submetrics (item 18 open question). Same materialise-
+    // VU-pool diagnostics submetrics. Same materialise-
     // via-threshold trick; all notify-only.
     t[`sweep_vus_active{rate:${rate}}`] = ['max>=0', 'avg>=0', 'p(95)>=0', 'med>=0'];
     t[`sweep_stalls{rate:${rate}}`] = ['count>=0'];
@@ -329,7 +289,7 @@ function sweepThresholds() {
   return t;
 }
 
-// Lean summary (item 31): only the counts and error rate the harness reconciles
+// Lean summary: only the counts and error rate the harness reconciles
 // against Prometheus. Percentile submetrics are not materialised because latency
 // comes from the merged native histograms.
 function leanThresholds(t) {
@@ -543,7 +503,7 @@ export function handleSummary(data) {
       // does not include it). It lets a downstream aggregator apply the repo's
       // MIN_TAIL_SAMPLES rule (regression.js/proxy.js/streaming.js) and suppress a
       // tail percentile a rung's own sample count cannot support — the per-core
-      // serving curve (perf-percore.sh, item 18) needs this because its low-C, low
+      // serving curve (perf-percore.sh) needs this because its low-C, low
       // arrival-rate rungs can dip below that floor. The percentiles above are left
       // UNSUPPRESSED here so the published knee/percentile charts keep their exact
       // contract; suppression is applied by the consumer that needs it.
@@ -567,7 +527,7 @@ export function handleSummary(data) {
       // with the offered arrival rate (VU starvation), so achieved_rps is bounded
       // by the CLIENT and this rung is not a valid server-ceiling candidate.
       dropped_iterations: dropped && dropped.values ? round(dropped.values.count, 0) : 0,
-      // --- VU-pool diagnostics (item 18). All additive; see the header block. ---
+      // --- VU-pool diagnostics. All additive; see the header block. ---
       // vus_active_* : the CONCURRENCY this rung actually used, sampled at the
       //   start of every iteration in this rung. `max` is the peak number of VUs
       //   simultaneously in flight; if it stays well below this rung's fixed pool
@@ -622,7 +582,7 @@ export function handleSummary(data) {
     proto: SWEEP.proto,
     // Absent on results from before the onset exclusion (percentiles include it).
     latency_window: { settle_s: SETTLE_SECONDS, measured_s: STEP_SECONDS - SETTLE_SECONDS, mode: SWEEP.windowMode },
-    // Wall-clock alignment for a synchronised multi-process run (item 31); absent
+    // Wall-clock alignment for a synchronised multi-process run; absent
     // from a default single-process run.
     wallclock: !RECORD_RUNG_START && !SWEEP.leanSummary ? undefined : {
       start_at_ms: data.setup_data ? data.setup_data.start_at_ms : null,

@@ -19,7 +19,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 /**
- * Item 17 of the performance programme, IN-JVM shape: N {@link ClientAndServer} instances started
+ * IN-JVM shape: N {@link ClientAndServer} instances started
  * in ONE test JVM — the {@code MockServerExtension} case a real suite hits. Unlike N containers,
  * this JVM has no cgroup, so every instance sizes its pools off the whole machine's
  * {@code availableProcessors()} and its stores off the live free heap at the moment of construction.

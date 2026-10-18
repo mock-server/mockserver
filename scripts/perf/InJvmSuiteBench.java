@@ -14,11 +14,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Item 22 of the performance programme, SUITE-LEVEL decomposition: the cost a JUnit suite actually
+ * SUITE-LEVEL decomposition: the cost a JUnit suite actually
  * pays when it creates a MockServer per test method or per test class, IN ONE test JVM — the
- * {@code MockServerExtension} / {@code MockServerRule} profile. Item 17 already established that
+ * {@code MockServerExtension} / {@code MockServerRule} profile. The parallel-instance profile already established that
  * per-instance <em>start</em> does not degrade with N (cold first launch dominates; warm launches
- * are flat), and the item-22 investigation then found the dominant per-method cost is per-instance
+ * are flat), and the dominant per-method cost turned out to be per-instance
  * {@code stop()}, which no committed harness measured. This harness measures both ends of every
  * instance's life — construction-to-ready AND stop — for the two suite shapes, so each candidate
  * saving is accepted or rejected against a measured number rather than a plausible mechanism.
@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *       waits on the port alone measures the wrong instant, so this harness never does.</li>
  *   <li><b>stop</b> — {@code System.nanoTime()} bracketing {@code server.stop()} ONLY. A per-method
  *       instance is torn down per method, so a slow shutdown is suite time just as surely as a slow
- *       start. Item 22 found this was the dominant cost before the {@code LifeCycle} quiet-period fix;
+ *       start. This was the dominant cost before the {@code LifeCycle} quiet-period fix;
  *       this region is exactly what proves the fix landed and stays landed.</li>
  * </ul>
  *

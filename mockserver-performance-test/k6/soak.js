@@ -3,7 +3,7 @@
 // churn, GC pressure, file-descriptor or connection leaks, and — the reason a
 // soak matters more than a short regression run — whether the DATA-PLANE p99
 // DRIFTS upward as the in-memory event log fills and stays full. Pair with the
-// docker-compose stack (Part D) so Grafana shows JVM heap/GC trends across the
+// docker-compose stack so Grafana shows JVM heap/GC trends across the
 // soak.
 //
 //   k6 run mockserver-performance-test/k6/soak.js
@@ -19,7 +19,7 @@
 // in (win:wNNN) and handleSummary emits each arm's per-window latency series, which
 // the soak step turns into drift figures (.buildkite/scripts/steps/lib/perf-soak-drift.jq).
 //
-// Item 10b — EVENT-LOG VERIFICATION COST AS THE LOG FILLS. `verify` and
+// EVENT-LOG VERIFICATION COST AS THE LOG FILLS. `verify` and
 // `retrieveRecordedRequests` are issued at a LOW fixed rate throughout. Both
 // scan the event log, so a query against a FULL ring is where an O(n)
 // regression bites hardest — and this is the central-deployment pattern
@@ -44,9 +44,8 @@ import {
   createSimpleExpectation,
 } from './lib/expectations.js';
 
-// --- item 10 / 10b tunables (local to soak.js — lib/config.js is owned by a
-// concurrent unit and not edited here; all knobs are __ENV-driven via the shared
-// num()/env() helpers so the same script runs locally, in compose, and in CI). --
+// --- soak tunables (local to soak.js; all knobs are __ENV-driven via the shared
+// num()/env() helpers so the same script runs locally, in compose, and in CI). ----
 const SOAK = {
   // Low fixed rates for the two event-log queries. Deliberately ~1 rps: this is a
   // COST probe against a filling log, not a load arm — it must not perturb the
@@ -92,7 +91,7 @@ function toSeconds(name, spec) {
 // counts a COMPLETED response with a non-2xx status (e.g. a 404) as a failure. The
 // pair lets the soak step tell "the SUT is DOWN" (high transport errors) apart
 // from "the SUT is UP but answering 404" (high http_req_failed, ~zero transport
-// errors) — the self-inflicted eviction shape of build 324. See the guard in
+// errors) — the shape of a harness that evicted its own match seed. See the guard in
 // .buildkite/scripts/steps/perf-test-soak.sh.
 const matchTransportErrors = new Counter('soak_match_transport_errors');
 
@@ -200,7 +199,7 @@ export const options = {
       preAllocatedVUs: 5,
       maxVUs: 50,
     },
-    // Item 10b — low-rate event-log queries throughout the soak.
+    // Low-rate event-log queries throughout the soak.
     verify: {
       executor: 'constant-arrival-rate',
       exec: 'verify',
@@ -232,7 +231,7 @@ export const options = {
     // must pass — a systemic control-plane failure (e.g. verify starts 406-ing)
     // drops this below the gate and fails the soak loudly.
     'checks': [`rate>${LIMITS.checkRate}`],
-    // --- item 10b: MEASURE, do NOT gate -----------------------------------------
+    // --- MEASURE, do NOT gate ------------------------------------------------------
     // verify / retrieve latency against a full log is EXPECTED to be higher than a
     // sub-ms match and is NOTIFY-ONLY (no history yet). Declare always-pass
     // thresholds purely to MATERIALISE the p50/p95/p99 + counts for handleSummary.
@@ -361,7 +360,7 @@ export function handleSummary(data) {
       transport_errors: count('soak_match_transport_errors'),
       windows: windowsFor('match'),
     },
-    // Item 10b — event-log query cost, with the same per-window series as the
+    // Event-log query cost, with the same per-window series as the
     // match arm so the scans can be read against how long the log has been full.
     verify: {
       samples: count('http_reqs{op:verify}'),

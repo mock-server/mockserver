@@ -54,7 +54,7 @@
 # BLOCKING vs ADVISORY — DERIVED, NOT ASSUMED
 #   The blocking set is read from the budget file's own `gating` field. Only
 #   `gating:true` budgets can block; a `gating:false` / gating-absent budget is
-#   notify-only (it has not yet earned a history-derived budget — the programme's
+#   notify-only (it has not yet earned a history-derived budget — the
 #   "10 runs before a budget" rule) and is NEVER consulted for a release block.
 #   The gate cannot be "wrong to block on a notify-only metric" because it reads
 #   the same source of truth the daily compare step does.
@@ -478,7 +478,7 @@ fi
 # — jq's total ordering makes `number <= "0.1"` unconditionally true — so a quoting
 # typo could silence any breach. Checking only the top-level array type (the easy
 # property) while leaving the field types (the load-bearing property) unchecked is
-# exactly the failure shape this programme keeps finding, so both layers assert it.
+# a known false-green shape, so both layers assert it.
 if [[ -f "$ACCEPT_FILE" ]]; then
   if ! jq -e 'type == "array"' "$ACCEPT_FILE" >/dev/null 2>&1; then
     err "INDETERMINATE: acceptance file exists but is not a parseable JSON array: $ACCEPT_FILE"

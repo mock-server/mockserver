@@ -1639,6 +1639,36 @@ effect: because the fingerprint covers the whole `.config.jmh` object, the notif
 stopped the benchmark classpath resolving. `perf-test-microbench.sh` now emits a failure
 annotation so a broken backstop is visible as a red build, not a silent absent artifact.
 
+The drift: from 2026-09-12 `mockserver-benchmark` depended on `mockserver-netty` (#2669), but
+the step still built only `mockserver-core`. The step now builds `-pl mockserver-netty -am`,
+which must cover every `org.mock-server` module the benchmark POM declares; `-pl
+mockserver-benchmark` cannot be used because that module is deliberately outside the parent
+`<modules>` (its JMH annotation processor must not enter the default build). The failure
+annotation is needed because `perf-test-guard.sh` wires compare to this step with a
+per-edge `allow_failure: true` (not step-level `allow_dependency_failure`, which would also
+relax compare's fail-closed edge on the measurement step), so compare runs either way and
+never reports this step's failure itself.
+
+**The JMH methodology fingerprint.** The reshape records `JMH_ARGS`, `JMH_ARGS_EXTRA` and
+`JMH_ARGS_SCALING` verbatim under `.config.jmh`. When the step moved from `-f 1`, 6 s warmup to
+`-f 2 -wi 2 -i 3` (item 15c — more measurement points, spread across two JVMs, for about a third
+more wall-clock), that fingerprint is what stopped the old-methodology baseline firing a
+spurious regression. `JMH_ARGS_PROXY` is deliberately left out: the proxy forks run after
+`MatchingBenchmark` has finished, so they cannot shift its timings, and including them would
+reset the gating matcher baseline on every proxy-only tweak.
+
+### `CandidateIndexChurnBenchmark` — the candidate-index churn gate
+
+The third JMH backstop in `perf-test-microbench.sh`. `run-g1-churn.sh ci` runs one arm (15,000
+expectations, candidate index engaged, static vs churning readers, `-t 1`) and emits
+`churn.alloc_ratio_index_n15000`, which is budgeted (absolute floor 1.5), so it gates. A
+regression back to rebuild-on-read would move the churn/static allocation ratio from about
+1.06× to over 1000×. The guard that a churn arm really churned is the benchmark's own
+`@TearDown` assertion, enforced by JMH `-foe true`: a dead writer thread would otherwise make
+the arm a static measurement, land the ratio near 1.0 and pass the floor. The rebuild proof
+`run-g1-churn.sh` also runs is synchronous and never exercises the writer thread, so it does
+not catch that.
+
 ### `perf-alloc-gate.sh` — per-merge allocation floors
 
 Runs on every Java pipeline build (PRs and master) and compares each row's `gc.alloc.rate.norm`
@@ -1712,6 +1742,14 @@ still carry provisional floors set from local measurement.
 Measures streams per connection at N = 1, 10, 100 over one h2c connection. Has no threshold
 because run-to-run variance on this benchmark is not yet characterised. The absence of a gate
 is intentional and correct, not an oversight.
+
+It and `Http2ConnectionMemoryBenchmark` (programme item 11) run in `perf-test-h2multiplex.sh`,
+answering the open question from the HTTP/2 multiplex migration (#2669) of what a child channel
+per stream costs. They run on the perf box because two attempts to measure this on a developer
+laptop failed under memory pressure. The per-connection numbers are a trend signal; the one-time
+pre-8.0.0 versus 8.0.0 comparison the changelog called for is the optional cross-version arm
+(`H2_MEM_COMPARE_IMAGES`), which drives an identical external client against two server images
+and diffs container RSS.
 
 ### `EventLogPublishWaitStrategyBenchmark` JMH — on demand, not run by CI
 
@@ -1800,6 +1838,15 @@ inside the microbench step's 70 min budget rather than doubling it. That fixed c
 by the step's `EXTRA_EXPECTED` fail-closed row guard (now 37 = 32 dark + 5 proxy); a rename, a
 crashed fork, **or a `-p` pin that stopped applying** (which would re-expand to the full
 cartesian) all red the build.
+
+The proxy benchmarks run in their own invocation, not appended to the dark set's
+`JMH_INCLUDE_EXTRA`, because `JMH_ARGS_EXTRA` is shared and unpinned: a `-p bodySize=...` there
+would also pin `InboundDecodeBenchmark`, which declares the same `@Param`, and collapse its three
+rows to one. JMH applies each `-p` only to classes that declare it, so `bodySize`/`readSize` reach
+the relay benchmark and `scenario` the SOCKS one. The relay cell — 256 KiB in 1460-byte (MTU-sized)
+fragments, about 180 fragments — is where the per-fragment object churn shows in
+`alloc_bytes_per_op`. `time_per_op` carries `hw: true` and `alloc_bytes_per_op` does not, since a
+relay timing moves with the machine but bytes/op does not.
 
 **`BinaryReadBufferBenchmark` is on demand, not daily.** It measures the read-buffer cost of one
 message on a binary (non-HTTP) proxied connection: 64 KiB reads, the binary read size, which the
@@ -2465,6 +2512,131 @@ same way.
 documentation that calls it part of how MockServer is tested is wrong: it is tooling for optional
 local use.
 
+### k6 load-shape sizing (`k6/lib/config.js`)
+
+The defaults in `k6/lib/config.js` carry one-line warnings; the derivations behind them live
+here.
+
+**Fixed VU pools (`preAllocatedVUs == maxVUs`).** The regression run originally pre-allocated 20
+VUs with a ceiling of 200. A cold or contended request piled up iterations, k6 ramped towards the
+ceiling, each new VU opened a fresh connection, and that storm slowed the core-limited SUT further
+— a tail of a second or more that more VUs only worsened. Equal pools (now 50/50) forbid the ramp:
+a transient beyond the pool is dropped and counted (`delivery_ratio`) instead. 200 rps at sub-ms
+latency needs about one VU by Little's law, so 50 is headroom for the JIT-cold first cohort, and
+reproductions showed the tail grows with pool size, so the fix is a modest equal pool, not a large
+one. Staggered scenario starts stop the per-scenario connection-open transients superimposing.
+`proxy.js`, `streaming.js` and `coverage.js` copy this shape (warmup, stagger, equal pool, settle
+exclusion, `MIN_TAIL_SAMPLES`); copying a revision older than 2026-09-16 would reintroduce a tail
+four orders of magnitude out.
+
+**Secondary regression arms.** The Mustache and JavaScript template arms run at 50 rps rather than
+200: two more full-rate template arms would perturb the historical match/forward/template/large
+arms on the 2-CPU SUT, and 50 rps over the window is still thousands of samples per percentile.
+
+**Event-log retention.** MockServer keeps every request and response, full bodies included, in a
+count-bounded ring of `maxLogEntries`. On the 2 GB CI GraalJS SUT (heap ≈ 0.9 GiB at
+`MaxRAMPercentage=45`) that is `min(heapKB/8, 250000)` ≈ 115,500 entries. An entry lives for the
+residence `maxLogEntries / total achieved rps`, so an arm at rate *r* with body *B* retains
+*r* × residence × *B*. At a healthy ~901 rps total (residence 172 s):
+
+| Arm | Rate | Retained |
+|---|---|---|
+| `large_10mb` | 0.1 rps | ≈ 172 MB |
+| `large_1mb` | 0.5 rps | ≈ 86 MB |
+| `large_file` (~1 MB response) | 0.5 rps | ≈ 86 MB |
+| `large` (4 KB) | 200 rps | ≈ 137 MB |
+
+About 480 MB looks safe, but residence is not constant: as achieved rps falls it grows without
+bound. Build #249 died that way — the since-fixed JavaScript contagion depressed throughput, the MB
+bodies stacked across the http and https_h2 passes, and the container OOMed before the second pass
+seeded — and the 2026-09-17 dispatch-pool fixes (`eec183f7e`, `7fbae1350`) make it worse by
+admitting more body throughput. No per-arm rate bounds *r* × residence × *B*, so retention is bounded
+at the server instead: `maxEventLogSizeInBytes` evicts oldest-first under a byte budget (the main SUT
+at the shipped heap-derived value, the other SUTs at 256 MiB). The low rates only limit contention
+and run length. `growth.js` needs the default ~115,500-entry ring to fill, and at ~1.3 KB per
+`/simple` entry a heap-derived byte budget would bind first, so `perf-test-run.sh` raises the budget
+to 256 MiB for the growth phase only (its ~150 MB fill stays under it). The forward proxy arms relay
+an ~8-byte body, so at 2 × 200 rps (residence ≈ 290 s) they retain ≈ 23 MB.
+
+**Streaming retention.** Each matched stream request is recorded with its event list. Stream-start
+rate is concurrency / (tokens × delay); at the `config.js` defaults (100 streams, 200 tokens, 20 ms)
+that is 25 streams/s, and with the 200 rps match arm residence ≈ 510 s, longer than the ~90 s window.
+Retained ≈ 25 × 90 × 200 tokens × ~30 B ≈ 13.5 MB plus ≈ 3.6 MB of match entries. A low stream-start
+rate lengthens residence rather than helping.
+
+**Streaming CI concurrency (600).** `perf-test-run.sh` drives the streaming SUT (1 CPU, 2 scheduler
+threads, 2 event-loop threads) at 600 streams, not `config.js`'s local 100. 300 used to sit past the
+knee (ratios 8.0× and 3.9×) until `3d7a2f9c8` ("stop keeping a parsed copy of every logged JSON
+body") cut retained heap per log entry about sevenfold (429 MB → 61 MB over 20,000 entries; 1,840,013
+Jackson tree nodes → 0). The knee moved, and the first post-fix CI run (build 290) read a match A/B
+ratio of 1.056 at 300 — a control proving nothing. A laptop curve (~2.0 at 300, ~2.6 at 600, ~4.5 at
+900, minimum 6.08 at 1200) then suggested 1200, on the assumption that CI needs more concurrency than
+a laptop. Measured on CI the knee is far sharper — 300 → 1.056, 600 → 2.536 (just past the knee,
+where the design wants to sit), 1200 → 93.8 (deep collapse) — because the laptop's own contention had
+flattened its curve. So the default is the CI-measured 600, and it must be recalibrated on CI, not a
+laptop. Retention is no constraint here: even at 1200 (start rate ~300/s, ~96,000 entries, residence
+~192 s) the retained events are ≈ 166 MB against the ~768 MB heap of the 1 GB SUT, and no run OOMed.
+
+**Create arm.** The `create` arm upserts one stable-id expectation on its own path (`/churn`). An
+earlier version created unbounded `/simple` expectations at 10/s; on soak build 324 that filled
+`maxExpectations` (~15k) in ~25 minutes, evicted the seeded `/simple` match expectation, and k6
+scored a ~54% match error rate that was entirely the harness's own doing. With the stable id, ~72k
+creates over a 2 h soak still leave one entry.
+
+**Rig-validity drop tolerance (1%).** `derive_saturation` forgives a rung's drops below 1% of its
+intended iterations when the VU pool was not pinned. The largest recorded harmless blip was build
+#322's 2,000 rung (133 drops, 0.44%, client at 13.6% CPU — a zero-tolerance rule failed that build
+and blamed the client), and the smallest recorded genuine shortfalls were build #347's 8,000 rung
+(1.83%), a native 16k rung (2.5%) and build #290's 16k rung (3.3%): over 2× and 1.8× margin. Those
+figures predate the fixed per-rung pools (`fa18ac3de`), which only make the filter more
+conservative: under the new pools #347's 8,000 rung has headroom (peak 301 < pool 640), so the
+fraction term is what excludes it, which is why the threshold must stay below 1.83%.
+
+**Sweep VU diagnostics.** The per-rung `vus_active_*`, `stalls` and `stall_time_buckets` fields were
+added when the per-core serving curve pinned at ~0.93–0.94 of offered at 8,000 rps, just under the
+0.95 rule, with dropped iterations at rungs whose Little's-law demand was one or two VUs of a 200-VU
+pool, and p99.9 of 66–90 ms against a 0.18 ms p50 — pointing at transient server stalls rather than
+pool shortage. They now verify the fixed per-rung pools (`vus_pool_grew` always false,
+`vus_active_max` below the pool on every sub-knee rung).
+
+**Per-core ladder resolution.** `perf-percore.sh` uses a finer ladder than doubling because the
+healthy ceiling can only take a rung's value. Build #358 reported 4000 / 8000 / 4000 / 4000 at
+C = 1/2/4/8 — quantisation noise that read like a server curve; build #364 re-ran on the finer
+ladder and measured 6000 flat at every core count, which the doubling ladder would have reported
+as 4000. The finer ladder lengthened the sweep from ~8.5 to ~15 minutes across the four feasible
+core counts. A capped client also bends this curve: an earlier 6-core client cap made k6 the
+bottleneck at C = 1 (85% of its pin, with drops) and produced a non-monotonic curve.
+
+**Forward pool guard.** The 1500 rps `forward.js` peak is the rate that broke the old per-request
+upstream connections (21%/68% errors before the pool fix, from ephemeral-port exhaustion).
+
+**Sweep per-rung pools.** `pool = clamp(ceil(rate × vuPerRps), vuFloor, vuCeiling)` with
+`vuPerRps` 0.08, floor 96, ceiling 2048, derived from the ramped VU peaks of build #347 (500 →
+64,000 ladder). Peak/rate ratios fall as rate rises (34/500 = 0.068, 128/2000 = 0.064, 216/4000 =
+0.054, 301/8000 = 0.038, 1283/32000 = 0.040), so the factor takes the worst ratio plus ~18%.
+`rig_valid` requires zero dropped iterations, so a flat pool sized for low rungs (e.g. 512) would
+starve near-knee rungs and silently lower `rig_valid_peak_achieved_rps`, and one sized for the top
+(e.g. 4,000) would open thousands of connections on the trusted low rungs. The floor covers 1,000 rps
+(unmeasured, interpolated 65–81; 64 was too low). The ceiling caps k6 pre-initialisation, which
+is the peak sum of overlapping rungs' pools (`sweep.js` `plannedVusBaseline`).
+
+| Rung (rps) | Pool | Ramped peak | Margin |
+|---|---|---|---|
+| 500 | 96 | 34 (measured) | +182% |
+| 1,000 | 96 | ~65–81 (interpolated) | +18–48% |
+| 2,000 | 160 | 128 | +25% |
+| 4,000 | 320 | 216 | +48% |
+| 8,000 | 640 | 301 | +113% |
+| 16,000 | 1280 | ~628 (interpolated, spans the knee) | +104% |
+| 32,000 | 2048 (cap) | 1283 | +60% |
+| 48,000 / 64,000 | 2048 (cap) | above the ~36k knee; saturated and excluded from `rig_valid` | — |
+
+The claim is narrow: every rung's pool exceeds its measured or interpolated peak, and a fixed pool
+cannot compound a storm. Not claimed: that a 2048 ceiling is "less rig-limiting" than the old ramp
+to 4,000. The 32k–64k demand figures came from the storm-contaminated ramp itself, so the clean
+fixed-pool demand there is unmeasured; a run should confirm the boundary rung stays rig-valid
+(0 drops, `vus_active_max` below its pool) and that 48k/64k still show the knee.
+
 ## Run Provenance
 
 Every stored run JSON carries a `config` block: MockServer version and image digest, log level,
@@ -2805,6 +2977,27 @@ could leak into a real run.
 ## Rig Capacity and k6 CPU Behaviour
 
 The perf box is a `c5.12xlarge`: 48 logical CPUs, 24 physical cores (hyperthread siblings at `N` and `N+24`). All 24 physical cores are allocated across the six-vCPU server arm (6), upstream (1), and k6 (17). A ten-vCPU arm leaves only 13 physical cores for k6, which is not enough at the server's knee — measuring a ten-core arm requires k6 on a separate machine.
+
+**Why the cpusets are checked against physical cores.** On the c5.4xlarge this queue used to run,
+the defaults asked for 6 (server) + 1 (upstream) + 6 (k6) = 13 cores on a box with 16 vCPU but only
+eight physical cores, so k6 shared silicon with the server it was loading — the main reason "the
+client saturates first" blocked the knee for so long (k6 read 600.9% against its 600% pin on a valid
+run). The old check, `_NPROCESSORS_ONLN >= 16`, counted logical CPUs and could not see it. On the
+c5.12xlarge, thirteen client cores still fell below the 95%-achieved threshold at 48k offered where
+seventeen served it cleanly, which is why k6 now spans cores 7–23.
+
+**Other harness lessons recorded in `perf-test-run.sh`'s history:**
+- the SUT image tag is mutable, and build #264 measured an entirely cached image with nothing tying
+  it to the commit under test — hence the up-front pull;
+- the old provenance equality check flagged build #284's three-docs-commit image lag as a failure;
+  a lagging image is now attributed to the commit it was built from;
+- build 302's heap dump was unreadable on the host (written by the image's non-root user), so the
+  bundle reported a 2.02 GiB dump as 0 MiB and never uploaded it — hence the chmod from a container;
+- the perf agents require IMDSv2 (launch-template `HttpTokens=required`, hop limit 2); the original
+  unauthenticated metadata GET got a 401, `curl -s` returned an empty body at exit 0, and every stored
+  baseline point carried `instance_type:""` until the IMDSv2 two-step and shape validation landed;
+- forcing the JDK TLS provider moved handshake p50 +51% in build 290 while the handshake rate did not
+  move, which is why handshake time, not rate, is the provider-sensitive signal.
 
 **k6 CPU is non-monotonic in offered load.** k6 draws its peak CPU at the last healthy rung; past the knee VUs block on I/O rather than working, so client CPU falls as offered load rises above the knee. A high k6 CPU reading at a given rung therefore locates the knee rather than indicating a bad measurement. Use the mean over the steady window, not the max — the first (startup) sample is inflated and not representative.
 

@@ -262,7 +262,7 @@ public class NettySslContextFactoryTest {
         assertThat(serverHandler.engine().getSSLParameters().getEndpointIdentificationAlgorithm(), is(nullValue()));
     }
 
-    // ---- bundled default Certificate Authority detection (item 3 decision, no global latch involved) ----
+    // ---- bundled default Certificate Authority detection (no global latch involved) ----
 
     @Test
     public void shouldDetectBundledDefaultCertificateAuthorityInUseByDefault() {

@@ -30,11 +30,11 @@ import static org.hamcrest.Matchers.*;
 import static org.mockserver.configuration.Configuration.configuration;
 
 /**
- * Global-state coverage for two Wave 3 TLS-hardening behaviours whose evidence requires mutating a
+ * Global-state coverage for two TLS-hardening behaviours whose evidence requires mutating a
  * process-wide static:
  * <ul>
- *   <li>Item 3 — the once-per-JVM bundled-CA WARN latch ({@link NettySslContextFactory#BUNDLED_CA_WARNING_LOGGED}).</li>
- *   <li>Item 4 — the time-bounded re-check of a user-supplied FIXED server certificate, driven by the
+ *   <li>The once-per-JVM bundled-CA WARN latch ({@link NettySslContextFactory#BUNDLED_CA_WARNING_LOGGED}).</li>
+ *   <li>The time-bounded re-check of a user-supplied FIXED server certificate, driven by the
  *       overridable {@link NettySslContextFactory#fixedCertificateClock}.</li>
  * </ul>
  * Registered in the sequential (non-parallel) surefire lane because both the latch and the clock are
@@ -58,7 +58,7 @@ public class NettySslContextFactoryGlobalStateTest {
         NettySslContextFactory.BUNDLED_CA_WARNING_LOGGED.set(false);
     }
 
-    // ---- item 3: bundled default CA WARN, once per JVM ----
+    // ---- bundled default CA WARN, once per JVM ----
 
     @Test
     public void shouldWarnOnceWhenBundledDefaultCertificateAuthorityInUse() {
@@ -105,7 +105,7 @@ public class NettySslContextFactoryGlobalStateTest {
         assertThat(bundledCaWarnings(serverLogger), hasSize(1));
     }
 
-    // ---- item 4: fixed server certificate re-check ----
+    // ---- fixed server certificate re-check ----
 
     @Test
     public void shouldRebuildServerContextWhenFixedCertificateRotatedOnDisk() throws Exception {

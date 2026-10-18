@@ -118,7 +118,7 @@ public class CertificateHardeningGlobalStateTest {
         assertTrue("fresh leaf must not already be expired", secondLeaf.getNotAfter().after(new Date()));
     }
 
-    // --- Finding 2: a near-expiry CA must NOT drive a permanent leaf-regeneration loop ---
+    // --- a near-expiry CA must NOT drive a permanent leaf-regeneration loop ---
 
     @Test
     public void shouldNotDemandRenewalRepeatedlyWhenOnlyTheCertificateAuthorityIsNearExpiry() throws Exception {

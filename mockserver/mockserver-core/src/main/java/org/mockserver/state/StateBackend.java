@@ -9,9 +9,9 @@ import java.io.Closeable;
  * {@code StateBackend} instance is created per {@code HttpState} via
  * {@link StateBackendFactory}.
  * <p>
- * The default {@link InMemoryStateBackend} wraps today's exact in-memory
- * data structures for zero behaviour change. A clustered implementation
- * (phase 2b+) can back these stores with a distributed cache.
+ * The default {@link InMemoryStateBackend} wraps the in-memory data
+ * structures directly. A clustered implementation (for example the
+ * Infinispan backend) backs these stores with a distributed cache.
  */
 public interface StateBackend extends Closeable {
 

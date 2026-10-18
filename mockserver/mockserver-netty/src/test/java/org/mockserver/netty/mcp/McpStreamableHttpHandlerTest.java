@@ -1456,7 +1456,7 @@ public class McpStreamableHttpHandlerTest {
         String requestBody = "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\",\"params\":{}}";
         FullHttpResponse response = sendPost(requestBody, "invalid-id");
 
-        // previously asserted 400. The session id is present but unknown, which MCP 2025-06-18
+        // The session id is present but unknown, which MCP 2025-06-18
         // basic/transports makes a 404 regardless of whether the message is a request or a
         // notification -- the client needs the same "start a new session" signal either way.
         // The sibling shouldRejectNotificationWithoutSession still asserts 400 (id absent).

@@ -362,7 +362,7 @@ public class HttpResponseMatcherTest {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // ITEM 1 — reason-phrase honours matchExactCase (parity with the response body, which already
+    // Reason-phrase honours matchExactCase (parity with the response body, which already
     // honours it via BodyMatcherBuilder). A per-instance Configuration is used so these tests stay
     // in the parallel Surefire phase (no global singleton mutation).
     // ---------------------------------------------------------------------------------------------
@@ -395,7 +395,7 @@ public class HttpResponseMatcherTest {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // ITEM 2 — cookie matching mirrors the request matcher (HashMapMatcher): sub-set semantics,
+    // Cookie matching mirrors the request matcher (HashMapMatcher): sub-set semantics,
     // missing required cookies fail, notted values behave correctly.
     // ---------------------------------------------------------------------------------------------
 
@@ -448,7 +448,7 @@ public class HttpResponseMatcherTest {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // ITEM 3 — matches(MatchDifference, actual) records per-field differences while computing the
+    // matches(MatchDifference, actual) records per-field differences while computing the
     // SAME boolean result as matches(actual). detailedMatchFailures must be true for the
     // MatchDifference to record differences.
     // ---------------------------------------------------------------------------------------------

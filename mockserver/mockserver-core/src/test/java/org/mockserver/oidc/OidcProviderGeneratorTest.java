@@ -721,7 +721,7 @@ public class OidcProviderGeneratorTest {
         }
     }
 
-    // --- Wave 1: token correctness, nonce, configurable signing, refresh tokens ---
+    // --- token correctness, nonce, configurable signing, refresh tokens ---
 
     @Test
     public void idTokenAudIsClientIdAndAccessTokenAudIsAudience() throws Exception {
@@ -926,7 +926,7 @@ public class OidcProviderGeneratorTest {
         assertThat(response.getFirstHeader("location"), containsString("state=s1"));
     }
 
-    // --- Wave 2: device grant, client authentication, opaque access tokens ---
+    // --- device grant, client authentication, opaque access tokens ---
 
     @Test
     public void deviceAuthorizationExpectationIsPostClassCallback() {

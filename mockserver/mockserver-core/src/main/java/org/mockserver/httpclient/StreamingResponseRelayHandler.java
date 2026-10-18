@@ -118,7 +118,7 @@ public class StreamingResponseRelayHandler extends ChannelInboundHandlerAdapter 
                 if (responseFuture != null && !responseFuture.isDone()) {
                     responseFuture.complete(mockResponse);
                 } else {
-                    // Finding 5: RESPONSE_FUTURE is null or already done — log and close
+                    // RESPONSE_FUTURE is null or already done — log and close
                     if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(Level.WARN)) {
                         mockServerLogger.logEvent(
                             new LogEntry()

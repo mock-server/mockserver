@@ -1,6 +1,6 @@
-// LLM/SSE streaming under concurrency — performance-programme item 12.
+// LLM/SSE streaming under concurrency.
 //
-// MECHANISM (confirmed against the code, 2026-09-17 — see the report/plan). An
+// MECHANISM. An
 // httpSseResponse streams each event by scheduling its per-token delay onto the
 // SHARED action-handler pool: HttpSseResponseActionHandler.scheduleEvents ->
 // Scheduler.schedule(writeEvent, delay), where Scheduler is a
@@ -14,25 +14,20 @@
 // thread STARVATION -> tasks execute late -> per-token timing DRIFTS (a fidelity
 // loss), and (2) event-loop write pressure a concurrent `match` pays for.
 //
-// IMPORTANT (measured, contradicts the plan's stated mechanism): the plan says
-// CallerRunsPolicy makes an event loop run the task under saturation. It does
-// NOT under load — ScheduledThreadPoolExecutor's DelayedWorkQueue is UNBOUNDED,
-// so its rejection handler (CallerRunsPolicy) fires only at executor shutdown.
-// The observable saturation signal is therefore delayed-task execution (the
-// inter-token error the run step's reader measures), NOT a CallerRunsPolicy
-// counter (which reads ~0 under load and MockServer does not expose anyway — see
-// the report). This file does not fabricate that counter.
+// Do NOT look for CallerRunsPolicy firing under saturation: ScheduledThreadPoolExecutor's
+// DelayedWorkQueue is UNBOUNDED, so the rejection handler fires only at shutdown. The
+// saturation signal is delayed-task execution (the inter-token error the run step's
+// reader measures); MockServer exposes no CallerRunsPolicy counter, and none is faked.
 //
 // WHAT k6 MEASURES HERE (k6 buffers SSE, so it cannot time individual tokens):
 //   1. It SUSTAINS the concurrency — a constant-VUs `stream` arm where each VU
 //      holds one long-lived GET /stream open (~STREAMING.concurrency in flight).
-//   2. The within-run match A/B (item 12's 4th metric): a fixed-rate `match` arm
+//   2. The within-run match A/B: a fixed-rate `match` arm
 //      measured FIRST alone (match_baseline) then AGAIN during the stream load
 //      (match_under_stream). The p95 ratio is "does streaming steal the hot path".
-// The inter-token delay-error distribution (item 12 #1) and heap-per-open-stream
-// (#2) are measured server-side by perf-test-run.sh and merged into .streaming.
+// The inter-token delay-error distribution and heap-per-open-stream are measured server-side by perf-test-run.sh and merged into .streaming.
 //
-// MEASURED-WINDOW HYGIENE — cloned from the FIXED regression.js shape (Finding 3):
+// MEASURED-WINDOW HYGIENE — cloned from the current regression.js shape:
 // a warmup scenario, staggered phase starts, preAllocatedVUs == maxVUs on the
 // fixed-rate match arms (no mid-run allocation), a settle exclusion tagged
 // op:<op>_settle, MIN_TAIL_SAMPLES tail suppression, and the heavy/warm load-time
@@ -296,7 +291,7 @@ export function handleSummary(data) {
     heap_idle_floor_bytes: null,
     heap_streaming_floor_bytes: null,
     heap_bytes_per_stream: null,
-    // item 12 #3 (CallerRunsPolicy counter): NOT emitted — MockServer exposes no
+    // CallerRunsPolicy counter: NOT emitted — MockServer exposes no
     // such counter, and the policy does not fire under load (unbounded scheduled
     // queue). Recorded here as a documented absence rather than a fabricated proxy.
     caller_runs_policy_count: null,

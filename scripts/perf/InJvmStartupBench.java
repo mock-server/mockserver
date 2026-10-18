@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Item 8b of the performance programme: the IN-JVM startup cost.
+ * The IN-JVM startup cost.
  *
  * <p>{@code MockServerExtension} / a plain JUnit test starts MockServer by calling
  * {@link ClientAndServer#startClientAndServer(Integer...)} inside the ALREADY-RUNNING test JVM —

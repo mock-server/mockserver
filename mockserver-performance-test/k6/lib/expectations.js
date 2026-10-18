@@ -89,7 +89,7 @@ export const TEMPLATE_EXPECTATION = {
   times: { unlimited: true },
 };
 
-// Item 15a — Mustache response-template arm. jmustache is a NON-optional core
+// Mustache response-template arm. jmustache is a NON-optional core
 // dependency, so this renders on the stock image alongside Velocity. Mustache
 // reads request fields via {{request.path}} / {{request.method}}.
 export const MUSTACHE_TEMPLATE_EXPECTATION = {
@@ -101,7 +101,7 @@ export const MUSTACHE_TEMPLATE_EXPECTATION = {
   times: { unlimited: true },
 };
 
-// Item 15a — JavaScript response-template arm. The GraalJS engine is an OPTIONAL
+// JavaScript response-template arm. The GraalJS engine is an OPTIONAL
 // dependency present only in the -graaljs image variant; a JavaScript template on
 // the stock image throws (fail-loud) and the request 500s. So this arm is seeded
 // ONLY when REGRESSION.jsTemplate is on (perf-test-run.sh, running the -graaljs
@@ -119,7 +119,7 @@ export const JS_TEMPLATE_EXPECTATION = {
   times: { unlimited: true },
 };
 
-// Item 15d — build a JSON body of approximately `targetBytes` carrying a fixed
+// Build a JSON body of approximately `targetBytes` carrying a fixed
 // top-level `marker` field. The matching expectation matches ONLY the marker
 // (ONLY_MATCHING_FIELDS), so the server must DECODE the whole posted body (the
 // size axis) while the match traversal stays constant — the variable under test
@@ -165,7 +165,7 @@ function largeBodyExpectation(path, marker) {
 export const LARGE_1MB_EXPECTATION = largeBodyExpectation('/large_1mb', 'large-1mb');
 export const LARGE_10MB_EXPECTATION = largeBodyExpectation('/large_10mb', 'large-10mb');
 
-// Item 15d — file-backed RESPONSE body arm (FileBodyMaterialiser path). The file
+// File-backed RESPONSE body arm (FileBodyMaterialiser path). The file
 // must exist on the SUT filesystem; perf-test-run.sh generates and mounts it and
 // passes its server-side path via K6_REG_FILE_BODY_PATH. When that is empty the
 // arm is absent.
@@ -195,7 +195,7 @@ export function forwardExpectation(host) {
   };
 }
 
-// --- item 12: LLM/SSE streaming under concurrency ----------------------------
+// --- LLM/SSE streaming under concurrency -------------------------------------
 //
 // Build an httpSseResponse expectation whose `events` each carry a DETERMINISTIC
 // per-event delay (no streaming-physics jitter), so the server's inter-token
@@ -220,7 +220,7 @@ export function streamingSseExpectation(path, tokens, delayMs) {
   };
 }
 
-// Seed the streaming.js expectations: the SSE stream (item 12's load) and the
+// Seed the streaming.js expectations: the SSE stream (the load) and the
 // plain /simple match used by the within-run A/B. When K6_STREAM_MATCH_DELAY_MS
 // > 0 a fixed server-side delay is added to the match response so a run can prove
 // the match percentiles still move with a REAL slowdown (positive control).
@@ -329,17 +329,17 @@ export function seedRegression() {
       times: { unlimited: true },
     },
     TEMPLATE_EXPECTATION,
-    MUSTACHE_TEMPLATE_EXPECTATION, // item 15a — always on (jmustache is bundled)
+    MUSTACHE_TEMPLATE_EXPECTATION, // always on (jmustache is bundled)
     forwardExpectation(host),
     LARGE_BODY_EXPECTATION, // 4 KB (existing `large` arm)
-    LARGE_1MB_EXPECTATION, // item 15d
-    LARGE_10MB_EXPECTATION, // item 15d
+    LARGE_1MB_EXPECTATION,
+    LARGE_10MB_EXPECTATION,
   ];
-  // item 15a — the JavaScript arm needs GraalJS; seed it only when enabled.
+  // The JavaScript arm needs GraalJS; seed it only when enabled.
   if (REGRESSION.jsTemplate) {
     expectations.push(JS_TEMPLATE_EXPECTATION);
   }
-  // item 15d — the file-backed arm needs a server-side file; seed only when set.
+  // The file-backed arm needs a server-side file; seed only when set.
   if (REGRESSION.fileBodyPath) {
     expectations.push(fileBodyExpectation(REGRESSION.fileBodyPath));
   }
@@ -350,8 +350,8 @@ export function seedRegression() {
   return res;
 }
 
-// Fail-loud verification of the OPTIONAL arms (item 15a JavaScript, item 15d
-// file-backed body). Both depend on server-side capability that may be absent (a
+// Fail-loud verification of the OPTIONAL arms (JavaScript template, file-backed
+// body). Both depend on server-side capability that may be absent (a
 // non-GraalJS image; a missing/unreadable file) and would otherwise record a
 // silent 100%-error arm that reads as a result. Probe each enabled arm ONCE and
 // fail() the whole run if it does not answer 200 — a broken arm must abort the
@@ -397,25 +397,13 @@ export function seedForward() {
 
 // --- actions (tagged so k6 reports per-operation) --------------------------
 
-// The `create` arm's job is to CHURN THE EVENT LOG with control-plane traffic —
-// NOT to grow the expectation store. Two independent properties keep it from
-// self-inflicting the match-arm 404 storm seen on soak build 324 (where an
-// unbounded /simple create at 10/s filled maxExpectations (~15k) in ~25 min and
-// then evicted the seeded /simple match expectation, so most match requests 404'd
-// and k6 scored a ~54% match error rate that was purely the harness's own doing):
-//   1. a STABLE `id` — PUT /expectation upserts by id (RequestMatchers.add ->
-//      getByKey(id)), so every PUT is an in-place REPLACE of the SAME entry. The
-//      store holds exactly ONE entry for this path no matter how many creates run
-//      (~72k over a 2h soak at 10/s => still 1 entry), so it never approaches
-//      maxExpectations and never evicts the /simple match seed. The endpoint still
-//      returns 201 on an upsert (HttpState PUT handler is unconditional), so the
-//      `create: 201` check stays green.
-//   2. a DISTINCT path (/churn) — even if the id were dropped, a /churn create can
-//      never shadow (priority-desc then created-asc order) or evict the /simple
-//      match seed the match/verify arms depend on.
-// times.remainingTimes:5 is retained only to mirror the legacy control-plane shape
-// (the Locust `expectation` task used it); it is inert here because nothing ever
-// GETs /churn, so the entry is never consumed and every PUT just resets it.
+// The `create` arm CHURNS THE EVENT LOG with control-plane traffic; it must NOT grow
+// the expectation store, or over a long run it fills maxExpectations, evicts the
+// seeded /simple match expectation and the match arm 404s. Two properties prevent it:
+//   1. a STABLE `id`: PUT /expectation upserts by id, so the store holds ONE entry
+//      however many creates run (and still answers 201, keeping `create: 201` green);
+//   2. a DISTINCT path (/churn): even without the id it cannot shadow or evict /simple.
+// times.remainingTimes:5 is inert (nothing GETs /churn); it mirrors the old Locust shape.
 const CHURN_EXPECTATION = JSON.stringify([
   {
     id: 'perf-churn',
@@ -482,7 +470,7 @@ export function getTemplated(extraTags) {
   return res;
 }
 
-// item 15a — Mustache template arm.
+// Mustache template arm.
 export function getTemplatedMustache(extraTags) {
   const res = http.get(`${CONFIG.baseUrl}/template_mustache`, {
     headers: CONFIG.keepAliveHeaders,
@@ -492,7 +480,7 @@ export function getTemplatedMustache(extraTags) {
   return res;
 }
 
-// item 15a — JavaScript template arm (GraalJS).
+// JavaScript template arm (GraalJS).
 export function getTemplatedJavaScript(extraTags) {
   const res = http.get(`${CONFIG.baseUrl}/template_javascript`, {
     headers: CONFIG.keepAliveHeaders,
@@ -502,7 +490,7 @@ export function getTemplatedJavaScript(extraTags) {
   return res;
 }
 
-// item 15d — POST a large JSON body (server decodes the whole body; matches only
+// POST a large JSON body (server decodes the whole body; matches only
 // the small marker). LARGE_BODIES[0] is 1 MB, [1] is 10 MB.
 export function postLarge1mb(extraTags) {
   const res = http.post(`${CONFIG.baseUrl}/large_1mb`, LARGE_BODIES[0].body,
@@ -518,7 +506,7 @@ export function postLarge10mb(extraTags) {
   return res;
 }
 
-// item 15d — GET a response served from a file on the SUT (FileBodyMaterialiser).
+// GET a response served from a file on the SUT (FileBodyMaterialiser).
 export function getLargeFile(extraTags) {
   const res = http.get(`${CONFIG.baseUrl}/large_file`, {
     headers: CONFIG.keepAliveHeaders,
@@ -528,7 +516,7 @@ export function getLargeFile(extraTags) {
   return res;
 }
 
-// --- proxy.js: item 9a (forward proxy) + item 14 (TLS handshake) actions ------
+// --- proxy.js: forward-proxy and TLS-handshake actions ------------------------
 //
 // The SUT under measurement in proxy.js's FORWARD mode is configured as a forward
 // PROXY, so these arms do NOT seed it — they route a request at the UPSTREAM and
@@ -536,7 +524,7 @@ export function getLargeFile(extraTags) {
 // probes the arms in setup() (verifyProxyForwardArms) and fails loud if the relay
 // does not work, never recording a silent 100%-error arm.
 
-// item 9a — absolute-URI forwarding. With HTTP_PROXY pointed at the SUT, an http://
+// Absolute-URI forwarding. With HTTP_PROXY pointed at the SUT, an http://
 // target is sent to the SUT as an absolute-URI GET; the SUT forwards it to the
 // upstream and relays the response. Keep-Alive so connections are reused (a real
 // proxy client), which keeps the measured latency about the RELAY, not handshakes.
@@ -549,7 +537,7 @@ export function getProxiedAbsolute(extraTags) {
   return res;
 }
 
-// item 9a — CONNECT tunnel carrying HTTPS. With HTTPS_PROXY pointed at the SUT, an
+// CONNECT tunnel carrying HTTPS. With HTTPS_PROXY pointed at the SUT, an
 // https:// target makes k6 issue CONNECT <upstream> to the SUT, which establishes a
 // tunnel; k6 then performs a TLS handshake over that tunnel and the request reaches
 // the upstream (the response body confirms the relay landed there). NOTE: this
@@ -568,7 +556,7 @@ export function getProxiedConnect(extraTags) {
   return res;
 }
 
-// item 14 — a direct-TLS GET against a handshake SUT's seeded /simple. With
+// A direct-TLS GET against a handshake SUT's seeded /simple. With
 // noConnectionReuse (proxy.js handshake mode) every call is a fresh TCP+TLS
 // handshake, so http_req_tls_handshaking is paid on EVERY iteration (never
 // amortised). The body is header-only/tiny so the handshake dominates.

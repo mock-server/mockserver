@@ -2,8 +2,7 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
-# multi-process-sweep.sh — a load generator that can SATURATE the server, so
-# the performance programme can finally answer its open question:
+# multi-process-sweep.sh — a load generator that can SATURATE the server, to answer:
 # "why does a single k6 process drop iterations with three quarters of its VU
 # pool unused, and is the flat ~6,000 rps healthy ceiling a CLIENT limit or a
 # SERVER limit?"
@@ -37,9 +36,8 @@ set -euo pipefail
 #   * dropped_iterations per process and summed — the client-shortfall signal;
 #   * client CPU PER PROCESS and the SUT CPU, both sampled from one docker-stats
 #     call, so "neither side is CPU-bound" is RE-TESTED at the new load rather
-#     than asserted (the native run never recorded client CPU — this closes that
-#     gap, which is exactly the flaw the programme keeps hitting: an instrument
-#     that measures the wrong subject);
+#     than asserted (an instrument that never records client CPU can be measuring
+#     the wrong subject);
 #   * a per-N `limited_by` verdict AND a top-level `scaling` verdict.
 #
 # THE DISCRIMINATOR (the whole point — the old instrument could not tell you
@@ -82,8 +80,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="${PERF_MULTI_REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
-# The ONE authoritative healthy-ceiling implementation (Finding 1). Reused, never
-# re-implemented — the programme forbids a divergent third copy of the rule. Only
+# The ONE authoritative healthy-ceiling implementation. Reused, never
+# re-implemented — a divergent third copy of the rule is what reuse prevents. Only
 # READ here (never edited); path overridable so the harness is not wedded to a
 # CI-tree layout.
 FIGURES_JQ="${PERF_MULTI_FIGURES_JQ:-$REPO_ROOT/.buildkite/scripts/steps/lib/perf-website-figures.jq}"
@@ -163,8 +161,8 @@ SWEEP_ERR_EPS="${PERF_MULTI_ERROR_EPS:-0.01}"
 SWEEP_SETTLE_S="${PERF_MULTI_SETTLE_S:-3}"
 SWEEP_SAMPLE_INTERVAL="${PERF_MULTI_SAMPLE_INTERVAL:-2}"
 MIN_TAIL_SAMPLES="${PERF_MULTI_MIN_TAIL_SAMPLES:-30}"
-# achieved/offered floor for a "clean" aggregate rung — same 0.95 keep Finding 1
-# uses. CPU-headroom threshold (fraction of a side's pin) mirrors perf-percore.sh.
+# achieved/offered floor for a "clean" aggregate rung — the same 0.95 keep the
+# healthy-ceiling rule uses. CPU-headroom threshold (fraction of a side's pin) mirrors perf-percore.sh.
 KEEP="${PERF_MULTI_KEEP:-0.95}"
 CPU_HEADROOM_FRAC="${PERF_MULTI_CPU_HEADROOM_FRAC:-0.85}"
 # Fraction of N above which "aggregate scales with processes" is declared. If the
@@ -399,9 +397,8 @@ for N in "${PROCS_ARR[@]}"; do
   # exist yet on the sampler's first ticks, and an exited container vanishes
   # mid-run. So we snapshot ALL containers in one call (still one process spawn per
   # tick) and filter to our names in awk: a name that is not up yet simply yields
-  # no row, instead of blanking the entire sample. (This is the bug that made an
-  # earlier version record null CPU on both sides — the exact "instrument measured
-  # the wrong subject" failure the programme keeps hitting.)
+  # no row, instead of blanking the entire sample (which records null CPU on both
+  # sides).
   CPU_LOG="$WORK/cpu-N${N}.csv"
   : > "$CPU_LOG"
   WANT_NAMES=""

@@ -22,7 +22,7 @@ import static org.mockserver.mock.HttpState.isControlPlanePathCandidate;
 import static org.mockserver.model.HttpRequest.request;
 
 /**
- * Differential corpus for unit 12's cheapest-first control-plane gate
+ * Differential corpus for the cheapest-first control-plane gate
  * ({@link HttpState#isControlPlanePathCandidate(String)}).
  * <p>
  * The gate is a necessary condition used only as a fast reject; the per-method dispatch chains in

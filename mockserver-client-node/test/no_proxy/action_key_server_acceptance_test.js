@@ -17,7 +17,7 @@
  * So this file closes the loop against a REAL MockServer: for every action key the
  * server's own expectation.json schema declares, create an expectation THROUGH THE
  * NODE CLIENT and assert the server both accepted it and stored it with that action.
- * That is the assertion Finding 22 is really about — "gRPC bidi is uncreatable from
+ * That is the assertion that matters — "gRPC bidi is uncreatable from
  * Node" is a claim about the server's response, not about the client's JSON.
  *
  * Why default headers are set on every case: addDefaultExpectationHeaders returns
