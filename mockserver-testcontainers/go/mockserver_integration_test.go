@@ -10,36 +10,19 @@ import (
 	"time"
 
 	mockserverclient "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
+	"github.com/testcontainers/testcontainers-go"
 )
 
-func isDockerAvailable() bool {
-	// Use testcontainers' own provider check — if the Docker daemon is not reachable,
-	// ProviderType returns an error. We use a lightweight exec-based check here.
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	// Attempt to start a minimal container request just to verify Docker connectivity.
-	// Instead, use a simple HTTP call to the Docker socket or exec docker info.
-	// The simplest portable check: try to run "docker info" via os/exec.
-	cmd := execCommand("docker", "info")
-	cmd.Stdout = nil
-	cmd.Stderr = nil
-	done := make(chan error, 1)
-	go func() {
-		done <- cmd.Run()
-	}()
-	select {
-	case err := <-done:
-		return err == nil
-	case <-ctx.Done():
-		return false
-	}
+// skipIfNoDocker probes the daemon the way Testcontainers itself connects (the
+// Docker socket / DOCKER_HOST), NOT via a `docker` CLI: the golang CI image has
+// no docker binary, so a CLI probe skipped every test while reading as green.
+func skipIfNoDocker(t *testing.T) {
+	t.Helper()
+	testcontainers.SkipIfProviderIsNotHealthy(t)
 }
 
 func TestIntegration_RunAndURL(t *testing.T) {
-	if !isDockerAvailable() {
-		t.Skip("Docker not available, skipping integration test")
-	}
+	skipIfNoDocker(t)
 
 	ctx := context.Background()
 	ctr, err := Run(ctx, DefaultImage)
@@ -82,14 +65,16 @@ func TestIntegration_RunAndURL(t *testing.T) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		t.Errorf("PUT /mockserver/status returned %d, want 200", resp.StatusCode)
+		t.Fatalf("PUT /mockserver/status returned %d, want 200", resp.StatusCode)
 	}
+
+	// Evidence marker: go-testcontainers-test.sh greps for this line to fail
+	// closed, because a skipped test (no usable Docker) otherwise reads as green.
+	fmt.Printf("GO_TESTCONTAINERS_STATUS_OK url=%s status=%d\n", url, resp.StatusCode)
 }
 
 func TestIntegration_CreateExpectationAndVerify(t *testing.T) {
-	if !isDockerAvailable() {
-		t.Skip("Docker not available, skipping integration test")
-	}
+	skipIfNoDocker(t)
 
 	ctx := context.Background()
 	ctr, err := Run(ctx, DefaultImage)
@@ -166,9 +151,7 @@ func TestIntegration_CreateExpectationAndVerify(t *testing.T) {
 // endpoint over HTTP, and verifies the request was received — all through the
 // container's mapped host/port.
 func TestIntegration_Client(t *testing.T) {
-	if !isDockerAvailable() {
-		t.Skip("Docker not available, skipping integration test")
-	}
+	skipIfNoDocker(t)
 
 	ctx := context.Background()
 	ctr, err := Run(ctx, DefaultImage)
