@@ -17,6 +17,7 @@
 import { describe, it, expect } from 'vitest';
 import { standardToRust } from './rust';
 import { rustCombos } from './rustCodegenCases';
+import { keptFieldsEdit } from './extractParityCases';
 import { rustGolden } from './__fixtures__/rustGolden';
 import { withRustClientMajorPlaceholder } from './__fixtures__/rustClientMajorPlaceholder';
 
@@ -102,5 +103,17 @@ describe('standardToRust — typed construction', () => {
     expect(code).toContain('error_status: Some(503)');
     expect(code).toContain('error_probability: Some(0.25)');
     expect(code).toContain('latency: Some(Delay::milliseconds(200))');
+  });
+
+  it('sets a JSON array response body with json_body, not the extra map', () => {
+    const combo = keptFieldsEdit(
+      'array-body',
+      { type: 'static', static: { statusCode: 200, body: 'ok', contentType: '', bodyFromFile: false, filePath: '', fileTemplateType: '' } },
+      'httpResponse',
+      (wire) => ({ ...wire, body: [1, { a: 2 }] }),
+    );
+    const code = standardToRust(combo.matcher, combo.action, combo.baseUrl);
+    expect(code).toContain('.json_body(serde_json::json!([');
+    expect(code).not.toContain('.extra.insert("body"');
   });
 });

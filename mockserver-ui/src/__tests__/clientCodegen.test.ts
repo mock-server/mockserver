@@ -157,11 +157,12 @@ describe('standardToRust', () => {
     expect(code).not.toContain('serde_json::from_str');
   });
 
-  it('carries a FILE/typed-object response body through the typed extra map, not the String body field', () => {
-    // HttpResponse.body is Option<String>; a FILE body object is inserted verbatim
-    // into the public `extra` catch-all rather than deserialised from a JSON blob.
+  it('builds a FILE/typed-object response body with body_value, not the String body field or extra', () => {
+    // HttpResponse.body is Option<String>; an object body goes through the typed
+    // `.body_value(Body::object(..))` builder rather than the `extra` map.
     const code = standardToRust(baseMatcher(), fileBodyAction, BASE_URL);
-    expect(code).toContain('response.extra.insert("body".to_string(), serde_json::json!({');
+    expect(code).toContain('.body_value(Body::object(');
+    expect(code).not.toContain('.extra.insert("body"');
     expect(code).toContain('"type": "FILE"');
     expect(code).toContain('"templateType": "MUSTACHE"');
   });

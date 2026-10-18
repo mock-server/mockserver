@@ -394,10 +394,14 @@ function renderHttpResponse(resp: Record<string, unknown>, ctx: Ctx, indent: num
   const calls: string[] = [];
   if (typeof resp['statusCode'] === 'number') calls.push(`.status_code(${numLit(resp['statusCode'])})`);
 
-  // A plain string body uses the typed String body field; a FILE/typed-object body
-  // has no String-typed builder, so it is carried through `extra`.
-  const bodyIsObject = resp['body'] != null && typeof resp['body'] === 'object';
-  if (typeof resp['body'] === 'string') calls.push(`.body(${rustStr(resp['body'])})`);
+  // A string body uses `.body(..)`, an object body (FILE, BINARY, JSON, …)
+  // `.body_value(..)`, and a JSON array or scalar body `.json_body(..)`, which
+  // sends it as a typed JSON body.
+  const body = resp['body'];
+  if (typeof body === 'string') calls.push(`.body(${rustStr(body)})`);
+  else if (body != null && typeof body === 'object' && !Array.isArray(body)) {
+    calls.push(`.body_value(${bodyValueExpr(body as Record<string, unknown>, indent + 4)})`);
+  } else if (body != null) calls.push(`.json_body(${jsonMacro(body, indent + 4)})`);
 
   const headers = resp['headers'];
   if (headers && typeof headers === 'object') {
@@ -428,7 +432,6 @@ function renderHttpResponse(resp: Record<string, unknown>, ctx: Ctx, indent: num
   }
 
   const extras: [string, unknown][] = [];
-  if (bodyIsObject) extras.push(['body', resp['body']]);
   for (const [k, v] of Object.entries(resp)) {
     if (RESPONSE_BUILDER_KEYS.has(k)) continue;
     extras.push([k, v]);
