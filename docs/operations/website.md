@@ -216,7 +216,7 @@ What it checks against `_data/perf_figures.json` (rules in
   the FAQ answers and the `llms.txt` line call it "a higher rate".
 - **Latencies** (`N ms`) must round from the headline p50, p95, p99, whole-rung p99 or the p99
   bound; **core counts** must equal `headline.server_cores`.
-- **The run tally** ("the ten like-for-like runs") must be the same number everywhere it is
+- **The run tally** ("the twelve like-for-like runs") must be the same number everywhere it is
   stated. The per-rate counts ("in five, … in three and … in two") are not in the page data, so
   they stay a manual reconcile.
 

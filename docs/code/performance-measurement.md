@@ -1252,6 +1252,31 @@ common rung. The committed page data is build 667's patch as emitted
 The page states the ten-run tally, tells readers to provision against 128k, the lowest rung any
 qualifying run read, and says the ceiling can land one step either way.
 
+**Builds 679 and 689, and the owner's 2026-10-18 decision to keep 136k.** Two further members
+(679, a `[perf-run] 44(c) trial: 10 Hz receive-queue sampler (PERF_XL)` build whose `rw_multik6`
+arm still ran as a qualifying member — `lib/perf-rw-multik6-series.jq` returns `[]` for it —
+image `a82cfcb1e6` (harness the same commit), `PERF_JVM_DIAGNOSTICS` `standard`; and 689, the
+weekly `perf_xl_weekly` scheduled run of 2026-10-17, image `1e486509ca`, harness `244c10100b`,
+same diagnostics tier) read:
+
+| Build | Masked ceiling | Its masked p99 | Whole-rung ceiling | First masked failure above it | Quiet seconds there |
+|---|---|---|---|---|---|
+| 679 | 136k | 8.745 ms | 136k | 144k, 10.541 ms | 8 |
+| 689 | 128k | 4.389 ms | 128k | 136k, 12.178 ms | 8 |
+
+Over the now twelve qualifying runs the ceiling is 136k six times (630, 631, 634, 664, 667, 679),
+144k three times (632, 633, 643) and 128k three times (668, 670, 689). Over the latest five
+members (667, 668, 670, 679, 689) the readings are 136k, 128k, 128k, 136k, 128k: all five on 128k
+or 136k, so criterion (2) — "at least 4 of the 5 ... fall on one ladder rung or on two adjacent
+rungs, ... and the ceiling to publish is the lower of the two rungs" — again names 128k, exactly
+as it already did over the ten-run set's latest five (643, 664, 667, 668, 670: 144k, 136k, 136k,
+128k, 128k). The owner reviewed this on 2026-10-18 and decided to keep the published figure at
+136k rather than move it to 128k, as before, leaving `_data/perf_figures.json` and the
+`RW_EXPECTED_CEILING_RPS` / `RW_ADJACENT_CEILING_RPS` constants unchanged; only the website's
+hand-counted run tally (the `ceiling_spread` and `ceiling_spread_detail` captures, the two
+`schema_faq` answers and the `llms.txt` line) was corrected to twelve runs: 136k×6, 144k×3,
+128k×3.
+
 **The rung a later run is held against.** `perf-website-publish.sh` names 136k as the expected
 rung (`RW_EXPECTED_CEILING_RPS`) and 128k (`RW_ADJACENT_CEILING_RPS`) as the rung below it that
 qualifying runs also read. A later patch reading 128k would lower the published headline, which
@@ -2723,8 +2748,9 @@ the other socket, ZGC with a 922 MiB heap, JDK 25.0.4.1+1, `MOCKSERVER_LOG_LEVEL
 **136,000** under `gc_masked_p99` with the 10 ms bound (achieved 136,327.2, p50 0.104 ms, p95
 3.347 ms, masked p99 9.572 ms, whole-rung p99 17.788 ms; whole-rung ceiling 96,000). The first
 failure is 144,000 at a masked p99 of 13.651 ms, and `peak_achieved_rps` is **158,854.5** at
-160,000 offered. 136,000 is the most common rung of the ten qualifying runs (five; 144,000 three
-and 128,000 two), published by the owner's decision of 2026-10-12
+160,000 offered. 136,000 is the most common rung of the twelve qualifying runs (six; 144,000
+three and 128,000 three), published by the owner's decision of 2026-10-12 and kept on 2026-10-18
+although criterion (2) over the latest five members names 128k
 ([the published run](#the-headline-rule-item-44)).
 
 **Currently published, `single_k6` (build 464, 2026-09-27, `efdc5227b2`, `c5.12xlarge`, 6 cores,
