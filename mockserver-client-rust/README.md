@@ -270,6 +270,40 @@ client.when(
 The JWT matcher serialises under the request's `"jwt"` key, and the composite
 body serialises to `{"type":"ALL_OF","bodyAllOf":[ ... ]}`.
 
+### Binary, JSON and file response bodies
+
+`.body(..)` sends a plain string body. For any other body shape, use
+`binary_body`, `json_body`, `file_body`, or `body_value` with a `Body`:
+
+```rust
+use mockserver_client::*;
+
+// BINARY: the bytes are base64-encoded on the wire and served back unchanged.
+client.when(HttpRequest::new().path("/logo.png"))
+    .respond(HttpResponse::new()
+        .status_code(200)
+        .binary_body(std::fs::read("logo.png").unwrap(), Some("image/png".to_string())))?;
+
+// Any other body shape, e.g. XML with an explicit content type.
+client.when(HttpRequest::new().path("/feed"))
+    .respond(HttpResponse::new()
+        .body_value(Body::xml("<feed/>").with_content_type("application/atom+xml")))?;
+
+// A raw (non-HTTP) message matcher, used with a binary response action.
+client.when(HttpRequest::new().binary_data(b"\x00\x01PING"))
+    .respond_with_binary(BinaryResponse::from_bytes(b"\x00\x02PONG"))?;
+```
+
+A non-string response body is held under `HttpResponse.extra["body"]`, so the
+`body` field keeps its `Option<String>` type. Expectations read back from the
+server keep every body shape; `response.typed_body()` returns the body as a
+`Body`. For a retrieved expectation that is the shape the server returned,
+which is not always the variant you sent (a typed JSON body can come back as
+an inline JSON object, and a JSON array comes back as a typed JSON body).
+`Body::with_content_type(..)` sets the content type on `FILE`, `JSON`,
+`BINARY`, `STRING` and `XML` bodies, and wraps an inline JSON object as a
+typed JSON body so the content type stays out of the payload.
+
 ### Conditional (if/then/else) request matchers and load-step checks
 
 `HttpRequest::conditional(if, then, else)` builds an `httpRequest` holding

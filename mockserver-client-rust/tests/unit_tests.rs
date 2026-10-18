@@ -208,6 +208,261 @@ fn test_response_with_delay() {
     assert_eq!(json["delay"]["value"], 500);
 }
 
+#[test]
+fn test_response_string_body_is_unchanged_on_the_wire() {
+    let resp = HttpResponse::new().status_code(200).body("plain text");
+    let json = serde_json::to_string(&resp).unwrap();
+    assert_eq!(json, r#"{"statusCode":200,"body":"plain text"}"#);
+
+    let back: HttpResponse = serde_json::from_str(&json).unwrap();
+    assert_eq!(back.body.as_deref(), Some("plain text"));
+    assert!(
+        back.extra.is_empty(),
+        "a string body must not leak into extra"
+    );
+    assert_eq!(back.typed_body(), Some(Body::Plain("plain text".into())));
+    assert_eq!(back, resp);
+}
+
+#[test]
+fn test_response_binary_body_serialises_base64_shape() {
+    let bytes = [0x00u8, 0x01, 0x7F, 0x80, 0xFE, 0xFF];
+    let resp = HttpResponse::new()
+        .status_code(200)
+        .binary_body(bytes, Some("application/octet-stream".to_string()));
+    let json = serde_json::to_value(&resp).unwrap();
+    assert_eq!(
+        json,
+        serde_json::json!({
+            "statusCode": 200,
+            "body": {
+                "type": "BINARY",
+                "base64Bytes": "AAF/gP7/",
+                "contentType": "application/octet-stream"
+            }
+        })
+    );
+    assert_eq!(resp.body, None);
+}
+
+#[test]
+fn test_response_binary_body_round_trips_and_decodes() {
+    use base64::Engine;
+    let bytes = b"\x00PNG\xff".to_vec();
+    let resp = HttpResponse::new().binary_body(&bytes, None);
+    let text = serde_json::to_string(&resp).unwrap();
+    let back: HttpResponse = serde_json::from_str(&text).unwrap();
+    assert_eq!(back, resp);
+    assert_eq!(back.body, None);
+    let Some(Body::Object(map)) = back.typed_body() else {
+        panic!("expected an object body, got {:?}", back.typed_body());
+    };
+    assert_eq!(map["type"], "BINARY");
+    assert!(!map.contains_key("contentType"));
+    let decoded = base64::engine::general_purpose::STANDARD
+        .decode(map["base64Bytes"].as_str().unwrap())
+        .unwrap();
+    assert_eq!(decoded, bytes);
+}
+
+#[test]
+fn test_response_deserialises_every_server_body_shape() {
+    // The shapes MockServer returns from retrieveActiveExpectations for a
+    // response body: a plain string, typed objects, and a raw JSON object or
+    // array for a JSON body.
+    fn object(v: serde_json::Value) -> Body {
+        Body::Object(v.as_object().unwrap().clone())
+    }
+    let json_typed = |json: &str| Body::Typed {
+        body_type: "JSON".to_string(),
+        json: json.to_string(),
+    };
+    let shapes = [
+        (
+            serde_json::json!({"type": "BINARY", "base64Bytes": "AP8=", "contentType": "image/png"}),
+            object(
+                serde_json::json!({"type": "BINARY", "base64Bytes": "AP8=", "contentType": "image/png"}),
+            ),
+        ),
+        (
+            serde_json::json!({"type": "JSON", "json": "{\"a\":1}"}),
+            json_typed("{\"a\":1}"),
+        ),
+        (
+            serde_json::json!({"type": "STRING", "string": "hi", "contentType": "text/plain; charset=utf-8"}),
+            object(
+                serde_json::json!({"type": "STRING", "string": "hi", "contentType": "text/plain; charset=utf-8"}),
+            ),
+        ),
+        (
+            serde_json::json!({"type": "XML", "xml": "<a/>"}),
+            Body::xml("<a/>"),
+        ),
+        (
+            serde_json::json!({"type": "FILE", "filePath": "/f.json", "templateType": "VELOCITY"}),
+            Body::file("/f.json").with_template_type("VELOCITY"),
+        ),
+        (
+            serde_json::json!({"type": "PARAMETERS", "parameters": {"k": ["v"]}}),
+            object(serde_json::json!({"type": "PARAMETERS", "parameters": {"k": ["v"]}})),
+        ),
+        (
+            serde_json::json!({"id": 1, "tags": ["x"]}),
+            object(serde_json::json!({"id": 1, "tags": ["x"]})),
+        ),
+        (serde_json::json!([1, 2, 3]), json_typed("[1,2,3]")),
+        (serde_json::json!(42), json_typed("42")),
+    ];
+    for (shape, expected) in shapes {
+        let wire = serde_json::json!({"statusCode": 200, "body": shape.clone()});
+        let resp: HttpResponse = serde_json::from_value(wire.clone())
+            .unwrap_or_else(|e| panic!("could not read body {shape}: {e}"));
+        assert_eq!(resp.body, None);
+        assert_eq!(resp.typed_body(), Some(expected), "{shape}");
+        assert_eq!(
+            serde_json::to_value(&resp).unwrap(),
+            wire,
+            "round-trip of {shape}"
+        );
+    }
+}
+
+#[test]
+fn test_json_array_body_is_resent_as_a_json_body_not_a_string() {
+    let resp: HttpResponse =
+        serde_json::from_value(serde_json::json!({"body": [1, 2, 3]})).unwrap();
+    let resent = HttpResponse::new().body_value(resp.typed_body().unwrap());
+    assert_eq!(
+        serde_json::to_value(&resent).unwrap(),
+        serde_json::json!({"body": {"type": "JSON", "json": "[1,2,3]"}})
+    );
+
+    let req: HttpRequest = serde_json::from_value(serde_json::json!({"body": [1, 2]})).unwrap();
+    assert_eq!(
+        req.body,
+        Some(Body::Typed {
+            body_type: "JSON".into(),
+            json: "[1,2]".into()
+        })
+    );
+}
+
+#[test]
+fn test_with_content_type_keeps_an_inline_json_payload_intact() {
+    let inline = Body::object(
+        serde_json::json!({"id": 1, "name": "x"})
+            .as_object()
+            .unwrap()
+            .clone(),
+    )
+    .with_content_type("application/vnd.api+json");
+    assert_eq!(
+        serde_json::to_value(&inline).unwrap(),
+        serde_json::json!({
+            "type": "JSON",
+            "json": {"id": 1, "name": "x"},
+            "contentType": "application/vnd.api+json"
+        }),
+        "the content type must not be injected into the JSON payload"
+    );
+
+    for typed in ["BINARY", "JSON", "STRING", "XML", "FILE"] {
+        let body = Body::object(
+            serde_json::json!({"type": typed})
+                .as_object()
+                .unwrap()
+                .clone(),
+        )
+        .with_content_type("a/b");
+        assert_eq!(
+            serde_json::to_value(&body).unwrap(),
+            serde_json::json!({"type": typed, "contentType": "a/b"})
+        );
+    }
+
+    let params = Body::parameters(std::collections::HashMap::from([(
+        "k".to_string(),
+        vec!["v".to_string()],
+    )]));
+    assert_eq!(params.clone().with_content_type("a/b"), params);
+
+    // An object whose "type" is not a MockServer body type is a JSON payload.
+    let geojson = serde_json::json!({"type": "FeatureCollection", "features": []});
+    let wrapped = Body::object(geojson.as_object().unwrap().clone())
+        .with_content_type("application/geo+json");
+    assert_eq!(
+        serde_json::to_value(&wrapped).unwrap(),
+        serde_json::json!({
+            "type": "JSON",
+            "json": geojson,
+            "contentType": "application/geo+json"
+        })
+    );
+}
+
+#[test]
+fn test_response_body_setters_replace_each_other() {
+    let resp = HttpResponse::new().binary_body([1u8, 2], None).body("text");
+    assert_eq!(
+        serde_json::to_value(&resp).unwrap(),
+        serde_json::json!({"body": "text"})
+    );
+
+    let resp = HttpResponse::new()
+        .body("text")
+        .json_body(serde_json::json!({"a": 1}));
+    assert_eq!(
+        serde_json::to_value(&resp).unwrap(),
+        serde_json::json!({"body": {"type": "JSON", "json": "{\"a\":1}"}})
+    );
+
+    let resp = HttpResponse::new().file_body("/f").body_value("plain");
+    assert_eq!(
+        serde_json::to_value(&resp).unwrap(),
+        serde_json::json!({"body": "plain"})
+    );
+}
+
+#[test]
+fn test_response_string_body_field_wins_over_extra_body() {
+    let mut resp = HttpResponse::new().binary_body([1u8], None);
+    resp.body = Some("wins".to_string());
+    assert_eq!(
+        serde_json::to_string(&resp).unwrap(),
+        r#"{"body":"wins"}"#,
+        "a set string body must suppress extra[\"body\"] rather than emit a duplicate key"
+    );
+}
+
+#[test]
+fn test_response_body_value_with_content_type() {
+    let resp =
+        HttpResponse::new().body_value(Body::xml("<a/>").with_content_type("application/xml"));
+    assert_eq!(
+        serde_json::to_value(&resp).unwrap()["body"],
+        serde_json::json!({"type": "XML", "xml": "<a/>", "contentType": "application/xml"})
+    );
+    let typed = Body::Typed {
+        body_type: "JSON".into(),
+        json: "{}".into(),
+    }
+    .with_content_type("application/vnd.api+json");
+    assert_eq!(
+        serde_json::to_value(&typed).unwrap(),
+        serde_json::json!({"type": "JSON", "json": "{}", "contentType": "application/vnd.api+json"})
+    );
+}
+
+#[test]
+fn test_request_binary_data_matcher() {
+    let req = HttpRequest::new().binary_data(b"\x00\x01PING\xff");
+    let json = serde_json::to_value(&req).unwrap();
+    assert_eq!(json, serde_json::json!({"binaryData": "AAFQSU5H/w=="}));
+    let back: HttpRequest = serde_json::from_value(json).unwrap();
+    assert_eq!(back.binary_data_bytes(), Some(b"\x00\x01PING\xff".to_vec()));
+    assert_eq!(HttpRequest::new().binary_data_bytes(), None);
+}
+
 // ---------------------------------------------------------------------------
 // HttpForward builder tests
 // ---------------------------------------------------------------------------

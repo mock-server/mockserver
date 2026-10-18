@@ -887,6 +887,29 @@ impl HttpRequest {
         self
     }
 
+    /// Make this a binary (non-HTTP) request matcher: a raw message on the
+    /// socket matches when its bytes equal `data`. Sent as `binaryData`
+    /// (base64) and used with a binary response action such as
+    /// [`BinaryResponse`]. A binary matcher must not be combined with the HTTP
+    /// fields (method, path, headers, body, …): set only `binary_data` and,
+    /// optionally, `not` or `socket_address`.
+    pub fn binary_data(mut self, data: impl AsRef<[u8]>) -> Self {
+        self.extra.insert(
+            "binaryData".into(),
+            serde_json::Value::from(BASE64.encode(data.as_ref())),
+        );
+        self
+    }
+
+    /// The decoded `binaryData` bytes of a binary request matcher, or `None`
+    /// when this is not one (or its `binaryData` is not valid base64).
+    pub fn binary_data_bytes(&self) -> Option<Vec<u8>> {
+        self.extra
+            .get("binaryData")
+            .and_then(|v| v.as_str())
+            .and_then(|s| BASE64.decode(s).ok())
+    }
+
     /// Set a JWT request matcher.
     ///
     /// Serialised under the `"jwt"` key alongside `method`/`path`/`headers`.
@@ -1155,16 +1178,59 @@ impl Body {
         }
     }
 
-    /// Set the content type on a FILE body. No-op on other variants.
-    pub fn with_content_type(mut self, content_type: impl Into<String>) -> Self {
-        if let Body::File {
-            content_type: ref mut ct,
-            ..
-        } = self
-        {
-            *ct = Some(content_type.into());
+    /// Set the content type (`contentType`) on a body whose type the server
+    /// gives a content type: `FILE`, `JSON`, `BINARY`, `STRING` and `XML`.
+    ///
+    /// An object whose `"type"` is not a MockServer body type (no `"type"`
+    /// key, or e.g. GeoJSON's `{"type":"FeatureCollection",…}`) is an inline
+    /// JSON payload, so it is wrapped as
+    /// `{"type":"JSON","json":<object>,"contentType":…}` and the content type
+    /// never becomes part of the payload. Any other body (another body type
+    /// such as `PARAMETERS`, [`Body::Plain`], [`Body::AllOf`],
+    /// [`Body::Matcher`]) is returned unchanged.
+    pub fn with_content_type(self, content_type: impl Into<String>) -> Self {
+        match self {
+            Body::File {
+                file_path,
+                template_type,
+                ..
+            } => Body::File {
+                file_path,
+                content_type: Some(content_type.into()),
+                template_type,
+            },
+            Body::Typed { body_type, json } => {
+                let mut map = serde_json::Map::new();
+                map.insert("type".into(), serde_json::Value::from(body_type));
+                map.insert("json".into(), serde_json::Value::from(json));
+                map.insert(
+                    "contentType".into(),
+                    serde_json::Value::from(content_type.into()),
+                );
+                Body::Object(map)
+            }
+            Body::Object(mut map) => match map.get("type").and_then(|t| t.as_str()) {
+                Some("BINARY" | "JSON" | "STRING" | "XML" | "FILE") => {
+                    map.insert(
+                        "contentType".into(),
+                        serde_json::Value::from(content_type.into()),
+                    );
+                    Body::Object(map)
+                }
+                Some(t) if SERVER_BODY_TYPES.contains(&t) => Body::Object(map),
+                _ => {
+                    let mut wrapped = serde_json::Map::new();
+                    wrapped.insert("type".into(), serde_json::Value::from("JSON"));
+                    wrapped.insert("json".into(), serde_json::Value::Object(map));
+                    wrapped.insert(
+                        "contentType".into(),
+                        serde_json::Value::from(content_type.into()),
+                    );
+                    Body::Object(wrapped)
+                }
+            },
+            other => other,
         }
-        self
     }
 
     /// Set the template type (e.g., "VELOCITY", "MUSTACHE") on a FILE body.
@@ -1310,6 +1376,40 @@ impl Body {
         map.insert("type".into(), serde_json::Value::from(body_type));
         map.insert(key.into(), serde_json::Value::from(value));
         Body::Object(map)
+    }
+}
+
+/// The body `type` names the server recognises (`org.mockserver.model.Body.Type`).
+const SERVER_BODY_TYPES: &[&str] = &[
+    "BINARY",
+    "JSON",
+    "JSON_SCHEMA",
+    "JSON_PATH",
+    "PARAMETERS",
+    "REGEX",
+    "FUZZY",
+    "STRING",
+    "XML",
+    "XML_SCHEMA",
+    "XPATH",
+    "JSON_RPC",
+    "GRAPHQL",
+    "LOG_EVENT",
+    "FILE",
+    "WASM",
+    "MULTIPART",
+    "ALL_OF",
+];
+
+impl From<&str> for Body {
+    fn from(s: &str) -> Self {
+        Body::Plain(s.to_string())
+    }
+}
+
+impl From<String> for Body {
+    fn from(s: String) -> Self {
+        Body::Plain(s)
     }
 }
 
@@ -1470,7 +1570,12 @@ impl<'de> Deserialize<'de> for Body {
                     Ok(Body::Object(map))
                 }
             }
-            _ => Ok(Body::Plain(v.to_string())),
+            // A JSON array or scalar is a JSON body; keep it typed so that
+            // sending it back does not turn it into a STRING body.
+            other => Ok(Body::Typed {
+                body_type: "JSON".to_string(),
+                json: other.to_string(),
+            }),
         }
     }
 }
@@ -1588,58 +1693,180 @@ impl Jwt {
 ///     .header("Location", "/api/users/42")
 ///     .body("{\"id\": 42}");
 /// ```
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct HttpResponse {
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub status_code: Option<u16>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub headers: Option<HashMap<String, Vec<String>>>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// A plain string body. Every other body shape (`BINARY`, `JSON`, `FILE`,
+    /// `XML`, `STRING` with a content type, an inline JSON object, …) is held
+    /// under `extra["body"]` instead; set those with [`body_value`](Self::body_value)
+    /// or [`binary_body`](Self::binary_body) and read any body with
+    /// [`typed_body`](Self::typed_body). When both are set, this field wins.
     pub body: Option<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub delay: Option<Delay>,
 
     /// Response cookies (single value per name; emitted as `Set-Cookie`).
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub cookies: Option<HashMap<String, String>>,
 
     /// HTTP reason phrase (e.g. `"Not Found"`); overrides the default for the
     /// status code.
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub reason_phrase: Option<String>,
 
     /// A status-code range to respond with a random status from (e.g. `"2xx"`).
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub status_code_range: Option<String>,
 
     /// Response trailers (HTTP/2 trailing headers), multiple values per key.
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub trailers: Option<HashMap<String, Vec<String>>>,
 
     /// Generate the response body from an inline/JSON-schema string.
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub generate_from_schema: Option<String>,
 
     /// Connection-level options (chunking, content-length, socket close, …).
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub connection_options: Option<ConnectionOptions>,
 
     /// Fail the first N requests then recover (circuit-breaker style).
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub recover_after: Option<RecoverAfter>,
 
     /// Mark this response as the primary action of a composite expectation.
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub primary: Option<bool>,
 
     /// Forward-compatibility catch-all for response fields the typed model does
-    /// not yet name.
-    #[serde(flatten, default)]
+    /// not yet name, and the home of any non-string `body`.
     pub extra: Extra,
+}
+
+/// Serialises an [`Extra`] map, optionally leaving out one key.
+struct ExtraWithout<'a> {
+    extra: &'a Extra,
+    skip: Option<&'static str>,
+}
+
+impl Serialize for ExtraWithout<'_> {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.collect_map(
+            self.extra
+                .iter()
+                .filter(|(k, _)| Some(k.as_str()) != self.skip),
+        )
+    }
+}
+
+impl Serialize for HttpResponse {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Wire<'a> {
+            #[serde(skip_serializing_if = "Option::is_none")]
+            status_code: &'a Option<u16>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            headers: &'a Option<HashMap<String, Vec<String>>>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            body: &'a Option<String>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            delay: &'a Option<Delay>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            cookies: &'a Option<HashMap<String, String>>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            reason_phrase: &'a Option<String>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            status_code_range: &'a Option<String>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            trailers: &'a Option<HashMap<String, Vec<String>>>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            generate_from_schema: &'a Option<String>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            connection_options: &'a Option<ConnectionOptions>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            recover_after: &'a Option<RecoverAfter>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            primary: &'a Option<bool>,
+            #[serde(flatten)]
+            extra: ExtraWithout<'a>,
+        }
+
+        Wire {
+            status_code: &self.status_code,
+            headers: &self.headers,
+            body: &self.body,
+            delay: &self.delay,
+            cookies: &self.cookies,
+            reason_phrase: &self.reason_phrase,
+            status_code_range: &self.status_code_range,
+            trailers: &self.trailers,
+            generate_from_schema: &self.generate_from_schema,
+            connection_options: &self.connection_options,
+            recover_after: &self.recover_after,
+            primary: &self.primary,
+            // A string `body` and an `extra["body"]` must never both reach the
+            // wire as duplicate keys; the typed string field wins.
+            extra: ExtraWithout {
+                extra: &self.extra,
+                skip: self.body.as_ref().map(|_| "body"),
+            },
+        }
+        .serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for HttpResponse {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Wire {
+            status_code: Option<u16>,
+            headers: Option<HashMap<String, Vec<String>>>,
+            #[serde(default)]
+            body: Option<serde_json::Value>,
+            delay: Option<Delay>,
+            cookies: Option<HashMap<String, String>>,
+            reason_phrase: Option<String>,
+            status_code_range: Option<String>,
+            trailers: Option<HashMap<String, Vec<String>>>,
+            generate_from_schema: Option<String>,
+            connection_options: Option<ConnectionOptions>,
+            recover_after: Option<RecoverAfter>,
+            primary: Option<bool>,
+            #[serde(flatten)]
+            extra: Extra,
+        }
+
+        let mut wire = Wire::deserialize(deserializer)?;
+        let body = match wire.body {
+            Some(serde_json::Value::String(s)) => Some(s),
+            None | Some(serde_json::Value::Null) => None,
+            Some(other) => {
+                wire.extra.insert("body".into(), other);
+                None
+            }
+        };
+        Ok(HttpResponse {
+            status_code: wire.status_code,
+            headers: wire.headers,
+            body,
+            delay: wire.delay,
+            cookies: wire.cookies,
+            reason_phrase: wire.reason_phrase,
+            status_code_range: wire.status_code_range,
+            trailers: wire.trailers,
+            generate_from_schema: wire.generate_from_schema,
+            connection_options: wire.connection_options,
+            recover_after: wire.recover_after,
+            primary: wire.primary,
+            extra: wire.extra,
+        })
+    }
 }
 
 impl HttpResponse {
@@ -1664,7 +1891,83 @@ impl HttpResponse {
     /// Set the response body as a string.
     pub fn body(mut self, body: impl Into<String>) -> Self {
         self.body = Some(body.into());
+        self.extra.remove("body");
         self
+    }
+
+    /// Set the response body from a [`Body`] value — any shape the server
+    /// accepts for a response (`BINARY`, `JSON`, `FILE`, `XML`, `STRING`,
+    /// `PARAMETERS`, an inline JSON object via [`Body::object`], …).
+    ///
+    /// A [`Body::Plain`] goes to the string [`body`](Self::body) field; every
+    /// other shape is stored under `extra["body"]`. Either way it replaces any
+    /// body set before.
+    ///
+    /// # Example
+    /// ```
+    /// use mockserver_client::{Body, HttpResponse};
+    ///
+    /// let response = HttpResponse::new()
+    ///     .body_value(Body::file("/data/order.json").with_content_type("application/json"));
+    /// ```
+    pub fn body_value(mut self, body: impl Into<Body>) -> Self {
+        match body.into() {
+            Body::Plain(s) => self.body(s),
+            other => {
+                self.body = None;
+                let value = serde_json::to_value(&other).expect("Body serialises to a JSON value");
+                self.extra.insert("body".into(), value);
+                self
+            }
+        }
+    }
+
+    /// Set a `BINARY` response body: the raw bytes are base64-encoded on the
+    /// wire (`{"type":"BINARY","base64Bytes":…}`) and the server sends them
+    /// back unchanged, with `content_type` as the `Content-Type` if given.
+    ///
+    /// # Example
+    /// ```
+    /// use mockserver_client::HttpResponse;
+    ///
+    /// let png_header = [0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A];
+    /// let response = HttpResponse::new()
+    ///     .status_code(200)
+    ///     .binary_body(png_header, Some("image/png".to_string()));
+    /// ```
+    pub fn binary_body(self, data: impl AsRef<[u8]>, content_type: Option<String>) -> Self {
+        self.body_value(Body::binary(data, content_type))
+    }
+
+    /// Set a typed `JSON` response body (`{"type":"JSON","json":…}`).
+    pub fn json_body(self, json: serde_json::Value) -> Self {
+        self.body_value(Body::Typed {
+            body_type: "JSON".to_string(),
+            json: json.to_string(),
+        })
+    }
+
+    /// Set a `FILE` response body read from the server's filesystem. Use
+    /// [`body_value`](Self::body_value) with [`Body::file`] to also set a
+    /// content type or template type.
+    pub fn file_body(self, file_path: impl Into<String>) -> Self {
+        self.body_value(Body::file(file_path))
+    }
+
+    /// The response body as a [`Body`], whichever form it is held in: the
+    /// string [`body`](Self::body) field as [`Body::Plain`], otherwise
+    /// `extra["body"]` decoded as a [`Body`]. `None` when no body is set.
+    ///
+    /// For an expectation read back from the server this reflects the shape the
+    /// server returned, which is not always the variant that was sent: for
+    /// example a typed JSON body may come back as an inline JSON object
+    /// ([`Body::Object`]), and a JSON array as a typed JSON body.
+    pub fn typed_body(&self) -> Option<Body> {
+        match (&self.body, self.extra.get("body")) {
+            (Some(s), _) => Some(Body::Plain(s.clone())),
+            (None, Some(v)) => serde_json::from_value(v.clone()).ok(),
+            (None, None) => None,
+        }
     }
 
     /// Set a response delay.

@@ -1045,25 +1045,17 @@ fn test_llm_response_serves_openai_envelope_over_wire() {
 
 /// A `binaryResponse` action answers a raw, non-HTTP message: the server writes
 /// the registered octets (including NUL and 0xFF) back on the same socket. The
-/// request matcher is a binary one (`httpRequest.binaryData`), which the typed
-/// [`HttpRequest`] does not name, so it rides in the `extra` catch-all.
+/// request matcher is a binary one (`httpRequest.binaryData`).
 #[test]
 #[ignore]
 fn test_binary_response_served_over_wire() {
-    use base64::Engine;
-
     let client = get_client();
     client.reset().expect("reset failed");
 
     let request_bytes: &[u8] = b"\x00\x01RUSTPING\xff";
     let response_bytes: &[u8] = b"\x00\x02RUSTPONG\xfe";
-    let mut matcher = HttpRequest::new();
-    matcher.extra.insert(
-        "binaryData".into(),
-        serde_json::Value::from(base64::engine::general_purpose::STANDARD.encode(request_bytes)),
-    );
     client
-        .when(matcher)
+        .when(HttpRequest::new().binary_data(request_bytes))
         .respond_with_binary(BinaryResponse::from_bytes(response_bytes))
         .expect("registering binary expectation failed");
 
@@ -1087,6 +1079,64 @@ fn test_binary_response_served_over_wire() {
     assert_eq!(
         received, response_bytes,
         "the server must write back exactly the registered binaryResponse octets"
+    );
+
+    client.reset().expect("reset failed");
+}
+
+/// An `httpResponse` with a `BINARY` body: the HTTP response body is exactly the
+/// registered bytes (including NUL, 0x7F, 0x80 and 0xFF, which a string body
+/// would corrupt), with the registered `Content-Type`.
+#[test]
+#[ignore]
+fn test_http_response_binary_body_served_over_wire() {
+    let client = get_client();
+    client.reset().expect("reset failed");
+
+    let body_bytes: &[u8] = b"\x00\x01RUST\x7f\x80BIN\xfe\xff\x00";
+    client
+        .when(
+            HttpRequest::new()
+                .method("GET")
+                .path("/rustwire-binary-body"),
+        )
+        .respond(
+            HttpResponse::new()
+                .status_code(200)
+                .binary_body(body_bytes, Some("application/octet-stream".to_string())),
+        )
+        .expect("registering binary-body expectation failed");
+
+    let (status, headers, body) = http_exchange("GET", "/rustwire-binary-body", None);
+    assert_eq!(status, 200, "headers: {headers}");
+    assert!(
+        headers.contains("content-type: application/octet-stream"),
+        "headers: {headers}"
+    );
+    assert_eq!(
+        body, body_bytes,
+        "the server must send exactly the registered BINARY body bytes"
+    );
+
+    let retrieved = client
+        .retrieve_active_expectations(Some(
+            &HttpRequest::new()
+                .method("GET")
+                .path("/rustwire-binary-body"),
+        ))
+        .expect("retrieving the binary-body expectation failed");
+    assert_eq!(retrieved.len(), 1);
+    let response = retrieved[0]
+        .http_response
+        .as_ref()
+        .expect("the retrieved expectation has an httpResponse action");
+    assert_eq!(
+        response.typed_body(),
+        Some(Body::binary(
+            body_bytes,
+            Some("application/octet-stream".to_string())
+        )),
+        "the retrieved expectation must read back the same BINARY body"
     );
 
     client.reset().expect("reset failed");
