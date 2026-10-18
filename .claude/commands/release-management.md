@@ -102,10 +102,10 @@ Return a concise release-preparation report with these sections:
 ### Manual Follow-up
 
 - List only the steps still outside the automated pipeline
-- **Homebrew is NOT one of them** — do not report it as manual. Both formulae publish
-  automatically: `Homebrew/homebrew-core` via BrewTestBot from the `*-brew-tar.tar` artifact
-  on Maven Central, and `mock-server/homebrew-tap` via the pipeline's own `homebrew` step.
-  See `docs/operations/release-process.md` §9 and §11.
+- **Homebrew is NOT one of them** — do not report it as manual. Homebrew is published only
+  by the `Homebrew/homebrew-core` `mockserver` formula, which BrewTestBot bumps from the
+  `*-brew-tar.tar` artifact on Maven Central; MockServer publishes no tap of its own.
+  See `docs/operations/release-process.md` §9.
 - In practice the only conditional item is SwaggerHub, whose step is `soft_fail: true`
 
 ## Notes

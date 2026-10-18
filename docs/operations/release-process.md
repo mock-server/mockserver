@@ -96,13 +96,10 @@ Versioned Site and Update Version References run first (sequentially), then the 
 | Versioned docs site (major/minor only) | `https://<release-version-with-dash>.mock-server.com` — e.g. `7-6.mock-server.com`. Verify it serves the **new** version and that the **previous** version's subdomain still serves the **old** one; `latest_version` in `terraform/website/terraform.tfvars` decides which bucket `main` publishes into, so a missed versioned-site step overwrites the previous archive in place |
 | Website | https://www.mock-server.com — version pin in the footer should match |
 | Homebrew/homebrew-core (a few hours later — bumped by BrewTestBot) | https://formulae.brew.sh/api/formula/mockserver.json → `.versions.stable` should equal `<release-version>` |
-| Homebrew tap (`mock-server/tap`) | `brew info mock-server/tap/mockserver` — version should equal `<release-version>` |
-| Scoop | `scoop bucket add mockserver https://github.com/mock-server/scoop-mockserver && scoop info mockserver` — or view `mockserver.json` directly in the bucket repo |
-| asdf / mise | `asdf list all mockserver` — `<release-version>` should appear |
 
 ### 9. Homebrew homebrew-core — fully automated, no action required
 
-The `mockserver` formula in `Homebrew/homebrew-core` is bumped automatically by **BrewTestBot** (Homebrew's own automation account). This is a JAR-based formula that depends on an OpenJDK installation. A separate, complementary Homebrew tap formula (`mock-server/tap/mockserver`) installs the self-contained bundle instead — it is published by the pipeline's own `homebrew` step, listed in §11 below. The chain for homebrew-core:
+The `mockserver` formula in `Homebrew/homebrew-core` is bumped automatically by **BrewTestBot** (Homebrew's own automation account). This is a JAR-based formula that depends on an OpenJDK installation. It is the only Homebrew channel: MockServer does not publish its own tap. The chain for homebrew-core:
 
 1. The Maven release publishes a `mockserver-netty-<version>-brew-tar.tar` artifact to Maven Central (built and signed by `maven-central.sh`'s `-P release` profile, same lifecycle as the regular jars).
 2. The Homebrew formula has a `livecheck` block pointing at Maven Search (`https://search.maven.org/remotecontent?filepath=org/mock-server/mockserver-netty/maven-metadata.xml`). BrewTestBot's scheduled livecheck picks up the new version, computes the URL + SHA256, and opens a PR against `Homebrew/homebrew-core`.
@@ -136,32 +133,7 @@ committed collections are out of sync with the spec. Validate locally with
 `python3 scripts/collections/test_collections.py` (starts a MockServer in Docker and fires every
 example).
 
-### 11. Package-manager channels — automated, soft_fail
-
-Three CLI distribution channels publish the **self-contained jlink bundles** uploaded
-by the `binary` component. They run in the `:package: Package Managers` Buildkite
-group (after the Binary Bundles step) as `soft_fail` steps — a channel failure
-never blocks the release. Each channel also skips itself gracefully when its
-prerequisite is not yet configured.
-
-| Channel | Activation prerequisite | Details |
-|---|---|---|
-| Homebrew tap | `github.com/mock-server/homebrew-tap` exists + `mockserver-release/github-token` has write access | Renders `Formula/mockserver.rb` from four darwin/linux checksums and pushes to the tap repo. Distinct from homebrew-core (§9). |
-| Scoop | `github.com/mock-server/scoop-mockserver` exists + `mockserver-release/github-token` has write access | Renders `mockserver.json` from the Windows bundle checksum and pushes to the bucket repo. Windows only. |
-| asdf / mise | `github.com/mock-server/asdf-mockserver` exists + `mockserver-release/github-token` has write access + plugin registered in asdf index (one-time) | Syncs `packaging/asdf/bin/` to the plugin repo; no per-release artifact push needed. |
-
-Each channel's full prerequisites and manual fallback are documented in
-`packaging/<channel>/release-component.md`.
-
-**Local dry-run for any channel:**
-
-```bash
-RELEASE_VERSION=99.99.0 ./scripts/release/components/<name>.sh --dry-run
-```
-
-Renders the manifest with a placeholder checksum and skips all external writes.
-
-### 12. Announce (optional)
+### 11. Announce (optional)
 
 If this is a notable release, post to:
 
@@ -201,9 +173,6 @@ scripts/release/
     ├── github.sh                 # GitHub Release
     ├── binary.sh                 # per-platform jlink bundles (GitHub Release assets)
     ├── versioned-site.sh         # X-Y.mock-server.com Terraform
-    ├── scoop.sh                  # Scoop bucket (Windows — mock-server/scoop-mockserver)
-    ├── homebrew.sh               # Homebrew tap formula (macOS/Linux — mock-server/homebrew-tap)
-    ├── asdf.sh                   # asdf/mise plugin repo sync + discoverability check
     ├── client-{go,dotnet,rust,php}.sh   # polyglot MockServer client publishers (soft_fail)
     ├── tc-{node,python,dotnet,go,rust}.sh  # Testcontainers module publishers (soft_fail)
     ├── tc-ruby.sh                # Testcontainers module -> RubyGems (self-bumps version.rb)
@@ -515,9 +484,6 @@ python3 scripts/release/version_refs.py check . --list   # every occurrence with
 | `update-version-references` | Show diff of version-reference rewrite | git push |
 | `finalize` | Show pom version-bump diff | git push, mvn deploy snapshot |
 | `binary` | Build all five platform jlink bundles | `gh release upload` (asset push to GitHub Release) |
-| `scoop` | Fetch checksum, render manifest, print it | Push to `mock-server/scoop-mockserver` bucket repo |
-| `homebrew` | Fetch four checksums, render formula, print it | Push `Formula/mockserver.rb` to `mock-server/homebrew-tap` |
-| `asdf` | Report what would be synced/verified; skip clone and push | Clone `mock-server/asdf-mockserver`, sync `bin/`, push if drifted; check release discoverability |
 
 ## Pinned Docker images
 

@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- MockServer is no longer published to Chocolatey, SDKMAN! or winget; install the CLI with Homebrew, Scoop or asdf/mise instead
+- MockServer is not published to Chocolatey, SDKMAN!, winget, Scoop, asdf/mise or a mock-server Homebrew tap; install the CLI with `brew install mockserver` (from homebrew-core) on macOS or Linux, or from the `windows-x86_64.zip` on the GitHub Release on Windows; Docker and the executable JAR work everywhere
 - Java client: chaining `withBeforeAction(...)` or `withAfterAction(...)` now adds each action to the expectation, so `.withAfterAction(a).withAfterAction(b)` runs both `a` and `b`. Before, each call replaced the list and only the last action ran. `withBeforeActions(...)` and `withAfterActions(...)` still replace the whole list. The same singular methods are now on `Expectation` too
 - ClassGraph upgraded from 4.8.198 to 5.0.0. If you use the regular (not `-no-dependencies`) artifacts, three new transitive jars arrive with it (`classgraph-base`, `classgraph-vfs`, `classgraph-classpath`), and a project that pins `classgraph` to 4.x must stop doing so, because 5.x is not binary-compatible; for the same reason, another library in your build that uses the 4.x API can break if Maven resolves it to 5.0.0, so use the `-no-dependencies` artifacts there
 - Dashboard: the generated Rust code for a response with a `FILE`, `BINARY`, typed `JSON` or other object body now sets it with `.body_value(Body::object(..))`, and a JSON array or scalar body with `.json_body(..)`, instead of inserting it into `response.extra`

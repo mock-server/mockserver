@@ -942,67 +942,10 @@ git_tag_and_push() {
   return $rc
 }
 
-# -----------------------------------------------------------------------------
-# Package-manager channel helpers
-#
-# Shared by the optional package-manager publish components (scoop, homebrew,
-# asdf). Those channels all publish the SAME self-contained jlink bundles that
-# the `binary` component uploads to the GitHub Release "mockserver-<version>":
-#
-#   mockserver-<version>-linux-x86_64.tar.gz   (+ .sha256 sidecar)
-#   mockserver-<version>-linux-aarch64.tar.gz  (+ .sha256)
-#   mockserver-<version>-darwin-x86_64.tar.gz  (+ .sha256)
-#   mockserver-<version>-darwin-aarch64.tar.gz (+ .sha256)
-#   mockserver-<version>-windows-x86_64.zip    (+ .sha256)
-#
-# Each archive expands to a single top directory
-# `mockserver-<version>-<os>-<arch>/` containing `bin/mockserver`
-# (or `bin/mockserver.bat`), `lib/mockserver.jar` and a trimmed `runtime/`.
-# -----------------------------------------------------------------------------
-
-# GitHub Release asset download base for the current RELEASE_VERSION.
-release_download_base() {
-  echo "https://github.com/mock-server/mockserver-monorepo/releases/download/mockserver-$RELEASE_VERSION"
-}
-
-# Bundle archive basename for an os/arch, e.g.
-#   bundle_asset_name windows x86_64 zip -> mockserver-1.2.3-windows-x86_64.zip
-bundle_asset_name() {
-  local os="$1" arch="$2" ext="$3"
-  echo "mockserver-$RELEASE_VERSION-$os-$arch.$ext"
-}
-
-# Placeholder SHA256 rendered into manifests when the real checksum can't be
-# resolved (dry-run against a not-yet-published version). 64 zeros is obviously
-# fake, so a manifest that ever shipped with it is trivially greppable.
-PM_PLACEHOLDER_SHA256="0000000000000000000000000000000000000000000000000000000000000000"
-
-# Fetch the SHA256 of a release asset from its `.sha256` sidecar (the format
-# `binary.sh` publishes: `<hash>  <filename>`). Echoes the hash on stdout.
-# Returns 0 when the real hash was fetched, non-zero (and echoes
-# PM_PLACEHOLDER_SHA256) when the sidecar is unreachable — e.g. the bundles are
-# not published yet, or this is a fake smoke-test version. Callers decide
-# whether a miss means "render with placeholder and continue" (dry-run) or
-# "skip this channel" (execute).
-fetch_release_sha256() {
-  local asset="$1"
-  local url line hash
-  url="$(release_download_base)/$asset.sha256"
-  if line=$(curl -fsSL --max-time 60 "$url" 2>/dev/null); then
-    hash=$(printf '%s\n' "$line" | awk 'NR==1{print $1}')
-    if [[ "$hash" =~ ^[0-9a-fA-F]{64}$ ]]; then
-      echo "$hash"
-      return 0
-    fi
-  fi
-  echo "$PM_PLACEHOLDER_SHA256"
-  return 1
-}
-
-# Returns 0 if a public GitHub repo (owner/name) exists and is reachable. Used
-# by the channels that publish by pushing to a companion repo (scoop bucket,
-# asdf plugin, homebrew tap) so the component skips gracefully until that repo
-# has been created. dry-run always returns 0 (no network dependency locally).
+# Returns 0 if a public GitHub repo (owner/name) exists and is reachable, so a
+# component that publishes by pushing to a companion repo skips gracefully until
+# that repo has been created. dry-run always returns 0 (no network dependency
+# locally).
 pm_repo_available() {
   local repo="$1"
   is_dry_run && return 0

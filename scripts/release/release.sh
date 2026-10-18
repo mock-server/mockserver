@@ -33,9 +33,6 @@ ALL_COMPONENTS=(
   rubygems
   github
   binary
-  scoop
-  homebrew
-  asdf
   mcp
   client-go
   client-dotnet

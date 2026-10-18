@@ -167,13 +167,10 @@ Return a concise release-preparation report with these sections:
 
 Steps outside — or not guaranteed by — the automated pipeline:
 
-- **Homebrew** — **not** a manual step; do not report it as one. Both formulae publish
-  automatically and need no action:
-  - `Homebrew/homebrew-core` (`mockserver`, JAR-based) is bumped by **BrewTestBot** from the
-    `*-brew-tar.tar` artifact on Maven Central, typically within a few hours
-    (`docs/operations/release-process.md` §9).
-  - `mock-server/homebrew-tap` (self-contained bundle) is pushed by the pipeline's own
-    `homebrew` step (§11).
+- **Homebrew** — **not** a manual step; do not report it as one. The only Homebrew channel
+  is the `mockserver` formula in `Homebrew/homebrew-core` (JAR-based), which **BrewTestBot**
+  bumps from the `*-brew-tar.tar` artifact on Maven Central, typically within a few hours
+  (`docs/operations/release-process.md` §9). MockServer publishes no tap of its own.
 
   Only intervene if BrewTestBot has not opened a PR a day or two after release — §9 lists what
   to check, and `brew bump-formula-pr --strict --version=<release-version> mockserver` is the

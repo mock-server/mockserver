@@ -305,34 +305,6 @@ steps:
 
   - wait
 
-  # Package-manager channels that redistribute the binary bundles published in
-  # the two steps above (GitHub Release + jlink bundle assets). They run after
-  # the Binary Bundles `wait` so both the release and its assets exist. Every
-  # step is soft_fail: these are convenience distribution surfaces, never a
-  # release gate. Each component also skips itself gracefully when its target
-  # repo is not configured (see packaging/<channel>/release-component.md).
-  - group: ":package: Package Managers"
-    steps:
-      - label: ":beer: Homebrew"
-        command: ".buildkite/scripts/release-runner.sh homebrew"
-        soft_fail: true
-        timeout_in_minutes: 10
-        agents: { queue: "release" }
-
-      - label: ":windows: Scoop"
-        command: ".buildkite/scripts/release-runner.sh scoop"
-        soft_fail: true
-        timeout_in_minutes: 10
-        agents: { queue: "release" }
-
-      - label: ":package: asdf / mise"
-        command: ".buildkite/scripts/release-runner.sh asdf"
-        soft_fail: true
-        timeout_in_minutes: 10
-        agents: { queue: "release" }
-
-  - wait
-
   - label: ":sparkles: Finalize"
     command: ".buildkite/scripts/release-runner.sh finalize"
     timeout_in_minutes: 30
