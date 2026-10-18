@@ -120,31 +120,46 @@ indistinguishable from a pass, so these gates now fail loudly instead:
 | Real dashboard bundle served by the netty jar (`DashboardRealBundleServedIntegrationTest`) | It `Assume`-skipped on a 404, so a packaging change that stopped bundling the UI was skipped, not failed, in the netty IT shards | The `build-ui` profile sets `mockserver.dashboardBundleExpected=true`, which failsafe passes to the test; with it set a missing bundle fails. The profile is file-activated by `mockserver-ui/package.json`, so it is active in the IT shards (which reuse the prebuild's classes); only a build with `-P '!build-ui'` still skips |
 | Node / Python / Go / .NET / Rust testcontainers container-start tests | Each skips when Docker is unusable, so a run that started no container passed. Go probed with a `docker info` CLI the `golang` image lacks, and .NET timed out starting its probe container (Ryuk / host resolution), so both skipped every container test on every build | The container-start test prints `<LANG>_TESTCONTAINERS_STATUS_OK` only after `PUT /mockserver/status` returns 200 from a real container (.NET writes it to the TRX output), and the step fails if the marker is absent. Go probes via `testcontainers.SkipIfProviderIsNotHealthy`; the .NET step sets `TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal` when that name resolves (Docker Desktop) |
 | Configuration call-site guard over `mockserver-maven-plugin` | The plugin ships but is outside the reactor, so the java build's guard never scanned it; it was scanned only on a machine that had built it locally | `maven-plugin-build.sh` re-runs the guard after the plugin's `verify` with `-Dguard.extraExpectedModules=mockserver-maven-plugin`, so a missing plugin `target/classes` fails the coverage check. The pipeline runs when the plugin, its pipeline or step, or `ConfigurationCallSiteGuardTest` changes; a server-only change that makes a plugin call site a violation surfaces on the next plugin build, not on its own |
-| Transparent-proxy end-to-end suites | Named `*EndToEndIT`, matching neither Surefire (`**/*Test.java`) nor Failsafe (`**/*IntegrationTest.java`), so `SoOriginalDstEndToEndIntegrationTest`, `TproxyEndToEndIntegrationTest` and `EbpfOriginalDestinationEndToEndIntegrationTest` never ran on any build | Renamed to `*EndToEndIntegrationTest` so Failsafe collects them; opt-in step (`java-transparent-proxy-test.sh`, `RUN_TRANSPARENT_PROXY_E2E=true`) runs them under the Docker socket and asserts via `assert-suite-ran.sh` that they executed — see below |
+| Transparent-proxy end-to-end suites | Named `*EndToEndIT`, matching neither Surefire (`**/*Test.java`) nor Failsafe (`**/*IntegrationTest.java`), so `SoOriginalDstEndToEndIntegrationTest`, `TproxyEndToEndIntegrationTest` and `EbpfOriginalDestinationEndToEndIntegrationTest` never ran on any build | Renamed to `*EndToEndIntegrationTest` so Failsafe collects them; the `:shield: transparent-proxy e2e tests` step (`java-transparent-proxy-test.sh`, enabled by `RUN_TRANSPARENT_PROXY_E2E=true` in `pipeline-java.yml`) runs them on the `default` queue with a docker CLI and the Docker socket, and `assert-suite-ran.sh` fails it if any of the three skipped — see below |
 
-**Why the transparent-proxy end-to-end suites are opt-in, not run by default:**
-Unlike the cloud/async Docker-gated suites — which reach the daemon through
-docker-java over the mounted socket — these three shell out to the **`docker` CLI**
-to build and run a **sibling** container, and need real kernel privilege inside it
-(`--cap-add=NET_ADMIN` for SO_ORIGINAL_DST/TPROXY, `--privileged` for eBPF). Two
-facts about the current agents make them unable to pass today: the maven CI image
-(`docker_build/maven/Dockerfile`) ships **no `docker` CLI binary**, and the
-elastic-ci-stack agents run dockerd with **user-namespace remapping**, which
-rejects `--privileged` outright. Under those conditions every suite SKIPS, and a
-fail-closed `assert-suite-ran.sh` over skip-only suites would turn the pipeline
-**permanently red without testing anything** — the exact ordering trap
-`DockerAvailability`'s javadoc warns about ("a fail-closed assertion is only safe
-once the suite can actually pass"). So `java-transparent-proxy-test.sh` defaults to
-a **loud, expanded notice** that the suites were not executed (making the untested
-state visible rather than a silent green), and runs + asserts them only when
-`RUN_TRANSPARENT_PROXY_E2E=true` on an agent with the docker CLI, the socket, and
-NET_ADMIN/`--privileged` support. The suites themselves skip cleanly (never error)
-when the daemon refuses the privileged container, via
-`DockerCliTestSupport.containerStartRejected(...)`. The suites run the unshaded
+**How the transparent-proxy end-to-end suites run on the `default` queue:**
+Unlike the cloud/async Docker-gated suites, which reach the daemon through
+docker-java over the mounted socket, these three shell out to the **`docker` CLI**
+to build and run a **sibling** container with real kernel privilege
+(`--cap-add=NET_ADMIN` for SO_ORIGINAL_DST/TPROXY, `--privileged` for eBPF), and
+bind-mount the fat jar into it by absolute path. Three things stood in the way on
+the existing agents, and `java-transparent-proxy-test.sh` handles each without a
+new queue:
+
+| Obstacle | Handling |
+|----------|----------|
+| The maven CI image (`docker_build/maven/Dockerfile`) has no `docker` CLI | The step copies `docker` and the `docker-buildx` plugin out of a digest-pinned `docker:<ver>-cli` image on the host and mounts them read-only into the maven container |
+| The sibling container is started by the **host** daemon, so a `/build/...` jar path does not exist there | The checkout is also mounted at its host path and Maven runs from there, so the path the suites pass to `docker run -v` resolves on the host |
+| The elastic-ci-stack agents run dockerd with **user-namespace remapping** (`enable_docker_user_namespace_remap` defaults to `true`), which rejects `--privileged` | The suites start their containers with `--userns=host` (`DockerCliTestSupport.HOST_USER_NAMESPACE`), the per-container opt-out dockerd requires for `--privileged`. On a daemon without remapping it changes nothing |
+
+For the step's own code, `--userns=host` adds nothing: the Docker socket is
+already root on the host, and `run-in-docker.sh` withholds it from PR builds, so
+the step runs only on trusted branch builds. **What it does add is trust in
+third-party image content, which now runs as real host root on non-PR builds on
+`default` agents** (agents that hold the build secrets, ECR Public push and the
+Docker Hub token). That content is the `docker`/`docker-buildx` binaries from
+`docker:<ver>-cli` (digest-pinned), `eclipse-temurin:17-jre` plus the Ubuntu
+`iptables`/`curl`/`iproute2`/`bpftool` packages installed at test time, and the
+eBPF suite's `fedora:41` fallback. The remap stays on for every other container.
+Rejected: a new queue without remapping (more infrastructure for no extra
+capability over the socket), and baking the CLI into the maven image (the step
+could not use it until a rebuilt image was pushed).
+
+`RUN_TRANSPARENT_PROXY_E2E=true` is set on the step in
+`pipeline-java.yml`; without it the script prints a notice and exits 0, so a local
+run opts in explicitly. With it, `assert-suite-ran.sh` fails the step if any suite
+skipped, including when the daemon refuses the privileged container
+(`DockerCliTestSupport.containerStartRejected(...)` turns that into a skip) or the
+kernel lacks `xt_TPROXY` or BPF. The suites run the unshaded
 jar-with-dependencies unless `-Dmockserver.e2e.jar=<path>` names another jar. The
 image-level equivalent, `.buildkite/scripts/steps/docker-transparent-proxy-verify.sh
-<image>`, is not wired into any pipeline for the same NET_ADMIN reason; run it locally
-after changing the image jar or JNA (see [docker.md](docker.md#image-server-jar-mockserver-netty-docker)).
+<image>`, is not wired into any pipeline; run it locally after changing the image
+jar or JNA (see [docker.md](docker.md#image-server-jar-mockserver-netty-docker)).
 
 **Why the cloud suites are a separate step, not `-s` on `java-build.sh`:**
 `run-in-docker.sh` withholds the Docker socket from PR builds and `exit 0`s the

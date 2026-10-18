@@ -23,6 +23,13 @@ final class DockerCliTestSupport {
     private static final org.slf4j.Logger LOG =
         org.slf4j.LoggerFactory.getLogger(DockerCliTestSupport.class);
 
+    /**
+     * Passed to every {@code docker run}: a daemon with user-namespace remapping refuses
+     * {@code --privileged} unless the container opts out of the remap, and on a daemon
+     * without remapping the flag changes nothing.
+     */
+    static final String HOST_USER_NAMESPACE = "--userns=host";
+
     private DockerCliTestSupport() {
         // utility class
     }

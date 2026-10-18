@@ -250,21 +250,14 @@ steps:
           limit: 2
 
   # Transparent-proxy original-destination end-to-end suites (SO_ORIGINAL_DST,
-  # TPROXY, eBPF). These were named *EndToEndIT, matching NEITHER Surefire
-  # (**/*Test.java) NOR Failsafe (**/*IntegrationTest.java), so they never ran on
-  # any build. Renamed to *EndToEndIntegrationTest so Failsafe collects them.
-  #
-  # Unlike the cloud/async Docker-gated suites, these shell out to the `docker`
-  # CLI and need NET_ADMIN / --privileged SIBLING containers. The maven image has
-  # no docker CLI, and the userns-remapped agents reject --privileged, so on the
-  # current agents every suite would SKIP — and a fail-closed assert over
-  # skip-only suites is permanently red for no coverage (see DockerAvailability
-  # javadoc: "only safe once the suite can actually pass"). The step therefore
-  # defaults to a LOUD, VISIBLE notice that the suites were not executed, and runs
-  # + asserts them only when RUN_TRANSPARENT_PROXY_E2E=true on a capable agent.
-  # See the script header and docs/infrastructure/ci-cd.md.
-  - label: ":shield: transparent-proxy e2e tests (opt-in)"
+  # TPROXY, eBPF). They start NET_ADMIN / --privileged sibling containers through
+  # the docker CLI, so the step mounts a docker CLI and the Docker socket, and
+  # assert-suite-ran.sh fails it if any suite skipped. Like every socket step it
+  # is skipped on PR builds. See the script header and docs/infrastructure/ci-cd.md.
+  - label: ":shield: transparent-proxy e2e tests"
     command: ".buildkite/scripts/steps/java-transparent-proxy-test.sh"
+    env:
+      RUN_TRANSPARENT_PROXY_E2E: "true"
     timeout_in_minutes: 30
     retry:
       automatic:

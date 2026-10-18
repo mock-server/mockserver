@@ -211,6 +211,7 @@ public class EbpfOriginalDestinationEndToEndIntegrationTest {
 
         String[] runCmd = {
             "docker", "run", "--rm",
+            DockerCliTestSupport.HOST_USER_NAMESPACE,
             "--privileged",
             "-v", fatJar.toAbsolutePath() + ":/app/mockserver.jar:ro",
             imageName,

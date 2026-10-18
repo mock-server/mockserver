@@ -120,6 +120,7 @@ public class SoOriginalDstEndToEndIntegrationTest {
 
         String[] runCmd = {
             "docker", "run", "--rm",
+            DockerCliTestSupport.HOST_USER_NAMESPACE,
             "--cap-add=NET_ADMIN",
             "-v", fatJar.toAbsolutePath() + ":/app/mockserver.jar:ro",
             imageName,
