@@ -3,7 +3,8 @@
 # description, schema_faq answers, llms.txt line, body core count) against _data/perf_figures.json.
 # Each case edits a copy of fixtures/website-perf-headline/ (a cut-down page in the live wording), so a
 # figure refresh on the real page never breaks these; an edit that does not apply fails, never passes.
-# The committed site itself is linted once, first.
+# The committed site itself is linted once, first, and then with its llms.txt run tally changed, so a
+# reword of that tally phrase ("the N like-for-like runs") fails that edit and needs this test updated.
 # Run: .buildkite/scripts/test/website-perf-headline-lint-test.sh
 set -euo pipefail
 
@@ -58,6 +59,15 @@ check "the fixture page has a description, two rate-stating FAQ answers, an llms
 echo "--- the committed site, then text that agrees"
 rc=0; bash "$LINT" > "$T/repo.out" 2>&1 || rc=$?
 check "the repository as committed passes" "0|yes" "$rc|$(says repo 'OK: the performance headline text agrees')"
+mkdir -p "$T/live/site/_data" "$T/live/site/mock_server"
+cp "$REPO_ROOT/jekyll-www.mock-server.com/_data/perf_figures.json" "$T/live/site/_data/"
+cp "$REPO_ROOT/jekyll-www.mock-server.com/mock_server/performance.html" "$T/live/site/mock_server/"
+cp "$REPO_ROOT/jekyll-www.mock-server.com/llms.txt" "$T/live/site/"
+cp "$REPO_ROOT/.buildkite/scripts/steps/perf-website-publish.sh" "$T/live/publish.sh"
+LIVE_LLMS="$(line_of "$T/live/site/llms.txt" 'mock_server/performance.html')"
+edit "$T/live/site/llms.txt" "${LIVE_LLMS}s/ the [A-Za-z0-9-]* like-for-like runs/ the 98 like-for-like runs/"
+check "  ... and its run tally is read: changing the llms.txt one alone is named" "1|yes" \
+  "$(lint live)|$(says live "llms.txt:$LIVE_LLMS says 98")"
 fixture good
 check "the fixture passes: other answers, other llms.txt lines and unrelated body numbers are not headline text" "0" "$(lint good)"
 fixture k
@@ -106,6 +116,41 @@ check "a run tally one place updated and another did not" "1|yes" "$(lint tally)
 fixture btally
 edit "$C/$PAGE_REL" "${SPREAD}s/In the six like-for-like/In the five like-for-like/"
 check "  ... including the page body's tally" "1|yes" "$(lint btally)|$(says btally "$PAGE_REL:$SPREAD says five")"
+# tally_all <case> <count>: every place states that tally.
+tally_all() {
+  edit "$C/$PAGE_REL" "s/the six like-for-like/the $2 like-for-like/g"
+  edit "$C/llms.txt" "${LLMS}s/the six like-for-like/the $2 like-for-like/"
+}
+fixture t13
+tally_all t13 thirteen
+check "a tally past twelve that every place agrees on passes" "0" "$(lint t13)"
+fixture t13x
+tally_all t13x thirteen
+edit "$C/llms.txt" "${LLMS}s/the thirteen like-for-like/the twelve like-for-like/"
+check "  ... and thirteen against twelve is named" "1|yes|yes" "$(lint t13x)|$(says t13x "llms.txt:$LLMS says twelve")|$(says t13x "$PAGE_REL:$SPREAD says thirteen")"
+fixture tnum
+tally_all tnum thirteen
+edit "$C/llms.txt" "${LLMS}s/the thirteen like-for-like/the 13 like-for-like/"
+check "a numeral and the same count in words agree" "0" "$(lint tnum)"
+fixture tnumx
+edit "$C/llms.txt" "${LLMS}s/the six like-for-like/the 13 like-for-like/"
+check "  ... and a numeral that disagrees is named" "1|yes" "$(lint tnumx)|$(says tnumx "llms.txt:$LLMS says 13")"
+fixture t21
+tally_all t21 twenty
+edit "$C/llms.txt" "${LLMS}s/the twenty like-for-like/the twenty-one like-for-like/"
+check "a compound count is read whole, not as its last word" "1|yes" "$(lint t21)|$(says t21 "llms.txt:$LLMS says twenty-one")"
+fixture t99
+tally_all t99 "ninety-nine"
+edit "$C/llms.txt" "${LLMS}s/the ninety-nine like-for-like/the 99 like-for-like/"
+check "  ... up to ninety-nine" "0" "$(lint t99)"
+fixture tbig
+tally_all tbig "a hundred and two"
+check "a count in words past ninety-nine fails closed" "1|yes" \
+  "$(lint tbig)|$(says tbig "llms.txt:$LLMS: the run tally \"a hundred and two\" is not a count the check can read")"
+fixture tadj
+edit "$C/llms.txt" "${LLMS}s/the six like-for-like/the six qualifying like-for-like/"
+check "a word between the count and \"like-for-like runs\" fails closed" "1|yes" \
+  "$(lint tadj)|$(says tadj "llms.txt:$LLMS: mentions like-for-like runs without a count")"
 
 echo "--- an FAQ answer that states a rate in any unit, in any case, is checked"
 for unit in "RPS" "rps" "req/sec" "requests a second" "Requests/Sec" "REQ/S" "Requests Per Second"; do

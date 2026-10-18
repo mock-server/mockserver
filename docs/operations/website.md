@@ -217,7 +217,10 @@ What it checks against `_data/perf_figures.json` (rules in
 - **Latencies** (`N ms`) must round from the headline p50, p95, p99, whole-rung p99 or the p99
   bound; **core counts** must equal `headline.server_cores`.
 - **The run tally** ("the twelve like-for-like runs") must be the same number everywhere it is
-  stated. The per-rate counts ("in five, … in three and … in two") are not in the page data, so
+  stated, by value: `13` and `thirteen` agree. A count is read as a numeral or in words up to
+  ninety-nine. A count in words it cannot read (`a hundred and two`), or an FAQ answer or
+  `llms.txt` line that mentions like-for-like runs with no count right before them, fails the
+  lint. The per-rate counts ("in five, … in three and … in two") are not in the page data, so
   they stay a manual reconcile.
 
 It fails closed: missing or unreadable page data, a missing `healthy_ceiling_rps`,
