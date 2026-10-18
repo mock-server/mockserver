@@ -81,6 +81,16 @@ The gate is `configuration.driftDetectionEnabled() && ChaosProbability.shouldInj
 
 `DriftStore.getInstance().clear()` is called during `HttpState.reset()`, alongside all other registry resets.
 
+### Several Servers in One JVM
+
+The drift alert webhook (`driftAlertWebhookEnabled`), LLM semantic analysis (`driftSemanticAnalysisEnabled`) and the p95 threshold (`driftResponseTimeThresholdMs`) live on process-wide singletons (`DriftAlertNotifier`, `DriftAnalyzer`). So only one server's drift settings can be in effect at a time. `DriftWiring` (in `mockserver-netty`, `org.mockserver.lifecycle`) applies them when `LifeCycle` starts a server, and withdraws them when it stops:
+
+- **Most recent wins.** A server that turns at least one of the three on puts all three of its settings in effect, replacing those of any running server.
+- **Servers that turn nothing on are ignored.** A server with all three off neither applies nor withdraws anything. Plain stub, upstream or sink servers started alongside one that uses drift alerts therefore do not switch them off.
+- **Settings never outlive their server.** When the server whose settings are in effect stops, the settings of the previous server that put its own in effect take over, provided it is still running (via `MostRecentRegistration`, the same pattern the request senders use). If no such server is running, the webhook, LLM enrichment and the threshold are all switched off.
+
+**Limit:** two running servers cannot have different drift webhook, semantic-analysis or threshold settings at the same time. The later one's settings apply to drift detected by both. `driftDetectionEnabled` and `driftSampleRate` are read per server and are not affected.
+
 ## REST API
 
 ### PUT /mockserver/baseline/compare

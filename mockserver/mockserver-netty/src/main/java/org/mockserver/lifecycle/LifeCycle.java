@@ -121,6 +121,7 @@ public abstract class LifeCycle implements Stoppable {
     private final org.mockserver.telemetry.GenAiSpanExporter genAiSpanExporter;
     // optional Prometheus remote-write push exporter — null unless enabled
     private final org.mockserver.metrics.PrometheusRemoteWriteExporter prometheusRemoteWriteExporter;
+    private final DriftWiring driftWiring;
 
     protected LifeCycle(Configuration configuration) {
         this.configuration = configuration != null ? configuration : configuration();
@@ -141,9 +142,7 @@ public abstract class LifeCycle implements Stoppable {
         this.prometheusRemoteWriteExporter = org.mockserver.metrics.PrometheusRemoteWriteExporter.startIfEnabled(this.configuration);
         installSemanticMatchingIfEnabled(this.workerGroup);
         installLlmCompletionServiceIfAvailable(this.workerGroup);
-        installSemanticDriftIfEnabled(this.workerGroup);
-        installPerformanceDriftThreshold();
-        installDriftAlertWebhook();
+        this.driftWiring = DriftWiring.start(this.configuration, this.mockServerLogger, this.workerGroup);
     }
 
     /**
@@ -204,109 +203,6 @@ public abstract class LifeCycle implements Stoppable {
             org.slf4j.LoggerFactory.getLogger(LifeCycle.class)
                 .warn("failed to install LLM completion service ({}); stub generation will use template fallback", e.getMessage());
         }
-    }
-
-    /**
-     * When semantic drift analysis is enabled and a runtime LLM backend resolves,
-     * create a {@link org.mockserver.mock.drift.SemanticDriftExtension} and install
-     * it on the global {@link org.mockserver.mock.drift.DriftAnalyzer}. Fail-soft.
-     */
-    private void installSemanticDriftIfEnabled(EventLoopGroup eventLoopGroup) {
-        if (!configuration.driftSemanticAnalysisEnabled()) {
-            return;
-        }
-        try {
-            java.util.Optional<org.mockserver.llm.client.LlmBackend> backend =
-                new org.mockserver.llm.client.LlmBackendResolver(configuration).resolveDefault();
-            if (!backend.isPresent()) {
-                org.slf4j.LoggerFactory.getLogger(LifeCycle.class)
-                    .info("semantic drift analysis enabled but no LLM backend available; feature disabled");
-                return;
-            }
-            org.mockserver.httpclient.NettyHttpClient httpClient =
-                new org.mockserver.httpclient.NettyHttpClient(configuration, mockServerLogger, eventLoopGroup, null, false);
-            org.mockserver.llm.client.LlmCompletionService service =
-                new org.mockserver.llm.client.LlmCompletionService(new org.mockserver.llm.client.NettyHttpClientLlmTransport(httpClient), configuration);
-            org.mockserver.mock.drift.SemanticDriftExtension extension =
-                new org.mockserver.mock.drift.SemanticDriftExtension(service, backend.get(), configuration.dataPlaneApiKeyAuthenticationHeader());
-            org.mockserver.mock.drift.DriftAnalyzer.getInstance().setSemanticExtension(extension);
-            org.slf4j.LoggerFactory.getLogger(LifeCycle.class)
-                .info("semantic drift analysis enabled (backend: {})", backend.get().provider());
-        } catch (Exception e) {
-            // fail-soft — semantic drift analysis stays off
-            org.slf4j.LoggerFactory.getLogger(LifeCycle.class)
-                .warn("failed to enable semantic drift analysis ({}); continuing without it", e.getMessage());
-        }
-    }
-
-    /**
-     * Apply the configured p95 response time threshold for performance drift detection.
-     */
-    private void installPerformanceDriftThreshold() {
-        long threshold = configuration.driftResponseTimeThresholdMs();
-        if (threshold > 0) {
-            org.mockserver.mock.drift.DriftAnalyzer.getInstance().setResponseTimeThresholdMs(threshold);
-            org.slf4j.LoggerFactory.getLogger(LifeCycle.class)
-                .info("performance drift detection enabled (p95 threshold: {} ms)", threshold);
-        }
-    }
-
-    /**
-     * Apply the configured drift-alert webhook. Off by default; only configures the
-     * {@link org.mockserver.mock.drift.DriftAlertNotifier} when enabled and the URL is non-blank.
-     * Fail-soft: a blank or malformed severity threshold logs a warning and the webhook stays off.
-     */
-    private void installDriftAlertWebhook() {
-        try {
-            if (!configuration.driftAlertWebhookEnabled()) {
-                return;
-            }
-            String url = configuration.driftAlertWebhookUrl();
-            if (url == null || url.isBlank()) {
-                org.slf4j.LoggerFactory.getLogger(LifeCycle.class)
-                    .warn("drift alert webhook enabled but no URL configured; feature disabled");
-                return;
-            }
-            org.mockserver.mock.drift.SemanticSeverity threshold;
-            try {
-                threshold = org.mockserver.mock.drift.SemanticSeverity.valueOf(
-                    configuration.driftAlertSeverityThreshold().trim().toUpperCase());
-            } catch (Exception e) {
-                org.slf4j.LoggerFactory.getLogger(LifeCycle.class)
-                    .warn("drift alert webhook severity threshold '{}' is invalid; feature disabled",
-                        configuration.driftAlertSeverityThreshold());
-                return;
-            }
-            long cooldownMillis = configuration.driftAlertCooldownMillis();
-            org.mockserver.mock.drift.DriftAlertNotifier.getInstance().configure(true, url, threshold, cooldownMillis, configuration);
-            // INFO logs only scheme+host: the configured webhook URL often embeds a secret token
-            // (e.g. a Slack incoming-webhook path), so the full URL must never be written at INFO.
-            org.slf4j.LoggerFactory.getLogger(LifeCycle.class)
-                .info("drift alert webhook enabled (endpoint: {}, severity>={}, cooldown: {} ms)", redactWebhookUrl(url), threshold, cooldownMillis);
-            org.slf4j.LoggerFactory.getLogger(LifeCycle.class)
-                .debug("drift alert webhook full url: {}", url);
-        } catch (Exception e) {
-            // fail-soft — drift alert webhook stays off
-            org.slf4j.LoggerFactory.getLogger(LifeCycle.class)
-                .warn("failed to enable drift alert webhook ({}); continuing without it", e.getMessage());
-        }
-    }
-
-    /**
-     * Reduces a webhook URL to a token-free {@code scheme://host[:port]} form for INFO logging. The
-     * path/query are dropped because they commonly carry a secret (e.g. a Slack incoming-webhook
-     * token). Falls back to {@code <redacted url>} if the URL cannot be parsed.
-     */
-    private static String redactWebhookUrl(String url) {
-        try {
-            java.net.URI uri = java.net.URI.create(url);
-            if (uri.getScheme() != null && uri.getHost() != null) {
-                return uri.getScheme() + "://" + uri.getHost() + (uri.getPort() == -1 ? "" : ":" + uri.getPort());
-            }
-        } catch (Exception ignore) {
-            // fall through to a fully-redacted placeholder
-        }
-        return "<redacted url>";
     }
 
     /**
@@ -462,6 +358,7 @@ public abstract class LifeCycle implements Stoppable {
                     prometheusRemoteWriteExporter.stop();
                 }
                 org.mockserver.llm.semantic.SemanticMatching.clear();
+                driftWiring.stop();
 
                 // The forward-client group is created lazily, so it may never have been created (a
                 // pure-mock server). Read it under the same lock the accessor creates it under: this is

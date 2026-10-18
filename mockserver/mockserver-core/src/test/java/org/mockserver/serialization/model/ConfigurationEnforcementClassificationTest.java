@@ -159,6 +159,11 @@ public class ConfigurationEnforcementClassificationTest {
             "org.mockserver.mock.HttpStateAuthorizationTest#authorizationDisabledDoesNotForbid");
         ENFORCEMENT_VERIFIED.put("dnsEnabled",
             "org.mockserver.netty.EpollTransportIntegrationTest#shouldBootWithDnsEnabledAndNativeTransport");
+        // read once at server start by DriftWiring; real forward-vs-stub drift reaches a webhook sink only when enabled
+        ENFORCEMENT_VERIFIED.put("driftAlertWebhookEnabled",
+            "org.mockserver.lifecycle.LifeCycleDriftWiringTest#shouldPostDriftAlertToTheWebhookWhenDriftAlertWebhookEnabled");
+        ENFORCEMENT_VERIFIED.put("driftSemanticAnalysisEnabled",
+            "org.mockserver.lifecycle.LifeCycleDriftWiringTest#shouldClassifyDriftWithTheLlmWhenDriftSemanticAnalysisEnabled");
         ENFORCEMENT_VERIFIED.put("forwardConnectionPoolEnabled",
             "org.mockserver.httpclient.netty.NettyHttpClientConnectionPoolTest#shouldReuseSingleConnectionForSequentialBurstWhenPoolingEnabled");
         ENFORCEMENT_VERIFIED.put("forwardProxyCircuitBreakerEnabled",
@@ -250,12 +255,8 @@ public class ConfigurationEnforcementClassificationTest {
                 + "exercising HttpActionHandler, so it would pass even if the call site read the static store");
         ENFORCEMENT_EXEMPT.put("driftAlertSeverityThreshold",
             "NO BEHAVIOURAL TEST YET — no test asserts the threshold changes which drift alerts are emitted");
-        ENFORCEMENT_EXEMPT.put("driftAlertWebhookEnabled",
-            "NO BEHAVIOURAL TEST YET — no test asserts the flag gates drift webhook delivery");
         ENFORCEMENT_EXEMPT.put("driftResponseTimeThresholdMs",
             "NO BEHAVIOURAL TEST YET — no test asserts the threshold changes which responses are flagged as drifted");
-        ENFORCEMENT_EXEMPT.put("driftSemanticAnalysisEnabled",
-            "NO BEHAVIOURAL TEST YET — no test asserts the flag gates semantic drift analysis");
         ENFORCEMENT_EXEMPT.put("maxStreamingCaptureBytes",
             "NO BEHAVIOURAL TEST YET — no test asserts streaming capture is truncated at an instance-set limit");
         ENFORCEMENT_EXEMPT.put("slowRequestThresholdMillis",
@@ -412,6 +413,8 @@ public class ConfigurationEnforcementClassificationTest {
     private static final Set<String> CROSS_MODULE_EVIDENCE = new TreeSet<>(java.util.Arrays.asList(
         "clusterEnabled",
         "dnsEnabled",
+        "driftAlertWebhookEnabled",
+        "driftSemanticAnalysisEnabled",
         "grpcBidiStreamingEnabled",
         "http3ConnectUdpEnabled",
         "maxInboundConnections",

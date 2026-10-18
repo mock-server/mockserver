@@ -1043,6 +1043,9 @@ registered, uses the most recent, and when the one in use is unregistered goes b
 the others instead of to none. So when a newer server stops, an older one still running gets its gauges,
 its scenario state (captures, the `scenario` template helper, cross-protocol triggers) and its load and
 drift-alert sender back without first accepting a new connection (`RunningServerKeepsItsRegistrationsTest`).
+`DriftWiring.IN_EFFECT` (`org.mockserver.lifecycle`) registers only servers that turn a drift setting on (webhook,
+LLM semantic analysis or p95 threshold); each entry holds that server's `Configuration` and, for semantic analysis,
+its LLM client, and `LifeCycle` stop releases it (`LifeCycleDriftWiringTest`).
 The registrations not in use are held weakly, so a server that is never stopped does not stay in those lists
 once nothing else refers to it, and the fallback skips ones already collected. (An `HttpState` dropped without `stop()`
 is still kept by its own event-log thread, which only `stop()` ends; `AbandonedHttpStateIsCollectedTest`
