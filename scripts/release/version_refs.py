@@ -60,9 +60,8 @@ KEEP_LINES = {
         'refused it (the 8.0.0 npm case)',
     ],
     'docs/plans/performance-measurement-backlog.md': [
-        '### After the 9.0.0 release',
-        'after 9.0.0: build and test',
-        'after 9.0.0: file the draft',
+        '9.0.0 has shipped (2026-10-15)',
+        '9.0.0 has shipped, so this is now',
     ],
     'jekyll-www.mock-server.com/llms-full.txt': [
         'Changed in 9.0.0 (breaking): 8.0.0 forwarded each message',
