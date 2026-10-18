@@ -823,3 +823,271 @@ fn test_matching_diagnostics() {
 
     client.reset().expect("reset failed");
 }
+
+// ---------------------------------------------------------------------------
+// SSE, LLM and binary response actions driven over the wire
+// ---------------------------------------------------------------------------
+
+/// A raw HTTP/1.1 exchange returning `(status, lower-cased header block, body)`.
+/// Unlike [`http_get`] it keeps the body as bytes, sends an optional body, and
+/// de-chunks a `Transfer-Encoding: chunked` response (SSE responses are chunked).
+fn http_exchange(method: &str, path: &str, body: Option<&str>) -> (u16, String, Vec<u8>) {
+    let (host, port) = data_host_port();
+    let mut stream =
+        TcpStream::connect((host.as_str(), port)).expect("connect to MockServer data plane");
+    stream
+        .set_read_timeout(Some(Duration::from_secs(20)))
+        .expect("set read timeout");
+
+    let mut req =
+        format!("{method} {path} HTTP/1.1\r\nHost: {host}:{port}\r\nConnection: close\r\n");
+    if let Some(b) = body {
+        req.push_str(&format!(
+            "Content-Type: application/json\r\nContent-Length: {}\r\n",
+            b.len()
+        ));
+    }
+    req.push_str("\r\n");
+    req.push_str(body.unwrap_or(""));
+    stream.write_all(req.as_bytes()).expect("write request");
+
+    let mut raw = Vec::new();
+    let mut chunk = [0u8; 4096];
+    loop {
+        match stream.read(&mut chunk) {
+            Ok(0) => break,
+            Ok(n) => {
+                raw.extend_from_slice(&chunk[..n]);
+                if response_complete(&raw) || raw.ends_with(b"\r\n0\r\n\r\n") {
+                    break;
+                }
+            }
+            Err(e)
+                if e.kind() == std::io::ErrorKind::WouldBlock
+                    || e.kind() == std::io::ErrorKind::TimedOut =>
+            {
+                panic!(
+                    "timed out before the response completed; partial response: {:?}",
+                    String::from_utf8_lossy(&raw)
+                )
+            }
+            Err(e) => panic!("read response failed: {e}"),
+        }
+    }
+
+    let split = raw
+        .windows(4)
+        .position(|w| w == b"\r\n\r\n")
+        .unwrap_or_else(|| {
+            panic!(
+                "no header terminator in {:?}",
+                String::from_utf8_lossy(&raw)
+            )
+        });
+    let headers = String::from_utf8_lossy(&raw[..split]).to_ascii_lowercase();
+    let status = headers
+        .split_whitespace()
+        .nth(1)
+        .and_then(|s| s.parse::<u16>().ok())
+        .unwrap_or_else(|| panic!("could not parse status line: {headers:?}"));
+    let mut body_bytes = raw[split + 4..].to_vec();
+    if headers.contains("transfer-encoding: chunked") {
+        body_bytes = dechunk(&body_bytes);
+    }
+    (status, headers, body_bytes)
+}
+
+fn dechunk(mut data: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    while let Some(eol) = data.windows(2).position(|w| w == b"\r\n") {
+        let size_field = String::from_utf8_lossy(&data[..eol]);
+        let size = usize::from_str_radix(size_field.split(';').next().unwrap().trim(), 16)
+            .unwrap_or_else(|_| panic!("bad chunk size {size_field:?}"));
+        if size == 0 {
+            break;
+        }
+        let start = eol + 2;
+        assert!(
+            start + size <= data.len(),
+            "truncated chunk: size {size} but only {} bytes remain: {:?}",
+            data.len() - start,
+            String::from_utf8_lossy(&data[start..])
+        );
+        out.extend_from_slice(&data[start..start + size]);
+        data = &data[(start + size + 2).min(data.len())..];
+    }
+    out
+}
+
+/// Parses a `text/event-stream` body into `(id, event, data, retry)` frames.
+fn parse_sse(body: &str) -> Vec<(String, String, String, String)> {
+    body.replace("\r\n", "\n")
+        .split("\n\n")
+        .filter(|frame| !frame.trim().is_empty())
+        .map(|frame| {
+            let (mut id, mut event, mut data, mut retry) =
+                (String::new(), String::new(), String::new(), String::new());
+            for line in frame.lines() {
+                if let Some((name, value)) = line.split_once(':') {
+                    let value = value.strip_prefix(' ').unwrap_or(value).to_string();
+                    match name {
+                        "id" => id = value,
+                        "event" => event = value,
+                        "data" => data = value,
+                        "retry" => retry = value,
+                        _ => {}
+                    }
+                }
+            }
+            (id, event, data, retry)
+        })
+        .collect()
+}
+
+#[test]
+#[ignore]
+fn test_sse_response_streamed_over_wire() {
+    let client = get_client();
+    client.reset().expect("reset failed");
+
+    client
+        .when(HttpRequest::new().method("GET").path("/rustwire-sse"))
+        .respond_with_sse(
+            HttpSseResponse::new()
+                .status_code(200)
+                .event(SseEvent::new().id("1").event("greet").data("hello-rust"))
+                .event(
+                    SseEvent::new()
+                        .id("42")
+                        .event("update")
+                        .data("world-rust")
+                        .retry(3000),
+                )
+                .close_connection(true),
+        )
+        .expect("registering SSE expectation failed");
+
+    let (status, headers, body) = http_exchange("GET", "/rustwire-sse", None);
+    assert_eq!(status, 200);
+    assert!(
+        headers.contains("content-type: text/event-stream"),
+        "SSE must be served as text/event-stream, headers: {headers}"
+    );
+    let s = |v: &str| v.to_string();
+    assert_eq!(
+        parse_sse(&String::from_utf8_lossy(&body)),
+        vec![
+            (s("1"), s("greet"), s("hello-rust"), s("")),
+            (s("42"), s("update"), s("world-rust"), s("3000")),
+        ],
+        "the server must stream exactly the registered SSE events"
+    );
+
+    client.reset().expect("reset failed");
+}
+
+#[test]
+#[ignore]
+fn test_llm_response_serves_openai_envelope_over_wire() {
+    use mockserver_client::llm::{llm_mock, Completion, Provider, Usage};
+
+    let client = get_client();
+    client.reset().expect("reset failed");
+
+    llm_mock("/rustwire-llm/v1/chat/completions")
+        .with_provider(Provider::OPENAI)
+        .with_model("gpt-4o-rustwire")
+        .responding_with(
+            Completion::new()
+                .with_text("Hello from Rust")
+                .with_stop_reason("stop")
+                .with_usage(Usage::new().with_input_tokens(9).with_output_tokens(3)),
+        )
+        .apply_to(&client)
+        .expect("registering LLM expectation failed");
+
+    let (status, headers, body) = http_exchange(
+        "POST",
+        "/rustwire-llm/v1/chat/completions",
+        Some(r#"{"model":"gpt-4o-rustwire","messages":[{"role":"user","content":"hi"}]}"#),
+    );
+    assert_eq!(status, 200, "body: {}", String::from_utf8_lossy(&body));
+    assert!(
+        headers.contains("content-type: application/json"),
+        "headers: {headers}"
+    );
+
+    let envelope: serde_json::Value =
+        serde_json::from_slice(&body).expect("LLM response body must be JSON");
+    assert_eq!(
+        envelope["object"], "chat.completion",
+        "not an OpenAI envelope: {envelope}"
+    );
+    assert!(
+        envelope["id"]
+            .as_str()
+            .unwrap_or("")
+            .starts_with("chatcmpl-"),
+        "{envelope}"
+    );
+    assert_eq!(envelope["model"], "gpt-4o-rustwire");
+    let choices = envelope["choices"].as_array().expect("choices array");
+    assert_eq!(choices.len(), 1, "{envelope}");
+    assert_eq!(choices[0]["message"]["role"], "assistant");
+    assert_eq!(choices[0]["message"]["content"], "Hello from Rust");
+    assert_eq!(choices[0]["finish_reason"], "stop");
+    assert_eq!(envelope["usage"]["prompt_tokens"], 9);
+    assert_eq!(envelope["usage"]["completion_tokens"], 3);
+    assert_eq!(envelope["usage"]["total_tokens"], 12);
+
+    client.reset().expect("reset failed");
+}
+
+/// A `binaryResponse` action answers a raw, non-HTTP message: the server writes
+/// the registered octets (including NUL and 0xFF) back on the same socket. The
+/// request matcher is a binary one (`httpRequest.binaryData`), which the typed
+/// [`HttpRequest`] does not name, so it rides in the `extra` catch-all.
+#[test]
+#[ignore]
+fn test_binary_response_served_over_wire() {
+    use base64::Engine;
+
+    let client = get_client();
+    client.reset().expect("reset failed");
+
+    let request_bytes: &[u8] = b"\x00\x01RUSTPING\xff";
+    let response_bytes: &[u8] = b"\x00\x02RUSTPONG\xfe";
+    let mut matcher = HttpRequest::new();
+    matcher.extra.insert(
+        "binaryData".into(),
+        serde_json::Value::from(base64::engine::general_purpose::STANDARD.encode(request_bytes)),
+    );
+    client
+        .when(matcher)
+        .respond_with_binary(BinaryResponse::from_bytes(response_bytes))
+        .expect("registering binary expectation failed");
+
+    let (host, port) = data_host_port();
+    let mut stream = TcpStream::connect((host.as_str(), port)).expect("connect");
+    stream
+        .set_read_timeout(Some(Duration::from_secs(10)))
+        .expect("set read timeout");
+    stream
+        .write_all(request_bytes)
+        .expect("write binary message");
+    let mut received = Vec::new();
+    let mut chunk = [0u8; 256];
+    while received.len() < response_bytes.len() {
+        match stream.read(&mut chunk) {
+            Ok(0) => break,
+            Ok(n) => received.extend_from_slice(&chunk[..n]),
+            Err(e) => panic!("reading binary reply failed after {received:?}: {e}"),
+        }
+    }
+    assert_eq!(
+        received, response_bytes,
+        "the server must write back exactly the registered binaryResponse octets"
+    );
+
+    client.reset().expect("reset failed");
+}

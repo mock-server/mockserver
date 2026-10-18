@@ -7,6 +7,8 @@ namespace MockServer.Client.IntegrationTests;
 /// hooks without requiring a running MockServer. When MOCKSERVER_URL is unset
 /// the fixture must degrade gracefully (no client, no-op hooks).
 /// </summary>
+// Shares the Integration collection so clearing the process-wide MOCKSERVER_URL cannot race those tests.
+[Collection("Integration")]
 public class MockServerFixtureTests
 {
     private sealed class ProbeFixture : MockServerFixture

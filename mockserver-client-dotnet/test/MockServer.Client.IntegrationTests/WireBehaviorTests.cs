@@ -1,6 +1,7 @@
 using System.Net;
 using FluentAssertions;
 using MockServer.Client.Models;
+using Llm = MockServer.Client.Llm;
 using Xunit;
 
 namespace MockServer.Client.IntegrationTests;
@@ -9,7 +10,7 @@ namespace MockServer.Client.IntegrationTests;
 /// Integration tests that prove the SERVER actually honours the actions and matchers the .NET
 /// client sends over the wire — not merely that the client can create the expectation.
 ///
-/// <para>Two coverage gaps motivated these tests:</para>
+/// <para>Covered behaviours:</para>
 /// <list type="bullet">
 ///   <item><description>NottableString negation (a header matcher value of <c>!foo</c>): the client
 ///   must send the negation marker and the server must reject a request whose header equals
@@ -20,6 +21,9 @@ namespace MockServer.Client.IntegrationTests;
 ///   ERROR action and a real request proves the server actually forwards (the response body comes
 ///   from the forwarded-to expectation) and actually errors (the connection is dropped) —
 ///   not just that the expectation was created.</description></item>
+///   <item><description>Advanced response actions (template, BINARY body, SSE, LLM): a real request
+///   proves the server renders the template, serves the exact bytes, streams the registered events
+///   and encodes the provider's response envelope.</description></item>
 /// </list>
 ///
 /// <para>Reaches a running MockServer via the same harness the other integration tests use: the
@@ -82,7 +86,7 @@ public class WireBehaviorTests : IDisposable
         return httpClient.Send(request);
     }
 
-    // ── #44 NottableString negation over the wire ──────────────────────────────────────────────
+    // ── NottableString negation over the wire ──────────────────────────────────────────────
 
     [SkippableFact]
     public void HeaderNegationMatcher_IsSentAndEnforced_OverWire()
@@ -146,7 +150,7 @@ public class WireBehaviorTests : IDisposable
         _client.Reset();
     }
 
-    // ── #46 server-echoed NottableString negation/escape is DECODED by the client ──────────────
+    // ── server-echoed NottableString negation/escape is DECODED by the client ──────────────
 
     [SkippableFact]
     public void NegationAndEscapeMatchers_AreDecoded_WhenRetrieved()
@@ -232,7 +236,7 @@ public class WireBehaviorTests : IDisposable
         throw new InvalidOperationException($"header {key} not present on expectation for {path}");
     }
 
-    // ── #46 response actions actually performed over the wire ──────────────────────────────────
+    // ── response actions actually performed over the wire ──────────────────────────────────
 
     [SkippableFact]
     public void ForwardAction_IsActuallyForwarded_OverWire()
@@ -297,7 +301,7 @@ public class WireBehaviorTests : IDisposable
         _client.Reset();
     }
 
-    // ── #47 advanced response actions actually rendered/served over the wire ───────────────────
+    // ── advanced response actions actually rendered/served over the wire ───────────────────
 
     [SkippableFact]
     public void ResponseTemplate_IsRendered_OverWire()
@@ -349,6 +353,108 @@ public class WireBehaviorTests : IDisposable
             "the server must serve the EXACT bytes of the registered BINARY body");
         served.Content.Headers.ContentType?.MediaType.Should().Be("application/octet-stream",
             "the registered content type must be served on the wire");
+
+        _client.Reset();
+    }
+
+    // ── SSE and LLM response actions actually streamed/encoded over the wire ───────────────
+
+    private static HttpResponseMessage PostJson(string url, string json)
+    {
+        using var httpClient = new HttpClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post, url)
+        {
+            Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+        };
+        return httpClient.Send(request);
+    }
+
+    /// <summary>Parses a text/event-stream body into (id, event, data, retry) tuples, one per frame.</summary>
+    private static List<(string? Id, string? Event, string? Data, string? Retry)> ParseSse(string body)
+    {
+        var events = new List<(string?, string?, string?, string?)>();
+        foreach (var frame in body.Replace("\r\n", "\n").Split("\n\n"))
+        {
+            if (string.IsNullOrWhiteSpace(frame)) continue;
+            string? id = null, evt = null, data = null, retry = null;
+            foreach (var line in frame.Split('\n'))
+            {
+                var colon = line.IndexOf(':');
+                if (colon < 0) continue;
+                var value = line[(colon + 1)..].TrimStart(' ');
+                switch (line[..colon])
+                {
+                    case "id": id = value; break;
+                    case "event": evt = value; break;
+                    case "data": data = value; break;
+                    case "retry": retry = value; break;
+                }
+            }
+            events.Add((id, evt, data, retry));
+        }
+        return events;
+    }
+
+    [SkippableFact]
+    public void SseResponse_IsStreamed_OverWire()
+    {
+        SkipIfNoServer();
+        _client!.Reset();
+
+        _client.When(
+            HttpRequest.Request().WithMethod("GET").WithPath("/sse-wire")
+        ).RespondWithSse(
+            new SseResponseBuilder()
+                .WithStatusCode(200)
+                .WithEvent("hello-dotnet", eventName: "greet", id: "1")
+                .WithEvent("world-dotnet", eventName: "update", id: "42", retry: 3000)
+                .WithCloseConnection()
+        );
+
+        var response = Get($"{_baseUrl}/sse-wire");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.Content.Headers.ContentType?.MediaType.Should().Be("text/event-stream");
+
+        var events = ParseSse(response.Content.ReadAsStringAsync().Result);
+        events.Should().Equal(
+            ("1", "greet", "hello-dotnet", (string?)null),
+            ("42", "update", "world-dotnet", "3000"));
+
+        _client.Reset();
+    }
+
+    [SkippableFact]
+    public void LlmResponse_ServesAnthropicEnvelope_OverWire()
+    {
+        SkipIfNoServer();
+        _client!.Reset();
+
+        Llm.LlmMockBuilder.LlmMock("/llm-wire/v1/messages")
+            .WithProvider(Llm.Provider.ANTHROPIC)
+            .WithModel("claude-dotnet-wire")
+            .RespondingWith(Llm.Completion.Create()
+                .WithText("Hello from .NET")
+                .WithUsage(Llm.Usage.Create().WithInputTokens(13).WithOutputTokens(4)))
+            .ApplyTo(_client);
+
+        var response = PostJson($"{_baseUrl}/llm-wire/v1/messages",
+            "{\"model\":\"claude-dotnet-wire\",\"max_tokens\":64,\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.Content.Headers.ContentType?.MediaType.Should().Be("application/json");
+
+        using var doc = System.Text.Json.JsonDocument.Parse(response.Content.ReadAsStringAsync().Result);
+        var root = doc.RootElement;
+        root.GetProperty("type").GetString().Should().Be("message", "an Anthropic Messages envelope");
+        root.GetProperty("id").GetString().Should().StartWith("msg_");
+        root.GetProperty("role").GetString().Should().Be("assistant");
+        root.GetProperty("model").GetString().Should().Be("claude-dotnet-wire");
+        root.GetProperty("stop_reason").GetString().Should().Be("end_turn");
+        var content = root.GetProperty("content");
+        content.GetArrayLength().Should().Be(1);
+        content[0].GetProperty("type").GetString().Should().Be("text");
+        content[0].GetProperty("text").GetString().Should().Be("Hello from .NET");
+        root.GetProperty("usage").GetProperty("input_tokens").GetInt32().Should().Be(13);
+        root.GetProperty("usage").GetProperty("output_tokens").GetInt32().Should().Be(4);
 
         _client.Reset();
     }
