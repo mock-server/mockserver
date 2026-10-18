@@ -1,16 +1,17 @@
 # Test Coverage Gaps
 
 **Outcome.** The July 2026 coverage audit (95 gaps: 93 numbered gaps plus follow-ups F1/F2) was
-re-checked against master on 2026-10-18: 83 closed, 1 no longer applies, 11 still open. Of the 11: T1 (#19–21) needs a capable CI queue;
-#1 and #82 are declined (see below); six (#47, #54, #66, #68, #83, #90) are being implemented now
-(2026-10-18) and are tracked by their own commits, not here. Delete this file once T1 is closed
-and the in-progress six have landed.
+re-checked against master on 2026-10-18: 83 closed, 1 no longer applies, 11 still open. Since
+then gaps 54, 66, 68, 83 and 90 have closed, and gap 47 is partly closed. What is left is T1 (gaps
+19–21, which need a capable CI queue) and the rest of gap 47. Gaps 1 and 82 were declined (see
+below). Delete this file once T1 and gap 47 are closed.
 
 ## What remains
 
 | # | Gap | Why it matters | Blocked on | Next step |
 |---|---|---|---|---|
 | T1 | The transparent-proxy end-to-end tests (`TproxyEndToEndIntegrationTest`, `SoOriginalDstEndToEndIntegrationTest`, `EbpfOriginalDestinationEndToEndIntegrationTest`, #19–21) are collected but run on no CI build. Their step is opt-in through `RUN_TRANSPARENT_PROXY_E2E`, which no pipeline sets, so the step exits 0 having run nothing. The step also runs inside the `mockserver/mockserver:maven` image, which has no Docker CLI, so it cannot start the privileged container these tests need as things stand. | `IP_TRANSPARENT`, `SO_ORIGINAL_DST` and eBPF interception can regress while every build stays green. | An agent with the Docker CLI and socket and `NET_ADMIN`, with no user-namespace remap. eBPF also needs `--privileged`. | Put the Docker CLI in `docker_build/maven/Dockerfile` (or run this step on a host-CLI image instead), add a capable queue in `terraform/buildkite-agents/`, then set `RUN_TRANSPARENT_PROXY_E2E=true` in `.buildkite/pipeline-java.yml` so the existing `assert-suite-ran` guard fails closed. Enabling `SO_ORIGINAL_DST` alone (it needs only `NET_ADMIN`, so it can go ahead of eBPF) means splitting the `-Dit.test` list and the `assert-suite-ran` globs in `java-transparent-proxy-test.sh` per suite, so it runs without also enabling the `--privileged` eBPF case. |
+| 47 | The Go, .NET and Rust clients create and retrieve callback, WebSocket, DNS and gRPC response actions, but no test drives them over the wire. SSE, LLM and binary are covered. | A client that mis-encodes one of these actions passes the schema tests but serves the wrong bytes. | Nothing external. The Go and .NET test projects need a WebSocket client, and class callbacks need a server-side callback class. | Add a per-client live test for each action that reads what the server actually sends (WebSocket frames, DNS answer, gRPC response) and asserts its shape. |
 
 ### Declined
 
@@ -32,15 +33,6 @@ and the in-progress six have landed.
   `DashboardWebSocketHandlerTest.java:2306` — the exact shape the declined sweep would have
   caught, found again by hand. That recurrence does not by itself reopen the decline; it is the
   fact the owner needs to weigh if this audit style continues.
-
-### In progress (2026-10-18)
-
-- **#47** — Response-action wire behaviour for the remaining Go/.NET/Rust action types (callback, sse, websocket, dns, grpc, llm, and Rust binary). Next: a per-client live test that reads the stream/response for each and asserts its real shape, not just that it was accepted.
-- **#54** — `driftAlertWebhookEnabled` / `driftSemanticAnalysisEnabled` gating tests. Next: start a MockServer with each flag true/false and assert the webhook POST / semantic-extension registration only happens when enabled.
-- **#66** — C# composer-codegen compile check (currently a frozen snapshot, not re-emitted per build). Next: emit the shared parity-case matrix through `csharp.ts` into a scratch project and `dotnet build` it in CI, as the other languages already do.
-- **#68** — Fail-closed container-start assertion for the go/dotnet testcontainers CI steps. Next: print a status marker once the container answers, and grep for it in the step script.
-- **#83** — `HttpRequestHandlerTest`'s dashboard-serving assertions and `DashboardRealBundleServedIntegrationTest`'s skip-on-404 path. Next: assert `200` (not just not-401/not-403) and fail instead of skip when CI is set.
-- **#90** — An over-the-socket (not in-memory) integration test for GraphQL/JWT/WASM/numeric matchers. Next: a netty IT that registers each matcher via `MockServerClient` and sends matching/non-matching requests over a real socket.
 
 ## Known limits of closed gaps
 
