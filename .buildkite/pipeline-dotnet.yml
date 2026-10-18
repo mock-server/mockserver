@@ -19,6 +19,18 @@ steps:
         - exit_status: 255  # agent forced shutdown
           limit: 2
 
+  # Also in pipeline-ui.yml: a .NET client API change must recompile the
+  # dashboard composer's generated C# too, not only a csharp.ts change.
+  - label: ":dotnet: composer generated-C# compile gate"
+    command: ".buildkite/scripts/steps/ui-client-codegen-compile.sh csharp"
+    timeout_in_minutes: 20
+    retry:
+      automatic:
+        - exit_status: -1   # agent lost (e.g. Spot reclamation)
+          limit: 2
+        - exit_status: 255  # agent forced shutdown
+          limit: 2
+
   # Runs the integration suite against a live MockServer built from HEAD.
   # Without this every [SkippableFact] skipped (MOCKSERVER_URL was never set)
   # while the step reported green.

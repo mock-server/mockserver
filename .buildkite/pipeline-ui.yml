@@ -54,11 +54,11 @@ steps:
 
   # Composer generated-code compile gates. The dashboard composer emits client
   # code in seven languages; broken generated code reaches users directly. Java
-  # (ui-java-codegen-compile.sh), C# (ComposerCodegenEquivalenceTests.cs) and Node
-  # (the tsc type-proof in node.test.ts, run under ":jest: UI tests") are already
-  # gated. These four close the remaining languages: each emits the shared
-  # composer matrix and compiles / syntax-checks it with that language's toolchain
-  # (Go + Rust against the REAL in-repo client, so a client-API rename fails here).
+  # (ui-java-codegen-compile.sh) and Node (the tsc type-proof in node.test.ts, run
+  # under ":jest: UI tests") are gated elsewhere. These five close the rest: each
+  # emits the shared composer matrix and compiles / syntax-checks it with that
+  # language's toolchain (Go, Rust and C# against the REAL in-repo client, so a
+  # client-API rename fails here).
   - label: ":python: composer generated-Python compile gate"
     command: ".buildkite/scripts/steps/ui-client-codegen-compile.sh python"
     timeout_in_minutes: 15
@@ -91,6 +91,16 @@ steps:
 
   - label: ":rust: composer generated-Rust compile gate"
     command: ".buildkite/scripts/steps/ui-client-codegen-compile.sh rust"
+    timeout_in_minutes: 20
+    retry:
+      automatic:
+        - exit_status: -1   # agent lost (e.g. Spot reclamation)
+          limit: 2
+        - exit_status: 255  # agent forced shutdown
+          limit: 2
+
+  - label: ":dotnet: composer generated-C# compile gate"
+    command: ".buildkite/scripts/steps/ui-client-codegen-compile.sh csharp"
     timeout_in_minutes: 20
     retry:
       automatic:

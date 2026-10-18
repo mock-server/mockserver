@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Permanent CI gate: compile / syntax-check the dashboard composer's GENERATED
-# client code for Python, Ruby, Go and Rust.
+# client code for Python, Ruby, Go, Rust and C#.
 #
 # The composer emits client code in seven languages. Java is gated by
-# ui-java-codegen-compile.sh (javac) and C# by ComposerCodegenEquivalenceTests.cs;
-# Node is gated by the tsc type-proof in src/lib/codegen/node.test.ts (run under
-# `npm test`). The remaining four had NO compile gate — a client-API rename or an
-# emitter bug that produced invalid source would ship broken generated code
-# silently, caught by nothing (the existing per-language tests only string/byte
+# ui-java-codegen-compile.sh (javac); Node is gated by the tsc type-proof in
+# src/lib/codegen/node.test.ts (run under `npm test`). C#'s
+# ComposerCodegenEquivalenceTests.cs is a frozen snapshot of emitter output, so it
+# never sees a csharp.ts change. These five had no compile gate: a client-API
+# rename or an emitter bug that produced invalid source would ship broken
+# generated code silently, caught by nothing (the existing per-language tests only string/byte
 # compare the emitter output; they never feed it to a compiler).
 #
 # This gate drives the SHARED representative composer matrix
@@ -19,12 +20,13 @@
 #   ruby    ruby -c                syntax/parse (dynamic client -> no static API check)
 #   go      go build/vet ./...     FULL compile against the real mockserver-client-go
 #   rust    cargo check --bins     FULL compile against the real mockserver-client-rust
+#   csharp  dotnet build           FULL compile against the real mockserver-client-dotnet
 #
-# Go and Rust are statically typed and their clients live in this monorepo, so
+# Go, Rust and C# are statically typed and their clients live in this monorepo, so
 # their checks catch API drift (a renamed client method fails the build) — the
 # direct analog of the Java javac gate. Python and Ruby are dynamically typed with
 # no shipped type stubs, so a syntax check is the strongest credible static gate:
-# it fails on any emitter bug that produces malformed source. All four are proven
+# it fails on any emitter bug that produces malformed source. All five are proven
 # to go red (see the commit's red/green evidence).
 #
 # TWO phases, each in the toolchain it needs:
@@ -37,13 +39,13 @@
 # CODEGEN_COMPILE_USE_DOCKER=false to run the exact same command strings against
 # host toolchains instead.
 #
-# USAGE: ui-client-codegen-compile.sh <python|ruby|go|rust>
+# USAGE: ui-client-codegen-compile.sh <python|ruby|go|rust|csharp>
 set -euo pipefail
 
 LANG_ARG="${1:-}"
 case "$LANG_ARG" in
-  python|ruby|go|rust) ;;
-  *) echo "usage: $(basename "$0") <python|ruby|go|rust>" >&2; exit 2 ;;
+  python|ruby|go|rust|csharp) ;;
+  *) echo "usage: $(basename "$0") <python|ruby|go|rust|csharp>" >&2; exit 2 ;;
 esac
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -155,6 +157,39 @@ serde_json = "1"
 CARGO
 cargo check --bins
 echo "--- :white_check_mark: all generated Rust compiled against the real client"
+EOF
+)"
+    ;;
+  csharp)
+    IMAGE="mcr.microsoft.com/dotnet/sdk:10.0"; CACHE="nuget"
+    # One project per sample: each is a top-level-statement program and C# allows
+    # one per compilation. ImplicitUsings matches a `dotnet new console` project.
+    CHECK_CMD="$(cat <<EOF
+set -eu
+cd "$WORK_DIR"
+n=\$(ls -d sample_*/ | wc -l | tr -d ' ')
+if [ "\$n" -lt $MIN_SAMPLES ]; then echo "FATAL: expected >= $MIN_SAMPLES samples, found \$n" >&2; exit 1; fi
+echo "--- :dotnet: building \$n generated sample(s) against mockserver-client-dotnet"
+for d in sample_*/; do
+  d="\${d%/}"
+  cat > "\$d/\$d.csproj" <<CSPROJ
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$BASE/mockserver-client-dotnet/src/MockServer.Client/MockServer.Client.csproj" />
+  </ItemGroup>
+</Project>
+CSPROJ
+done
+dotnet new sln -n samples --format sln >/dev/null
+dotnet sln samples.sln add sample_*/*.csproj >/dev/null
+dotnet build samples.sln -nologo -v minimal
+echo "--- :white_check_mark: all generated C# compiled against the real client"
 EOF
 )"
     ;;

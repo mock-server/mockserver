@@ -5,8 +5,8 @@
 // verified by TypeScript string-assertion / byte-identity tests. Those pin the
 // SHAPE of the emitted snippet but cannot catch:
 //   * an emitter bug that produces syntactically invalid code (all four langs), or
-//   * a client-API rename the generated code now violates (Go / Rust — statically
-//     typed clients that live in this monorepo).
+//   * a client-API rename the generated code now violates (Go / Rust / C# —
+//     statically typed clients that live in this monorepo).
 // The generated code would ship broken silently. This script drives the SHARED
 // representative composer matrix (../src/lib/codegen/extractParityCases.ts — the
 // exact `combos` the per-language byte-identity parity tests use, chosen to cover
@@ -26,8 +26,10 @@
 //   ruby   -> <out>/sample_NN_<name>.rb           (ruby -c)
 //   go     -> <out>/sample_NN_<name>/main.go      (go build/vet ./...; one main pkg per dir)
 //   rust   -> <out>/src/bin/sample_NN_<name>.rs   (cargo check; one bin per file)
+//   csharp -> <out>/sample_NN_<name>/Program.cs   (dotnet build; one top-level-statement
+//                                                  program per project, as C# allows one)
 //
-// USAGE: node scripts/emit-client-codegen-samples.mjs <python|ruby|go|rust> <out-dir>
+// USAGE: node scripts/emit-client-codegen-samples.mjs <python|ruby|go|rust|csharp> <out-dir>
 
 import './define-build-constants.mjs';
 import { mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';
@@ -38,12 +40,14 @@ import { standardToPython } from '../src/lib/codegen/python.ts';
 import { standardToGo } from '../src/lib/codegen/go.ts';
 import { standardToRuby } from '../src/lib/codegen/ruby.ts';
 import { standardToRust } from '../src/lib/codegen/rust.ts';
+import { standardToCsharp } from '../src/lib/codegen/csharp.ts';
 
 const LANGS = {
   python: { emit: standardToPython, layout: 'flat', ext: 'py' },
   ruby: { emit: standardToRuby, layout: 'flat', ext: 'rb' },
   go: { emit: standardToGo, layout: 'go-dir', ext: 'go' },
   rust: { emit: standardToRust, layout: 'rust-bin', ext: 'rs' },
+  csharp: { emit: standardToCsharp, layout: 'cs-dir', ext: 'cs' },
 };
 
 const lang = process.argv[2];
@@ -95,6 +99,10 @@ for (const c of [...combos, ...actionFieldCombos]) {
     const binDir = join(finalOut, 'src', 'bin');
     mkdirSync(binDir, { recursive: true });
     writeFileSync(join(binDir, `${name}.rs`), code.endsWith('\n') ? code : code + '\n');
+  } else if (layout === 'cs-dir') {
+    const dir = join(finalOut, name);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'Program.cs'), code.endsWith('\n') ? code : code + '\n');
   }
   n += 1;
 }
