@@ -704,13 +704,17 @@ name = "mockserver-client"
 version = "9.0.0"
 dependencies = [
  "base64",
+ "bytes",
  "dirs",
+ "h2",
+ "http",
  "percent-encoding",
  "reqwest",
  "serde",
  "serde_json",
  "sha2",
  "tiny_http",
+ "tokio",
  "tungstenite",
  "url",
 ]

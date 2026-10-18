@@ -16,6 +16,7 @@
 #   #   $MOCKSERVER_NAME    — container name / resolvable hostname
 #   #   $MOCKSERVER_URL     — http://<name>:1080, as seen from a sibling
 #   #                         container attached to $MOCKSERVER_NETWORK
+#   #   $MOCKSERVER_DNS_PORT / $MOCKSERVER_DNS_ADDRESS — 1053 / <name>:1053, UDP DNS mocking
 #
 # The caller is expected to pass --network "$MOCKSERVER_NETWORK" and
 # -e "MOCKSERVER_URL=$MOCKSERVER_URL" to run-in-docker.sh.
@@ -42,13 +43,18 @@ trap _wms_cleanup EXIT
 
 docker network create "$MOCKSERVER_NETWORK" >/dev/null
 
+MOCKSERVER_DNS_PORT=1053
+
 docker run -d \
   --name "$MOCKSERVER_NAME" \
   --network "$MOCKSERVER_NETWORK" \
   -e "MOCKSERVER_ATTEMPT_TO_PROXY_IF_NO_MATCHING_EXPECTATION=false" \
+  -e "MOCKSERVER_DNS_ENABLED=true" \
+  -e "MOCKSERVER_DNS_PORT=$MOCKSERVER_DNS_PORT" \
   "$MOCKSERVER_IMAGE" >/dev/null
 
 MOCKSERVER_URL="http://${MOCKSERVER_NAME}:1080"
+MOCKSERVER_DNS_ADDRESS="${MOCKSERVER_NAME}:${MOCKSERVER_DNS_PORT}"
 
 # Wait for readiness via the image's Docker HEALTHCHECK — the image is
 # distroless (no shell, no curl) so `docker exec ... curl` cannot work.
@@ -73,4 +79,4 @@ fi
 
 echo "--- :white_check_mark: MockServer ready at ${MOCKSERVER_URL}"
 
-export MOCKSERVER_NETWORK MOCKSERVER_NAME MOCKSERVER_URL
+export MOCKSERVER_NETWORK MOCKSERVER_NAME MOCKSERVER_URL MOCKSERVER_DNS_PORT MOCKSERVER_DNS_ADDRESS

@@ -220,6 +220,10 @@ pub(crate) struct BreakpointWebSocketClient {
     /// frames without an `X-MockServer-BreakpointId` header route here).
     object_response_handler: Arc<Mutex<Option<ObjectResponseHandler>>>,
     dead: Arc<std::sync::atomic::AtomicBool>,
+    /// A second handle on the socket's TCP stream. The read loop holds
+    /// `socket`'s lock while blocked in `read`, so `close` shuts this down to
+    /// end that read instead of waiting for the lock.
+    shutdown_handle: Option<std::net::TcpStream>,
     _read_thread: Option<std::thread::JoinHandle<()>>,
 }
 
@@ -280,6 +284,10 @@ impl BreakpointWebSocketClient {
         let object_response_handler: Arc<Mutex<Option<ObjectResponseHandler>>> =
             Arc::new(Mutex::new(None));
 
+        let shutdown_handle = match socket.get_ref() {
+            tungstenite::stream::MaybeTlsStream::Plain(stream) => stream.try_clone().ok(),
+            _ => None,
+        };
         let socket = Arc::new(Mutex::new(socket));
         let dead = Arc::new(std::sync::atomic::AtomicBool::new(false));
 
@@ -303,6 +311,7 @@ impl BreakpointWebSocketClient {
             stream_frame_handlers,
             object_response_handler,
             dead,
+            shutdown_handle,
             _read_thread: Some(read_thread),
         })
     }
@@ -353,8 +362,12 @@ impl BreakpointWebSocketClient {
     }
 
     pub(crate) fn close(&self) {
-        if let Ok(mut sock) = self.socket.lock() {
+        if let Ok(mut sock) = self.socket.try_lock() {
             let _ = sock.close(None);
+            let _ = sock.flush();
+        }
+        if let Some(stream) = &self.shutdown_handle {
+            let _ = stream.shutdown(std::net::Shutdown::Both);
         }
     }
 }
@@ -684,5 +697,62 @@ pub fn set_header(obj: &mut Value, name: &str, value: &str) {
                 serde_json::json!([value]),
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::TcpListener;
+    use std::sync::mpsc;
+    use std::time::{Duration, Instant};
+
+    /// A callback WebSocket server that registers one client and then stays
+    /// silent, so the client's read loop blocks in `read` holding the lock.
+    fn idle_callback_server() -> (u16, std::thread::JoinHandle<()>) {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
+        let port = listener.local_addr().expect("local addr").port();
+        let server = std::thread::spawn(move || {
+            let (stream, _) = listener.accept().expect("accept");
+            let mut ws = tungstenite::accept(stream).expect("ws handshake");
+            let registration = serde_json::json!({
+                "type": "org.mockserver.serialization.model.WebSocketClientIdDTO",
+                "value": serde_json::json!({ "clientId": "idle-client" }).to_string(),
+            });
+            ws.send(Message::Text(registration.to_string()))
+                .expect("send registration");
+            while ws.read().is_ok() {}
+        });
+        (port, server)
+    }
+
+    #[test]
+    fn close_returns_promptly_while_read_loop_is_idle() {
+        let (port, server) = idle_callback_server();
+        let client = Arc::new(
+            BreakpointWebSocketClient::connect(&format!("http://127.0.0.1:{port}"))
+                .expect("connect"),
+        );
+        assert_eq!(client.client_id, "idle-client");
+        // Let the read loop take the socket lock and block in `read`.
+        std::thread::sleep(Duration::from_millis(300));
+
+        let (done_tx, done_rx) = mpsc::channel();
+        let closing = Arc::clone(&client);
+        std::thread::spawn(move || {
+            closing.close();
+            let _ = done_tx.send(());
+        });
+        assert!(
+            done_rx.recv_timeout(Duration::from_secs(3)).is_ok(),
+            "close() did not return within 3s while the connection was idle"
+        );
+
+        let deadline = Instant::now() + Duration::from_secs(3);
+        while !client.is_dead() && Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert!(client.is_dead(), "read loop still running after close()");
+        server.join().expect("server thread");
     }
 }

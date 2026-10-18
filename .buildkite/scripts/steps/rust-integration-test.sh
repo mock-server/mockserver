@@ -16,4 +16,5 @@ source "$SCRIPT_DIR/../with-mockserver.sh"
   -w /build/mockserver-client-rust \
   --network "$MOCKSERVER_NETWORK" \
   -e "MOCKSERVER_URL=$MOCKSERVER_URL" \
+  -e "MOCKSERVER_DNS_PORT=$MOCKSERVER_DNS_PORT" \
   -- bash -c "cargo test --test integration_test -- --ignored --test-threads=1"

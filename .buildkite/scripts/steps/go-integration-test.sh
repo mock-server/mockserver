@@ -17,5 +17,6 @@ source "$SCRIPT_DIR/../with-mockserver.sh"
   -w /build/mockserver-client-go \
   --network "$MOCKSERVER_NETWORK" \
   -e "MOCKSERVER_URL=$MOCKSERVER_URL" \
+  -e "MOCKSERVER_DNS_ADDRESS=$MOCKSERVER_DNS_ADDRESS" \
   -e "MOCKSERVER_REQUIRE_SERVER=true" \
   -- bash -c "go test ./... -v -count=1 -run 'TestIntegration'"

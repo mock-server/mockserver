@@ -2,16 +2,14 @@
 
 **Outcome.** The July 2026 coverage audit (95 gaps: 93 numbered gaps plus follow-ups F1/F2) was
 re-checked against master on 2026-10-18: 83 closed, 1 no longer applies, 11 still open. Since
-then gaps 54, 66, 68, 83 and 90 have closed, and gap 47 is partly closed. What is left is T1 (gaps
-19–21, which need a capable CI queue) and the rest of gap 47. Gaps 1 and 82 were declined (see
-below). Delete this file once T1 and gap 47 are closed.
+then gaps 47, 54, 66, 68, 83 and 90 have closed. The only gap left is T1 (gaps 19–21, which need a
+capable CI queue). Gaps 1 and 82 were declined (see below). Delete this file once T1 is closed.
 
 ## What remains
 
 | # | Gap | Why it matters | Blocked on | Next step |
 |---|---|---|---|---|
 | T1 | The transparent-proxy end-to-end tests (`TproxyEndToEndIntegrationTest`, `SoOriginalDstEndToEndIntegrationTest`, `EbpfOriginalDestinationEndToEndIntegrationTest`, #19–21) are collected but run on no CI build. Their step is opt-in through `RUN_TRANSPARENT_PROXY_E2E`, which no pipeline sets, so the step exits 0 having run nothing. The step also runs inside the `mockserver/mockserver:maven` image, which has no Docker CLI, so it cannot start the privileged container these tests need as things stand. | `IP_TRANSPARENT`, `SO_ORIGINAL_DST` and eBPF interception can regress while every build stays green. | An agent with the Docker CLI and socket and `NET_ADMIN`, with no user-namespace remap. eBPF also needs `--privileged`. | Put the Docker CLI in `docker_build/maven/Dockerfile` (or run this step on a host-CLI image instead), add a capable queue in `terraform/buildkite-agents/`, then set `RUN_TRANSPARENT_PROXY_E2E=true` in `.buildkite/pipeline-java.yml` so the existing `assert-suite-ran` guard fails closed. Enabling `SO_ORIGINAL_DST` alone (it needs only `NET_ADMIN`, so it can go ahead of eBPF) means splitting the `-Dit.test` list and the `assert-suite-ran` globs in `java-transparent-proxy-test.sh` per suite, so it runs without also enabling the `--privileged` eBPF case. |
-| 47 | The Go, .NET and Rust clients create and retrieve callback, WebSocket, DNS and gRPC response actions, but no test drives them over the wire. SSE, LLM and binary are covered. | A client that mis-encodes one of these actions passes the schema tests but serves the wrong bytes. | Nothing external. The Go and .NET test projects need a WebSocket client, and class callbacks need a server-side callback class. | Add a per-client live test for each action that reads what the server actually sends (WebSocket frames, DNS answer, gRPC response) and asserts its shape. |
 
 ### Declined
 
@@ -49,6 +47,11 @@ build logs.
 - HTTP/3 covers the streaming forward relay, but not a mocked `httpSseResponse` over QUIC.
 - The AsyncAPI live-broker control-plane test covers Kafka. The MQTT load path is not driven.
 - The IPv6 SAN case is covered, but the netmask/CIDR branch is not.
+- **#47** — The Go, .NET and Rust live tests do not drive a forward **class** callback: the server
+  image ships no `ExpectationForwardCallback` class to name. The Rust client also has no closure API
+  for a forward object callback, so only Go and .NET drive that one.
+- **#47** — A Go `DnsRecord` cannot set TTL 0: `TTL` is an `int` with `omitempty`, so 0 is served as
+  the server default of 300. Fixing it means making the field `*int`, a breaking change.
 - **#6** — Embedded-secret masking is asserted at the configuration serializer, not via an HTTP GET.
 - **#5** — Runtime mTLS enforcement is toggled via the live `Configuration` object, not via HTTP PUT (the enforcement itself is still asserted over the wire).
 - **#73** — Cassette auto-registration is proven in two halves (the MCP tool registers; a separate test shows `GET` lists it) — no single test spans both.

@@ -1141,3 +1141,618 @@ fn test_http_response_binary_body_served_over_wire() {
 
     client.reset().expect("reset failed");
 }
+
+// ---------------------------------------------------------------------------
+// Callback, WebSocket, DNS and gRPC response actions driven over the wire
+// ---------------------------------------------------------------------------
+
+/// The MockServer DNS (UDP) port, from `MOCKSERVER_DNS_PORT`. The server must
+/// run with `dnsEnabled=true` on that port.
+fn dns_port() -> u16 {
+    std::env::var("MOCKSERVER_DNS_PORT")
+        .expect("MOCKSERVER_DNS_PORT must be set to the server's UDP dnsPort (e.g., 1053)")
+        .parse()
+        .expect("MOCKSERVER_DNS_PORT must be a valid u16")
+}
+
+/// An `httpResponseClassCallback` naming a class on the server's classpath:
+/// `OidcDiscoveryCallback` ships in the MockServer jar and builds the OIDC
+/// discovery document from the configured provider, so the served JSON proves
+/// the server loaded and ran exactly the named class.
+#[test]
+#[ignore]
+fn test_class_callback_invoked_over_wire() {
+    let client = get_client();
+    client.reset().expect("reset failed");
+
+    let (host, port) = data_host_port();
+    let oidc = reqwest::blocking::Client::new()
+        .put(format!("http://{host}:{port}/mockserver/oidc"))
+        .header("Content-Type", "application/json")
+        .body(r#"{"issuer":"https://rustwire.example","jwksPath":"/rustwire/jwks"}"#)
+        .send()
+        .expect("configuring the OIDC provider failed");
+    assert_eq!(oidc.status().as_u16(), 201, "{:?}", oidc.text());
+
+    client
+        .upsert(&[Expectation::new(
+            HttpRequest::new()
+                .method("GET")
+                .path("/rustwire-class-callback"),
+        )
+        .respond_class_callback(HttpClassCallback::new(
+            "org.mockserver.oidc.OidcDiscoveryCallback",
+        ))])
+        .expect("registering class-callback expectation failed");
+
+    let (status, headers, body) = http_exchange("GET", "/rustwire-class-callback", None);
+    assert_eq!(status, 200, "body: {}", String::from_utf8_lossy(&body));
+    assert!(
+        headers.contains("content-type: application/json"),
+        "headers: {headers}"
+    );
+    let discovery: serde_json::Value =
+        serde_json::from_slice(&body).expect("class callback response must be JSON");
+    assert_eq!(
+        discovery["issuer"], "https://rustwire.example",
+        "{discovery}"
+    );
+    assert_eq!(
+        discovery["jwks_uri"],
+        "https://rustwire.example/rustwire/jwks"
+    );
+    assert_eq!(
+        discovery["token_endpoint"],
+        "https://rustwire.example/token"
+    );
+    assert_eq!(
+        discovery["response_types_supported"],
+        serde_json::json!(["code"])
+    );
+
+    client.reset().expect("reset failed");
+}
+
+/// An `httpResponseObjectCallback`: the server pushes the matched request to
+/// this client over the callback WebSocket and serves what the closure returns.
+#[test]
+#[ignore]
+fn test_object_callback_invoked_over_wire() {
+    let client = get_client();
+    client.reset().expect("reset failed");
+
+    client
+        .mock_with_callback(
+            HttpRequest::new()
+                .method("GET")
+                .path("/rustwire-object-callback"),
+            |req| {
+                let probe = req
+                    .headers
+                    .as_ref()
+                    .and_then(|h| {
+                        h.iter()
+                            .find(|(k, _)| k.eq_ignore_ascii_case("x-probe"))
+                            .and_then(|(_, v)| v.first().cloned())
+                    })
+                    .unwrap_or_else(|| "<missing>".into());
+                HttpResponse::new()
+                    .status_code(202)
+                    .header("x-rustwire-callback", "closure")
+                    .body(format!(
+                        "{}|{}|{}",
+                        req.method.unwrap_or_default(),
+                        req.path.unwrap_or_default(),
+                        probe
+                    ))
+            },
+        )
+        .expect("registering object-callback expectation failed");
+
+    let (status, body) = http_get("/rustwire-object-callback", &[("x-probe", "p-47")]);
+    assert_eq!(status, 202, "body: {body}");
+    assert_eq!(
+        body, "GET|/rustwire-object-callback|p-47",
+        "the server must serve the closure's response built from the forwarded request"
+    );
+
+    client.close_breakpoint_websocket();
+    client.reset().expect("reset failed");
+}
+
+fn web_socket_connect(
+    path: &str,
+    subprotocol: Option<&str>,
+) -> (
+    tungstenite::WebSocket<tungstenite::stream::MaybeTlsStream<TcpStream>>,
+    tungstenite::handshake::client::Response,
+) {
+    use tungstenite::client::IntoClientRequest;
+
+    let (host, port) = data_host_port();
+    let mut request = format!("ws://{host}:{port}{path}")
+        .into_client_request()
+        .expect("WebSocket request");
+    if let Some(protocol) = subprotocol {
+        request.headers_mut().insert(
+            "Sec-WebSocket-Protocol",
+            protocol.parse().expect("subprotocol header"),
+        );
+    }
+    let (socket, response) = tungstenite::connect(request).expect("WebSocket handshake failed");
+    if let tungstenite::stream::MaybeTlsStream::Plain(stream) = socket.get_ref() {
+        stream
+            .set_read_timeout(Some(Duration::from_secs(10)))
+            .expect("set read timeout");
+    }
+    (socket, response)
+}
+
+/// An `httpWebSocketResponse` with scripted messages: the server upgrades,
+/// agrees the registered subprotocol, sends exactly the text and binary frames
+/// registered, then closes with 1000.
+#[test]
+#[ignore]
+fn test_web_socket_messages_streamed_over_wire() {
+    use tungstenite::Message;
+
+    let client = get_client();
+    client.reset().expect("reset failed");
+
+    client
+        .when(HttpRequest::new().method("GET").path("/rustwire-ws"))
+        .respond_with_web_socket(
+            HttpWebSocketResponse::new()
+                .subprotocol("rustwire.v1")
+                .message(WebSocketMessage::text("hello-rust"))
+                .message(WebSocketMessage::binary([0x00, 0x01, 0xfe, 0xff]))
+                .message(WebSocketMessage::text("bye-rust"))
+                .close_connection(true),
+        )
+        .expect("registering WebSocket expectation failed");
+
+    let (mut socket, response) = web_socket_connect("/rustwire-ws", Some("rustwire.v1"));
+    assert_eq!(response.status().as_u16(), 101);
+    assert_eq!(
+        response
+            .headers()
+            .get("sec-websocket-protocol")
+            .map(|v| v.to_str().unwrap_or_default()),
+        Some("rustwire.v1"),
+        "the server must agree the registered subprotocol"
+    );
+
+    let mut frames = Vec::new();
+    let close = loop {
+        match socket.read() {
+            Ok(Message::Close(frame)) => break frame,
+            Ok(message @ (Message::Text(_) | Message::Binary(_))) => frames.push(message),
+            Ok(_) => {}
+            Err(e) => panic!("WebSocket read failed after {frames:?}: {e}"),
+        }
+    };
+    assert_eq!(
+        frames,
+        vec![
+            Message::text("hello-rust"),
+            Message::binary(vec![0x00, 0x01, 0xfe, 0xff]),
+            Message::text("bye-rust"),
+        ],
+        "the server must send exactly the registered frames in order"
+    );
+    assert_eq!(
+        close.map(|f| u16::from(f.code)),
+        Some(1000),
+        "closeConnection must end with a normal closure"
+    );
+
+    client.reset().expect("reset failed");
+}
+
+/// An `httpWebSocketResponse` with an incoming-frame matcher: a text frame
+/// matching the rule gets the rule's reply, and one that does not gets nothing.
+#[test]
+#[ignore]
+fn test_web_socket_matcher_replies_over_wire() {
+    use tungstenite::Message;
+
+    let client = get_client();
+    client.reset().expect("reset failed");
+
+    client
+        .when(
+            HttpRequest::new()
+                .method("GET")
+                .path("/rustwire-ws-matcher"),
+        )
+        .respond_with_web_socket(
+            HttpWebSocketResponse::new().matcher(
+                WebSocketMatcher::new()
+                    .frame_type("TEXT")
+                    .text_matcher("ping-rust")
+                    .response(WebSocketMessage::text("pong-rust")),
+            ),
+        )
+        .expect("registering WebSocket matcher expectation failed");
+
+    let (mut socket, _) = web_socket_connect("/rustwire-ws-matcher", None);
+    socket
+        .send(Message::text("ping-rust"))
+        .expect("sending matching frame failed");
+    let reply = loop {
+        match socket.read().expect("reading the matcher reply failed") {
+            message @ (Message::Text(_) | Message::Binary(_)) => break message,
+            Message::Close(frame) => panic!("closed before replying: {frame:?}"),
+            _ => {}
+        }
+    };
+    assert_eq!(reply, Message::text("pong-rust"));
+
+    if let tungstenite::stream::MaybeTlsStream::Plain(stream) = socket.get_ref() {
+        stream
+            .set_read_timeout(Some(Duration::from_secs(2)))
+            .expect("set read timeout");
+    }
+    socket
+        .send(Message::text("other-rust"))
+        .expect("sending non-matching frame failed");
+    match socket.read() {
+        Err(tungstenite::Error::Io(e))
+            if e.kind() == std::io::ErrorKind::WouldBlock
+                || e.kind() == std::io::ErrorKind::TimedOut => {}
+        other => panic!("a frame matching no rule must get no reply, got {other:?}"),
+    }
+    socket.close(None).ok();
+
+    client.reset().expect("reset failed");
+}
+
+fn dns_encode_name(out: &mut Vec<u8>, name: &str) {
+    for label in name.trim_end_matches('.').split('.') {
+        out.push(label.len() as u8);
+        out.extend_from_slice(label.as_bytes());
+    }
+    out.push(0);
+}
+
+/// Reads a possibly compressed DNS name at `pos`, returning it and the offset
+/// just past it in the original record.
+fn dns_read_name(msg: &[u8], mut pos: usize) -> (String, usize) {
+    let mut labels = Vec::new();
+    let mut end = None;
+    loop {
+        let len = msg[pos] as usize;
+        if len & 0xc0 == 0xc0 {
+            end.get_or_insert(pos + 2);
+            pos = ((len & 0x3f) << 8) | msg[pos + 1] as usize;
+        } else if len == 0 {
+            return (labels.join("."), end.unwrap_or(pos + 1));
+        } else {
+            labels.push(String::from_utf8_lossy(&msg[pos + 1..pos + 1 + len]).into_owned());
+            pos += 1 + len;
+        }
+    }
+}
+
+/// One answer-section record: `(name, type, class, ttl, rdata)`.
+type DnsAnswer = (String, u16, u16, u32, Vec<u8>);
+
+/// Sends one A/IN query over UDP and returns `(rcode, answers)`.
+fn dns_query(name: &str, id: u16) -> (u8, Vec<DnsAnswer>) {
+    let (host, _) = data_host_port();
+    let socket = std::net::UdpSocket::bind("0.0.0.0:0").expect("bind UDP socket");
+    socket
+        .set_read_timeout(Some(Duration::from_secs(3)))
+        .expect("set read timeout");
+    socket
+        .connect((host.as_str(), dns_port()))
+        .expect("connect UDP socket to the DNS port");
+
+    let mut query = Vec::new();
+    query.extend_from_slice(&id.to_be_bytes());
+    query.extend_from_slice(&[0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    dns_encode_name(&mut query, name);
+    query.extend_from_slice(&[0x00, 0x01, 0x00, 0x01]);
+
+    let mut buf = [0u8; 1500];
+    let len = (0..3)
+        .find_map(|_| {
+            socket.send(&query).expect("send DNS query");
+            socket.recv(&mut buf).ok()
+        })
+        .unwrap_or_else(|| panic!("no DNS answer for {name} after 3 attempts"));
+    let msg = &buf[..len];
+
+    assert!(len >= 12, "short DNS message: {msg:?}");
+    assert_eq!(
+        u16::from_be_bytes([msg[0], msg[1]]),
+        id,
+        "answer must echo the query id"
+    );
+    assert_eq!(msg[2] & 0x80, 0x80, "QR must mark a response: {msg:?}");
+    let rcode = msg[3] & 0x0f;
+    let qdcount = u16::from_be_bytes([msg[4], msg[5]]);
+    let ancount = u16::from_be_bytes([msg[6], msg[7]]);
+
+    let mut pos = 12;
+    for _ in 0..qdcount {
+        pos = dns_read_name(msg, pos).1 + 4;
+    }
+    let answers = (0..ancount)
+        .map(|_| {
+            let (record_name, next) = dns_read_name(msg, pos);
+            let field = |at: usize| u16::from_be_bytes([msg[at], msg[at + 1]]);
+            let ttl =
+                u32::from_be_bytes([msg[next + 4], msg[next + 5], msg[next + 6], msg[next + 7]]);
+            let rdlength = field(next + 8) as usize;
+            let rdata = msg[next + 10..next + 10 + rdlength].to_vec();
+            let answer = (record_name, field(next), field(next + 2), ttl, rdata);
+            pos = next + 10 + rdlength;
+            answer
+        })
+        .collect();
+    (rcode, answers)
+}
+
+/// A `dnsResponse` action answering a real UDP DNS query: the answer section
+/// holds exactly the registered records (type, class, TTL, address) and the
+/// registered response code is the one sent. The DNS request matcher
+/// (`dnsName`/`dnsType`) is not modelled by [`HttpRequest`], so it rides in
+/// the `extra` catch-all.
+#[test]
+#[ignore]
+fn test_dns_response_answered_over_wire() {
+    let client = get_client();
+    client.reset().expect("reset failed");
+
+    let dns_matcher = |name: &str| {
+        let mut matcher = HttpRequest::new();
+        matcher
+            .extra
+            .insert("dnsName".into(), serde_json::Value::from(name));
+        matcher
+            .extra
+            .insert("dnsType".into(), serde_json::Value::from("A"));
+        matcher
+    };
+    client
+        .when(dns_matcher("api.rustwire.example"))
+        .respond_with_dns(
+            DnsResponse::new()
+                .response_code("NOERROR")
+                .answer_record(DnsRecord::a("api.rustwire.example", "192.0.2.44").ttl(321))
+                .answer_record(
+                    DnsRecord::a("api.rustwire.example", "198.51.100.7")
+                        .dns_class("IN")
+                        .ttl(60),
+                ),
+        )
+        .expect("registering DNS expectation failed");
+    client
+        .when(dns_matcher("refused.rustwire.example"))
+        .respond_with_dns(DnsResponse::new().response_code("REFUSED"))
+        .expect("registering REFUSED DNS expectation failed");
+
+    let (rcode, answers) = dns_query("api.rustwire.example", 0x5247);
+    assert_eq!(rcode, 0, "NOERROR");
+    assert_eq!(
+        answers,
+        vec![
+            (
+                "api.rustwire.example".to_string(),
+                1,
+                1,
+                321,
+                vec![192, 0, 2, 44]
+            ),
+            (
+                "api.rustwire.example".to_string(),
+                1,
+                1,
+                60,
+                vec![198, 51, 100, 7]
+            ),
+        ],
+        "the answer section must hold exactly the registered A records"
+    );
+
+    let (rcode, answers) = dns_query("refused.rustwire.example", 0x5248);
+    assert_eq!(
+        rcode, 5,
+        "the registered REFUSED response code must be sent"
+    );
+    assert!(answers.is_empty(), "{answers:?}");
+
+    client.reset().expect("reset failed");
+}
+
+fn proto_varint(out: &mut Vec<u8>, mut value: u64) {
+    while value >= 0x80 {
+        out.push((value as u8) | 0x80);
+        value >>= 7;
+    }
+    out.push(value as u8);
+}
+
+fn proto_bytes(out: &mut Vec<u8>, field: u64, bytes: &[u8]) {
+    proto_varint(out, field << 3 | 2);
+    proto_varint(out, bytes.len() as u64);
+    out.extend_from_slice(bytes);
+}
+
+fn proto_int(out: &mut Vec<u8>, field: u64, value: u64) {
+    proto_varint(out, field << 3);
+    proto_varint(out, value);
+}
+
+/// A `FileDescriptorSet` for:
+/// `package rustwire; message Ping { string text = 1; }`
+/// `message Pong { string text = 1; }`
+/// `service Echo { rpc Stream (Ping) returns (stream Pong); }`
+fn rustwire_descriptor_set() -> Vec<u8> {
+    let message = |name: &str| {
+        let mut field = Vec::new();
+        proto_bytes(&mut field, 1, b"text");
+        proto_int(&mut field, 3, 1);
+        proto_int(&mut field, 4, 1);
+        proto_int(&mut field, 5, 9);
+        proto_bytes(&mut field, 10, b"text");
+        let mut message = Vec::new();
+        proto_bytes(&mut message, 1, name.as_bytes());
+        proto_bytes(&mut message, 2, &field);
+        message
+    };
+    let mut method = Vec::new();
+    proto_bytes(&mut method, 1, b"Stream");
+    proto_bytes(&mut method, 2, b".rustwire.Ping");
+    proto_bytes(&mut method, 3, b".rustwire.Pong");
+    proto_int(&mut method, 6, 1);
+    let mut service = Vec::new();
+    proto_bytes(&mut service, 1, b"Echo");
+    proto_bytes(&mut service, 2, &method);
+
+    let mut file = Vec::new();
+    proto_bytes(&mut file, 1, b"rustwire.proto");
+    proto_bytes(&mut file, 2, b"rustwire");
+    proto_bytes(&mut file, 4, &message("Ping"));
+    proto_bytes(&mut file, 4, &message("Pong"));
+    proto_bytes(&mut file, 6, &service);
+    proto_bytes(&mut file, 12, b"proto3");
+    let mut set = Vec::new();
+    proto_bytes(&mut set, 1, &file);
+    set
+}
+
+/// Splits a gRPC body into its length-prefixed messages and reads field 1
+/// (`text`) of each, failing on compressed frames or any other field.
+fn grpc_text_messages(mut body: &[u8]) -> Vec<String> {
+    let mut texts = Vec::new();
+    while !body.is_empty() {
+        assert!(body.len() >= 5, "truncated gRPC frame header: {body:?}");
+        assert_eq!(body[0], 0, "gRPC message must not be compressed");
+        let len = u32::from_be_bytes([body[1], body[2], body[3], body[4]]) as usize;
+        let message = &body[5..5 + len];
+        assert_eq!(
+            message.first(),
+            Some(&0x0a),
+            "expected field 1 (text): {message:?}"
+        );
+        let text_len = message[1] as usize;
+        assert_eq!(
+            message.len(),
+            2 + text_len,
+            "unexpected extra fields: {message:?}"
+        );
+        texts.push(String::from_utf8(message[2..].to_vec()).expect("UTF-8 text"));
+        body = &body[5 + len..];
+    }
+    texts
+}
+
+/// A `grpcStreamResponse` action answering a real server-streaming gRPC call
+/// over HTTP/2 (h2c): the registered headers arrive as response metadata, each
+/// registered JSON message arrives as one protobuf-encoded gRPC message, and
+/// the registered status name and message arrive as the trailers.
+#[test]
+#[ignore]
+fn test_grpc_stream_response_served_over_wire() {
+    let client = get_client();
+    client.reset().expect("reset failed");
+    client
+        .upload_grpc_descriptor(&rustwire_descriptor_set())
+        .expect("uploading the gRPC descriptor failed");
+
+    client
+        .when(
+            HttpRequest::new()
+                .method("POST")
+                .path("/rustwire.Echo/Stream"),
+        )
+        .respond_with_grpc_stream(
+            GrpcStreamResponse::new()
+                .header("x-rustwire", "grpc-meta")
+                .message(GrpcStreamMessage::json(r#"{"text":"pong-1"}"#))
+                .message(GrpcStreamMessage::json(r#"{"text":"pong-2"}"#))
+                .status_name("RESOURCE_EXHAUSTED")
+                .status_message("rustwire-quota"),
+        )
+        .expect("registering gRPC stream expectation failed");
+
+    let mut ping = Vec::new();
+    proto_bytes(&mut ping, 1, b"ping");
+    let mut request_body = vec![0u8];
+    request_body.extend_from_slice(&(ping.len() as u32).to_be_bytes());
+    request_body.extend_from_slice(&ping);
+
+    let (host, port) = data_host_port();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let exchange = async move {
+        let tcp = tokio::net::TcpStream::connect((host.as_str(), port))
+            .await
+            .expect("connect to MockServer for h2c");
+        let (sender, connection) = h2::client::handshake(tcp).await.expect("h2c handshake");
+        tokio::spawn(async move {
+            connection.await.ok();
+        });
+        let mut sender = sender.ready().await.expect("h2 sender ready");
+        let request = http::Request::builder()
+            .method("POST")
+            .uri(format!("http://{host}:{port}/rustwire.Echo/Stream"))
+            .header("content-type", "application/grpc")
+            .header("te", "trailers")
+            .body(())
+            .expect("gRPC request");
+        let (response, mut send) = sender
+            .send_request(request, false)
+            .expect("send gRPC request");
+        send.send_data(bytes::Bytes::from(request_body), true)
+            .expect("send gRPC message");
+        let response = response.await.expect("gRPC response headers");
+        let headers = response.headers().clone();
+        let mut recv = response.into_body();
+        let mut body = Vec::new();
+        while let Some(chunk) = recv.data().await {
+            let chunk = chunk.expect("gRPC DATA frame");
+            recv.flow_control().release_capacity(chunk.len()).ok();
+            body.extend_from_slice(&chunk);
+        }
+        let trailers = recv.trailers().await.expect("gRPC trailers");
+        (headers, body, trailers)
+    };
+    let (headers, body, trailers) = runtime
+        .block_on(async { tokio::time::timeout(Duration::from_secs(20), exchange).await })
+        .expect("timed out before the gRPC stream ended");
+
+    let header = |map: &http::HeaderMap, name: &str| {
+        map.get(name)
+            .map(|v| v.to_str().unwrap_or_default().to_string())
+    };
+    assert_eq!(
+        header(&headers, "content-type").as_deref(),
+        Some("application/grpc")
+    );
+    assert_eq!(header(&headers, "x-rustwire").as_deref(), Some("grpc-meta"));
+    assert_eq!(
+        grpc_text_messages(&body),
+        vec!["pong-1".to_string(), "pong-2".to_string()],
+        "each registered JSON message must arrive as one protobuf Pong"
+    );
+    let trailers = trailers.expect("a gRPC response must end with trailers");
+    assert_eq!(
+        header(&trailers, "grpc-status").as_deref(),
+        Some("8"),
+        "RESOURCE_EXHAUSTED"
+    );
+    assert_eq!(
+        header(&trailers, "grpc-message").as_deref(),
+        Some("rustwire-quota")
+    );
+
+    client
+        .clear_grpc_descriptors()
+        .expect("clearing gRPC descriptors failed");
+    client.reset().expect("reset failed");
+}

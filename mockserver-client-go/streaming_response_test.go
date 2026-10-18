@@ -320,6 +320,17 @@ func TestDnsRecordHelpers(t *testing.T) {
 	}
 }
 
+func TestDnsRecord_MXZeroPriorityIsSent(t *testing.T) {
+	mx := marshalToMap(t, MXRecord("h", 0, "mail.example.com"))
+	if p, ok := mx["priority"]; !ok || p != float64(0) {
+		t.Errorf("MX priority 0 must be sent (the server reads an absent one as 10), got %v", mx)
+	}
+	a := marshalToMap(t, ARecord("h", "1.1.1.1"))
+	if _, ok := a["priority"]; ok {
+		t.Errorf("A record must not carry a priority, got %v", a)
+	}
+}
+
 func TestForwardChain_RespondDns_Body(t *testing.T) {
 	var receivedBody []byte
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

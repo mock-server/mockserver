@@ -24,6 +24,9 @@ namespace MockServer.Client.IntegrationTests;
 ///   <item><description>Advanced response actions (template, BINARY body, SSE, LLM): a real request
 ///   proves the server renders the template, serves the exact bytes, streams the registered events
 ///   and encodes the provider's response envelope.</description></item>
+///   <item><description>Protocol and callback actions (WebSocket, DNS, gRPC, class and object callbacks), in
+///   <c>WireBehaviorTests.ProtocolActions.cs</c>: the frames, answer records, messages and trailers, and
+///   callback-built responses the server actually sends.</description></item>
 /// </list>
 ///
 /// <para>Reaches a running MockServer via the same harness the other integration tests use: the
@@ -32,7 +35,7 @@ namespace MockServer.Client.IntegrationTests;
 /// failure so a missing server can never be a silent green.</para>
 /// </summary>
 [Collection("Integration")]
-public class WireBehaviorTests : IDisposable
+public partial class WireBehaviorTests : IDisposable
 {
     private readonly MockServerClient? _client;
     private readonly string? _baseUrl;

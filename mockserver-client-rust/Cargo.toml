@@ -26,3 +26,7 @@ percent-encoding = "2"
 
 [dev-dependencies]
 tiny_http = "0.12"
+h2 = "0.4"
+http = "1"
+bytes = "1"
+tokio = { version = "1", features = ["rt", "net", "time"] }

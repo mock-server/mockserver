@@ -1,5 +1,10 @@
 package mockserver
 
+import (
+	"encoding/json"
+	"strings"
+)
+
 // This file defines the streaming and protocol-specific response actions that
 // mirror the Java/Python/Ruby/Node clients: Server-Sent Events, WebSocket,
 // gRPC streaming, raw binary, and DNS responses.
@@ -328,7 +333,9 @@ func (b *BinaryResponseBuilder) Build() BinaryResponse {
 
 // --- DNS response ---
 
-// DnsRecord represents a single DNS resource record.
+// DnsRecord represents a single DNS resource record. An MX record always
+// sends its Priority, so a zero Priority is preference 0; for every other
+// field a zero value means the server's default (TTL 300).
 type DnsRecord struct {
 	Name     string `json:"name,omitempty"`
 	Type     string `json:"type,omitempty"`
@@ -338,6 +345,19 @@ type DnsRecord struct {
 	Priority int    `json:"priority,omitempty"`
 	Weight   int    `json:"weight,omitempty"`
 	Port     int    `json:"port,omitempty"`
+}
+
+// MarshalJSON keeps a zero MX priority on the wire; the server reads an
+// absent one as preference 10.
+func (r DnsRecord) MarshalJSON() ([]byte, error) {
+	type plain DnsRecord
+	if !strings.EqualFold(r.Type, "MX") {
+		return json.Marshal(plain(r))
+	}
+	return json.Marshal(struct {
+		plain
+		Priority int `json:"priority"`
+	}{plain(r), r.Priority})
 }
 
 // ARecord returns an A (IPv4) DNS record.
