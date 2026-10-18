@@ -24,6 +24,9 @@
              re-applies the pattern, so a subpackage's tests run in netty-it-shard-rest. -->
         <mockserver.nettyItShard.proxyHttp>org/mockserver/netty/integration/proxy/http</mockserver.nettyItShard.proxyHttp>
         <mockserver.nettyItShard.mock>org/mockserver/netty/integration/mock</mockserver.nettyItShard.mock>
+        <!-- true when the build-ui profile is active: DashboardRealBundleServedIntegrationTest then
+             fails, rather than skips, if the built dashboard is missing from the classpath. -->
+        <mockserver.dashboardBundleExpected>false</mockserver.dashboardBundleExpected>
     </properties>
 
     <dependencies>
@@ -375,6 +378,9 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <forkedProcessTimeoutInSeconds>2400</forkedProcessTimeoutInSeconds>
+                    <systemPropertyVariables>
+                        <mockserver.dashboardBundleExpected>${mockserver.dashboardBundleExpected}</mockserver.dashboardBundleExpected>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <!-- Expose the RESOLVED path of every dependency as a Maven property
@@ -723,6 +729,9 @@
                     <exists>../../mockserver-ui/package.json</exists>
                 </file>
             </activation>
+            <properties>
+                <mockserver.dashboardBundleExpected>true</mockserver.dashboardBundleExpected>
+            </properties>
             <build>
                 <plugins>
                     <plugin>

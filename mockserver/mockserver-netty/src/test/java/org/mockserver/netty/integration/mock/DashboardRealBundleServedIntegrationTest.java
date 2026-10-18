@@ -41,10 +41,11 @@ import static org.mockserver.stop.Stop.stopQuietly;
  *
  * <p>Behaviour:</p>
  * <ul>
- *   <li>If the real bundle is not on the classpath at all (the {@code build-ui} profile did not run —
- *       e.g. a developer running the netty tests without building the UI), the test SKIPS with a clear
- *       message rather than passing vacuously. In CI the profile is auto-activated by the presence of
- *       {@code mockserver-ui/package.json}, so the assertions always execute there.</li>
+ *   <li>If the real bundle is not on the classpath and the {@code build-ui} profile is active (it is
+ *       auto-activated by {@code mockserver-ui/package.json}, so always in CI), the test FAILS: the
+ *       pom passes {@code -Dmockserver.dashboardBundleExpected=true} to failsafe.</li>
+ *   <li>If the profile is NOT active (e.g. a developer build with {@code -P '!build-ui'}), a missing
+ *       bundle SKIPS with a clear message rather than passing vacuously.</li>
  *   <li>If the real bundle IS present it FAILS CLOSED unless the genuine app shell is served AND it
  *       references a real hashed JS asset AND that asset is itself served with a JS content-type. A
  *       synthetic fixture cannot satisfy these assertions.</li>
@@ -53,6 +54,8 @@ import static org.mockserver.stop.Stop.stopQuietly;
 public class DashboardRealBundleServedIntegrationTest {
 
     private static final String DASHBOARD_PATH = "/mockserver/dashboard";
+    // Set by mockserver-netty's pom: true whenever the build-ui profile is active.
+    static final String BUNDLE_EXPECTED_PROPERTY = "mockserver.dashboardBundleExpected";
 
     // The Vite build sets base=/mockserver/dashboard/ and emits hashed entry chunks as
     // assets/index-<hash>.js referenced absolutely from index.html (e.g.
@@ -85,14 +88,19 @@ public class DashboardRealBundleServedIntegrationTest {
         // given - the dashboard root, which the handler resolves to the built index.html
         HttpResponse index = send("GET", DASHBOARD_PATH);
 
-        // The real bundle is only present when the build-ui profile ran. There is no synthetic
-        // index.html fixture, so a 404 here means the built dashboard was never copied onto the
-        // classpath: skip rather than pass vacuously. (In CI the profile always runs.)
-        Assume.assumeTrue(
-            "real dashboard bundle is not on the classpath - build with the build-ui Maven profile "
-                + "(mockserver-ui must be built and copied into mockserver-netty resources) to run this test; "
-                + "GET " + DASHBOARD_PATH + " returned status " + index.getStatusCode(),
-            index.getStatusCode() != null && index.getStatusCode() == 200);
+        // The real bundle is only present when the build-ui profile ran (there is no synthetic
+        // index.html fixture). When that profile is active - always in CI, where the netty IT
+        // shards inherit the prebuild's classes - a missing bundle is a packaging regression and
+        // must FAIL; otherwise (e.g. a developer build with -P '!build-ui') it skips.
+        boolean served = index.getStatusCode() != null && index.getStatusCode() == 200;
+        String missingBundle = "real dashboard bundle is not on the classpath - build with the build-ui Maven profile "
+            + "(mockserver-ui must be built and copied into mockserver-netty resources); "
+            + "GET " + DASHBOARD_PATH + " returned status " + index.getStatusCode();
+        if (Boolean.getBoolean(BUNDLE_EXPECTED_PROPERTY)) {
+            assertThat(missingBundle + " although " + BUNDLE_EXPECTED_PROPERTY + "=true", served, is(true));
+        } else {
+            Assume.assumeTrue(missingBundle, served);
+        }
 
         String indexBody = index.getBodyAsString();
 

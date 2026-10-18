@@ -78,6 +78,7 @@ public class DashboardHandler {
                         final String content = new String(ByteStreams.toByteArray(contentStream), UTF_8.name());
                         response =
                             response()
+                                .withStatusCode(200)
                                 .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), contentType)
                                 .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(content.getBytes(UTF_8).length))
                                 .withBody(content);
@@ -85,11 +86,12 @@ public class DashboardHandler {
                         final byte[] bytes = ByteStreams.toByteArray(contentStream);
                         response =
                             response()
+                                .withStatusCode(200)
                                 .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), contentType)
                                 .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(bytes.length))
                                 .withBody(bytes);
                     }
-                    if (request.isKeepAlive()) {
+                    if (Boolean.TRUE.equals(request.isKeepAlive())) {
                         response.withHeader(HttpHeaderNames.CONNECTION.toString(), HttpHeaderValues.KEEP_ALIVE.toString());
                     }
                 }
@@ -101,7 +103,7 @@ public class DashboardHandler {
         // with the client's own stream (see Http2StreamIds for how the id is captured inbound). Null on
         // HTTP/1.1, where it is a no-op.
         response.withStreamId(request.getStreamId());
-        if (!request.isKeepAlive()) {
+        if (!Boolean.TRUE.equals(request.isKeepAlive())) {
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         } else {
             ctx.writeAndFlush(response);

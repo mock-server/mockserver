@@ -45,6 +45,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.startsWith;
@@ -1218,10 +1219,10 @@ public class HttpRequestHandlerTest {
         // when
         embeddedChannel.writeInbound(dashboardRequest);
 
-        // then - the gate allows it through to the dashboard handler (not a 401/403 challenge)
+        // then - the gate lets it reach the dashboard handler: 200 when the build-ui bundle is on
+        // the classpath, 404 when it is not; never a 401/403 challenge or an error
         HttpResponse httpResponse = embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), not(is(401)));
-        assertThat(httpResponse.getStatusCode(), not(is(403)));
+        assertThat(httpResponse.getBodyAsString(), httpResponse.getStatusCode(), anyOf(is(200), is(404)));
     }
 
     @Test
@@ -1233,10 +1234,9 @@ public class HttpRequestHandlerTest {
         // when
         embeddedChannel.writeInbound(dashboardRequest);
 
-        // then - not an auth challenge
+        // then - served by the dashboard handler (200 with the bundle, 404 without), not an auth challenge
         HttpResponse httpResponse = embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), not(is(401)));
-        assertThat(httpResponse.getStatusCode(), not(is(403)));
+        assertThat(httpResponse.getBodyAsString(), httpResponse.getStatusCode(), anyOf(is(200), is(404)));
     }
 
     @Test
@@ -1250,10 +1250,9 @@ public class HttpRequestHandlerTest {
         // when
         embeddedChannel.writeInbound(dashboardRequest);
 
-        // then - allowed through (not a 401/403 challenge)
+        // then - allowed through to the dashboard handler (200 with the bundle, 404 without)
         HttpResponse httpResponse = embeddedChannel.readOutbound();
-        assertThat(httpResponse.getStatusCode(), not(is(401)));
-        assertThat(httpResponse.getStatusCode(), not(is(403)));
+        assertThat(httpResponse.getBodyAsString(), httpResponse.getStatusCode(), anyOf(is(200), is(404)));
     }
 
     @Test
