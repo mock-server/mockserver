@@ -2,15 +2,15 @@
 
 **Outcome.** The July 2026 coverage audit (95 gaps: 93 numbered gaps plus follow-ups F1/F2) was
 re-checked against master on 2026-10-18: 83 closed, 1 no longer applies, 11 still open. Since
-then gaps 47, 54, 66, 68, 83 and 90 have closed. The only gap left is T1 (gaps 19–21), now wired
-into CI and waiting for a green `master` run to confirm it. Gaps 1 and 82 were declined (see
-below). Delete this file once T1 is confirmed on `master`.
+then gaps 47, 54, 66, 68, 83 and 90 have closed, and T1 (gaps 19–21) now runs on CI. What is left
+is T1's eBPF remainder. Gaps 1 and 82 were declined (see
+below). Delete this file once the eBPF remainder is closed.
 
 ## What remains
 
 | # | Gap | Why it matters | Blocked on | Next step |
 |---|---|---|---|---|
-| T1 | The transparent-proxy end-to-end tests (`TproxyEndToEndIntegrationTest`, `SoOriginalDstEndToEndIntegrationTest`, `EbpfOriginalDestinationEndToEndIntegrationTest`, #19–21) ran on no CI build: no pipeline set `RUN_TRANSPARENT_PROXY_E2E`, the maven image has no Docker CLI, and the `default` queue's userns-remapped dockerd rejects `--privileged`. The `:shield: transparent-proxy e2e tests` step now runs all three on the existing `default` queue, with no new queue or Terraform change. `pipeline-java.yml` sets `RUN_TRANSPARENT_PROXY_E2E=true`. `java-transparent-proxy-test.sh` mounts a docker CLI copied from a digest-pinned `docker:<ver>-cli` image, mounts the checkout at its host path so the sibling container can bind-mount the jar, and fails closed through `assert-suite-ran.sh`. The suites start their containers with `--userns=host`, so `--privileged` is accepted. Locally, through that script, all three passed against Docker Desktop and against a userns-remapped docker-in-docker daemon. With `--userns=host` removed from the eBPF suite, the step failed closed. The eBPF suite proves only that a pinned BPF map can be created under `--privileged` and that enabling the eBPF resolver does not break the chain. Its map entry (cookie 1) never matches a real socket, so the request is resolved by the SO_ORIGINAL_DST/conntrack fallback, and a broken eBPF lookup or decode still passes. | `IP_TRANSPARENT` and `SO_ORIGINAL_DST` interception, and the eBPF lookup/decode path, can regress while every build stays green. | Landing on `master`. A pre-merge `mockserver-java` build on a real `default` agent (build 3277, hidden ref, dockerd 25.0.16) ran all three with `1 tests ran (0 skipped)` each. | Once it is green on `master`, narrow this row to the remaining eBPF gap: make the eBPF suite assert that the eBPF resolver itself answered, for example by disabling the SO_ORIGINAL_DST/conntrack fallbacks in its container or asserting a resolver log line, on a real agent kernel. If only eBPF fails on the agents, split the `-Dit.test` list and the `assert-suite-ran` globs per suite and run SO_ORIGINAL_DST/TPROXY first. |
+| T1 | The transparent-proxy end-to-end tests (`TproxyEndToEndIntegrationTest`, `SoOriginalDstEndToEndIntegrationTest`, `EbpfOriginalDestinationEndToEndIntegrationTest`, #19–21) now run on every non-PR `mockserver-java` build in the `:shield: transparent-proxy e2e tests` step on the `default` queue (commit `929bb4c0a`); `master` build 3279 ran all three with `1 tests ran (0 skipped)` each, and `assert-suite-ran.sh` fails the step if one skips. **Remainder:** the eBPF suite proves only that a pinned BPF map can be created under `--privileged` and that enabling the eBPF resolver does not break the chain. Its map entry (cookie 1) never matches a real socket, so the request is resolved by the SO_ORIGINAL_DST/conntrack fallback. | A broken eBPF lookup or decode still passes. | Nothing external. | Make the eBPF suite assert that the eBPF resolver itself answered, for example by disabling the SO_ORIGINAL_DST/conntrack fallbacks in its container or asserting a resolver log line, and prove it on a real agent kernel. |
 
 ### Declined
 
