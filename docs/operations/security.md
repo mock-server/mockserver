@@ -28,18 +28,35 @@ GitHub's CodeQL semantic analysis runs automatically on:
 - Every pull request targeting `master`
 - Weekly (Tuesdays at 22:00 UTC)
 
-CodeQL scans **four languages** in the monorepo:
+CodeQL scans **eight languages** in the monorepo with the `security-extended` query suite. Each language is a separate matrix job with its own code scanning category, `.github/workflows/codeql-analysis.yml:analyze/language:<language>`, so a language's alerts open and close independently of the others. The category is set explicitly because it must stay byte-identical to the one Java, JavaScript, Python and Ruby already use: the action's default would now include the matrix `build-mode` value, and a changed category orphans the existing alerts.
 
-| Language | Scope |
-|----------|-------|
-| Java | `mockserver/` (server, core, clients, integrations) |
-| JavaScript | `mockserver-ui/`, `mockserver-client-node/`, `mockserver-node/` |
-| Python | `mockserver-client-python/` |
-| Ruby | `mockserver-client-ruby/` |
+| Language | Build mode | Scope |
+|----------|-----------|-------|
+| Java | `manual` (Maven `package`) | `mockserver/` (server, core, clients, integrations) |
+| JavaScript | `none` | `mockserver-ui/`, `mockserver-client-node/`, `mockserver-node/` |
+| Python | `none` | `mockserver-client-python/` |
+| Ruby | `none` | `mockserver-client-ruby/` |
+| C# | `none` | `mockserver-client-dotnet/`, `mockserver-testcontainers/dotnet/`, `examples/dotnet/` |
+| Go | `autobuild` | the Go modules (directories with a `go.mod`): `mockserver-client-go/`, `mockserver-testcontainers/go/`, `examples/go/`, `examples/wasm/go/` |
+| Rust | `none` | `mockserver-client-rust/`, `mockserver-testcontainers/rust/`, `examples/rust/`, `examples/wasm/` |
+| Actions | `none` | `.github/workflows/` and `.github/actions/` (workflow injection, untrusted checkout, excessive permissions) |
 
-Results appear in the [GitHub Security tab](https://github.com/mock-server/mockserver-monorepo/security/code-scanning). CodeQL detects issues including SQL injection, path traversal, insecure deserialization, cross-site scripting, and other OWASP Top 10 categories.
+Results appear in the [GitHub Security tab](https://github.com/mock-server/mockserver-monorepo/security/code-scanning). CodeQL detects issues including SQL injection, path traversal, insecure deserialization, cross-site scripting, and other OWASP Top 10 categories. The C#, Go, Rust and Actions languages and the `security-extended` suite were added in October 2026, so their first runs raise a batch of alerts that predate the change.
 
 **Workflow:** [`.github/workflows/codeql-analysis.yml`](../../.github/workflows/codeql-analysis.yml)
+
+## Static Analysis: zizmor (GitHub Actions)
+
+[zizmor](https://docs.zizmor.sh/) audits the workflows, the composite action and `dependabot.yml` under `.github/` for template injection, excessive permissions, credential persistence, unpinned actions, Dependabot cooldown gaps and similar CI supply-chain risks. It runs on every push to `master`, every pull request targeting `master`, and weekly (Wednesdays at 05:23 UTC).
+
+- **Where alerts appear:** the [code scanning alerts](https://github.com/mock-server/mockserver-monorepo/security/code-scanning) list, under the tool `zizmor` and the category `zizmor`. They are triaged, dismissed and closed exactly like CodeQL alerts.
+- **Findings do not fail the job.** zizmor runs with `--no-exit-codes`, so findings become alerts rather than a red run. An error (unparseable workflow, bad flag) still fails the job.
+- **Offline and hash-pinned.** zizmor runs with `--offline`, so it makes no network calls and needs no token. It is installed with `pip install --require-hashes` from [`.github/zizmor/requirements.txt`](../../.github/zizmor/requirements.txt), which pins the version and the sha256 of every published file. To upgrade, take the new version's hashes from `https://pypi.org/pypi/zizmor/<version>/json`.
+- **No third-party actions.** The workflow uses only `actions/checkout` and `github/codeql-action/upload-sarif`, both pinned to the same SHAs as the CodeQL workflow, so the GitHub-owned-only actions allowlist is unchanged.
+
+To run it locally: `python3 -m venv .tmp/zizmor && .tmp/zizmor/bin/pip install --require-hashes --only-binary=:all: --no-deps -r .github/zizmor/requirements.txt && .tmp/zizmor/bin/zizmor --offline .github/`.
+
+**Workflow:** [`.github/workflows/zizmor.yml`](../../.github/workflows/zizmor.yml)
 
 ## Dependency Scanning: Dependabot
 
@@ -310,11 +327,13 @@ The repository uses several GitHub security features:
 | Feature | Status | Purpose |
 |---------|--------|---------|
 | [Code scanning (CodeQL)](https://github.com/mock-server/mockserver-monorepo/security/code-scanning) | Active | Static analysis for vulnerabilities |
+| [Code scanning (zizmor)](https://github.com/mock-server/mockserver-monorepo/security/code-scanning?query=tool%3Azizmor) | Active | Static analysis of GitHub Actions workflows |
 | [Dependabot alerts](https://github.com/mock-server/mockserver-monorepo/security/dependabot) | Active | Vulnerable dependency detection |
 | [Dependabot security updates](https://github.com/mock-server/mockserver-monorepo/security/dependabot) | Active | Automatic PRs for security fixes |
 | [Dependency graph](https://github.com/mock-server/mockserver-monorepo/network/dependencies) | Active | Transitive dependency visibility |
 | [Security advisories](https://github.com/mock-server/mockserver-monorepo/security/advisories) | Active | Private vulnerability reporting |
-| Secret scanning | Active (GitHub default) | Prevents accidental secret commits |
+| Secret scanning | Active | Detects committed secrets and raises secret scanning alerts |
+| Secret scanning push protection | Active | Blocks a push that contains a recognised secret before it reaches the repository |
 
 ## SNAPSHOT and Pre-Release Versions
 

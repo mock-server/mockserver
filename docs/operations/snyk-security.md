@@ -19,7 +19,7 @@ Snyk runs automatically on all pull requests via two integrations:
 1. **`security/snyk (mockserver)`** - Scans against the `mockserver` organization
 2. **`security/snyk (jamesdbloom)`** - Scans against the personal organization
 
-Both checks must pass for a PR to be merged. Results are visible in the PR status checks with links to detailed reports on app.snyk.io.
+Results are visible in the PR status checks with links to detailed reports on app.snyk.io. The checks are advisory: `master` has no required status checks, so a failing Snyk check does not block a merge by itself. Review a red Snyk check before merging.
 
 ### Web Dashboard
 
@@ -176,7 +176,7 @@ Snyk and Dependabot work together:
 
 1. **Dependabot** proposes dependency upgrades (automated PRs)
 2. **Snyk** scans the PRs for new/resolved vulnerabilities
-3. Both checks must pass before merge
+3. A red Snyk check blocks the Dependabot auto-merge workflow, which refuses to merge unless every commit status, including both Snyk scans, is green. For a human merge the checks are advisory, because `master` has no required status checks
 
 ## GitHub Actions Integration
 

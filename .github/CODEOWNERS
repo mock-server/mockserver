@@ -11,6 +11,16 @@
 /.github/workflows/**          @jamesdbloom
 /.github/dependabot.yml        @jamesdbloom
 /.github/CODEOWNERS            @jamesdbloom
+/.github/actions/**            @jamesdbloom
+/.github/scripts/**            @jamesdbloom
+/.github/zizmor/**             @jamesdbloom
+
+# AI agent configuration
+/.opencode/**                  @jamesdbloom
+/.claude/**                    @jamesdbloom
+/AGENTS.md                     @jamesdbloom
+/CLAUDE.md                     @jamesdbloom
+/opencode.jsonc                @jamesdbloom
 
 # Infrastructure as Code
 /terraform/**                  @jamesdbloom

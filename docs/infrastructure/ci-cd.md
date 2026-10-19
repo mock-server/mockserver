@@ -18,6 +18,8 @@ Cancel & Delete"]
     subgraph "GitHub Actions"
         GA_CODEQL["CodeQL Analysis
 Security scanning"]
+        GA_ZIZMOR["zizmor
+Workflow audit"]
     end
 
     subgraph "GitHub Built-in"
@@ -29,6 +31,7 @@ Auto-indexed"]
     BK_MAVEN -->|pushes to| DH[Docker Hub]
     BK_CLEANUP -->|triggered by| GH_WH[GitHub Webhook]
     GA_CODEQL -->|reports to| GH_SEC[GitHub Security]
+    GA_ZIZMOR -->|SARIF to| GH_SEC
 ```
 
 ### CI Security Model
@@ -42,7 +45,7 @@ All custom CI pipelines run on Buildkite with self-managed EC2 agents. This keep
 | Build & test | Buildkite (EC2 agents, secrets in AWS Secrets Manager) for in-repo branches; **fork PRs** build & test on GitHub Actions (`pr-tests.yml`, secret-free, read-only token) since Buildkite must not run fork code |
 | Docker push | Buildkite (Docker Hub credentials in AWS Secrets Manager) |
 | GitHub event reactions | Buildkite Pipeline Triggers (GitHub webhook → Buildkite, no secrets in GitHub) |
-| Security scanning | GitHub Actions CodeQL (read-only, no secrets needed) |
+| Security scanning | GitHub Actions CodeQL and zizmor (read-only plus `security-events: write`, no secrets needed); both report as code scanning alerts in the Security tab |
 | Dependency graph | GitHub built-in (auto-indexed from manifests, no workflow needed) |
 
 ## Buildkite Pipelines
@@ -994,7 +997,7 @@ It prints `build#<n> <commit> build=<state> <job>=<state> exit=<code>` and exits
 
 ## GitHub Actions
 
-Several workflows run on GitHub Actions (CodeQL, Maven dependency submission, scheduled hygiene jobs such as certificate-expiry, and issue/label automation). The security-relevant ones are described below.
+Several workflows run on GitHub Actions (CodeQL, zizmor, Maven dependency submission, scheduled hygiene jobs such as certificate-expiry, and issue/label automation). The security-relevant ones are described below.
 
 ### CodeQL Security Analysis
 
@@ -1005,31 +1008,43 @@ Several workflows run on GitHub Actions (CodeQL, Maven dependency submission, sc
 - Pull requests targeting `master`
 - Weekly schedule: Tuesdays at 22:00 UTC
 
-**Languages scanned:** Java, JavaScript, Python, Ruby
+**Languages scanned:** Java, JavaScript, Python, Ruby, C#, Go, Rust and Actions, one matrix job per language, all with the `security-extended` query suite.
+
+**Permissions:** `permissions: {}` at workflow level; the job grants only `contents: read` and `security-events: write`.
 
 **Process:**
 
 ```mermaid
 flowchart LR
     TRIGGER[Push/PR/Schedule] --> CHECKOUT[Checkout code]
-    CHECKOUT --> SETUP_JDK[Set up JDK 17]
-    SETUP_JDK --> INIT[Initialize CodeQL]
-    INIT --> BUILD[Maven compile
-skip tests]
+    CHECKOUT --> INIT["Initialize CodeQL
+language + build mode"]
+    INIT --> BUILD["Java only: Maven package
+skip tests"]
     BUILD --> ANALYZE[CodeQL Analysis]
-    ANALYZE --> REPORT[Report to GitHub Security]
+    ANALYZE --> REPORT["Upload to code scanning
+one category per language"]
 ```
 
-The workflow:
-1. Checks out the repository
-2. Sets up JDK 17 (Temurin distribution)
-3. Initializes CodeQL for Java, JavaScript, Python, and Ruby
-4. For Java: Runs `./mvnw clean compile -DskipTests -Dmaven.javadoc.skip=true` (CodeQL autobuild)
-5. For JavaScript, Python, and Ruby: Analyzes source files directly (no build required)
-6. Performs CodeQL static analysis to detect security vulnerabilities
-7. Uploads results to GitHub Security tab
+| Language | Build mode |
+|----------|-----------|
+| Java | `manual`: JDK 17 plus `./mvnw clean package -DskipTests -Dmaven.javadoc.skip=true` in `mockserver/` |
+| Go | `autobuild` (Go has no `none` mode); confirm the first `Analyze (go)` run on `master` is green, because there are several Go modules and no `go.work` |
+| JavaScript, Python, Ruby, C#, Rust, Actions | `none`: source is extracted without a build |
 
-**Results:** Vulnerabilities appear in the repository's Security tab under "Code scanning alerts".
+**Results:** each language uploads under its own category, `.github/workflows/codeql-analysis.yml:analyze/language:<language>`. The category is set explicitly so it stays identical to the one the original four languages already use (the default would now include the matrix `build-mode`, which would orphan their existing alerts). Its alerts appear in the repository's Security tab under "Code scanning alerts". C#, Go, Rust, Actions and `security-extended` were added in October 2026, so the first runs raise alerts for code that predates the change.
+
+### zizmor (GitHub Actions audit)
+
+**File:** `.github/workflows/zizmor.yml`
+
+**Triggers:** push to `master`, pull requests targeting `master`, weekly on Wednesdays at 05:23 UTC, and `workflow_dispatch`.
+
+**What it does:** installs zizmor with `pip install --require-hashes` from `.github/zizmor/requirements.txt`, runs `zizmor --offline --format=sarif --no-exit-codes .github/`, and uploads the SARIF with `github/codeql-action/upload-sarif` (same SHA as the CodeQL workflow) under the category `zizmor`.
+
+**Results:** code scanning alerts in the Security tab, tool `zizmor`, category `zizmor`. Findings never fail the job; only an error does. The job is check run `Audit GitHub Actions`.
+
+**Permissions:** `permissions: {}` at workflow level; the job grants only `contents: read` and `security-events: write`. Checkout uses `persist-credentials: false`, and no third-party action is used. See [security.md → Static Analysis: zizmor](../operations/security.md#static-analysis-zizmor-github-actions).
 
 ### Maven Dependency Submission
 
@@ -1055,10 +1070,10 @@ The full rationale, the two-project coverage table, the cost/trigger design, and
 
 | API | Endpoint | What it carries here (verified on PR #2562's head) |
 |---|---|---|
-| Check Runs | `GET /commits/{sha}/check-runs` | 6 runs — CodeQL, the four `Analyze (*)` language runs, and the fork-only `Build & test full reactor` (which is `skipped` on in-repo branches) |
+| Check Runs | `GET /commits/{sha}/check-runs` | 6 runs on PR #2562 — CodeQL, the then four `Analyze (*)` language runs, and the fork-only `Build & test full reactor` (which is `skipped` on in-repo branches). Since October 2026 there are about 11: CodeQL, eight `Analyze (*)` runs, `Audit GitHub Actions` (zizmor) and `Build & test full reactor`, plus a `zizmor` code scanning results run on pull requests |
 | Commit Statuses | `GET /commits/{sha}/status` | 3 statuses — `buildkite/mockserver` and **both** Snyk scans |
 
-A workflow reading only check-runs would see 6 green and merge **while missing the build and the vulnerability scanner entirely**. This workflow aggregates all **9** signals and requires every one to be green.
+A workflow reading only check-runs would see every run green and merge **while missing the build and the vulnerability scanner entirely**. This workflow aggregates every check run plus the 3 statuses (9 signals on PR #2562, about 14 since October 2026) and requires every one to be green. It picks up new check runs, such as `Analyze (actions)`, `Analyze (csharp)`, `Analyze (go)`, `Analyze (rust)` and `Audit GitHub Actions`, without change because it reads the live list. CodeQL and zizmor go red only on a tool or extraction failure, never on findings, but a broken extractor blocks **every** Dependabot auto-merge until it is fixed: **confirm the first `Analyze (go)` run on `master` is green** (the riskiest new job: several Go modules, no `go.work`, one module on `go 1.25.0`). If a language stays broken, fix or remove it from the CodeQL matrix rather than adding an exclusion to this workflow.
 
 **Fail-closed decision matrix.** The job refuses (and logs *why*) on any of:
 

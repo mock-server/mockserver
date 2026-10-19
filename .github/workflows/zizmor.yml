@@ -1,0 +1,54 @@
+name: zizmor
+
+# Static analysis of the GitHub Actions workflows, composite actions and
+# dependabot.yml under .github/. Findings are uploaded as SARIF (category
+# `zizmor`) and appear as code scanning alerts in the Security tab.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '23 5 * * 3'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: zizmor-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zizmor:
+    name: Audit GitHub Actions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write  # upload SARIF to code scanning
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install zizmor (hash-pinned)
+        run: |
+          python3 -m venv "$RUNNER_TEMP/zizmor-venv"
+          "$RUNNER_TEMP/zizmor-venv/bin/python" -m pip install --disable-pip-version-check \
+            --require-hashes --only-binary=:all: --no-deps \
+            -r .github/zizmor/requirements.txt
+
+      # --no-exit-codes: findings are reported as alerts, not a red job. Errors
+      # (unparseable input, bad flags) still exit non-zero. Never add --debug.
+      - name: Run zizmor
+        run: |
+          "$RUNNER_TEMP/zizmor-venv/bin/zizmor" --offline --no-progress \
+            --format=sarif --no-exit-codes .github/ > "$RUNNER_TEMP/zizmor.sarif"
+
+      - name: Upload SARIF to code scanning
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d  # v4.38.3
+        with:
+          sarif_file: ${{ runner.temp }}/zizmor.sarif
+          category: zizmor
