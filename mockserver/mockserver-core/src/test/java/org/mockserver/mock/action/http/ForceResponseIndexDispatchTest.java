@@ -162,6 +162,7 @@ public class ForceResponseIndexDispatchTest {
             Set<Integer> served = new HashSet<>();
             for (int i = 0; i < 60; i++) {
                 int statusCode = serve(header);
+                // status-tolerance-ok: RANDOM mode serves one of the three variants, chosen per request
                 assertThat(statusCode, is(oneOf(200, 500, 418)));
                 served.add(statusCode);
             }

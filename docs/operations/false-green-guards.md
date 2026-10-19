@@ -30,6 +30,7 @@ flowchart TD
   A --> R5
   A --> R6
   A --> R7
+  A --> R8
   R1["Rule 1\nDocker-gated suite\nmust be assert-suite-ran-paired"]
   R2["Rule 2\nno step mounts the Docker socket\nthen deselects Docker tests"]
   R3["Rule 3\nno container-integration skip\nparks deferred work as green"]
@@ -37,6 +38,7 @@ flowchart TD
   R5["Rule 5\ncore test with a global logging\nside effect must be sequential"]
   R6["Rule 6\nDependabot auto-merge gate\nmust keep its two-signal scope"]
   R7["Rule 7\nno pipe into grep -q\nin a pipefail script"]
+  R8["Rule 8\nno test assertion that accepts\nmore than one HTTP status"]
   R1 --> V{"new violation?"}
   R2 --> V
   R3 --> V
@@ -44,6 +46,7 @@ flowchart TD
   R5 --> V
   R6 --> V
   R7 --> V
+  R8 --> V
   V -- yes --> F["exit 1 — fail the build"]
   V -- no --> P["exit 0"]
 ```
@@ -57,6 +60,7 @@ flowchart TD
 | **5** | A `mockserver-core` test whose source performs a JVM-global logging side effect — reaching `LogManager.getLogManager().readConfiguration(...)` (a JVM-wide handler `reset()`) via the static logging setters or a forced fresh `<clinit>` — that is **not** in the sequential-includes list of `mockserver-core/pom.xml`. In the parallel phase it races another test's log capture, silently zeroing a capture (a failing test) or falsely passing a silence assertion (a false green). | The release-blocking flake where `ClassInitializationDeadlockTest` / `ConfigurationPropertiesInitializationTest` forced a fresh `MockServerLogger`/`ConfigurationProperties` `<clinit>` in the parallel phase, resetting every logger's handlers mid-run. `ParallelStaticStateGuardTest` structurally cannot catch it — those classes are in neither the parallel-exclude nor the sequential-include list. |
 | **6** | The Dependabot auto-merge gate losing one of the four properties its safety rests on: the `/distroless/` scope on the digest branch regex, a trailing hex-run floor of at least 7, the title cross-check that makes path B a two-signal AND, or `update-types` staying within {minor, patch} for every group whose name path A accepts. Each is a plausible tidy-up, and each silently widens what merges into `master` unattended. | Dropping `/distroless/` — a date-tagged bump such as `bump ubuntu from 202401151200 to 202402201200` matches the title regex (date tokens are all hex), so the scope is the only thing rejecting it; and adding `major` to a `*-minor-and-patch` group, which would put majors into a branch literally named `minor-and-patch` and auto-merge them. |
 | **7** | A pipe into an early-exit grep (`grep -q`/`-m`/`--quiet`/`--silent`/`--max-count`) in a shell script or GitHub workflow `run:` block that runs under `set -o pipefail`. grep exits on its first match; if the writer still has output it dies of SIGPIPE and pipefail reports the whole pipeline as failed. That is a **false red** in an `if !` check and a **false green** in an `if` check. | This guard's own Rule 6c went red at random (Buildkite `mockserver` build 7643) on an unchanged, correct workflow. `generate-pipeline.sh`'s trigger-all path passed the whole file tree (~470 KB) through `printf \| grep -q` and silently skipped most pipelines. The `quiche`-leak checks in the jar-natives assertions could miss a leaked native. `examples/validate/run.sh` could report success with a failing client. The Dependabot auto-merge workflow could fail to recognise a security PR from its multi-line body, and so refuse it. |
+| **8** | A test assertion whose matcher accepts more than one HTTP status literal: `not(is(401))`, `Matchers.not(401)`, `is(not(404))`, `not(anyOf(is(401), is(403)))`, `anyOf(is(200), is(404))`, `either(..).or(..)`, `oneOf`/`isOneOf`/`isIn`, a range (`lessThan(500)`, `isBetween(200, 299)`, `status < 300`), `assertNotEquals(404, status)`, `a == 201 \|\| a == 200`, Playwright/Jest `.not.toBe(404)` or `expect([200, 404]).toContain(..)`, status-class arithmetic `statusCode() / 100, is(2)`, Python `status in (200, 404)` / `!= 500`, and Go `!= 200 && != 404` or `>= 400`. Each passes when the endpoint answers an unexpected status, including a 500. | The dashboard auth tests in `HttpRequestHandlerTest` asserted only `not(401)`/`not(403)` and passed on a real dashboard 500 (fixed in `291b2885f`). The rule's first sweep found 23 status-tolerant assertions, including `ControlPlaneAuthenticationRuntimePutTest`'s `is(not(401))` on `/mockserver/metrics`, which was passing on a 500 from the same null-keep-alive defect in `MetricsHandler`. |
 
 Rule 1's match is **module-scoped**, not class-name-only. The correlation key is
 the Maven module directory name — the last path segment before `/target/` in an
@@ -278,6 +282,79 @@ reader into a failure of the writer. Before trusting any check shaped like
 **A check that sometimes gives the wrong answer is worse than one that always
 does**, because a rerun hides it.
 
+### Rule 8: an HTTP status assertion must name one status
+
+Rule 8 sweeps test sources only: `*/src/test/` Java, Kotlin and Groovy, plus the shared
+integration suites in `mockserver-integration-testing/src/main`; `*_test.go`;
+`*.test.*` / `*.spec.*`, `__tests__/`, `e2e/`, `test/` and `tests/` JavaScript and
+TypeScript; and `test_*.py`, `*_test.py`, `tests/` and `test/` Python. It includes
+untracked files, so a new test is checked before its first commit.
+
+The detector (`r8_hits`, one `awk` program) joins each assertion statement across lines,
+strips comments, and blanks string contents unless the string is itself a status such as
+`"404"`, so prose in an assertion message never matches a signature. It flags a statement
+in two cases:
+
+- **A negated or `anyOf` matcher on status literals, whatever the subject:**
+  `is(not("501"))` on `result[0]`, `.not.toBe(202)` on an array element, and
+  `anyOf(is(200), is(404))` on `rc`. A status literal (100–599) inside `not(..)`
+  says by itself that a status is being checked. `not(is(0))` and
+  `anyOf(is(200), is(1))` are not flagged.
+- **Any other tolerant shape** (ranges, `oneOf`/`isIn`, `assertNotEquals`, list-contains,
+  `||` comparisons, and status-class arithmetic `/ 100`) **when the statement names a
+  status.** The name can be in the subject (`status`, `statusCode`,
+  `getStatusCode()`, `.code()`, `responseCode`) or in the assertion message. So
+  `lessThan(500L)` on a latency and `total / 100` on a count are not flagged.
+
+Hamcrest calls qualified as `Matchers.not(..)` / `CoreMatchers.anyOf(CoreMatchers.is(..))`
+are matched. So are a `.not` / `.toBe(..)` chain split across lines and a Go
+condition split after `&&` / `||`.
+
+**Exemption is an inline marker, not an allow-list.** Test files churn, so a
+`path:line` allow-list would break on unrelated edits. A genuinely tolerant
+assertion carries a comment on the statement or on the line directly above it:
+
+```java
+// status-tolerance-ok: RANDOM mode serves one of the three variants, chosen per request
+assertThat(statusCode, is(oneOf(200, 500, 418)));
+```
+
+The reason must be at least 10 characters. A marker without one fails the build, and
+so does a marker that excuses no loose assertion, so a marker cannot outlive the code
+it excused. A marker inside a string literal does not count. The one genuine case today
+is `ForceResponseIndexDispatchTest`, which checks that `RANDOM` response selection
+serves one of three variants.
+
+What Rule 8 does **not** catch:
+
+- a status held in a constant or returned by a helper (`not(is(ENFORCEMENT_STATUS))`);
+- a range written as `res.ok()` / `toBeTruthy()` on a 2xx flag;
+- a range or `/ 100` check whose statement never names a status (`assertThat(rc / 100, is(2))`);
+- `not(oneOf(..))` / `not(isIn(..))`, and a long literal such as `not(is(401L))`;
+- AssertJ `.isTrue()` / `.isFalse()` around a comparison (`assertThat(status < 300).isTrue()`);
+- a Java or JavaScript `if (status ...) fail(..)` / `throw` guard instead of an assertion;
+- a Python `in [..]` list split across lines, and `in range(200, 300)`;
+- client tests in Rust, C#, PHP and Ruby.
+
+The reverse also holds. A negated matcher on any literal from 100 to 599 is flagged
+whatever its subject, so `assertThat(port, not(is(443)))` fails the build even though
+it is not a status. Give such an assertion a `status-tolerance-ok: <reason>` marker
+(for example "a port, not an HTTP status").
+
+It also matches textually, so a tolerance built from variables
+(`anyOf(is(expected), is(fallback))`) is invisible. A JavaScript regex literal that
+contains `/*` is read as the start of a block comment, which can hide the assertions
+after it in that file.
+
+The detector is plain POSIX awk and gives identical results on BSD awk, gawk, busybox
+and mawk, including mawk 1.3.4 20200120 (Debian 12, Ubuntu 22.04). That mawk mismatches
+a repeated group nested inside a repeated group, such as `(x*,)*`, so the signatures
+avoid that construct.
+The detector is self-tested on every run against one fixture per language in
+`check-false-green-guards.rule8-fixtures/`, with a directive line naming what must be
+reported for the line after it (`//@flag`, `//@allow`, `//@noreason`, `//@orphan`,
+`//@pass`). Any report the fixture does not name also fails the self-test.
+
 ## Where it runs
 
 Wired into the **always-on** steps in `.buildkite/scripts/generate-pipeline.sh`
@@ -300,6 +377,10 @@ uses `bash -e`, which has no pipefail. Rule 7 flags those too: the here-string
 form is always safe, and scanning everything means adding `shell: bash` later
 cannot silently arm a race. Each YAML file is scanned whole; outside `run:`
 blocks the pattern does not occur.
+
+Rule 8 sweeps the test sources of every Java module, the dashboard (unit and
+Playwright end-to-end tests), and the Python and Go clients. These are another set of
+paths that no single path-filtered pipeline sees.
 
 The guard is also linted by `infra-validate-scripts.sh` (`bash -n` +
 `shellcheck`) like every other CI script.
@@ -335,24 +416,26 @@ the socket **and** deselect the tests that need it.
 
 ### Other coverage-audit proposals
 
-Two broader proposals from the July 2026 coverage audit (gaps 1 and 82) were declined. The
-October 2026 recheck kept both declines; neither is enforced here:
+Two broader proposals came from the July 2026 coverage audit (gaps 1 and 82). Gap 1 stays
+declined; gap 82 was reopened and is now enforced as Rule 8.
 
 - **Gap 1: mutation / degrade-and-confirm-red gate.** No pitest/mutation plugin and no scripted
   degrade list exist, so negative controls stay ad hoc inside individual tests. Declined in commit
   `adf935e66` (2026-08-17, where it was Gap #5 of the coverage-gaps plan; `9a1497928` on 2026-09-26
   only deleted that plan, it did not make this decision): "a pitest gate is a large investment
   against a much-reduced risk." Nothing since has changed that calculus.
-- **Gap 82: standing sweep for the audit's tell categories** (`CONFIGURES_AROUND_DEFAULT` /
-  `TOLERANCE_COVERS_BUG` / `WRONG_MODULE`, per `adf935e66` Gap #4). No Rule 8 (or equivalent) in
-  `check-false-green-guards.sh` flags `not(is(4xx))` / `anyOf(is(2xx)...)`-style assertions. Declined
-  in the same commit `adf935e66`: the named instances were all fixed, so the remaining value is
-  preventing recurrence. That is bookkeeping unless this audit style continues, and worth a standing
-  CI grep only in that case. The October 2026 recheck found 7 status-tolerance assertions present at
-  the time, the exact shape the sweep would have caught, found again by hand: 6 in three dashboard
-  tests in `HttpRequestHandlerTest.java`, and 1 in `DashboardWebSocketHandlerTest.java:2306`. That
-  recurrence does not by itself reopen the decline. The decline stands; whether the recurrence
-  warrants a rule is for the owner to decide.
+- **Gap 82: standing sweep for status-tolerant assertions** (the `TOLERANCE_COVERS_BUG` tell, per
+  `adf935e66` Gap #4). **Decided and implemented 2026-10-19 as Rule 8** (`check-false-green-guards.sh`,
+  "Rule 8: test assertions must pin the exact HTTP status"). It was first declined in `adf935e66`
+  because the named instances were all fixed and a standing grep was worth it only if the shape
+  recurred. The October 2026 recheck found it had: 7 status-tolerance assertions, 6 in three dashboard
+  tests in `HttpRequestHandlerTest.java` and 1 in `DashboardWebSocketHandlerTest.java`, and one of those
+  shapes had hidden a real dashboard 500. The owner reopened the gap. The full sweep found 23 instances
+  across Java tests, Playwright specs, the Node browser-client spec and a Java example. 22 were false
+  greens, now pinned to the exact status, and one of those exposed a second real 500 (`MetricsHandler` unboxed a null keep-alive flag, the defect fixed in
+  `DashboardHandler` by `291b2885f`). One, `ForceResponseIndexDispatchTest`'s random-selection check,
+  is genuinely tolerant and carries the marker. `CONFIGURES_AROUND_DEFAULT` and `WRONG_MODULE` have no
+  low-false-positive textual signature and stay unenforced.
 
 ## Allow-lists — how to add an entry
 
@@ -360,7 +443,8 @@ Some Docker-gated files are legitimately **not** assert-suite-ran-paired (for
 example the probe's own unit test, `DockerAvailabilityTest`, which calls
 `isAvailable()` with stubbed suppliers and starts no container). Each rule has an
 allow-list array (`R1_ALLOWLIST` … `R5_ALLOWLIST`, and `R7_ALLOWLIST`; Rule 6 has
-none by design).
+none by design). Rule 8 uses an inline `status-tolerance-ok: <reason>` comment instead,
+checked the same way: a marker that excuses nothing or gives no reason fails the build.
 
 An allow-list entry is a **justification, never a mute button.** Follow the
 precedent of `check-certificate-expiry.sh`, which allow-lists the intentionally
@@ -398,6 +482,11 @@ goes red, then restore:
   `if printf '%s\n' "$CHANGED_FILES" | grep -qE -- "^test-fixtures/"; then` in
   `generate-pipeline.sh`; it is flagged as `generate-pipeline.sh:<line>: pipes into
   an early-exit grep`.
+- **Rule 8** — loosen any exact status assertion, e.g. change
+  `assertThat(response.getStatusCode(), is(200))` in `DashboardHandlerTest` to
+  `is(not(404))`; it is flagged as `DashboardHandlerTest.java:<line>: status assertion
+  accepts more than one status`. Deleting the reason from the `status-tolerance-ok`
+  marker in `ForceResponseIndexDispatchTest` fails it too.
 - **Allow-list rot** — point an allow-list entry at a nonexistent path (Rules 1/5),
   or at a location that no longer matches the rule's condition (Rules 2/3/4/5).
 - **Empty corpus** — each rule also fails closed if its sweep matches nothing

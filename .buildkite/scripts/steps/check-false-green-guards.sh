@@ -114,6 +114,14 @@
 #     scripts/, and GitHub workflows/actions. The detector is self-tested against
 #     check-false-green-guards.rule7-fixture on every run.
 #
+#   Rule 8 — a test assertion that accepts more than one HTTP status.
+#     not(is(401)), anyOf(is(200), is(404)), isIn(200, 404), status < 300,
+#     .not.toBe(404), `in (200, 404)` and the like pass when the endpoint answers an
+#     unexpected status, including a 500 — the shape that hid a real dashboard 500.
+#     Scope: Java/Kotlin/Groovy, JS/TS, Python and Go test sources. A genuinely
+#     tolerant assertion carries an inline `status-tolerance-ok: <reason>` comment.
+#     The detector is self-tested against check-false-green-guards.rule8-fixtures/.
+#
 # ALLOW-LISTS
 #
 # Some Docker-gated files are legitimately NOT assert-suite-ran-paired (the probe's
@@ -1139,6 +1147,241 @@ for entry in ${R7_ALLOWLIST[@]+"${R7_ALLOWLIST[@]}"}; do
     errors=$(( errors + 1 ))
   fi
 done
+
+# ══════════════════════════════════════════════════════════════════════
+# Rule 8 — no status-tolerant HTTP status assertion in a test
+# ══════════════════════════════════════════════════════════════════════
+echo "--- :dart: Rule 8: test assertions must pin the exact HTTP status"
+
+# Exemption is an inline comment on the assertion (or the line above it), never an
+# allow-list: "status-tolerance-ok: <reason of 10+ characters>". A marker that excuses
+# no loose assertion, or that gives no reason, fails the build like a violation.
+#
+# R8_AWK prints "<file>\t<line>\t<loose|allowed|noreason|orphan>\t<statement>" for each
+# assertion (joined across lines, comments stripped, strings blanked unless a bare status
+# such as "404") whose matcher admits several status literals and whose subject or message
+# names a status; a negated or anyOf matcher on status literals needs no subject. Matching
+# is textual: a status held in a constant or a helper is not seen. Avoid a repeated group
+# inside a repeated group: mawk 1.3.4 20200120 (Debian 12, Ubuntu 22.04) mismatches it.
+# shellcheck disable=SC2016  # an awk program, not a shell expansion
+R8_AWK='
+function langof(f) {
+  if (forcelang != "") return forcelang
+  if (f ~ /\.(java|kt|kts|groovy)$/) return "java"
+  if (f ~ /\.(ts|tsx|js|jsx|mjs|cjs)$/) return "js"
+  if (f ~ /\.py$/) return "py"
+  if (f ~ /\.go$/) return "go"
+  return ""
+}
+# Strip comments and blank string contents, keeping a literal that is exactly an
+# HTTP status ("404") so a string-typed status still reaches the signatures.
+function code(s,   out, i, n, c, q, lit, j, rest) {
+  out = ""; q = ""; lit = ""; n = length(s); i = 1
+  while (i <= n) {
+    rest = substr(s, i)
+    if (inblock) {
+      j = index(rest, "*/"); if (j == 0) return out
+      inblock = 0; i += j + 1; continue
+    }
+    if (mq != "") {
+      j = index(rest, mq); if (j == 0) return out
+      i += j + length(mq) - 1; mq = ""; out = out "\"\""; continue
+    }
+    if (q != "") {
+      c = substr(s, i, 1)
+      if (c == "\\") { i += 2; continue }
+      if (c == q) { out = out q ((lit ~ /^[1-5][0-9][0-9]$/) ? lit : "") q; q = ""; lit = "" }
+      else lit = lit c
+      i++; continue
+    }
+    if (!match(rest, specials)) return out rest
+    out = out substr(rest, 1, RSTART - 1); i += RSTART - 1
+    c = substr(s, i, 1)
+    if (substr(s, i, 3) == "\"\"\"" || (lang == "py" && substr(s, i, 3) == "\047\047\047")) { mq = substr(s, i, 3); i += 3; continue }
+    if (c == "`") { mq = c; i++; continue }
+    if (c == "\"" || c == "\047") { q = c; i++; continue }
+    if (c == "#") { if (lang == "py") return out; out = out c; i++; continue }
+    if (lang != "py" && substr(s, i + 1, 1) == "/") return out
+    if (lang != "py" && substr(s, i + 1, 1) == "*") { inblock = 1; i += 2; continue }
+    out = out c; i++
+  }
+  if (q != "") out = out q q
+  return out
+}
+function nparen(s,   t, o, cl) { t = s; o = gsub(/\(/, "", t); t = s; cl = gsub(/\)/, "", t); return o - cl }
+function loose(b) {
+  if (b ~ sig_not || b ~ sig_any || b ~ sig_in || b ~ sig_range || b ~ sig_jsnot || b ~ sig_list || b ~ sig_ne || b ~ sig_div) return 1
+  if (lang == "py") return b ~ sig_rel || b ~ sig_rel2 || b ~ sig_pyin || b ~ sig_pyor || b ~ sig_pyassert
+  if (lang == "go") return b ~ sig_gorel || b ~ sig_rel2 || b ~ sig_goand || b ~ sig_gotest
+  return b ~ sig_false || (b ~ boolctx && (b ~ sig_rel || b ~ sig_rel2 || b ~ sig_or))
+}
+function flush(   k, allowed) {
+  if (buf != "" && (((buf ~ subj || raw ~ subj) && loose(buf)) || buf ~ sig_not || buf ~ sig_jsnot || buf ~ sig_any2)) {
+    allowed = 0
+    if ((start - 1) in markonly) { allowed = mark[start - 1]; used[start - 1] = 1 }
+    for (k = start; k <= stop; k++) if (k in mark) { allowed = mark[k]; used[k] = 1 }
+    gsub(/[[:space:]]+/, " ", raw)
+    print curfile "\t" start "\t" (allowed == 1 ? "allowed" : (allowed == 2 ? "noreason" : "loose")) "\t" raw
+  }
+  buf = ""; raw = ""; depth = 0; pend = 0; nl = 0
+}
+function endfile(   k) {
+  flush()
+  for (k in mark) if (!(k in used)) print curfile "\t" k "\torphan\t" mtext[k]
+  for (k in mark) delete mark[k]
+  for (k in used) delete used[k]
+  for (k in mtext) delete mtext[k]
+  for (k in markonly) delete markonly[k]
+  inblock = 0; mq = ""
+}
+BEGIN {
+  OFS = "\t"
+  S = "\"?[1-5][0-9][0-9]\"?([^0-9A-Za-z_.\"]|$)"
+  W = "[[:space:]]*"
+  subj = "[Ss]tatus|\\.code\\(\\)|[Rr]esponse[Cc]ode"
+  Q = "([A-Za-z]*Matchers\\.|Is\\.|IsNot\\.|IsEqual\\.|AnyOf\\.)?"
+  L = "\"?[1-5][0-9][0-9]\"?"
+  sig_not = "(^|[^A-Za-z0-9_.]|Matchers\\.|IsNot\\.)not" W "\\(" W "(" Q "(is|equalTo)" W "\\(" W ")?" S
+  sig_any = "(anyOf|either|not" W "\\(" W Q "anyOf)" W "\\(" W Q "(is|equalTo)" W "\\(" W S
+  sig_any2 = "(anyOf|either)" W "\\(" W Q "(is|equalTo)" W "\\(" W L W "\\)" W "\\)?" W "[,.]" W "(or" W "\\(" W ")?" Q "(is|equalTo)" W "\\(" W S
+  sig_div = "/" W "100([^0-9.]|$)"
+  sig_in = "(^|[^A-Za-z0-9_])(oneOf|isOneOf|isIn|isNotIn|in)" W "\\(" W "((Arrays\\.)?asList|List\\.of|Set\\.of)?" W "\\(?" W S
+  sig_range = "(^|[^A-Za-z0-9_])(greaterThan|greaterThanOrEqualTo|lessThan|lessThanOrEqualTo|isGreaterThan|isGreaterThanOrEqualTo|isLessThan|isLessThanOrEqualTo|isBetween|isStrictlyBetween|isNotEqualTo|toBeGreaterThan|toBeGreaterThanOrEqual|toBeLessThan|toBeLessThanOrEqual|Less|LessOrEqual|Greater|GreaterOrEqual|NotEqual|NotContains)" W "\\(" W "([^()]*," W ")?" S
+  sig_jsnot = "\\." W "not" W "\\." W "(toBe|toEqual|toStrictEqual)" W "\\(" W S
+  sig_list = "[[(]" W "\"?[1-5][0-9][0-9]\"?" W "," "[^])]*[])]" W "\\)?" W "\\.(toContain|includes|contains|indexOf)" W "\\("
+  sig_ne = "(^|[^A-Za-z0-9_])(assertNotEquals|notStrictEqual|notEqual|assertNotEqual|assert_ne)" W "\\(" "([^()]*,)?" W S
+  sig_rel = "(!==?|(^|[^=<>!-])[<>]=?)" W S
+  sig_rel2 = "\"?[1-5][0-9][0-9]\"?" W "(<|>|<=|>=)[^=>]"
+  sig_or = "===?" W S "[^;]*\\|\\|[^;]*===?" W S
+  sig_false = "assertFalse" W "\\(.*==" W S
+  sig_gorel = "(^|[^=<>!-])[<>]=?" W S
+  sig_pyor = "==" W "[1-5][0-9][0-9]" W "[[:space:]]or[[:space:]].*==" W S
+  boolctx = "(^|[^A-Za-z0-9_])(assertTrue|assertFalse|assert" W "\\(|assert\\.ok)|is" W "\\(" W "(true|false)" W "\\)|toBe" W "\\(" W "(true|false)" W "\\)|toBeTruthy|toBeFalsy"
+  sig_pyin = "(^|[^A-Za-z0-9_])in" W "[[({]" W "\"?[1-5][0-9][0-9]\"?" W ","
+  sig_pyassert = "assert(In|NotIn|NotEqual|Less|LessEqual|Greater|GreaterEqual)" W "\\(.*" S
+  sig_goand = "!=" W S "[^{]*&&[^{]*!=" W S
+  sig_gotest = "(assert|require)\\.(Contains|Subset|ElementsMatch)" W "\\(.*\\[\\][a-z0-9]*int[{]" W S
+  mk = "(//|#)[[:space:]]*status-tolerance-ok:"
+  specials = "[\"\047`/#]"
+  prefilter = "assert|expect|require|if[[:space:]]|/\\*|\"\"\"|\047\047\047|`"
+}
+FNR == 1 { if (NR > 1) endfile(); curfile = FILENAME; lang = langof(FILENAME) }
+{
+  line = $0
+  if (match(line, mk)) {
+    reason = substr(line, RSTART + RLENGTH)
+    gsub(/[[:space:]]/, "", reason)
+    mark[FNR] = (length(reason) >= 10) ? 1 : 2
+    mtext[FNR] = line
+    if (line ~ /^[[:space:]]*(\/\/|#)/) markonly[FNR] = 1
+  }
+  if (buf == "" && !inblock && mq == "" && line !~ prefilter) next
+  c = code(line)
+  if (buf != "" && pend) {
+    if (c ~ /^[[:space:]]*\./ && lang != "py" && lang != "go") { pend = 0 }
+    else flush()
+  }
+  if (buf == "") {
+    if (lang == "java" || lang == "js") startre = "(^|[^A-Za-z0-9_])(assert[A-Za-z]*|expect)" W "(\\.[A-Za-z]+)?" W "\\("
+    else if (lang == "py") startre = "(^|[^A-Za-z0-9_])(assert([[:space:]]|\\()|self\\.assert[A-Za-z]+" W "\\()"
+    else if (lang == "go") startre = "(^|[^A-Za-z0-9_])(if[[:space:]]|(assert|require)\\.[A-Za-z]+" W "\\()"
+    else next
+    if (c !~ startre) next
+    start = FNR
+  }
+  buf = buf " " c; raw = raw " " line; stop = FNR; nl++
+  depth += nparen(c)
+  if (nl >= 15) { flush(); next }
+  if (depth <= 0) {
+    if (lang == "java" || lang == "js") { if (c ~ /;[[:space:]]*$/) flush(); else pend = 1 }
+    else if (lang != "go" || c !~ /(&&|\|\|)[[:space:]]*$/) flush()
+  }
+}
+END { if (NR > 0) endfile() }
+  '
+r8_hits() {  # $1 = forced language (java|js|py|go) or "" to infer from each extension
+  awk -v forcelang="$1" "$R8_AWK" "${@:2}"
+}
+
+R8_FIXTURES=".buildkite/scripts/steps/check-false-green-guards.rule8-fixtures"
+for r8_lang in java js py go; do
+  r8_fixture="${R8_FIXTURES}/${r8_lang}.txt"
+  if [ ! -f "$r8_fixture" ]; then
+    echo "+++ :bangbang: Rule 8: detector fixture ${r8_fixture} is missing — the ${r8_lang} detector cannot be self-tested; failing closed" >&2
+    errors=$(( errors + 1 ))
+    continue
+  fi
+  # A directive on line N names the outcome the detector must report for line N+1.
+  r8_want="$(awk '
+    match($0, /(\/\/|#)@(flag|allow|noreason|orphan|pass)[[:space:]]*$/) {
+      k = substr($0, RSTART); sub(/^(\/\/|#)@/, "", k); sub(/[[:space:]]*$/, "", k)
+      if (k == "pass") next
+      if (k == "flag") k = "loose"
+      if (k == "allow") k = "allowed"
+      print NR + 1 "\t" k
+    }' "$r8_fixture")"
+  r8_npass="$(awk '/(\/\/|#)@pass[[:space:]]*$/ { n++ } END { print n + 0 }' "$r8_fixture")"
+  r8_got="$(r8_hits "$r8_lang" "$r8_fixture" | cut -f2,3)"
+  if [ -z "$r8_want" ] || [ "$r8_npass" -eq 0 ]; then
+    echo "+++ :bangbang: Rule 8: ${r8_fixture} has no must-report or no #@pass cases — the self-test would prove nothing; failing closed" >&2
+    errors=$(( errors + 1 ))
+  elif [ "$r8_got" != "$r8_want" ]; then
+    echo "+++ :bangbang: Rule 8: ${r8_lang} detector self-test FAILED on ${r8_fixture} — want [$(tr '\n\t' ' :' <<<"$r8_want")] got [$(tr '\n\t' ' :' <<<"$r8_got")]. The detector has regressed; fix r8_hits before trusting this rule." >&2
+    errors=$(( errors + 1 ))
+  else
+    echo "    :white_check_mark: ${r8_lang} detector self-test: $(wc -l <<<"$r8_want" | tr -d ' ') must-report and ${r8_npass} must-pass fixture cases correct"
+  fi
+done
+
+# Swept corpus: test sources in every module and client, plus the shared integration
+# suites that live in mockserver-integration-testing/src/main. Untracked files are
+# included so a new test is checked before it is first committed.
+r8_files="$(git ls-files --cached --others --exclude-standard -- \
+  '*/src/test/*.java' '*/src/test/*.kt' '*/src/test/*.groovy' \
+  'mockserver/mockserver-integration-testing/src/main/*.java' \
+  '*_test.go' \
+  '*.test.ts' '*.test.tsx' '*.test.js' '*.test.mjs' '*.test.cjs' \
+  '*.spec.ts' '*.spec.tsx' '*.spec.js' '*.spec.mjs' \
+  '*/__tests__/*.ts' '*/__tests__/*.tsx' '*/__tests__/*.js' \
+  '*/e2e/*.ts' '*/e2e/*.js' '*/test/*.ts' '*/test/*.js' '*/tests/*.ts' '*/tests/*.js' \
+  'test_*.py' '*/test_*.py' '*_test.py' '*/tests/*.py' '*/test/*.py' | sort -u)"
+r8_scanned=0
+r8_list=()
+while IFS= read -r f; do
+  [ -n "$f" ] && [ -f "$f" ] || continue
+  r8_list+=("$f")
+  r8_scanned=$(( r8_scanned + 1 ))
+done <<<"$r8_files"
+
+if [ "$r8_scanned" -eq 0 ]; then
+  echo "+++ :bangbang: Rule 8: swept zero test sources — the sweep matched nothing (paths moved?), so the rule can never fire; failing closed" >&2
+  errors=$(( errors + 1 ))
+else
+  # xargs batches the file list so it can never exceed ARG_MAX; awk state resets per file.
+  if ! r8_out="$(printf '%s\0' "${r8_list[@]}" | xargs -0 awk -v forcelang= "$R8_AWK")"; then
+    echo "+++ :bangbang: Rule 8: the detector failed while sweeping the test sources — failing closed" >&2
+    errors=$(( errors + 1 ))
+    r8_out=""
+  fi
+  while IFS=$'\t' read -r file lineno kind text; do
+    [ -n "$file" ] || continue
+    loc="${file}:${lineno}"
+    case "$kind" in
+      allowed)
+        echo "    :white_check_mark: allowed: ${loc} (status-tolerance-ok marker with a reason)" ;;
+      noreason)
+        echo "+++ :bangbang: ${loc}: status-tolerance-ok marker gives no reason (10+ characters) — say why several statuses are genuinely correct here, or pin the exact status" >&2
+        errors=$(( errors + 1 )) ;;
+      orphan)
+        echo "+++ :bangbang: ${loc}: status-tolerance-ok marker excuses no status-tolerant assertion — remove it (a marker must not rot into a no-op)" >&2
+        errors=$(( errors + 1 )) ;;
+      *)
+        echo "+++ :bangbang: ${loc}: status assertion accepts more than one status ('${text# }') — a tolerance such as not(401), anyOf(200, 404) or < 300 passes when the endpoint answers an unexpected status, including a 500. Assert the exact status; if several are genuinely correct (a race between two valid outcomes), add a comment 'status-tolerance-ok: <reason>' on the assertion." >&2
+        errors=$(( errors + 1 )) ;;
+    esac
+  done <<<"$r8_out"
+  echo "    ${r8_scanned} test source(s) swept"
+fi
 
 # ══════════════════════════════════════════════════════════════════════
 echo "--- :bar_chart: false-green guard summary: ${errors} error(s)"

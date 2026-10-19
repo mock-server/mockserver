@@ -1,0 +1,35 @@
+// Rule 8 detector fixture (Go rules). Directives as in java.txt. Never compiled.
+//@flag
+if resp.StatusCode != 200 && resp.StatusCode != 404 {
+//@flag
+if resp.StatusCode >= 400 {
+//@flag
+assert.NotEqual(t, 500, resp.StatusCode)
+//@flag
+require.Contains(t, []int{200, 404}, resp.StatusCode)
+//@flag
+assert.Less(t, resp.StatusCode, 500)
+//@flag
+if 400 <= resp.StatusCode {
+//@flag
+if resp.StatusCode != 200 &&
+	resp.StatusCode != 404 {
+//@pass
+if resp.StatusCode != 200 {
+//@pass
+if status != 302 {
+//@pass
+if card.HttpResponse == nil || card.HttpResponse.StatusCode != 200 {
+//@pass
+if len(items) >= 400 {
+//@pass
+assert.Equal(t, 200, resp.StatusCode)
+//@pass
+const s = `
+if resp.StatusCode >= 400 {
+`
+//@pass
+if resp.StatusCode != 200 ||
+	body != "x" {
+//@allow
+if resp.StatusCode != 200 && resp.StatusCode != 204 { // status-tolerance-ok: DELETE may answer 200 or 204 per RFC 9110

@@ -1,0 +1,41 @@
+# Rule 8 detector fixture (Python rules). Directives as in java.txt, written #@flag etc. Never run.
+#@flag
+assert resp.status_code in (200, 404)
+#@flag
+assert resp.status_code in [200, 404]
+#@flag
+assert resp.status_code != 500
+#@flag
+assert resp.status_code < 300
+#@flag
+assert 200 <= resp.status_code < 300
+#@flag
+self.assertIn(resp.status_code, (200, 404))
+#@flag
+self.assertNotEqual(resp.status_code, 500)
+#@flag
+assert resp.status_code == 200 or resp.status_code == 404
+#@flag
+assert (
+    resp.status_code != 500
+)
+#@flag
+assert 299 >= resp.status_code
+#@flag
+assert resp.status_code // 100 == 2
+#@pass
+assert resp.status_code == 200
+#@pass
+assert resp.status_code == 200, f"got {resp.status_code} not in (200, 404)"
+#@pass
+# assert resp.status_code != 500
+#@pass
+assert len(items) < 300
+#@pass
+doc = """
+assert resp.status_code != 500
+"""
+#@pass
+self.assertEqual(resp.status_code, 201)
+#@allow
+assert resp.status_code in (200, 404)  # status-tolerance-ok: the endpoint is optional on older servers

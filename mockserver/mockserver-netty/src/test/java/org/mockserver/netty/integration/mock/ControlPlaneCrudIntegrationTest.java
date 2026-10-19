@@ -244,7 +244,7 @@ public class ControlPlaneCrudIntegrationTest {
         assertThat(response.getBodyAsString(), containsString("must not overlap with the /mockserver control plane"));
 
         // then - nothing was registered, so the path is not served
-        assertThat(send("GET", "/mockserver/hijack", null).getStatusCode(), is(not(200)));
+        assertThat(send("GET", "/mockserver/hijack", null).getStatusCode(), is(404));
     }
 
     @Test

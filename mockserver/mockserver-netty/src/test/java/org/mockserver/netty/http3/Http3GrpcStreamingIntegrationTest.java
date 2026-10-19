@@ -228,8 +228,9 @@ public class Http3GrpcStreamingIntegrationTest {
         }
         assertThat("bidi rule responses must NOT be produced when bidi is disabled",
             result.bodyBytes.length, is(0));
-        assertThat("grpc-status should be a non-OK error when bidi is disabled",
-            grpcStatus, is(not("0")));
+        // 501 has no row in the gRPC HTTP-to-status table, so it maps to UNKNOWN (2)
+        assertThat("grpc-status should be UNKNOWN when bidi is disabled",
+            grpcStatus, is("2"));
     }
 
     /**

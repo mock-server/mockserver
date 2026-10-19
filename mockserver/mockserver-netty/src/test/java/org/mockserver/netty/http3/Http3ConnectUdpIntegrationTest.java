@@ -223,7 +223,8 @@ public class Http3ConnectUdpIntegrationTest {
     public void shouldNotInterceptConnectWhenFlagDisabled() throws Exception {
         Configuration config = configuration()
             .http3MaxIdleTimeout(30000L)
-            .http3ConnectUdpEnabled(false); // explicitly disabled
+            .http3ConnectUdpEnabled(false) // explicitly disabled
+            .attemptToProxyIfNoMatchingExpectation(false); // else the unmatched CONNECT is proxied upstream
 
         mockServer = startWithHttp3(config);
 
@@ -235,9 +236,9 @@ public class Http3ConnectUdpIntegrationTest {
         String[] result = sendHttp3ConnectRequest(http3Port, "target.example.com:443");
 
         // Without the CONNECT-UDP handler, the request goes to the normal
-        // pipeline which does not understand CONNECT and returns a non-501 status
-        assertThat("status should NOT be 501 when flag is disabled",
-            result[0], is(not("501")));
+        // pipeline, which matches no expectation for it and does not proxy it
+        assertThat("CONNECT should reach the normal pipeline when the flag is disabled",
+            result[0], is("404"));
     }
 
     @Test

@@ -332,7 +332,7 @@ test.describe('Traffic (OBS)', () => {
     await expect(dialog.getByText(/registered successfully/)).toBeVisible();
     await dialog.getByRole('button', { name: 'Cancel' }).click();
     const replay = await request.post(`${ORIGIN}${path}`, { data: body, headers: { 'content-type': 'application/json' } });
-    expect(replay.status(), 'the generated stub matches the original request').not.toBe(404);
+    expect(replay.status(), 'the generated stub matches the original request').toBe(201);
   });
 
   test('Capture as mock fills the request body with the WHOLE body, not the 64 KiB prefix', async ({ page, request }) => {

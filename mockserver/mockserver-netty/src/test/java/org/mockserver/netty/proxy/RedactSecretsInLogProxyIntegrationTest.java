@@ -78,7 +78,7 @@ public class RedactSecretsInLogProxyIntegrationTest {
 
         Response configured = send(proxy.getLocalPort(), "PUT", "/mockserver/configuration",
             "{\"redactSecretsInLog\": true, \"fixtureBodyRedactFields\": \"password\", \"redactSecretsInRecordedExpectations\": true}");
-        assertThat(configured.body, configured.statusCode < 300, is(true));
+        assertThat(configured.body, configured.statusCode, is(200));
         proxiedRequest();
 
         assertNoSecrets("LOGS", retrieve("LOGS", null));

@@ -1127,7 +1127,7 @@ test.describe('with the upstream MockServer', () => {
     const pausedRow = page.getByRole('row').filter({ hasText: path });
     await pausedRow.getByRole('button', { name: /^Abort / }).click();
     const aborted = await inFlight;
-    expect(aborted.status).not.toBe(200);
+    expect(aborted.status).toBe(503);
     expect(aborted.body).not.toContain('should-not-arrive');
     const upstreamSaw = await (await request.put(`${UP_ORIGIN}/mockserver/retrieve?type=REQUESTS`, { data: { path } })).json() as unknown[];
     expect(upstreamSaw).toEqual([]);

@@ -592,7 +592,8 @@ Reports are generated in each module's `target/site/jacoco/` directory. See [AI-
 
 ### Known Coverage Limits
 
-The July 2026 coverage audit's gaps are closed, except gaps 1 and 82, which were declined (see
+The July 2026 coverage audit's gaps are closed, except gap 1, which was declined; gap 82 was reopened
+and is enforced as Rule 8 of the false-green guard (see
 [False-Green Guards → Other coverage-audit proposals](operations/false-green-guards.md#other-coverage-audit-proposals));
 one further gap no longer applies. Method note: CI execution for the closed CI-truth gaps was inferred
 from pom/pipeline wiring, not from reading build logs. The transparent-proxy end-to-end suites
@@ -611,6 +612,7 @@ coverage that closed the gaps has limits:
 - **Gap 5:** runtime mTLS enforcement is toggled through the live `Configuration` object, not an HTTP PUT. The enforcement itself is still asserted over the wire.
 - **Gap 73:** cassette auto-registration is proven in two halves: one test shows the MCP tool registers it, and a separate test shows `GET` lists it. No single test spans both.
 - **Gap 62:** `ConnectionLifecycleChaos` relies on the Failsafe shard configuration to run. No CI log was read to confirm it actually executes.
+- `Http3ConnectUdpIntegrationTest.shouldNotInterceptConnectWhenFlagDisabled` does not prove that the flag removes the CONNECT-UDP handler. It sends a plain CONNECT, which reaches the normal pipeline (and answers 404) whether the flag is on or off, because the handler only takes extended-CONNECT `connect-udp` requests. A test that sends a `connect-udp` request with the flag off would close this. The gap predates Rule 8.
 
 ## CI Test Execution
 

@@ -28,7 +28,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockserver.model.HttpRequest.request;
@@ -51,6 +50,7 @@ public class ControlPlaneAuthenticationRuntimePutTest {
     private Configuration configuration;
     private HttpState httpState;
     private HttpRequestHandler httpRequestHandler;
+    private LifeCycle server;
 
     @Before
     public void setUp() {
@@ -58,7 +58,7 @@ public class ControlPlaneAuthenticationRuntimePutTest {
         // ONE shared Configuration instance, as the running server has: the PUT mutates it and the
         // control-plane gate reads it
         configuration = Configuration.configuration();
-        LifeCycle server = mock(MockServer.class);
+        server = mock(MockServer.class);
         when(server.getScheduler()).thenReturn(mock(Scheduler.class));
         httpState = new HttpState(configuration, new MockServerLogger(), mock(Scheduler.class));
         httpRequestHandler = new HttpRequestHandler(configuration, server, httpState, null);
@@ -219,7 +219,9 @@ public class ControlPlaneAuthenticationRuntimePutTest {
         // pins the DEFAULT posture: control-plane authentication is opt-in, so an instance that has not
         // enabled it keeps serving both endpoints unauthenticated. A change that closed them by default
         // would break every existing Prometheus scrape config, and must not happen silently.
-        assertThat(get("/mockserver/metrics").getStatusCode(), is(not(401)));
+        configuration.metricsEnabled(true);
+        httpRequestHandler = new HttpRequestHandler(configuration, server, httpState, null);
+        assertThat(get("/mockserver/metrics").getStatusCode(), is(200));
         assertThat(get("/mockserver/http3status").getStatusCode(), is(200));
     }
 

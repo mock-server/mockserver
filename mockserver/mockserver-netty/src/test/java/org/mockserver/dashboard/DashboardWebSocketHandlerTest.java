@@ -59,7 +59,6 @@ import java.util.stream.Collectors;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace;
-import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -2277,11 +2276,9 @@ public class DashboardWebSocketHandlerTest {
         // when
         channel.writeInbound(webSocketUpgradeRequest());
 
-        // then - the gate allowed the upgrade so NO 401/403 rejection is written. The real
-        // WebSocket handshake needs an HTTP codec on the pipeline (present in production, absent
-        // in this bare EmbeddedChannel), so it writes no capturable 101 here — the security-
-        // relevant assertion is the absence of a rejection (contrast the reject test below).
-        assertNotRejected(channel.readOutbound());
+        // then - the gate allowed the upgrade: no rejection is written and the handshake started.
+        // The bare EmbeddedChannel has no HTTP codec, so the handshake writes no capturable 101.
+        assertUpgradeAllowed(channel);
     }
 
     @Test
@@ -2294,17 +2291,14 @@ public class DashboardWebSocketHandlerTest {
         // when
         channel.writeInbound(webSocketUpgradeRequest());
 
-        // then - non-breaking default: no credentials required, no rejection written
-        assertNotRejected(channel.readOutbound());
+        // then - non-breaking default: no credentials required, the upgrade proceeds
+        assertUpgradeAllowed(channel);
     }
 
-    private static void assertNotRejected(FullHttpResponse response) {
-        // The gate allowed the upgrade: either the handshake proceeded (101 Switching Protocols)
-        // or nothing capturable was written in this bare channel. Either way it must NOT be a
-        // 401/403 auth challenge.
-        if (response != null) {
-            assertThat(response.status().code(), not(anyOf(is(401), is(403))));
-        }
+    private static void assertUpgradeAllowed(EmbeddedChannel channel) {
+        Object written = channel.readOutbound();
+        assertThat(String.valueOf(written), written, is(nullValue()));
+        assertThat(DashboardWebSocketHandler.handshakerForChannel(channel), is(notNullValue()));
     }
 
     @Test
@@ -2434,7 +2428,7 @@ public class DashboardWebSocketHandlerTest {
 
         channel.writeInbound(webSocketUpgradeRequest("/_mockserver_ui_websocket"));
 
-        assertNotRejected(channel.readOutbound());
+        assertUpgradeAllowed(channel);
         assertThat("bare upgrade stores the DEFAULT log limit",
             DashboardWebSocketHandler.logItemLimitForChannel(channel),
             is(DashboardWebSocketHandler.defaultLogItemLimitForTesting()));
@@ -2450,7 +2444,7 @@ public class DashboardWebSocketHandlerTest {
 
         channel.writeInbound(webSocketUpgradeRequest("/_mockserver_ui_websocket?logLimit=250"));
 
-        assertNotRejected(channel.readOutbound());
+        assertUpgradeAllowed(channel);
         assertThat("in-range requested limit is stored on the channel",
             DashboardWebSocketHandler.logItemLimitForChannel(channel), is(250));
     }
@@ -2465,7 +2459,7 @@ public class DashboardWebSocketHandlerTest {
 
         channel.writeInbound(webSocketUpgradeRequest("/_mockserver_ui_websocket?logLimit=100000"));
 
-        assertNotRejected(channel.readOutbound());
+        assertUpgradeAllowed(channel);
         assertThat("excessive requested limit is clamped to the server maximum",
             DashboardWebSocketHandler.logItemLimitForChannel(channel),
             is(DashboardWebSocketHandler.maxLogItemLimitForTesting()));

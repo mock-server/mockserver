@@ -669,7 +669,7 @@ test.describe('mockServerClient browser client', () => {
       }, [MOCKSERVER_HOST, MOCKSERVER_PORT, uuid]);
 
       expect(result[0]).toBe(202);
-      expect(result[1]).not.toBe(202);
+      expect(result[1]).toBe(404);
     } finally {
       await context.close();
     }

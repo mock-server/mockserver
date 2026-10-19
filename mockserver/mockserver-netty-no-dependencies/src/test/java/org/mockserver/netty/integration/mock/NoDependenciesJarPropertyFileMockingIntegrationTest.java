@@ -170,9 +170,9 @@ public class NoDependenciesJarPropertyFileMockingIntegrationTest {
                 "}"))
             .build();
         HttpResponse<String> createResponse = HTTP.send(createExpectation, HttpResponse.BodyHandlers.ofString());
-        assertTrue(
+        assertEquals(
             "PUT /mockserver/expectation returned " + createResponse.statusCode() + " body=" + createResponse.body(),
-            createResponse.statusCode() == 201 || createResponse.statusCode() == 200);
+            201, createResponse.statusCode());
 
         HttpRequest invokeMock = HttpRequest.newBuilder()
             .uri(URI.create("http://localhost:" + port + "/property-file-smoke/hello"))

@@ -207,7 +207,7 @@ public class BreakpointReleaseIntegrationTest {
                 .timeout(Duration.ofSeconds(10))
                 .build(),
             HttpResponse.BodyHandlers.ofString());
-        assertThat(path + " -> " + response.body(), response.statusCode() / 100, is(2));
+        assertThat(path + " -> " + response.body(), response.statusCode(), is(201));
     }
 
     private CompletableFuture<HttpResponse<String>> get(String path) {

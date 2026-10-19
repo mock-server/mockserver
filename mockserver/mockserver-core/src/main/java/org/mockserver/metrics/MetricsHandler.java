@@ -39,6 +39,7 @@ public class MetricsHandler {
             byte[] content = outputStream.toByteArray();
             response =
                 response()
+                    .withStatusCode(200)
                     .withHeader(HttpHeaderNames.CONTENT_TYPE.toString(), writer.getContentType())
                     .withHeader(HttpHeaderNames.CONTENT_LENGTH.toString(), String.valueOf(content.length))
                     .withBody(content);
@@ -54,7 +55,7 @@ public class MetricsHandler {
         // header - so on HTTP/2 the scrape would go out on a fresh server-initiated stream and
         // Prometheus would hang instead of receiving metrics. Null on HTTP/1.1, where it is a no-op.
         response.withStreamId(request.getStreamId());
-        if (!request.isKeepAlive()) {
+        if (!Boolean.TRUE.equals(request.isKeepAlive())) {
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         } else {
             ctx.writeAndFlush(response);

@@ -211,13 +211,14 @@ public class ParallelSearchMcpExamples {
             ObjectNode message = JSON.createObjectNode().put("jsonrpc", "2.0").put("method", method);
             message.set("params", params);
             message.put("id", id);
-            JsonNode reply = JSON.readTree(post(message));
+            JsonNode reply = JSON.readTree(post(message, 200));
             assertTrue(method + ": id " + reply.get("id") + " != " + id, reply.path("id").isIntegralNumber() && reply.path("id").asInt() == id);
             return reply.path("result");
         }
 
         void notify(String method) throws Exception {
-            post(JSON.createObjectNode().put("jsonrpc", "2.0").put("method", method));
+            // the MCP Streamable HTTP transport acknowledges a notification with a bare 202 Accepted
+            post(JSON.createObjectNode().put("jsonrpc", "2.0").put("method", method), 202);
         }
 
         JsonNode callTool(String name, JsonNode arguments) throws Exception {
@@ -227,7 +228,7 @@ public class ParallelSearchMcpExamples {
             return JSON.readTree(send("tools/call", params).path("content").path(0).path("text").asText());
         }
 
-        private String post(JsonNode message) throws Exception {
+        private String post(JsonNode message, int expectedStatus) throws Exception {
             // an explicit User-Agent: Parallel's CDN rejects some library defaults
             java.net.http.HttpRequest.Builder request = java.net.http.HttpRequest.newBuilder(URI.create(url))
                 .timeout(Duration.ofSeconds(120))
@@ -239,7 +240,7 @@ public class ParallelSearchMcpExamples {
                 request.header("Authorization", "Bearer " + apiKey);
             }
             java.net.http.HttpResponse<String> response = httpClient.send(request.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
-            assertTrue(message.path("method").asText() + ": HTTP " + response.statusCode(), response.statusCode() < 300);
+            assertEquals(message.path("method").asText() + ": HTTP status", expectedStatus, response.statusCode());
             return response.body();
         }
     }

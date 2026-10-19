@@ -1,0 +1,48 @@
+// Rule 8 detector fixture (JavaScript/TypeScript rules). Directives as in java.txt. Never run.
+//@flag
+expect(aborted.status).not.toBe(200);
+//@flag
+expect(replay.status(), 'the generated stub matches').not.toBe(404);
+//@flag
+expect([200, 404]).toContain(res.status);
+//@flag
+expect(res.status).toBeLessThan(500);
+//@flag
+expect(res.status()).toBeGreaterThanOrEqual(200);
+//@flag
+expect(res.status < 300).toBe(true);
+//@flag
+assert.notStrictEqual(res.status, 500);
+//@flag
+assert.ok(res.status === 200 || res.status === 404);
+//@flag
+expect([200, 201].includes(response.status)).toBeTruthy();
+//@flag
+expect(res.status)
+  .not.toBe(500)
+//@flag
+expect(result[1]).not.toBe(202);
+//@flag
+expect(res.status)
+  .not
+  .toBe(404);
+//@pass
+expect(res.status).toBe(200);
+//@pass
+expect(res.status, 'not.toBe(404)').toBe(201);
+//@pass
+expect(items.length).toBeGreaterThan(200);
+//@pass
+expect(body.chaos).toEqual({ errorStatus: 429 });
+//@pass
+await waitFor(() => expect(puts.length).toBeGreaterThan(0));
+//@pass
+expect(res.status === 200).toBe(true);
+//@pass
+const s = `
+expect(res.status).not.toBe(200);
+`;
+//@pass
+expect(items.length).not.toBe(0);
+//@allow
+expect([200, 503]).toContain(res.status); // status-tolerance-ok: upstream may shed load during the drain window

@@ -38,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.netty.http3.Http3TestServer.startWithHttp3;
 
@@ -164,10 +163,10 @@ public class Http3DataPlaneAuthenticationIntegrationTest {
         //    NOT by httpState.handle, so over HTTP/3 it falls through to data-plane processing and 404s
         //    (a pre-existing HTTP/3 limitation, independent of this feature). The point this test guards
         //    is that the data-plane gate does NOT turn it into a 401 — i.e. control-plane paths are
-        //    exempt from data-plane auth. So assert "not 401", not "200".
+        //    exempt from data-plane auth. If HTTP/3 ever serves /status, this becomes "200".
         Http3ResponseCapture status = sendH3("PUT", "/mockserver/status", null, new ConcurrentHashMap<>());
         assertThat("control-plane /status must not be rejected by data-plane auth (401)",
-            status.status, is(not("401")));
+            status.status, is("404"));
     }
 
     // ---- helpers (mirrors Http3McpIntegrationTest harness) ----

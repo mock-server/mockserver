@@ -1,5 +1,7 @@
 package org.mockserver.metrics;
 
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -11,8 +13,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.model.HttpRequest.request;
 
@@ -46,6 +50,7 @@ public class MetricsHandlerTest {
 
         // then - the metrics body is served (content-type header set by the
         // exposition writer, not the 404 path) and the requesting origin is reflected
+        assertThat(response.getStatusCode(), is(200));
         assertThat(response.getFirstHeader("content-type"), notNullValue());
         assertThat(response.getFirstHeader("access-control-allow-origin"), is("http://localhost:3000"));
     }
@@ -103,6 +108,24 @@ public class MetricsHandlerTest {
         // then
         assertThat(response.getStatusCode(), is(404));
         assertThat(response.getStreamId(), is(9));
+    }
+
+    @Test
+    public void shouldServeMetricsAndCloseWhenKeepAliveIsUnset() throws Exception {
+        // given - a request built in code carries no keep-alive flag; it must be treated as close
+        HttpRequest request = request().withMethod("GET");
+        ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+        ChannelFuture writeFuture = mock(ChannelFuture.class);
+        when(ctx.writeAndFlush(any())).thenReturn(writeFuture);
+
+        // when
+        new MetricsHandler(configuration().metricsEnabled(true)).renderMetrics(ctx, request);
+
+        // then
+        ArgumentCaptor<HttpResponse> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
+        verify(ctx).writeAndFlush(responseCaptor.capture());
+        assertThat(responseCaptor.getValue().getStatusCode(), is(200));
+        verify(writeFuture).addListener(ChannelFutureListener.CLOSE);
     }
 
     @Test

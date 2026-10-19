@@ -79,9 +79,9 @@ public class ExtendedNoDependenciesJarMockingIntegrationTest {
                 "}"))
             .build();
         HttpResponse<String> createResponse = HTTP.send(createExpectation, HttpResponse.BodyHandlers.ofString());
-        assertTrue(
+        assertEquals(
             "PUT /mockserver/expectation returned " + createResponse.statusCode() + " body=" + createResponse.body(),
-            createResponse.statusCode() == 201 || createResponse.statusCode() == 200);
+            201, createResponse.statusCode());
 
         HttpRequest invokeMock = HttpRequest.newBuilder()
             .uri(URI.create("http://localhost:" + port + "/smoke-test/hello"))
@@ -124,8 +124,8 @@ public class ExtendedNoDependenciesJarMockingIntegrationTest {
                 "}"))
             .build();
         HttpResponse<String> created = HTTP.send(createExpectation, HttpResponse.BodyHandlers.ofString());
-        assertTrue("PUT /mockserver/expectation returned " + created.statusCode() + " body=" + created.body(),
-            created.statusCode() == 201 || created.statusCode() == 200);
+        assertEquals("PUT /mockserver/expectation returned " + created.statusCode() + " body=" + created.body(),
+            201, created.statusCode());
 
         HttpResponse<String> equivalent = HTTP.send(jsonPost("{ \"size\": 2, \"name\": \"smoke\" }"), HttpResponse.BodyHandlers.ofString());
         assertEquals("an equivalent JSON body (other field order) must match: " + equivalent.body(), 200, equivalent.statusCode());

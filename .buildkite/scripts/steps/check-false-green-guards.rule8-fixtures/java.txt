@@ -1,0 +1,112 @@
+// Rule 8 detector fixture (Java/Kotlin rules), run by check-false-green-guards.sh on every build.
+// A directive comment applies to the NEXT line: //@flag = a loose status assertion starts there,
+// //@allow = one starts there and carries a valid allow marker, //@noreason = one starts there with a
+// marker that gives no reason, //@orphan = an allow marker there excuses nothing, //@pass = nothing.
+// Any detector report on a line no directive names also fails the self-test. Not code: never compiled.
+//@flag
+assertThat(response.getStatusCode(), not(is(401)));
+//@flag
+assertThat(response.getStatusCode(), is(not(404)));
+//@flag
+assertThat(response.status().code(), not(anyOf(is(401), is(403))));
+//@flag
+assertThat(httpResponse.getBodyAsString(), httpResponse.getStatusCode(), anyOf(is(200), is(404)));
+//@flag
+assertThat("a 200 here means the limit never reached the pipeline",
+    after.statusCode, is(not(200)));
+//@flag
+assertThat(statusCode, either(is(200)).or(is(204)));
+//@flag
+assertThat(statusCode, is(oneOf(200, 404)));
+//@flag
+assertThat(statusCode, isOneOf(200, 404));
+//@flag
+assertThat(statusCode, is(in(Arrays.asList(200, 404))));
+//@flag
+assertThat(response.getStatusCode(), lessThan(500));
+//@flag
+assertThat(response.getStatusCode(), greaterThanOrEqualTo(200));
+//@flag
+assertThat(status.status, is(not("401")));
+//@flag
+assertThat(response.getStatusCode()).isIn(200, 404);
+//@flag
+assertThat(response.getStatusCode())
+    .isNotEqualTo(500);
+//@flag
+assertThat(statusCode).isBetween(200, 299);
+//@flag
+assertThat(response.statusCode()).isLessThan(300);
+//@flag
+assertNotEquals(404, response.getStatusCode());
+//@flag
+assertTrue(response.statusCode() < 300);
+//@flag
+assertTrue("PUT returned " + created.statusCode(),
+    created.statusCode() == 201 || created.statusCode() == 200);
+//@flag
+assertFalse(response.statusCode() == 500);
+//@flag
+assertThat(configured.body, configured.statusCode < 300, is(true));
+//@flag
+assertTrue(Arrays.asList(200, 404).contains(response.getStatusCode()));
+//@flag
+assertThat("status-tolerance-ok: a marker inside a string is not a marker", response.getStatusCode(), anyOf(is(200), is(404)));
+//@flag
+assertTrue(300 > response.statusCode());
+//@flag
+assertThat("status should NOT be 501 when the flag is off", result[0], is(not("501")));
+//@flag
+assertThat(code, not(is(401)));
+//@flag
+assertThat(response.statusCode(), Matchers.not(401));
+//@flag
+assertThat(response.getStatusCode(), CoreMatchers.anyOf(CoreMatchers.is(200), CoreMatchers.is(404)));
+//@flag
+assertThat(path + " -> " + response.body(), response.statusCode() / 100, is(2));
+//@flag
+assertThat(rc, anyOf(is(200), is(404)));
+//@flag
+assertThat(rc, either(is(200)).or(is(204)));
+//@pass
+assertThat(response.getStatusCode(), is(200));
+//@pass
+assertThat(httpResponse.getStatusCode(), is(expectedDashboardStatus()));
+//@pass
+assertThat(uuids.size(), anyOf(is(200), is(1)));
+//@pass
+assertThat("a 200 or not(is(401)) here is only prose", response.getStatusCode(), is(413));
+//@pass
+// assertThat(response.getStatusCode(), not(is(401)));
+//@pass
+/* assertThat(response.getStatusCode(), not(is(401))); */
+//@pass
+assertThat(status.p99Millis, lessThan(500L));
+//@pass
+assertThat(String.valueOf(statusCode), result, containsString("x" + (statusCode < 100 ? "a" : "b")));
+//@pass
+assertEquals(201, response.statusCode());
+//@pass
+assertThat(response.getStatusCode()).isEqualTo(200);
+//@pass
+if (response.getStatusCode() != 200) { fail(); }
+//@pass
+String json = """
+    assertThat(response.getStatusCode(), not(is(401)));
+    """;
+//@pass
+assertThat(total / 100, is(2));
+//@pass
+assertThat(count, not(is(0)));
+//@allow
+assertThat(statusCode, is(oneOf(200, 500, 418))); // status-tolerance-ok: RANDOM mode serves one variant per request
+// status-tolerance-ok: two valid outcomes race here, both are correct //@allow
+assertThat(response.getStatusCode(), anyOf(is(200), is(204)));
+//@allow
+assertThat(statusCode, is(oneOf(200, 500))); // status-tolerance-ok: RANDOM picks one variant per request //@flag
+assertThat(statusCode, is(oneOf(200, 404)));
+//@noreason
+assertThat(statusCode, is(oneOf(200, 404))); // status-tolerance-ok: race
+//@orphan
+// status-tolerance-ok: nothing loose follows this marker at all
+assertThat(response.getStatusCode(), is(200));

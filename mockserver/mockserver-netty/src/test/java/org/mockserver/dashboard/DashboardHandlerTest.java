@@ -121,11 +121,9 @@ public class DashboardHandlerTest {
         // given - a dashboard asset whose extension (.webp) is not in the MIME map
         HttpResponse response = renderDashboardResource("/unmapped-fixture.webp");
 
-        // then - the asset was found and served (not the 404 notFoundResponse). The handler builds
-        // the success response with response(), leaving statusCode null, which Netty writes to the
-        // wire as the default 200; the not-found path would carry an explicit 404.
+        // then - the asset was found and served, not the 404 notFoundResponse
         assertThat(response.getBodyAsString(), is(notNullValue()));
-        assertThat(response.getStatusCode(), is(not(404)));
+        assertThat(response.getStatusCode(), is(200));
 
         // and - the Content-Type falls back to the non-null DEFAULT_MIME_TYPE (application/octet-stream)
         String contentType = response.getFirstHeader(CONTENT_TYPE.toString());

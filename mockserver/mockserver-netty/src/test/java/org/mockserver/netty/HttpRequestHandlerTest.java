@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.dashboard.DashboardHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.time.EpochService;
 import org.mockserver.log.model.LogEntry;
@@ -45,7 +46,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.startsWith;
@@ -1219,10 +1219,9 @@ public class HttpRequestHandlerTest {
         // when
         embeddedChannel.writeInbound(dashboardRequest);
 
-        // then - the gate lets it reach the dashboard handler: 200 when the build-ui bundle is on
-        // the classpath, 404 when it is not; never a 401/403 challenge or an error
+        // then - the gate lets it reach the dashboard handler
         HttpResponse httpResponse = embeddedChannel.readOutbound();
-        assertThat(httpResponse.getBodyAsString(), httpResponse.getStatusCode(), anyOf(is(200), is(404)));
+        assertThat(httpResponse.getBodyAsString(), httpResponse.getStatusCode(), is(expectedDashboardStatus()));
     }
 
     @Test
@@ -1234,9 +1233,9 @@ public class HttpRequestHandlerTest {
         // when
         embeddedChannel.writeInbound(dashboardRequest);
 
-        // then - served by the dashboard handler (200 with the bundle, 404 without), not an auth challenge
+        // then - served by the dashboard handler, not an auth challenge
         HttpResponse httpResponse = embeddedChannel.readOutbound();
-        assertThat(httpResponse.getBodyAsString(), httpResponse.getStatusCode(), anyOf(is(200), is(404)));
+        assertThat(httpResponse.getBodyAsString(), httpResponse.getStatusCode(), is(expectedDashboardStatus()));
     }
 
     @Test
@@ -1250,9 +1249,15 @@ public class HttpRequestHandlerTest {
         // when
         embeddedChannel.writeInbound(dashboardRequest);
 
-        // then - allowed through to the dashboard handler (200 with the bundle, 404 without)
+        // then - allowed through to the dashboard handler
         HttpResponse httpResponse = embeddedChannel.readOutbound();
-        assertThat(httpResponse.getBodyAsString(), httpResponse.getStatusCode(), anyOf(is(200), is(404)));
+        assertThat(httpResponse.getBodyAsString(), httpResponse.getStatusCode(), is(expectedDashboardStatus()));
+    }
+
+    // The dashboard handler serves index.html with 200 when the build-ui bundle is on the test
+    // classpath and 404 when it is not, so the exact expected status is derived from the classpath.
+    private static int expectedDashboardStatus() {
+        return DashboardHandler.class.getResource("/org/mockserver/dashboard/index.html") != null ? 200 : 404;
     }
 
     @Test

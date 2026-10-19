@@ -71,13 +71,13 @@ public class ConfigurationRestApiEnforcementIntegrationTest {
             applyConfiguration(port, "{\"maxRequestBodySize\": 128}");
 
             // AFTER: a new connection builds a pipeline from the updated configuration and rejects it.
-            // maxRequestBodySize is consumed when the HTTP aggregator is installed per connection, so the
-            // rejection surfaces as a 413, or as a refused/oversized-content failure on the connection.
+            // maxRequestBodySize is consumed when the HTTP aggregator is installed per connection; the
+            // aggregator answers 413 (closing through LingeringClose, so a reset cannot drop it).
             Response after = send(port, "POST", "/body-size-probe", largeBody, null);
             assertThat("maxRequestBodySize set via PUT /mockserver/configuration must reject an oversized "
                     + "body — a 200 here means the value round-tripped through the DTO but never reached "
                     + "the Netty pipeline (instance-unreachable enforcement)",
-                after.statusCode, is(not(200)));
+                after.statusCode, is(413));
         } finally {
             stop(mockServer);
         }
@@ -116,7 +116,7 @@ public class ConfigurationRestApiEnforcementIntegrationTest {
             assertThat("wasmEnabled=false set via PUT /mockserver/configuration must stop the WASM-matched "
                     + "expectation from matching — a 200 here means the security control is unreachable "
                     + "from the REST API",
-                notMatched.statusCode, is(not(200)));
+                notMatched.statusCode, is(404));
         } finally {
             stop(mockServer);
         }
@@ -165,13 +165,13 @@ public class ConfigurationRestApiEnforcementIntegrationTest {
     private static void applyConfiguration(int port, String configurationJson) throws IOException {
         Response response = send(port, "PUT", "/mockserver/configuration", configurationJson, null);
         assertThat("PUT /mockserver/configuration should be accepted, body: " + response.body,
-            response.statusCode < 300, is(true));
+            response.statusCode, is(200));
     }
 
     private static void createExpectation(int port, String expectationJson) throws IOException {
         Response response = send(port, "PUT", "/mockserver/expectation", expectationJson, null);
         assertThat("expectation creation should be accepted, body: " + response.body,
-            response.statusCode < 300, is(true));
+            response.statusCode, is(201));
     }
 
     private static String retrieveRecordedRequests(int port) throws IOException {
@@ -220,8 +220,7 @@ public class ConfigurationRestApiEnforcementIntegrationTest {
             try {
                 statusCode = connection.getResponseCode();
             } catch (IOException e) {
-                // a body rejected at the pipeline layer can surface as a reset/refused connection rather
-                // than a status line; that is still "not served", which is what the assertions check
+                // no status line arrived; -1 makes the failing assertion report the cause readably
                 return new Response(-1, "connection failed: " + e.getMessage());
             }
             InputStream stream = statusCode >= 400 ? connection.getErrorStream() : connection.getInputStream();
