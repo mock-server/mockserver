@@ -1829,7 +1829,10 @@ loop replaced the regex (one fork, JDK 17, developer Mac, so directional only): 
 from 422–498 to 199–207 ns and 2,336 to 304 B per op for `SIMPLE`, and from 2.9 to 1.4 µs and 14.9 to
 1.5 KB for `JSON`; a whole message 25–37% faster and 35–46% less allocated in every shape, for example
 a `SIMPLE` did-not-match entry 3.40 to 2.12 µs and 13.6 to 7.3 KB. The rest is mostly Jackson
-serialising the quoted request, response or expectation, which the change does not touch.
+serialising the quoted request, response or expectation, which the change does not touch. On the
+perf rig (builds 700, 701, 703 and 704) the change cut the `INFO` consumer's CPU at 6,000 req/s from 0.78–0.79 to 0.62. It also moved the first
+`ring_full` drops from the 8,000 rung to 10,000–12,000 (see
+[memory-management.md](memory-management.md#ring-in-flight-bounding-and-drops)).
 
 ### The seven promoted dark benchmarks
 

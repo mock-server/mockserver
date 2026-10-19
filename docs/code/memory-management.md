@@ -894,7 +894,37 @@ At the measured composite of 1.76, the whole log as a share of the ceiling is ab
 | `/20`, `/7` (`WARN`'s pair) | 15.9% |
 | `/7`, `/7` | 25.1% |
 
-So the `INFO` in-flight floor moved to `WARN`'s `/7`, which keeps the whole log under a fifth of the ceiling on these profiles and lets the slow `INFO` consumer hold about 70% more backlog before in-flight byte drops start. `DEBUG` and `TRACE` were not measured here and keep `/12`. Confirmation on the perf rig at `/7` (`PERF_INFO_INVESTIGATION=heap`, G1 and generational ZGC) is pending a snapshot image that carries the change. These figures do not decide retention, which stays at `/12` and remains an open question: `WARN`'s `/20` comes from young-GC promotion (see [Retention and young-GC promotion](#retention-and-young-gc-promotion)), which was not measured here at `INFO`. Small-body and echo traffic were not run under overload, as before.
+So the `INFO` in-flight floor moved to `WARN`'s `/7`, which keeps the whole log under a fifth of the ceiling on these profiles and lets the slow `INFO` consumer hold about 70% more backlog before in-flight byte drops start. `DEBUG` and `TRACE` were not measured here and keep `/12`. These figures do not decide retention, which stays at `/12` and remains an open question: `WARN`'s `/20` comes from young-GC promotion (see [Retention and young-GC promotion](#retention-and-young-gc-promotion)), which was not measured here at `INFO`. Small-body and echo traffic were not run under overload, as before.
+
+##### Confirmed on the perf rig at `/7` (2026-10-19)
+
+**Outcome: at the `/7` `INFO` in-flight floor the whole log peaked at 14.0–18.3% of the ceiling under overload, below the 19.2% expected, with no OOM in any cell.** The method is the same as above. Perf builds 699 (1 GiB) and 702 (256 MiB) ran on the master snapshot image at `113c46cdf`, pinned by digest `sha256:bcdc0eea…`, with json10k, proxy10k and json100k under G1 and gen-ZGC. All 24 cells were fully measured and neither log has an `OutOfMemoryError`. The `INFO` in-flight cap read 150,394,880 B at 1 GiB, the ceiling ÷ 7 (87,730,176 B at `/12` in builds 694–697).
+
+| Heap | Collector | Drained (fill) | Overload deque | Overload ring | Whole log / ceiling |
+|---|---|---|---|---|---|
+| 1 GiB | G1 | 0.669–0.992 | 0.825–0.977 | 0.562–0.695 | 14.9–18.1% |
+| 1 GiB | gen-ZGC | 0.687–0.998 | 0.826–0.998 | 0.530–0.676 | 14.5–18.0% |
+| 256 MiB | G1 | 0.671–0.986 | 0.822–0.995 | 0.577–0.707 | 15.0–18.3% |
+| 256 MiB | gen-ZGC | 0.688–0.988 | 0.756–0.968 | 0.556–0.679 | 14.0–17.7% |
+
+- **Composite and drops.**
+  - The composite is 1.71 (0.998 + 0.707), which predicts 18.4% at `/12` retention and `/7` in-flight.
+  - Drops are compared as a fraction of entries offered, which is drops ÷ (drops + evicted + retained). Raw counts follow how many requests the closed-loop clients completed in the window, so they can rise while fewer entries are lost.
+  - **During the fill the fraction fell in all 12 `INFO` cells.**
+
+    | Profile | 1 GiB, was | 1 GiB, now | 256 MiB, was | 256 MiB, now |
+    |---|---|---|---|---|
+    | json10k | 0.871–0.906 | 0.725–0.811 | 0.807–0.838 | 0.733–0.764 |
+    | json100k | 0.976–0.978 | 0.956–0.957 | 0.971–0.976 | 0.960 |
+    | proxy10k | 0.25–0.50 | 0 | 0.04–0.20 | 0 |
+
+  - **Two raw counts rose, in the same 1.5 s window.** Both are 256 MiB gen-ZGC. json10k went from 22,247 to 24,460 drops while 7,576 entries were recorded, up from 5,327. json100k went from 16,375 to 18,212.
+  - **Raw counts are noisy anyway.** Identical-config repeats differ by up to about 50% (1 GiB json10k G1: 123,415 in build 694 against 188,211 in build 697).
+  - **During the 60 s overload the fraction fell in every cell:** json10k 0.946–0.955 → 0.901–0.917, proxy10k 0.686–0.710 → 0.311–0.464, json100k 0.988–0.991 → 0.982–0.986.
+  - **`/7` is kept at every heap size, 256 MiB included.** These images also carry the faster consumer render (row 126a), so the lower drop fractions are not all due to the floor.
+- **`WARN` control.**
+  - The multiples reproduce the earlier runs: json10k 0.500–0.525, proxy10k 0.670–0.692, json100k 0.501–0.507.
+  - The 256 MiB json100k `WARN` fills dropped 378 entries (G1, was 0) and 163 (gen-ZGC, was 114). `/7` did not change `WARN`, so this shows the noise in small raw counts.
 
 #### Validation at the current divisors
 
@@ -962,7 +992,7 @@ No run ran out of memory or stalled, and the largest heap after GC was 186 MiB o
 - **The evidence.** On a 2-core, 1 GB container (462 MiB heap) the default (`/7`, 66 MB) budget promoted 8–44 MB/s and stalled allocations from about 33k rps; a 4 MB budget promoted at most 1.3 MB/s, with the knee CPU-bound at 41–44k. The same 66 MB budget in a 2 GB container (about a 922 MiB heap) did not loop. The runs were recorded under item 51 of the performance plan, removed when the item closed: see the history of `docs/plans/performance-programme.md`.
 - **Dose-response (2 cores, 1 GB container, 462 MiB heap).** No loop at 4, 16 or 32 MB (promotion at most 1.4, 1.5 and 4.4 MB/s; lifetime ratio up to 0.19, 0.73 and 1.15), so the loop starts between 32 and 66 MB, about 40 MB by extrapolation. Below the loop the knee still falls about one rung per doubling of the budget, because each young cycle marks the live retained entries: the highest rung with p50 ≤ 1 ms was 41.2k, 38.3k and 35.6k, against 30.8k at 66 MB. Saturated throughput did not move (42.1–44.1k). Heap/20 there is 23 MB, below the loop with at least 1.6× margin, so its expected knee is about 35.6–38.3k rather than 41k (interpolated, pending rig confirmation).
 - **Why the in-flight cap is separate.** The 4 MB run dropped 795–28,566 log events per rung, because the in-flight cap was the same budget and a burst filled it. The in-flight cap therefore keeps its own default (`/7`), so cutting retention does not cut what a burst may hold while it waits to be recorded.
-- **`INFO`/`DEBUG`/`TRACE` keeps `/12`.** The entry-lifetime rule cannot set the default at a rendering level: rendering makes promotion structural there, so a smaller budget would cost history without removing it. `/12` was sized to keep the whole log at about 25% of the ceiling; now that the rendered message is no longer retained, it measured 12.9–14.5% on the json and proxy profiles with the in-flight floor also at `/12`, and about 19.2% is expected with that floor at `/7` (see [INFO re-measured on the perf rig](#info-re-measured-on-the-perf-rig-2026-10-18)). An `INFO` tail regression seen on the rig (closed as item 40 of the performance plan; see its history) came from a harness that forced a 256 MiB budget on the `INFO` server, not from the `/12` default.
+- **`INFO`/`DEBUG`/`TRACE` keeps `/12`.** The entry-lifetime rule cannot set the default at a rendering level: rendering makes promotion structural there, so a smaller budget would cost history without removing it. `/12` was sized to keep the whole log at about 25% of the ceiling; now that the rendered message is no longer retained, it measured 12.9–14.5% on the json and proxy profiles with the in-flight floor also at `/12`, and with that floor at `/7` it measured 14.0–18.3% against about 19.2% expected (see [INFO re-measured on the perf rig](#info-re-measured-on-the-perf-rig-2026-10-18) and [Confirmed on the perf rig at `/7`](#confirmed-on-the-perf-rig-at-7-2026-10-19)). An `INFO` tail regression seen on the rig (closed as item 40 of the performance plan; see its history) came from a harness that forced a 256 MiB budget on the `INFO` server, not from the `/12` default.
 
 #### Compact retention (evaluated 2026-10-12)
 
@@ -1066,7 +1096,23 @@ The consumer took no monitor for 1 ms or more, so this is CPU, not contention. J
 
 The console takes the String path only: `writeToSystemOut` calls `RedactedView.getMessage`, which renders through `StringFormatter.formatLogMessage` (each argument's Jackson `toString`, then the indent). A streaming renderer already exists. `LogEntry.writeMessage` calls `StringFormatter.writeLogMessage`, which serialises each argument straight into a `LineIndentingWriter` with the same multiline-`^` semantics (`StringFormatterWriteLogMessageTest`, `StringFormatterRegexDifferentialTest`). Only the plain-text `LOGS` retrieve uses it (`HttpState.writeLogs`). The console does not, because SLF4J takes a `String`, the compact format has its own renderer, and `writeLogMessage` throws an `IOException` where `getMessage` falls back for an argument that cannot be serialised by its fields.
 
-**The indent regex is gone (row 126a).** `indentAndToString` now indents each argument with a loop that has the same multiline-`^` semantics as `LineIndentingWriter` (before the first character and after each `\n`, `\r`, `\r\n`, U+0085, U+2028 or U+2029, but not after a terminator that ends the text). Output is unchanged byte for byte: a frozen corpus of 4,273 renderings (every argument shape the console sees, at indents 0–4, through `getMessage`, the redacted view, the serialised, compact and streamed forms) matched before and after, and `StringFormatterRegexDifferentialTest` compares the loop with the regex on 50,000 random strings over every terminator and the characters either side of its range checks. `LogMessageRenderBenchmark` puts a whole message at 25–37% faster with 35–46% less allocated (see [performance-measurement.md](performance-measurement.md#logmessagerenderbenchmark-jmh--on-demand-not-run-by-ci)). The Jackson serialisation, the other large share of the consumer's time, is unchanged. Whether the drop onset moves above 8,000 req/s has not been measured on the perf rig yet; row 126a in the [performance measurement backlog](../plans/performance-measurement-backlog.md) gives the command that measures it.
+**The indent regex is gone (row 126a).** `indentAndToString` now indents each argument with a loop that has the same multiline-`^` semantics as `LineIndentingWriter` (before the first character and after each `\n`, `\r`, `\r\n`, U+0085, U+2028 or U+2029, but not after a terminator that ends the text). Output is unchanged byte for byte: a frozen corpus of 4,273 renderings (every argument shape the console sees, at indents 0–4, through `getMessage`, the redacted view, the serialised, compact and streamed forms) matched before and after, and `StringFormatterRegexDifferentialTest` compares the loop with the regex on 50,000 random strings over every terminator and the characters either side of its range checks. `LogMessageRenderBenchmark` puts a whole message at 25–37% faster with 35–46% less allocated (see [performance-measurement.md](performance-measurement.md#logmessagerenderbenchmark-jmh--on-demand-not-run-by-ci)). The Jackson serialisation, the other large share of the consumer's time, is unchanged.
+
+**On the perf rig the drop onset moved from 8,000 to 10,000–12,000 req/s.** These are perf builds 700, 701, 703 and 704 (2026-10-19), run with the same `PART=jfr` sweep, two runs per arm on digest-pinned images. The after arm is the snapshot at `113c46cdf` and the before arm is build 694's image at `929bb4c0a`.
+
+| | Before (701, 704) | After (700, 703) |
+|---|---|---|
+| Consumer CPU at 6,000 req/s | 0.78–0.79 | 0.62 |
+| Consumer CPU at 8,000 req/s | 1.00 (saturated) | 0.78 |
+| `ring_full` drops at the end of 8,000 | 31,953–43,302 | 0 |
+| First `ring_full` drops | 8,000 rung | 10,000 rung (21,302) in 700; 12,000 rung (375,206) in 703 |
+| `ring_full` drops by the end of 16,000 | 2.60–2.64 million | 1.45–1.47 million |
+| Consumer CPU samples with `java.util.regex` under `indentAndToString` | 34.6–36.3% | 0% |
+| Of which in the new indent loop (`appendIndented`) | — | 14.8% |
+
+- **What the shares count.** Shares are the fraction of the consumer thread's `jdk.CPUTimeSample` stacks; build 694 reads 35.0% by the same count. About a third of CPU-time samples were lost in every run, so the 14.8% share is good to a few points; the 0% regex share is not affected.
+- **Why this is the fix.** The arms differ by every commit from `929bb4c0a` to `113c46cdf`, including the `/7` `INFO` in-flight floor. No run dropped for in-flight bytes, so that floor did not bind, and the regex share falling to zero ties the gain to this change.
+- **Machines.** Both after runs landed on one perf agent and the two before runs on two others. The 21% gap in consumer CPU at 6,000 req/s is far wider than the spread across the three before runs, including build 694 (0.78–0.82).
 
 ## Eviction and GC
 
