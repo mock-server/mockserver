@@ -18,12 +18,13 @@
  * literal term stays literal (`/api/v1.0` -> `/api/v1\.0`).
  *
  * **Why the vocabulary stops where it does.**
- * - `status:` lands only in the breakpoint form ({@link BREAKPOINT_SCOPE_FIELDS}),
+ * - `status:` lands in the breakpoint form ({@link BREAKPOINT_SCOPE_FIELDS}),
  *   whose matcher carries an inclusive `responseStatusCodeMin`/`Max` range. Every
  *   comparator the search box accepts maps exactly onto that range, and repeated
- *   `status:` operators intersect just as the search box ANDs them.
- *   `VerificationView`'s response matcher exposes a single exact `statusCode`, so
- *   there `status:>=400` has no destination and stays flagged unsupported.
+ *   `status:` operators intersect just as the search box ANDs them. The
+ *   verification response matcher ({@link VERIFICATION_SCOPE_FIELDS}) takes an
+ *   exact `statusCode` or ONE `statusCodeRange` expression, so
+ *   {@link verificationStatusFor} refuses a range only two comparisons express.
  * - `operation:` resolves from a decoded JSON request body's `operationName`.
  *   Neither matcher has a JSON-member body matcher wired to it here, so it is out.
  *
@@ -43,6 +44,9 @@ export const REQUEST_SCOPE_FIELDS = ['method', 'path', 'host'] as const;
 
 /** The breakpoint form also has a response status range for `status:` to fill. */
 export const BREAKPOINT_SCOPE_FIELDS = [...REQUEST_SCOPE_FIELDS, 'status'] as const;
+
+/** The verification form's response matcher has a status code and a status range for `status:`. */
+export const VERIFICATION_SCOPE_FIELDS = BREAKPOINT_SCOPE_FIELDS;
 
 /** Matcher fields derived from a scope term. `path`/`host` are regex sources. */
 export interface RequestScope {
@@ -243,4 +247,41 @@ export function withHostHeaderLine(text: string, hostRegex: string): string {
   const kept = [...lines];
   while (kept.length > 0 && kept[kept.length - 1]!.trim() === '') kept.pop();
   return [...kept, line].join('\n');
+}
+
+/** Where a `status:` scope lands in a verification response matcher. */
+export type VerificationStatus =
+  | { statusCode: string; statusCodeRange: '' }
+  | { statusCode: ''; statusCodeRange: string };
+
+/**
+ * Translate inclusive status bounds into the verification response matcher: an exact code, a
+ * class such as `4XX`, or one comparison such as `>= 400` (the forms `StatusCodeMatcher`
+ * accepts). A range that needs two comparisons, such as 400-449, has no single expression, so
+ * it is refused rather than widened.
+ */
+export function verificationStatusFor(scope: RequestScope): VerificationStatus | { error: string } | null {
+  const min = scope.statusMin != null && scope.statusMin > STATUS_FLOOR ? scope.statusMin : undefined;
+  const max = scope.statusMax != null && scope.statusMax < STATUS_CEILING ? scope.statusMax : undefined;
+  if (scope.statusMin == null && scope.statusMax == null) return null;
+  if (min != null && max != null) {
+    if (min === max) return { statusCode: String(min), statusCodeRange: '' };
+    if (min % 100 === 0 && max === min + 99) return { statusCode: '', statusCodeRange: `${min / 100}XX` };
+    return {
+      error: `status: selects ${min}-${max}, which needs two comparisons; a verification response matcher takes one ` +
+        '(e.g. status:>=400), an exact code, or a whole class (status:>=400 status:<500 is 4XX).',
+    };
+  }
+  if (min != null) return { statusCode: '', statusCodeRange: `>= ${min}` };
+  if (max != null) return { statusCode: '', statusCodeRange: `<= ${max}` };
+  return { statusCode: '', statusCodeRange: '>= 0' };
+}
+
+const STATUS_CLASS = /^\s*[0-9][xX]{2}\s*$/;
+const STATUS_COMPARISON = /^\s*(>=|<=|==|>|<)\s*-?\d+(?:\.\d+)?\s*$/;
+
+/** Why a typed status range would never match (the server treats it as a non-match), or null when it is valid. */
+export function statusRangeProblem(range: string): string | null {
+  if (range.trim() === '' || STATUS_CLASS.test(range) || STATUS_COMPARISON.test(range)) return null;
+  return 'Use a class such as 4XX or one comparison such as >= 400 (>, >=, <, <=, ==).';
 }

@@ -493,3 +493,32 @@ describe('between upper bound (E2E-VERIFY-5)', () => {
     expect(JSON.parse(verifyToJson(input)).times).toEqual({ atLeast: 3, atMost: 1 });
   });
 });
+
+describe('response status range', () => {
+  const RANGE = baseInput({ httpRequest: {}, httpResponse: { statusCodeRange: '>= 400' } });
+
+  it('Java sets it with withStatusCodeRange', () => {
+    expect(verifyToJava(RANGE)).toContain('.withStatusCodeRange(">= 400")');
+  });
+
+  it('the JSON-carrying clients keep it as statusCodeRange', () => {
+    for (const code of [verifyToJson(RANGE), verifyToNode(RANGE), verifyToCsharp(RANGE), verifyToRuby(RANGE), verifyToRust(RANGE)]) {
+      expect(code).toMatch(/statusCodeRange/);
+    }
+    expect(verifyToPython(RANGE)).toContain('"statusCodeRange": ">= 400"');
+  });
+
+  it('Go sends it with net/http, since its ResponseBuilder cannot set a range', () => {
+    const go = verifyToGo(RANGE);
+    expect(go).toContain('http.NewRequest(http.MethodPut, "http://localhost:1080/mockserver/verify"');
+    expect(go).toContain('\\"statusCodeRange\\":\\">= 400\\"');
+    expect(go).toContain('http.StatusAccepted');
+    expect(go).not.toContain('mockserver.Response()');
+    const seq = verifyToGo(baseInput({ mode: 'sequence', httpRequests: [{ path: '/a' }], httpResponses: [{ statusCodeRange: '5XX' }] }));
+    expect(seq).toContain('/mockserver/verifySequence');
+  });
+
+  it('Go keeps the client builders when there is no range', () => {
+    expect(verifyToGo(RESPONSE_ONLY)).toContain('mockserver.Response()');
+  });
+});

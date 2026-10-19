@@ -14,6 +14,7 @@ import { useDashboardStore } from '../store';
 vi.mock('../hooks/useWebSocket', () => ({
   useWebSocket: () => ({
     connect: vi.fn(),
+    start: vi.fn(),
     sendFilter: vi.fn(),
     clearServer: vi.fn().mockResolvedValue(undefined),
   }),

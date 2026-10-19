@@ -9,6 +9,7 @@ import {
   BREAKPOINT_SCOPE_FIELDS,
 } from '../lib/filterScope';
 import { matchesItemSearch } from '../lib/filterDSL';
+import { verificationStatusFor, statusRangeProblem, VERIFICATION_SCOPE_FIELDS } from '../lib/filterScope';
 
 describe('filterScope — the operators a server-side matcher can honour', () => {
   it('declares exactly method, path and host', () => {
@@ -251,5 +252,58 @@ describe('filterScope — status: on the breakpoint scope', () => {
         expect(viaMatcher, `${term} vs ${status}`).toBe(viaSearchBox);
       }
     }
+  });
+});
+
+/**
+ * The server's StatusCodeMatcher: an exact code when no range is set, else a class such as
+ * "4XX" or one numeric comparison. A range it cannot parse matches nothing.
+ */
+function serverStatusMatches(statusCode: string, range: string, actual: number): boolean {
+  if (range.trim() === '') return statusCode === '' || Number(statusCode) === actual;
+  const cls = /^\s*([0-9])[xX]{2}\s*$/.exec(range);
+  if (cls) return actual >= Number(cls[1]) * 100 && actual <= Number(cls[1]) * 100 + 99;
+  const cmp = /^\s*(>=|<=|==|>|<)\s*(-?\d+(?:\.\d+)?)\s*$/.exec(range);
+  if (!cmp) return false;
+  const n = Number(cmp[2]);
+  switch (cmp[1]) {
+    case '>=': return actual >= n;
+    case '<=': return actual <= n;
+    case '>': return actual > n;
+    case '<': return actual < n;
+    default: return actual === n;
+  }
+}
+
+describe('verificationStatusFor', () => {
+  const verification = (term: string) => parseRequestScope(term, VERIFICATION_SCOPE_FIELDS);
+
+  it('selects exactly the statuses the search box selects, wherever it can express them', () => {
+    const terms = [
+      'status:>=400', 'status:>399', 'status:<=499', 'status:<500', 'status:404', 'status:=201',
+      'status:>=400 status:<500', 'status:>=500 status:<=599', 'status:>=500 status:>=400',
+      'status:<=404 status:<500', 'status:>=0', 'status:<=999', 'status:>=0 status:<300',
+    ];
+    for (const term of terms) {
+      const status = verificationStatusFor(verification(term).scope);
+      expect(status && !('error' in status), term).toBe(true);
+      const { statusCode, statusCodeRange } = status as { statusCode: string; statusCodeRange: string };
+      expect(statusRangeProblem(statusCodeRange), term).toBeNull();
+      for (let actual = 100; actual <= 599; actual++) {
+        const viaSearchBox = matchesItemSearch({ httpResponse: { statusCode: actual } }, term);
+        expect(serverStatusMatches(statusCode, statusCodeRange, actual), `${term} vs ${actual}`).toBe(viaSearchBox);
+      }
+    }
+  });
+
+  it('refuses a range only two comparisons express, rather than widening it', () => {
+    for (const term of ['status:>=400 status:<450', 'status:>200 status:<=204', 'status:>=401 status:<=499']) {
+      const status = verificationStatusFor(verification(term).scope);
+      expect(status && 'error' in status, term).toBe(true);
+    }
+  });
+
+  it('contributes nothing without a status operator', () => {
+    expect(verificationStatusFor(verification('method:GET').scope)).toBeNull();
   });
 });

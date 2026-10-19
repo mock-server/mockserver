@@ -261,15 +261,42 @@ The active view and per-panel search terms persist across page reloads: the view
 
 ### Workspaces
 
-A **workspace** bundles a view and the five panel search terms, so one browser tab can hold several independent investigations. The captured data (log messages, expectations, received and proxied requests), the connection target, the WebSocket subscription filter and the theme are all **global** — a workspace is a lens over one server's data, not a second connection.
+A **workspace** bundles a view, the five panel search terms and, optionally, its own **MockServer target**, so one browser tab can hold several independent investigations, including against different MockServer instances. The WebSocket subscription filter and the theme are **global**. The captured data (log messages, expectations, received and proxied requests) always belongs to the **active** workspace's target: there is one live connection at a time, and switching to a workspace on another server replaces the data rather than mixing it.
 
 The active workspace's state *is* the existing top-level store state (`view`, `logSearch`, …); `workspaces` holds a **snapshot** per workspace, refreshed only when the active workspace changes. Every panel keeps its existing selector and every setter is unchanged, which is what makes a view switch structurally unable to reset filter state. With a single workspace no snapshot is ever read or written, so the behaviour is exactly what it was before workspaces existed.
 
-Persistence keeps `mockserver-view` and `mockserver-search` as the **authoritative** record of the *active* workspace (unchanged keys and formats); the new `mockserver-workspaces` key holds the workspace list, and the active snapshot is overwritten from the two legacy keys on load. An upgrading user with no `mockserver-workspaces` entry therefore lands in a single workspace carrying exactly their previous view and searches, and nothing is written to the new key until they create a second workspace. Malformed blobs — bad JSON, wrong shape, duplicate or missing ids, unknown views, non-string searches — degrade field by field to safe defaults. This assumes a single writer per origin; see the design comment in `store/index.ts` for the two-browser-tab caveat.
+Persistence keeps `mockserver-view` and `mockserver-search` as the **authoritative** record of the *active* workspace's view and searches (unchanged keys and formats); the `mockserver-workspaces` key holds the workspace list, including each workspace's target, and the active snapshot's view and searches are overwritten from the two legacy keys on load. An upgrading user with no `mockserver-workspaces` entry therefore lands in a single workspace carrying exactly their previous view and searches, and nothing is written to the new key until they create a second workspace. Malformed blobs — bad JSON, wrong shape, duplicate or missing ids, unknown views, non-string searches, a target that fails validation — degrade field by field to safe defaults (an invalid target becomes "follow the URL").
 
-`WorkspaceTabBar.tsx` renders a switcher row below the app bar, and only once a second workspace exists — the app bar itself gains a single icon button. That placement is deliberate: an earlier tab bar of pinned/recent *views* was reverted in `d55d7077d` because labelled tabs in the flexible nav region stopped the bar fitting at typical widths.
+**Two browser tabs** share one `localStorage`. Once the workspaces key is in use, a store subscription writes every live change of view, searches or target through to it, under the writing tab's active id, so the legacy keys and the blob always describe the same workspace. Each tab also listens for the `storage` event and adopts the other tab's list (`adoptWorkspacesFromOtherTab`) for every workspace **except its own active one**, whose live state and target never change from another tab. A tab therefore never writes back a stale copy of a workspace it is not using; a workspace live in two tabs at once is last-writer-wins, and a workspace closed in one tab stays open in a tab that is using it.
 
-Per-workspace **connection params** are not yet implemented: `useConnectionParams` derives purely from the URL, and several components call it directly, so a partial override would route destructive control-plane calls (`deleteExpectation`, `clearLoggedRequest`, `replayRequests`, `setServerMode`) at the wrong instance.
+`WorkspaceTabBar.tsx` renders a switcher row below the app bar, and only once a second workspace exists or the only workspace has its own target (so a target is never in force without being shown and editable) — the app bar itself gains a single icon button. That placement is deliberate: an earlier tab bar of pinned/recent *views* was reverted in `d55d7077d` because labelled tabs in the flexible nav region stopped the bar fitting at typical widths.
+
+#### Per-workspace MockServer target
+
+Each tab in the workspace bar has a **Set MockServer** button that opens `WorkspaceTargetDialog` (host, port, https, base path). Once any workspace has its own target, every tab shows its `host:port`, so where a tab's actions go is never a guess; closing down to a single workspace that has a target keeps the bar (without a close button) for that reason. A workspace without a target follows the dashboard URL (`?host=`/`?port=`/`?secure=`/`?basePath=`, else the page origin); a new workspace starts that way.
+
+```mermaid
+flowchart LR
+    U["URL target\n(urlConnectionParams)"] --> H["useConnectionParams"]
+    O["active workspace\nconnection override"] --> H
+    H --> REST["every REST call"]
+    H --> WS["dashboard WebSocket\n(useWebSocket)"]
+    H --> BP["breakpoint callback client\nfor that target"]
+```
+
+How the target change stays safe:
+
+| Concern | Mechanism |
+|---------|-----------|
+| One consumer still calling the old server | `useConnectionParams` merges the store's `connection` over the URL target; it is the only source every component and hook reads, including the ones that call it directly. |
+| Old server's data shown under the new target | Any change of the *effective* target (switch, close, add, or retargeting the active workspace) drops the four data arrays and their reconcile caches, loaded full bodies, the configuration, selection, hand-offs and the debug/stub dialogs in the same store update, and increments `connectionEpoch`. |
+| Component state from the old server (lists, open dialogs, held rows) | `App` keys the app bar, the log-pressure banner, the view region and the App-level dialogs on the target, so they remount. |
+| A push or a reply from the old server arriving after the switch | The dashboard socket ignores messages once `connectionEpoch` has moved on; `useWithWholeExpectation`, `useLoadFullRow` and the auth probe drop late results the same way; the auto-load markers reset per epoch. |
+| Two live sockets | A target change re-creates `useWebSocket`'s `start`, and `connect()` closes the previous socket first, reconnecting with the last filter. |
+| Breakpoints | `getBreakpointCallbackClient(params)` keeps **one callback client per target**. Matchers are owned on the server by that socket's `clientId`, so switching workspace leaves another server's matchers armed (exactly as navigating to another view does). When no workspace targets a server any more (closed or retargeted), `releaseBreakpointCallbackClientsExcept` closes its socket and the server removes those matchers and continues anything they paused. |
+| Cross-origin calls | Saving a target first sends `PUT /mockserver/status` (`probeTarget`); a failure is explained (unreachable or CORS refused, `corsAllowOrigin` excluding this origin, control-plane auth, a wrong base path, mixed content, an untrusted certificate) and the user may still choose **Save anyway**. A lost connection to a cross-origin target names CORS too. |
+
+Validation (`validateConnection`) refuses a host typed as a URL or with a path, a port outside 1-65535 and a base path that does not start with `/`; it lower-cases the host (underscores are allowed, as in Docker service names), and the breakpoint client compares targets by `connectionKey`, so a different spelling of one host never reconnects and drops matchers. Analytics is decided only by the dashboard URL's server, never by a workspace's other target.
 
 The Request Filter panel is shown on Dashboard, Traffic, and Trace views. It is hidden on all other views. Its header is a real button (in the Tab order, Enter or Space toggles it, `aria-expanded` reports the state), as well as Ctrl/Cmd+Shift+F.
 
@@ -838,7 +865,7 @@ Every bound mock has a per-row **Edit** action, and each scenario has a scenario
 - **Single request** — one `httpRequest` matcher (method, path, header lines, query `key=value` lines, substring/JSON body) plus a times assertion. The times mode (`VerificationTimesMode`) is one of `atLeast` / `atMost` / `exactly` / `between`; `between` reveals a second count field. Submitting calls `verifyRequest(...)` in `lib/verification.ts`.
 - **Ordered sequence** — an ordered list of matcher rows (add / remove steps) that must have been received in order (other requests may occur in between). Submitting calls `verifySequence(...)`.
 
-Empty form fields are omitted from the built `httpRequest` (`buildHttpRequest`). The request and response **body** fields go through `bodyMatcher` in `lib/verification.ts`: text that parses as a JSON object or array becomes a `JSON` matcher (server default `ONLY_MATCHING_FIELDS`, so a fragment matches a larger document), anything else a `STRING` matcher with `subString: true`, never a plain string (which the server treats as an exact whole-body match). Header / query lines the parser cannot split (no separator, or an empty name — `ignoredKeyValueLines` in `lib/standardCodegen.ts`) are shown as inline field errors and disable Verify, because dropping them would loosen the check into a false pass; a section holding such a field cannot be collapsed. `timesSpecProblem` likewise blocks a count above a Java `int` and a `between` max below its min (the max is sent as entered, never raised to the min). A pass (202) renders a green "Verified" alert; a failed verification (406) renders the server's `failureMessage` (closest matches + actual count) in a red alert; any other status (a 400 for bad input, a 5xx) is thrown and shown as an error, not as a verdict. `lib/verification.ts` is framework-agnostic (plain `fetch`) so it is unit-tested independently of the component. This is the visual equivalent of the verification REST API (`PUT /mockserver/verify` and `PUT /mockserver/verifySequence`).
+Empty form fields are omitted from the built `httpRequest` (`buildHttpRequest`). The response matcher has a **Status code** and a **Status range** (`statusCodeRange`: a class such as `4XX` or one comparison such as `>= 400`, the forms the server's `StatusCodeMatcher` accepts); a range the server could not parse, or a code and a range together (the server ignores the code when a range is set), is a field error that disables Verify. The quick scope accepts `status:` and fills these fields through `verificationStatusFor` in `lib/filterScope.ts`: an exact code goes to Status code, a whole class (`status:>=400 status:<500`) to `4XX`, and a single bound to `>= N` or `<= N`; a range only two comparisons express (`status:>=400 status:<450`) is refused rather than widened, since `statusCodeRange` holds one expression. A test checks the translation against `matchesItemSearch` for every status from 100 to 599. Applying a `status:` scope opens the response matcher. The generated Java calls `.withStatusCodeRange(...)`; the Go client's `ResponseBuilder` cannot set a range, so with one the Go tab sends the verification with `net/http` instead of emitting a looser client call. The request and response **body** fields go through `bodyMatcher` in `lib/verification.ts`: text that parses as a JSON object or array becomes a `JSON` matcher (server default `ONLY_MATCHING_FIELDS`, so a fragment matches a larger document), anything else a `STRING` matcher with `subString: true`, never a plain string (which the server treats as an exact whole-body match). Header / query lines the parser cannot split (no separator, or an empty name — `ignoredKeyValueLines` in `lib/standardCodegen.ts`) are shown as inline field errors and disable Verify, because dropping them would loosen the check into a false pass; a section holding such a field cannot be collapsed. `timesSpecProblem` likewise blocks a count above a Java `int` and a `between` max below its min (the max is sent as entered, never raised to the min). A pass (202) renders a green "Verified" alert; a failed verification (406) renders the server's `failureMessage` (closest matches + actual count) in a red alert; any other status (a 400 for bad input, a 5xx) is thrown and shown as an error, not as a verdict. `lib/verification.ts` is framework-agnostic (plain `fetch`) so it is unit-tested independently of the component. This is the visual equivalent of the verification REST API (`PUT /mockserver/verify` and `PUT /mockserver/verifySequence`).
 
 ## SLO View
 
@@ -941,7 +968,7 @@ The panel has **three tabs**:
 
 The server checks the status range at the `RESPONSE` phase only (`BreakpointMatcherRegistry.findResponseMatch`); the request and stream phases pause regardless of it. So registration refuses a status range without the Response phase ticked, a caption warns when other phases are ticked beside it, and a min above the max or a value outside 0-999 is refused before the request is sent.
 
-**Breakpoint scope** — the `OperatorSearchField` above the form (accessible name "Breakpoint scope") takes `BREAKPOINT_SCOPE_FIELDS`: `method:`, `path:`, `host:` and `status:`. **Apply scope** fills the form through `lib/filterScope.ts` `parseRequestScope`: globs become anchored regexes, `host:` becomes a `Host` header row, and each `status:` comparator becomes inclusive bounds (`>N` is `>=N+1`, `<N` is `<=N-1`, a bare code is one exact code); repeated `status:` operators intersect, as the search box ANDs them, and a range that selects no code is refused. A `status:` scope also sets the phases to Response only, since a ticked Request phase would pause every matching request. A test compares the translated range with `matchesItemSearch` for every status from 100 to 599. Verification's form has no range field, so its scope (`REQUEST_SCOPE_FIELDS`) still flags `status:` as unsupported; each of its scope boxes is named ("Quick scope", "Scope for step N") so a screen reader can tell an ordered sequence's steps apart.
+**Breakpoint scope** — the `OperatorSearchField` above the form (accessible name "Breakpoint scope") takes `BREAKPOINT_SCOPE_FIELDS`: `method:`, `path:`, `host:` and `status:`. **Apply scope** fills the form through `lib/filterScope.ts` `parseRequestScope`: globs become anchored regexes, `host:` becomes a `Host` header row, and each `status:` comparator becomes inclusive bounds (`>N` is `>=N+1`, `<N` is `<=N-1`, a bare code is one exact code); repeated `status:` operators intersect, as the search box ANDs them, and a range that selects no code is refused. A `status:` scope also sets the phases to Response only, since a ticked Request phase would pause every matching request. A test compares the translated range with `matchesItemSearch` for every status from 100 to 599. Verification's scope takes `status:` too (`VERIFICATION_SCOPE_FIELDS`, see [Verification View](#verification-view)); each of its scope boxes is named ("Quick scope", "Scope for step N") so a screen reader can tell an ordered sequence's steps apart.
 
 The matcher REST endpoints:
 
@@ -964,7 +991,7 @@ The matcher list loads on mount and via a manual Refresh button (no interval).
 
 **Live Streams tab** — paused frames from forwarded streaming responses (SSE, chunked transfer, gRPC server-streaming, gRPC bidi inbound), grouped by `streamId`. Each row shows a direction badge (`Inbound` / `Outbound`) alongside the sequence number, method, path, body preview, size, and age. Per-frame decisions are sent over the WebSocket as a `StreamFrameDecisionDTO` whose `action` is one of `CONTINUE` / `MODIFY` / `DROP` / `INJECT` / `CLOSE` (continue, modify body, drop/discard, inject an extra frame after this one, close stream). The modify and inject actions each open a text editor dialog.
 
-Held items are bounded client-side and cleared when the callback WebSocket disconnects (a reconnect issues a new `clientId`, so older paused items can no longer be resolved).
+Held items are bounded client-side and cleared when the callback WebSocket disconnects (a reconnect issues a new `clientId`, so older paused items can no longer be resolved). There is one callback client per MockServer target (see [Per-workspace MockServer target](#per-workspace-mockserver-target)); the panel remounts on a target change and always uses the live target's client.
 
 **Items MockServer resolves itself** — when the breakpoint timeout continues a paused item, or a stream ends before a held frame can be delivered, the server sends a `BreakpointReleasedDTO` (the dashboard asks for these by connecting with `?capabilities=breakpointReleased`). The client removes the item from its store and tells subscribers (`subscribeReleaseNotices`); the panel shows the message in a dismissible notice (`data-testid="breakpoint-release-notice"`), and an open Modify / Inject dialog for that item shows an error and no longer sends. The client remembers the correlation ids it has replied to, so a notice that crosses the user's own decision is shown as "Your decision was not applied".
 
@@ -1110,6 +1137,9 @@ The AppBar "Import / export" (wrench) menu groups one-off control-plane tools, e
   actionTypeFilter: [],
   llmProviderFilter: [],
   pendingEditExpectation: null,  // Set by editExpectation(); consumed once by ComposerView to pre-fill the form
+  workspaces: [...], activeWorkspaceId: 'workspace-1',
+  connection: null,             // active workspace's own target; null follows the dashboard URL
+  connectionEpoch: 0,           // incremented on every effective target change
 }
 ```
 
@@ -1412,7 +1442,7 @@ Vitest + React Testing Library + jsdom — see `mockserver-ui/src/__tests__/` fo
 
 | Area | Example test files |
 |------|--------------------|
-| Store + hooks | `store.test.ts`, `useConnectionParams.test.ts`, `useKeyboardShortcuts.test.ts`, `useWebSocket.test.ts`, `useAutoRefresh.test.ts` |
+| Store + hooks | `store.test.ts`, `workspaces.test.ts`, `workspaceTargets.test.ts`, `connectionTarget.test.ts`, `useConnectionParams.test.ts`, `useKeyboardShortcuts.test.ts`, `useWebSocket.test.ts`, `useAutoRefresh.test.ts` |
 | App-chrome components | `AppBar.test.tsx`, `Panel.test.tsx`, `BecauseSection.test.tsx`, `CopyButton.test.tsx`, `DescriptionDisplay.test.tsx`, `HumanErrorAlert.test.tsx` |
 | Log and request panels | `LogEntry.test.tsx`, `EventLogLossDetails.test.tsx`, `LogGroup.test.tsx`, `LogPanel.test.tsx`, `RequestPanel.test.tsx`, `ExpectationPanel.test.tsx`, `FilterPanel.test.tsx`, `JsonListItem.test.tsx` |
 | Traffic / Sessions inspectors | `TrafficInspector.test.tsx`, `SessionInspector.test.tsx`, `PredicatePills.test.tsx`, `AgentRunGraph.test.tsx` |
@@ -1693,8 +1723,8 @@ The `MOCKSERVER_URL` env var is set by `local_ui_dev.sh` to match the configured
 
 ### Cross-Origin (CORS) Support
 
-The dashboard is designed to connect to a MockServer at an arbitrary `host`/`port` (set via its
-connection fields or the `?host=`/`?port=` query parameters), which is inherently a cross-origin
+The dashboard is designed to connect to a MockServer at an arbitrary `host`/`port` (set per workspace
+or via the `?host=`/`?port=` query parameters), which is inherently a cross-origin
 request when the dashboard is not served from that same MockServer. To make this work without any
 configuration, **MockServer always returns CORS headers on control-plane responses** (every
 `/mockserver/*` API response, written with `apiResponse == true`) and **answers the CORS preflight**

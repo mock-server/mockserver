@@ -7,7 +7,7 @@
  *  2. the existing fields keep working — the scope box only ever fills them, so no
  *     capability (raw regex paths, multi-line headers, query, body) is lost.
  */
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
@@ -30,13 +30,13 @@ const applyButton = () => screen.getAllByRole('button', { name: 'Apply scope' })
 afterEach(cleanup);
 
 describe('VerificationView quick scope', () => {
-  it('advertises only the operators a request matcher can honour', () => {
+  it('advertises only the operators the request and response matchers can honour', () => {
     renderView();
     const placeholder = scopeInput().getAttribute('placeholder') ?? '';
     expect(placeholder).toContain('method:POST');
     expect(placeholder).toContain('path:/api/*');
     expect(placeholder).toContain('host:*.example.com');
-    expect(placeholder).not.toContain('status:');
+    expect(placeholder).toContain('status:>=400');
     expect(placeholder).not.toContain('operation:');
   });
 
@@ -70,11 +70,11 @@ describe('VerificationView quick scope', () => {
     const user = userEvent.setup({ delay: null });
     renderView();
 
-    await user.type(scopeInput(), 'status:>=400');
+    await user.type(scopeInput(), 'operation:GetUser');
 
     const explanation = screen.getByText(/not supported here/i);
-    expect(explanation).toHaveTextContent('status:');
-    expect(explanation).toHaveTextContent('Supported here: method:, path:, host:');
+    expect(explanation).toHaveTextContent('operation:');
+    expect(explanation).toHaveTextContent('Supported here: method:, path:, host:, status:');
     expect(scopeInput()).toHaveAttribute('aria-invalid', 'true');
     expect(applyButton()).toBeDisabled();
     // Nothing was applied behind the scenes.
@@ -144,5 +144,67 @@ describe('VerificationView quick scope', () => {
     const paths = screen.getAllByLabelText('Path');
     expect(paths[0]).toHaveValue('');
     expect(paths[1]).toHaveValue('/step/.*');
+  });
+
+  it('puts a status comparison into the response status range and opens the response matcher', async () => {
+    const user = userEvent.setup({ delay: null });
+    renderView();
+
+    await user.type(scopeInput(), 'method:GET status:>=400');
+    await user.click(applyButton());
+
+    expect(screen.getByLabelText('Status range')).toHaveValue('>= 400');
+    expect(screen.getByLabelText('Status code')).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Collapse Response matcher (optional)' })).toBeInTheDocument();
+  });
+
+  it('puts an exact status into the status code, and a whole class into the range', async () => {
+    const user = userEvent.setup({ delay: null });
+    renderView();
+
+    await user.type(scopeInput(), 'status:404');
+    await user.click(applyButton());
+    expect(screen.getByLabelText('Status code')).toHaveValue('404');
+    expect(screen.getByLabelText('Status range')).toHaveValue('');
+
+    await user.type(scopeInput(), 'status:>=500 status:<600');
+    await user.click(applyButton());
+    expect(screen.getByLabelText('Status code')).toHaveValue('');
+    expect(screen.getByLabelText('Status range')).toHaveValue('5XX');
+  });
+
+  it('refuses a status range that needs two comparisons', async () => {
+    const user = userEvent.setup({ delay: null });
+    renderView();
+
+    await user.type(scopeInput(), 'status:>=400 status:<450');
+
+    expect(screen.getByText(/selects 400-449, which needs two comparisons/)).toBeInTheDocument();
+    expect(applyButton()).toBeDisabled();
+  });
+
+  it('sends the range, and blocks Verify for a range the server could not read or a code and range together', async () => {
+    const fetchMock = vi.fn(async () => new Response('', { status: 202 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup({ delay: null });
+    renderView();
+    await user.click(screen.getByRole('button', { name: 'Expand Response matcher (optional)' }));
+
+    const range = screen.getByLabelText('Status range');
+    await user.type(range, 'between 4 and 5');
+    expect(screen.getByText(/Use a class such as 4XX/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Verify' })).toBeDisabled();
+
+    await user.clear(range);
+    await user.type(range, '4xx');
+    await user.type(screen.getByLabelText('Status code'), '404');
+    expect(screen.getByText('Fill the status code or the status range, not both.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Verify' })).toBeDisabled();
+
+    await user.clear(screen.getByLabelText('Status code'));
+    await user.click(screen.getByRole('button', { name: 'Verify' }));
+    const body = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string) as Record<string, unknown>;
+    expect(body['httpResponse']).toEqual({ statusCodeRange: '4xx' });
+    vi.unstubAllGlobals();
   });
 });

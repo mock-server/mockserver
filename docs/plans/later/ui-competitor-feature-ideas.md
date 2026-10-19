@@ -1,10 +1,10 @@
 # UI competitor-inspired feature ideas — residue after the 2026-07 build
 
-**Outcome.** All six items from the original backlog shipped in 2026-07. What remains open:
-one deferred sub-feature (per-tab connection params), one instruction that turned out to be
-wrong and must not be retried (chaos operator search), and a handful of small follow-ups the
-reviews surfaced. Re-verified against `mockserver-ui` code 2026-10-18 — all still unimplemented
-as described below.
+**Outcome.** All six items from the original backlog shipped in 2026-07, and the last deferred
+sub-feature (per-workspace MockServer targets) and the review follow-ups (`status:` on the
+verification scope, two-browser-tab workspace persistence) shipped in 2026-10. What remains:
+two instructions that turned out to be wrong and must not be retried, one engine constraint, a
+few follow-ups found while building workspace targets, and some low-priority notes.
 
 ---
 
@@ -54,61 +54,25 @@ possible.
 
 ---
 
-## Deferred: per-tab connection params (Multi-tab workspaces' third sub-feature)
+## Follow-ups found while building per-workspace targets (2026-10)
 
-Workspaces carry view and search terms. They do **not** carry a connection target, so the
-plan's "target different MockServer instances from one window" value is not yet delivered.
-
-The blocker is that `useConnectionParams` is a `useMemo(…, [])` derived purely from
-`window.location`, and six components call it directly rather than taking the prop `App`
-drills — including four that issue destructive control-plane calls (`deleteExpectation`,
-`clearLoggedRequest`, `replayRequests`, `setServerMode`). A partial override would route
-those at the wrong instance, so half of this feature is worse than none.
-
-To finish it:
-1. Merge the active workspace's override over the URL-derived base inside
-   `hooks/useConnectionParams.ts` — that one edit covers every consumer.
-2. Add a `connection` field to `Workspace` and an edit affordance in the tab bar.
-3. **Reset the four data arrays on a target change**, so instance A's traffic is never shown
-   under instance B's tab.
-4. The single-socket invariant survives by construction: a params identity change re-creates
-   `connect`, and `connect()` closes the previous socket first.
-
-Re-assessed 2026-10-13 and left deferred: it is not small. Beyond the four steps above,
-finishing it needs:
-- the Breakpoints callback WebSocket is an app-lifetime singleton
-  (`getBreakpointCallbackClient`) whose matchers are owned on the server by its `clientId`,
-  so switching a tab's target must reconnect it, and the matchers registered on instance A
-  are then dropped or orphaned; that needs a decision, not just a reset;
-- module-level caches outside the four store arrays also hold instance A's data: the
-  remembered shortened expectations (`lib/fullExpectation.ts`), the loaded full bodies
-  (`fullMessages`), the auto-load attempted markers (`useAutoLoadLlmRows`) and the rows held
-  by `useHeldItems`;
-- a target on another origin makes every control-plane `fetch` cross-origin, which works
-  only when that MockServer answers CORS for its API (`enableCORSForAPI`); the dashboard
-  needs to say so rather than fail with a bare network error;
-- a workspace that holds a connection target is exactly the "more state" the single-writer
-  follow-up below warns about, so two browser tabs would need resolving first.
-
----
-
-## Follow-ups the reviews surfaced
-
-- **`status:` on the verification scope.** The Verify view's quick scope still flags `status:` as
-  unsupported, because its response matcher form has a single exact `statusCode` field.
-  `StatusCodeMatcher` already supports an exact code, a class range such as `"2XX"` and numeric
-  operators via `statusCodeRange`, so adding a range field to the verification response matcher
-  (and passing `[...REQUEST_SCOPE_FIELDS, 'status']` to its scope, translating each comparator to
-  `statusCodeRange`) would make `status:>=400` work there. `lib/filterScope.ts`
-  `parseRequestScope` already produces inclusive `statusMin`/`statusMax` bounds for the breakpoint
-  scope, with a test that they select exactly what the search box selects.
-- **Workspace persistence assumes a single writer per origin.** Two dashboard browser tabs
-  share one `localStorage`, so the legacy keys can be written by a tab on workspace 1 while
-  the blob says workspace 2 is active. The payload is a view name and five strings, so it is
-  not worth a coordination mechanism — but anything that makes a workspace hold more state
-  should revisit it.
-
----
+- **Control-plane CORS preflights are logged as received requests.** A dashboard on another
+  origin (a workspace target, or `?host=`/`?port=`) sends a preflight `OPTIONS` before each
+  control-plane `PUT`, and the target records it like traffic: saving a target shows an
+  `OPTIONS /mockserver/status` row on that server. That can make a `verifyZeroInteractions`
+  fail. The fix is server-side (`HttpActionHandler`'s control-plane preflight path should not
+  log a received request), not in the UI.
+- **The Verify response-matcher caption is wrong.** It says the response matcher checks
+  "responses recorded from proxied/forwarded traffic", but response verification counts mock
+  responses too (`MockServerEventLog.expectationLogPredicate`: `EXPECTATION_RESPONSE` and
+  `FORWARDED_REQUEST`). Reword it in `VerificationView.tsx` and the consumer UI page.
+- **Paused breakpoints on a background workspace's server are not shown.** Each target keeps its
+  breakpoint session while any workspace targets it (as navigating away from the Breakpoints
+  view always did), so requests can sit paused on a server the visible workspace does not show
+  until the breakpoint timeout. A paused-count badge on the workspace tab would surface them.
+- **A stored workspace target wins over `?host=`/`?port=`.** The URL target applies only to
+  workspaces without their own. The target is always shown in the workspace bar (the bar stays up
+  even for a single workspace that has one), but a deep link with `?host=` does not override it.
 
 ## LOW / trivial notes (still unshipped, still low priority)
 

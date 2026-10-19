@@ -4,6 +4,26 @@ import type { ClearType, RequestFilter, WebSocketMessage } from '../types';
 import { useDashboardStore } from '../store';
 import { buildBaseUrl } from '../lib/mcpClient';
 import { CLEAR_LOGS_DONE_MESSAGE } from '../lib/clearServerText';
+import { isCrossOrigin, isMixedContent } from '../lib/connectionTarget';
+
+const currentEpoch = (): number => useDashboardStore.getState().connectionEpoch;
+
+/** What to check when the live connection to `params` keeps failing. */
+export function connectionLostMessage(params: ConnectionParams, workspaceTarget: boolean): string {
+  const where = `${params.host}:${params.port}`;
+  const check = workspaceTarget
+    ? "Check the server is running and this workspace's target is correct."
+    : 'Check the server is running and the host/port (?host=&port= in the URL) are correct.';
+  let message = `Connection lost to ${where} — retrying automatically. ${check}`;
+  if (isMixedContent(params)) {
+    message += ' This dashboard is served over https, so the browser blocks calls to an http target: use https for it.';
+  } else if (isCrossOrigin(params)) {
+    message += ` ${where} is a different origin from this dashboard, so its control-plane calls are cross-origin:` +
+      ' it must answer CORS for this origin (MockServer does unless corsAllowOrigin is set to exclude it,' +
+      ' or a proxy in front of it strips the CORS headers).';
+  }
+  return message;
+}
 
 const RECONNECT_DELAY_MS = 3000;
 
@@ -70,8 +90,10 @@ export function useWebSocket(params: ConnectionParams) {
     // is gated by the SAME control-plane auth as the WebSocket upgrade — to tell the two apart and
     // show an actionable auth-required message instead of the misleading "server down" banner.
     try {
+      const epoch = currentEpoch();
       const base = buildBaseUrl(params);
       const response = await fetch(`${base}/mockserver/dashboard`, { method: 'GET' });
+      if (currentEpoch() !== epoch) return;
       if (response.status === 401 || response.status === 403) {
         authRequiredRef.current = true;
         setError(
@@ -99,7 +121,7 @@ export function useWebSocket(params: ConnectionParams) {
       // Suppressed when a probe has determined the failure is an auth rejection, so the auth-required
       // message (set by probeAuthRequired) is not clobbered by the generic banner.
       if (reconnectCountRef.current === 2 && !authRequiredRef.current) {
-        setError(`Connection lost to ${params.host}:${params.port} — retrying automatically. Check the server is running and the host/port (?host=&port= in the URL) are correct.`);
+        setError(connectionLostMessage(params, useDashboardStore.getState().connection !== null));
       }
       if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       const delay = RECONNECT_DELAY_MS * Math.min(reconnectCountRef.current, 5); // capped at 15s
@@ -111,7 +133,7 @@ export function useWebSocket(params: ConnectionParams) {
         connectRef.current(lastFilterRef.current);
       }, delay);
     },
-    [setError, params.host, params.port],
+    [setError, params],
   );
 
   const connect = useCallback(
@@ -126,12 +148,14 @@ export function useWebSocket(params: ConnectionParams) {
         socketRef.current = null;
       }
 
+      hiddenMessageRef.current = null;
       setConnectionStatus('connecting');
       const protocol = params.secure ? 'wss' : 'ws';
       const url = `${protocol}://${params.host}:${params.port}${params.basePath ?? ''}/_mockserver_ui_websocket`;
 
       const ws = new WebSocket(url);
       socketRef.current = ws;
+      const epoch = currentEpoch();
 
       ws.onopen = () => {
         reconnectCountRef.current = 0;
@@ -142,6 +166,9 @@ export function useWebSocket(params: ConnectionParams) {
       };
 
       ws.onmessage = (event: MessageEvent) => {
+        // The store drops the old server's data before React re-renders with the new target,
+        // so a push from the old socket in between must not repopulate it.
+        if (currentEpoch() !== epoch) return;
         const raw = event.data as string;
         // Hidden tab: buffer only the newest payload and skip all work until the
         // tab is shown again (a background dashboard otherwise parses/reconciles/
@@ -172,6 +199,17 @@ export function useWebSocket(params: ConnectionParams) {
 
   useEffect(() => {
     connectRef.current = connect;
+  }, [connect]);
+
+  /**
+   * Open the socket to the current target with the last filter requested. Re-created when the
+   * target changes, so calling it from an effect reconnects on a workspace target change;
+   * `connect` closes the previous socket first, which keeps a single live socket.
+   */
+  const start = useCallback(() => {
+    reconnectCountRef.current = 0;
+    authRequiredRef.current = false;
+    connect(lastFilterRef.current);
   }, [connect]);
 
   // When the tab becomes visible again, replay the newest message buffered while
@@ -224,12 +262,14 @@ export function useWebSocket(params: ConnectionParams) {
   const clearServer = useCallback(
     async (type: ClearType = 'all') => {
       const base = buildBaseUrl(params);
+      const epoch = currentEpoch();
       try {
         const url =
           type === 'all'
             ? `${base}/mockserver/reset`
             : `${base}/mockserver/clear?type=${encodeURIComponent(type)}`;
         const response = await fetch(url, { method: 'PUT' });
+        if (currentEpoch() !== epoch) return;
         if (!response.ok) {
           setError(`Clear failed: ${response.status} ${response.statusText}`);
           return;
@@ -259,5 +299,5 @@ export function useWebSocket(params: ConnectionParams) {
     };
   }, [disconnect]);
 
-  return { connect, disconnect, sendFilter, clearServer };
+  return { connect, start, disconnect, sendFilter, clearServer };
 }

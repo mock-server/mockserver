@@ -34,7 +34,10 @@ import {
   parseRequestScope,
   isApplicableScope,
   withHostHeaderLine,
-  REQUEST_SCOPE_FIELDS,
+  statusRangeProblem,
+  verificationStatusFor,
+  VERIFICATION_SCOPE_FIELDS,
+  type VerificationStatus,
 } from '../lib/filterScope';
 import HumanErrorAlert from './HumanErrorAlert';
 import { useDashboardStore } from '../store';
@@ -57,12 +60,14 @@ function emptyRequest(): RequestForm {
 
 interface ResponseForm {
   statusCode: string;
+  /** A class (`4XX`) or one comparison (`>= 400`); the server uses it in place of `statusCode`. */
+  statusCodeRange: string;
   headers: string;
   body: string;
 }
 
 function emptyResponse(): ResponseForm {
-  return { statusCode: '', headers: '', body: '' };
+  return { statusCode: '', statusCodeRange: '', headers: '', body: '' };
 }
 
 /** Build an httpRequest matcher object from a form row (omitting empty fields). */
@@ -89,6 +94,8 @@ function buildHttpResponse(form: ResponseForm): Record<string, unknown> {
       resp['statusCode'] = parsed;
     }
   }
+  const range = form.statusCodeRange.trim();
+  if (range) resp['statusCodeRange'] = range;
   const headers = parseKeyValueLines(form.headers, ':');
   if (headers) resp['headers'] = headers;
   const body = bodyMatcher(form.body);
@@ -110,36 +117,44 @@ function linesError(text: string, separator: ':' | '='): string | undefined {
 }
 
 interface RequestErrors { headers?: string; queryString?: string }
-interface ResponseErrors { headers?: string }
+interface ResponseErrors { headers?: string; statusCodeRange?: string }
 
 function requestErrors(form: RequestForm): RequestErrors {
   return { headers: linesError(form.headers, ':'), queryString: linesError(form.queryString, '=') };
 }
 
 function responseErrors(form: ResponseForm): ResponseErrors {
-  return { headers: linesError(form.headers, ':') };
+  // The server ignores the status code when a range is set, so both together would hide one.
+  const both = form.statusCode.trim() !== '' && form.statusCodeRange.trim() !== '';
+  return {
+    headers: linesError(form.headers, ':'),
+    statusCodeRange: both ? 'Fill the status code or the status range, not both.' : statusRangeProblem(form.statusCodeRange) ?? undefined,
+  };
 }
 
 const hasError = (errors: RequestErrors | ResponseErrors): boolean => Object.values(errors).some(Boolean);
 
 /**
- * Filter-DSL "quick scope" for a request matcher. Uses the same operator syntax as
- * the Traffic and dashboard search boxes, narrowed via `REQUEST_SCOPE_FIELDS` to the
- * three operators a MockServer `httpRequest` matcher can genuinely honour — anything
- * else (`status:`, `operation:`) is flagged in the input instead of silently doing
- * nothing. Applying FILLS the fields below (a glob becomes the equivalent regex), so
- * the form stays the single source of truth and every field remains editable.
+ * Filter-DSL "quick scope" for a request/response matcher pair. Uses the same
+ * operator syntax as the Traffic and dashboard search boxes, narrowed via
+ * `VERIFICATION_SCOPE_FIELDS` to the operators the matchers can genuinely honour —
+ * anything else (`operation:`) is flagged in the input instead of silently doing
+ * nothing. Applying FILLS the fields below (a glob becomes the equivalent regex, a
+ * `status:` the response status code or range), so the form stays the single source
+ * of truth and every field remains editable.
  */
-function ScopeField({ id, ariaLabel, form, onChange, busy }: { id: string; ariaLabel: string; form: RequestForm; onChange: (f: RequestForm) => void; busy?: boolean }) {
+function ScopeField({ id, ariaLabel, form, onChange, onStatus, busy }: { id: string; ariaLabel: string; form: RequestForm; onChange: (f: RequestForm) => void; onStatus: (status: VerificationStatus) => void; busy?: boolean }) {
   const [term, setTerm] = useState('');
-  const parsed = useMemo(() => parseRequestScope(term), [term]);
+  const parsed = useMemo(() => parseRequestScope(term, VERIFICATION_SCOPE_FIELDS), [term]);
+  const status = useMemo(() => verificationStatusFor(parsed.scope), [parsed]);
+  const statusError = status && 'error' in status ? status.error : null;
   const methodUnknown = parsed.scope.method != null && !METHODS.includes(parsed.scope.method);
-  const applicable = isApplicableScope(parsed) && !methodUnknown;
+  const applicable = isApplicableScope(parsed) && !methodUnknown && statusError == null;
   // `unsupportedFields` already has its own helper text inside the input, so only
   // the other refusals get a message here — never two messages for one mistake.
   const message = methodUnknown
     ? `method:${parsed.scope.method} is not one of ${METHODS.filter(Boolean).join(', ')}.`
-    : parsed.error;
+    : parsed.error ?? statusError;
 
   const apply = () => {
     const { scope } = parsed;
@@ -148,6 +163,7 @@ function ScopeField({ id, ariaLabel, form, onChange, busy }: { id: string; ariaL
     if (scope.path) next.path = scope.path;
     if (scope.host) next.headers = withHostHeaderLine(next.headers, scope.host);
     onChange(next);
+    if (status && !('error' in status)) onStatus(status);
     setTerm('');
   };
 
@@ -159,7 +175,7 @@ function ScopeField({ id, ariaLabel, form, onChange, busy }: { id: string; ariaL
           ariaLabel={ariaLabel}
           value={term}
           onChange={setTerm}
-          fields={REQUEST_SCOPE_FIELDS}
+          fields={VERIFICATION_SCOPE_FIELDS}
           maxWidth={520}
           sx={{ ml: 0, flex: 1, minWidth: 240 }}
         />
@@ -176,11 +192,11 @@ function ScopeField({ id, ariaLabel, form, onChange, busy }: { id: string; ariaL
   );
 }
 
-function RequestFields({ scopeId, scopeLabel, form, onChange, busy }: { scopeId: string; scopeLabel: string; form: RequestForm; onChange: (f: RequestForm) => void; busy?: boolean }) {
+function RequestFields({ scopeId, scopeLabel, form, onChange, onStatus, busy }: { scopeId: string; scopeLabel: string; form: RequestForm; onChange: (f: RequestForm) => void; onStatus: (status: VerificationStatus) => void; busy?: boolean }) {
   const errors = requestErrors(form);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <ScopeField id={scopeId} ariaLabel={scopeLabel} form={form} onChange={onChange} busy={busy} />
+      <ScopeField id={scopeId} ariaLabel={scopeLabel} form={form} onChange={onChange} onStatus={onStatus} busy={busy} />
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
         <Select
           size="small"
@@ -215,8 +231,13 @@ function ResponseFields({ form, onChange }: { form: ResponseForm; onChange: (f: 
   const errors = responseErrors(form);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <TextField size="small" label="Status code" placeholder="200" value={form.statusCode}
-        onChange={(e) => onChange({ ...form, statusCode: e.target.value })} sx={{ width: { xs: '100%', sm: 150 } }} />
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <TextField size="small" label="Status code" placeholder="200" value={form.statusCode}
+          onChange={(e) => onChange({ ...form, statusCode: e.target.value })} sx={{ width: { xs: '100%', sm: 150 } }} />
+        <TextField size="small" label="Status range" placeholder="4XX or >= 400" value={form.statusCodeRange}
+          error={!!errors.statusCodeRange} helperText={errors.statusCodeRange}
+          onChange={(e) => onChange({ ...form, statusCodeRange: e.target.value })} sx={{ width: { xs: '100%', sm: 220 } }} />
+      </Box>
       <TextField size="small" label="Response headers (Name: value per line)" multiline minRows={1} maxRows={4}
         error={!!errors.headers} helperText={errors.headers}
         value={form.headers} onChange={(e) => onChange({ ...form, headers: e.target.value })} sx={{ flex: 1 }} />
@@ -442,7 +463,17 @@ export default function VerificationView({ connectionParams }: { connectionParam
             invalid={hasError(requestErrors(single))}
             onToggle={() => setSingleRequestExpanded(!singleRequestExpanded)}
           >
-            <RequestFields scopeId="verify-scope-single" scopeLabel="Quick scope" form={single} onChange={setSingle} busy={busy} />
+            <RequestFields
+              scopeId="verify-scope-single"
+              scopeLabel="Quick scope"
+              form={single}
+              onChange={setSingle}
+              onStatus={(status) => {
+                setSingleResponse((r) => ({ ...r, ...status }));
+                setSingleResponseExpanded(true);
+              }}
+              busy={busy}
+            />
           </MatcherSection>
           <MatcherSection
             title="Response matcher (optional)"
@@ -495,7 +526,17 @@ export default function VerificationView({ connectionParams }: { connectionParam
                   invalid={hasError(requestErrors(row))}
                   onToggle={() => setSeqRequestExpanded(seqRequestExpanded.map((v, j) => j === i ? !v : v))}
                 >
-                  <RequestFields scopeId={`verify-scope-step-${i}`} scopeLabel={`Scope for step ${i + 1}`} form={row} onChange={(f) => setSequence(sequence.map((r, j) => j === i ? f : r))} busy={busy} />
+                  <RequestFields
+                    scopeId={`verify-scope-step-${i}`}
+                    scopeLabel={`Scope for step ${i + 1}`}
+                    form={row}
+                    onChange={(f) => setSequence(sequence.map((r, j) => j === i ? f : r))}
+                    onStatus={(status) => {
+                      setSeqResponses((all) => all.map((r, j) => (j === i ? { ...r, ...status } : r)));
+                      setSeqResponseExpanded((all) => all.map((v, j) => (j === i ? true : v)));
+                    }}
+                    busy={busy}
+                  />
                 </MatcherSection>
                 <MatcherSection
                   title="Response matcher (optional)"

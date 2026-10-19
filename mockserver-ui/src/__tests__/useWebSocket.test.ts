@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useWebSocket } from '../hooks/useWebSocket';
+import { connectionLostMessage, useWebSocket } from '../hooks/useWebSocket';
 import { useDashboardStore } from '../store';
 
 class MockWebSocket {
@@ -389,6 +389,49 @@ describe('useWebSocket', () => {
         });
       });
       expect(useDashboardStore.getState().logMessages).toHaveLength(3);
+    });
+  });
+
+  describe('workspace target change', () => {
+    it('reconnects to the new target with the last filter, closing the old socket first', () => {
+      const filter = { method: 'GET', path: '/api' };
+      const { result, rerender } = renderHook(({ params }) => useWebSocket(params), {
+        initialProps: { params: defaultParams },
+      });
+      act(() => result.current.start());
+      act(() => result.current.sendFilter(filter));
+      const first = MockWebSocket.instances[MockWebSocket.instances.length - 1]!;
+
+      rerender({ params: { host: 'other', port: '1081', secure: false } });
+      act(() => result.current.start());
+
+      const second = MockWebSocket.instances[MockWebSocket.instances.length - 1]!;
+      expect(first.onmessage).toBeNull();
+      act(() => first.simulateOpen());
+      expect(first.closed).toBe(true);
+      expect(second.url).toBe('ws://other:1081/_mockserver_ui_websocket');
+      act(() => second.simulateOpen());
+      expect(JSON.parse(second.sentMessages[0]!)).toEqual(filter);
+    });
+
+    it('ignores a push the old socket delivers after the store has switched target', () => {
+      const { result } = renderHook(() => useWebSocket(defaultParams));
+      act(() => result.current.connect({}));
+      const ws = MockWebSocket.instances[0]!;
+      act(() => ws.simulateOpen());
+
+      act(() => {
+        useDashboardStore.setState((s) => ({ connectionEpoch: s.connectionEpoch + 1 }));
+        ws.simulateMessage({ logMessages: [{ key: 'from-old-server', value: {} }] });
+      });
+      expect(useDashboardStore.getState().logMessages).toEqual([]);
+    });
+
+    it('names the workspace target and CORS in the connection-lost message for a cross-origin target', () => {
+      expect(connectionLostMessage({ host: 'far-away', port: '1081', secure: false }, true))
+        .toMatch(/this workspace's target is correct.*different origin.*CORS/);
+      expect(connectionLostMessage({ host: globalThis.location.hostname, port: globalThis.location.port, secure: false }, false))
+        .toMatch(/\?host=&port= in the URL\) are correct\.$/);
     });
   });
 });

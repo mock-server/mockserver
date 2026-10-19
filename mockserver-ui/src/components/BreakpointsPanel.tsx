@@ -164,7 +164,8 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
   // -- Callback WS state --
   const [wsState, setWsState] = useState<CallbackClientState>('disconnected');
   const [clientId, setClientId] = useState<string | null>(null);
-  const clientRef = useRef(getBreakpointCallbackClient());
+  // The panel remounts when the workspace target changes, so this is always the live target's client.
+  const clientRef = useRef(getBreakpointCallbackClient(connectionParams));
 
   // -- Live paused items (from the client-owned store) --
   // The mount effect subscribes to the singleton client's store, which seeds
@@ -228,8 +229,8 @@ export default function BreakpointsPanel({ connectionParams }: BreakpointsPanelP
 
     client.connect(connectionParams);
 
-    // Intentionally NO disconnect on unmount: the callback WebSocket is an
-    // app-lifetime singleton. Keeping it open across tab changes preserves the
+    // Intentionally NO disconnect on unmount: the callback WebSocket lives as long
+    // as a workspace targets its server. Keeping it open across tab changes preserves the
     // server clientId and the breakpoint matchers registered under it, so
     // breakpoints stay active and registered when navigating away from and back
     // to this tab. Only the store subscriptions are torn down.

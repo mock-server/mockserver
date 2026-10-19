@@ -18,7 +18,11 @@ export function useLoadFullRow(): (item: JsonListItem) => Promise<JsonListItem> 
   return useCallback(
     async (item: JsonListItem) => {
       if (!hasTruncatedBodies(item)) return item;
+      const epoch = useDashboardStore.getState().connectionEpoch;
       const full = await fetchFullMessages(params, item);
+      if (useDashboardStore.getState().connectionEpoch !== epoch) {
+        throw new Error('The dashboard switched to another MockServer while the body was loading');
+      }
       applyFullMessages(item.key, full);
       return withFullMessages(item, full);
     },
@@ -53,6 +57,7 @@ export async function forEachLimited<T>(items: T[], limit: number, task: (item: 
 
 // Shared by every mounted LLM view, so each shortened message is fetched at most once per page.
 const autoLoadAttempted = new Set<string>();
+let autoLoadEpoch = 0;
 const AUTO_LOAD_CONCURRENCY = 2;
 const AUTO_LOAD_MEMORY = 1000;
 /** A message longer than this (in characters) is left for the user to load with Load Full Body. */
@@ -80,6 +85,11 @@ export function useAutoLoadLlmRows(): void {
   const loadFullRow = useLoadFullRow();
   useEffect(() => {
     const rows = [...proxiedRequests, ...recordedRequests];
+    const epoch = useDashboardStore.getState().connectionEpoch;
+    if (epoch !== autoLoadEpoch) {
+      autoLoadAttempted.clear();
+      autoLoadEpoch = epoch;
+    }
     if (autoLoadAttempted.size > AUTO_LOAD_MEMORY) {
       const present = new Set(rows.map(loadIdOf));
       for (const id of autoLoadAttempted) if (!present.has(id)) autoLoadAttempted.delete(id);

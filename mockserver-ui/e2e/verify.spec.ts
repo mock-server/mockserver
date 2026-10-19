@@ -326,6 +326,31 @@ test('response matcher verifies the responses recorded for forwarded traffic', a
   await clickVerifyAndExpect(page, 'Verify', /not found exactly once/);
 });
 
+test('quick scope: "status:>=500" fills the response status range, which the server applies', async ({ page, request }) => {
+  consoleWatch.allow(FAILED_VERIFY_406);
+  const path = `/e2e/verify/status-${Date.now()}`;
+  await putExpectations(request, ORIGIN, [{ httpRequest: { path }, httpResponse: { statusCode: 503 } }]);
+  expect((await request.get(`${ORIGIN}${path}`)).status()).toBe(503);
+
+  await openVerification(page);
+  const scope = page.getByRole('textbox', { name: 'Quick scope' });
+  const applyScope = page.getByRole('button', { name: 'Apply scope' });
+  await scope.fill(`path:${path} status:>=500`);
+  await applyScope.click();
+  await expect(page.getByRole('textbox', { name: 'Status range' })).toHaveValue('>= 500');
+  await setTimes(page, 'exactly', 1);
+  await clickVerifyAndExpect(page, 'Verify', 'pass');
+
+  await scope.fill('status:>=400 status:<500');
+  await applyScope.click();
+  await expect(page.getByRole('textbox', { name: 'Status range' })).toHaveValue('4XX');
+  await clickVerifyAndExpect(page, 'Verify', /not found exactly once/);
+
+  await scope.fill('status:>=400 status:<450');
+  await expect(page.getByText(/needs two comparisons/)).toBeVisible();
+  await expect(applyScope).toBeDisabled();
+});
+
 // ---------------------------------------------------------------------------
 // Sequence verification
 // ---------------------------------------------------------------------------

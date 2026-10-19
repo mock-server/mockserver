@@ -107,6 +107,7 @@ function requestToJava(req: Record<string, unknown>): string {
 function responseToJava(resp: Record<string, unknown>): string {
   const lines: string[] = ['response()'];
   if (resp['statusCode'] != null) lines.push(`    .withStatusCode(${resp['statusCode']})`);
+  if (typeof resp['statusCodeRange'] === 'string') lines.push(`    .withStatusCodeRange("${escapeJava(resp['statusCodeRange'])}")`);
   const headers = resp['headers'] as Record<string, string[]> | undefined;
   if (headers) {
     for (const [k, vs] of Object.entries(headers)) {
@@ -487,7 +488,48 @@ function responseToGo(resp: Record<string, unknown>): string {
   return s;
 }
 
+/**
+ * The Go client's ResponseBuilder cannot set `statusCodeRange`, so a verification with a status
+ * range is sent with net/http instead of being emitted as a looser client call.
+ */
+function verifyToGoHttp(input: VerificationCodegenInput): string {
+  const endpoint = input.mode === 'sequence' ? '/mockserver/verifySequence' : '/mockserver/verify';
+  const json = JSON.stringify(JSON.parse(verifyToJson(input)));
+  return [
+    'package main',
+    '',
+    'import (',
+    '\t"fmt"',
+    '\t"io"',
+    '\t"net/http"',
+    '\t"strings"',
+    ')',
+    '',
+    'func main() {',
+    '\t// The Go client cannot express a status range, so this sends the verification directly.',
+    `\tbody := ${JSON.stringify(json)}`,
+    `\treq, err := http.NewRequest(http.MethodPut, ${JSON.stringify(`${input.baseUrl}${endpoint}`)}, strings.NewReader(body))`,
+    '\tif err != nil {',
+    '\t\tpanic(err)',
+    '\t}',
+    '\treq.Header.Set("Content-Type", "application/json")',
+    '\tresp, err := http.DefaultClient.Do(req)',
+    '\tif err != nil {',
+    '\t\tpanic(err)',
+    '\t}',
+    '\tdefer resp.Body.Close()',
+    '\tif resp.StatusCode != http.StatusAccepted {',
+    '\t\tmessage, _ := io.ReadAll(resp.Body)',
+    '\t\tpanic(fmt.Sprintf("verification failed (%d): %s", resp.StatusCode, message))',
+    '\t}',
+    '}',
+  ].join('\n');
+}
+
 export function verifyToGo(input: VerificationCodegenInput): string {
+  const ranged = (input.mode === 'sequence' ? input.httpResponses : [input.httpResponse])
+    .some((r) => r && typeof r['statusCodeRange'] === 'string');
+  if (ranged) return verifyToGoHttp(input);
   const { host, port } = clientHostPort(input.baseUrl);
   const hasReq = hasKeys(input.httpRequest);
   const hasResp = hasKeys(input.httpResponse);

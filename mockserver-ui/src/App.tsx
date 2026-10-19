@@ -32,6 +32,8 @@ import { getConfiguration } from './lib/configuration';
 import { initAnalytics, trackView } from './lib/analytics';
 import { CLEAR_LOGS_CONFIRM_MESSAGE, CLEAR_LOGS_CONFIRM_TITLE } from './lib/clearServerText';
 import { requestLogSearchFocus } from './lib/logSearchFocus';
+import { connectionKey, effectiveConnection, urlConnectionParams } from './lib/connectionTarget';
+import { releaseBreakpointCallbackClientsExcept } from './lib/breakpointCallbackClient';
 import type { RequestFilter } from './types';
 
 // Lazy-loaded so the @mui/x-charts bundle only loads when the Metrics tab is
@@ -123,7 +125,10 @@ export default function App() {
   const setNotification = useDashboardStore((s) => s.setNotification);
 
   const params = useConnectionParams();
-  const { connect, sendFilter, clearServer } = useWebSocket(params);
+  const { start, sendFilter, clearServer } = useWebSocket(params);
+  // The app bar and everything below the workspace bar remount when the target changes, so no
+  // component keeps local state (a list, an open dialog, a held row) from the server being left.
+  const targetKey = connectionKey(params);
   const { debugMismatch } = useDebugMismatch(params);
   const { generateStub } = useGenerateStub(params);
   // "Set breakpoint" from a log row: seed the matcher form + switch to the
@@ -138,8 +143,31 @@ export default function App() {
   // socket — a guard would skip the remount's reconnect and leave the connection
   // dead (status stuck until a later action lazily reconnects).
   useEffect(() => {
-    connect({});
-  }, [connect]);
+    start();
+  }, [start]);
+
+  // Another browser tab changed the workspaces: adopt its edits for every workspace but ours.
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'mockserver-workspaces') {
+        useDashboardStore.getState().adoptWorkspacesFromOtherTab(event.newValue);
+      }
+    };
+    globalThis.addEventListener?.('storage', onStorage);
+    return () => globalThis.removeEventListener?.('storage', onStorage);
+  }, []);
+
+  // A breakpoint session (and the matchers the server holds for it) lives while a workspace
+  // targets its server; closing or retargeting the last such workspace releases it.
+  const workspaces = useDashboardStore((s) => s.workspaces);
+  const liveConnection = useDashboardStore((s) => s.connection);
+  const activeWorkspaceId = useDashboardStore((s) => s.activeWorkspaceId);
+  useEffect(() => {
+    const base = urlConnectionParams();
+    const keys = new Set(workspaces.map((w) =>
+      connectionKey(effectiveConnection(w.id === activeWorkspaceId ? liveConnection : w.connection, base))));
+    releaseBreakpointCallbackClientsExcept(keys);
+  }, [workspaces, liveConnection, activeWorkspaceId]);
 
   // Keep the active view in sync with the URL hash so browser back/forward and
   // manually-edited deep links (e.g. `#/contract`) navigate the dashboard. The
@@ -174,10 +202,13 @@ export default function App() {
       .then((config) => {
         if (!controller.signal.aborted) {
           useDashboardStore.getState().setServerConfiguration(config);
-          initAnalytics(config, {
-            validViews: ALL_VIEWS,
-            initialView: useDashboardStore.getState().view,
-          });
+          // Only the dashboard URL's server decides analytics, never a workspace's other target.
+          if (connectionKey(params) === connectionKey(urlConnectionParams())) {
+            initAnalytics(config, {
+              validViews: ALL_VIEWS,
+              initialView: useDashboardStore.getState().view,
+            });
+          }
         }
       })
       .catch(() => {
@@ -256,6 +287,7 @@ export default function App() {
       <SetBreakpointContext.Provider value={setBreakpointPrefill}>
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
           <AppBar
+            key={`appbar-${targetKey}`}
             onClearServer={handleClearServer}
             onClearLogs={handleClearLogs}
             onClearExpectations={handleClearExpectations}
@@ -304,7 +336,7 @@ export default function App() {
               eviction would make incomplete, so the banner is scoped to them —
               which also avoids polling metrics from unrelated tabs. */}
           {(view === 'dashboard' || view === 'traffic') && (
-            <LogPressureBanner connectionParams={params} />
+            <LogPressureBanner key={`pressure-${targetKey}`} connectionParams={params} />
           )}
           {(view === 'dashboard' || view === 'traffic') && <FrameLimitBanner view={view} />}
           <AnalyticsBanner />
@@ -328,7 +360,7 @@ export default function App() {
             entire app, and clears automatically when the user switches tabs. The
             AppBar above stays OUTSIDE the boundary so navigation always works.
           */}
-          <ErrorBoundary label="this view" resetKeys={[view]}>
+          <ErrorBoundary key={`view-${targetKey}`} label="this view" resetKeys={[view]}>
             {view === 'get-started' && (
               <Suspense fallback={<Box sx={{ p: 2 }}>Loading…</Box>}>
                 <OnboardingPanel connectionParams={params} />
@@ -452,8 +484,9 @@ export default function App() {
             </Alert>
           ) : undefined}
         </Snackbar>
-        <DebugMismatchDialog connectionParams={params} />
+        <DebugMismatchDialog key={`debug-${targetKey}`} connectionParams={params} />
         <GenerateStubDialog
+          key={`stub-${targetKey}`}
           open={generateStubOpen}
           onClose={closeGenerateStub}
           suggestions={generateStubSuggestions}

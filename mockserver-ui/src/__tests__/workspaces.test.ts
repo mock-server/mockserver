@@ -22,6 +22,7 @@ function workspace(id: string, name: string, overrides: Partial<Workspace> = {})
     receivedSearch: '',
     proxiedSearch: '',
     trafficSearch: '',
+    connection: null,
     ...overrides,
   };
 }

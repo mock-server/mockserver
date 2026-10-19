@@ -468,6 +468,56 @@ test.describe('title bar', () => {
     await bar.getByRole('button', { name: `Close workspace ${secondName}` }).click();
     await expect(bar).toHaveCount(0);
   });
+
+  test('a workspace can target another MockServer: it shows that server’s data, and its deletes go there only', async ({ page, request }) => {
+    const secondary = METRICS_ORIGIN;
+    const secondaryPort = new URL(secondary).port;
+    const suffix = Date.now();
+    const mainPath = `/shell/ws-main-${suffix}`;
+    const secondaryPath = `/shell/ws-secondary-${suffix}`;
+    await upsert(request, mainPath);
+    await upsert(request, secondaryPath, 200, secondary);
+    const onSecondary = async () => {
+      const res = await request.put(`${secondary}/mockserver/retrieve?type=active_expectations`, { data: { path: secondaryPath } });
+      return ((await res.json()) as unknown[]).length;
+    };
+    try {
+      await openDashboard(page);
+      await page.locator('header').getByRole('button', { name: 'New workspace' }).click();
+      const bar = page.getByRole('group', { name: 'Workspaces' });
+      const tabs = bar.getByRole('button', { name: /^Workspace / });
+      const secondName = ((await tabs.nth(1).getAttribute('aria-label')) ?? '').replace(/^Workspace /, '');
+
+      await bar.getByRole('button', { name: `Set MockServer for workspace ${secondName}` }).click();
+      const dialog = page.getByRole('dialog', { name: `MockServer for ${secondName}` });
+      await dialog.getByLabel('Host').fill(new URL(secondary).hostname);
+      await dialog.getByLabel('Port').fill(secondaryPort);
+      await dialog.getByRole('button', { name: 'Save' }).click();
+      await expect(dialog).toHaveCount(0);
+
+      await expect(bar.getByText(`:${secondaryPort}`)).toBeVisible();
+      await expect(connectionChip(page, 'connected')).toBeVisible();
+      await expect(page.getByText(secondaryPath).first()).toBeVisible();
+      await expect(page.getByText(mainPath)).toHaveCount(0);
+
+      await tabs.first().click();
+      await expect(page.getByText(mainPath).first()).toBeVisible();
+      await expect(page.getByText(secondaryPath)).toHaveCount(0);
+
+      // A destructive action in the retargeted workspace reaches only its own server.
+      await tabs.nth(1).click();
+      await expect(page.getByText(secondaryPath).first()).toBeVisible();
+      await page.locator('#active-expectations-search').fill(secondaryPath);
+      const rows = page.getByRole('button', { name: 'Delete expectation' }).filter({ visible: true });
+      await expect(rows).toHaveCount(1);
+      await rows.click();
+      await page.getByRole('dialog', { name: 'Delete this expectation?' }).getByRole('button', { name: 'Delete', exact: true }).click();
+      await expect.poll(onSecondary).toBe(0);
+      expect(await activeExpectationCount(request)).toBe(1);
+    } finally {
+      await request.put(`${secondary}/mockserver/clear?type=expectations`, { data: { path: secondaryPath } });
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------

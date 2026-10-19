@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   BreakpointCallbackClient,
   _resetBreakpointCallbackClient,
+  getBreakpointCallbackClient,
+  releaseBreakpointCallbackClientsExcept,
   type PausedItem,
   type CallbackClientState,
   type WsEnvelope,
@@ -755,5 +757,62 @@ describe('BreakpointCallbackClient release notices', () => {
 
     expect(notices).toHaveLength(0);
     client.disconnect();
+  });
+});
+
+describe('one callback client per MockServer target', () => {
+  const other = { host: 'other-host', port: '1081', secure: false, basePath: '' };
+  const clientIdMessage = (id: string) => ({
+    type: 'org.mockserver.serialization.model.WebSocketClientIdDTO',
+    value: JSON.stringify({ clientId: id }),
+  });
+
+  it('gives each target its own client and socket, so switching keeps the other server’s session', () => {
+    const a = getBreakpointCallbackClient(params);
+    const b = getBreakpointCallbackClient(other);
+    expect(a).not.toBe(b);
+    expect(getBreakpointCallbackClient({ ...params })).toBe(a);
+
+    a.connect(params);
+    b.connect(other);
+    expect(MockWebSocket.instances.map((ws) => ws.url)).toEqual([
+      'ws://127.0.0.1:1080/_mockserver_callback_websocket?capabilities=breakpointReleased',
+      'ws://other-host:1081/_mockserver_callback_websocket?capabilities=breakpointReleased',
+    ]);
+    MockWebSocket.instances[0]!.simulateOpen();
+    MockWebSocket.instances[0]!.simulateMessage(clientIdMessage('client-on-a'));
+    MockWebSocket.instances[1]!.simulateOpen();
+    MockWebSocket.instances[1]!.simulateMessage(clientIdMessage('client-on-b'));
+    expect(a.clientId).toBe('client-on-a');
+    expect(b.clientId).toBe('client-on-b');
+  });
+
+  it('releasing a target no workspace uses closes only that session', () => {
+    const a = getBreakpointCallbackClient(params);
+    const b = getBreakpointCallbackClient(other);
+    a.connect(params);
+    b.connect(other);
+    MockWebSocket.instances.forEach((ws) => ws.simulateOpen());
+
+    releaseBreakpointCallbackClientsExcept(new Set(['http://127.0.0.1:1080']));
+
+    expect(MockWebSocket.instances[0]!.readyState).toBe(1);
+    expect(MockWebSocket.instances[1]!.readyState).toBe(3);
+    expect(b.state).toBe('disconnected');
+    expect(getBreakpointCallbackClient(other)).not.toBe(b);
+    expect(getBreakpointCallbackClient(params)).toBe(a);
+  });
+
+  it('keeps the session when the same target is given with another host spelling', () => {
+    const client = getBreakpointCallbackClient(other);
+    client.connect(other);
+    MockWebSocket.instances[0]!.simulateOpen();
+    MockWebSocket.instances[0]!.simulateMessage(clientIdMessage('kept'));
+
+    client.connect({ ...other, host: 'OTHER-HOST' });
+
+    expect(MockWebSocket.instances).toHaveLength(1);
+    expect(client.clientId).toBe('kept');
+    expect(getBreakpointCallbackClient({ ...other, host: 'Other-Host' })).toBe(client);
   });
 });

@@ -25,7 +25,7 @@
  * serialized back over the WS.
  */
 
-import type { ConnectionParams } from '../hooks/useConnectionParams';
+import { connectionKey, type ConnectionParams } from './connectionTarget';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -266,8 +266,8 @@ export class BreakpointCallbackClient {
   // Module-level (client-owned) store of paused items. Accumulates regardless of
   // whether the UI panel is mounted, so items pushed while the panel is unmounted
   // (e.g. the user navigated to another tab) are retained and resolvable when the
-  // panel remounts and re-subscribes — the callback WS is an app-lifetime
-  // singleton but the panel's React state is not.
+  // panel remounts and re-subscribes — the callback WS outlives the
+  // panel, and the panel's React state does not.
   private pausedItems: StoredPausedItem[] = [];
   private pausedItemsListeners = new Set<PausedItemsListener>();
   private nextItemKey = 0;
@@ -344,7 +344,7 @@ export class BreakpointCallbackClient {
     // Breakpoints tab).
     const sameServer =
       this.connectionParams !== null &&
-      JSON.stringify(this.connectionParams) === JSON.stringify(params);
+      connectionKey(this.connectionParams) === connectionKey(params);
     if (sameServer && (this._state === 'connected' || this._state === 'connecting')) {
       return;
     }
@@ -594,7 +594,7 @@ export class BreakpointCallbackClient {
 
   private scheduleReconnect(): void {
     // Retry indefinitely with a capped backoff rather than permanently giving up
-    // after a fixed number of attempts. The callback WS is app-lifetime, so a
+    // after a fixed number of attempts. The callback WS outlives the panel, so a
     // server outage longer than a few attempts (a deploy/restart) must still
     // reconnect automatically once it returns — otherwise breakpoints stay dead
     // until the user re-enters the Breakpoints view. onopen resets the counter.
@@ -621,22 +621,39 @@ export class BreakpointCallbackClient {
 }
 
 // ---------------------------------------------------------------------------
-// Singleton for the dashboard (one WS connection shared across the panel)
+// One client per MockServer target
 // ---------------------------------------------------------------------------
 
-let _instance: BreakpointCallbackClient | null = null;
+// Matchers are owned on the server by the clientId of the socket that registered them, and
+// the server removes them (continuing anything they paused) when that socket closes. So each
+// target keeps its own client: switching workspace leaves another server's breakpoints armed,
+// and only releasing the last workspace on a target closes its session.
+const _instances = new Map<string, BreakpointCallbackClient>();
+const DEFAULT_KEY = '';
 
-export function getBreakpointCallbackClient(): BreakpointCallbackClient {
-  if (!_instance) {
-    _instance = new BreakpointCallbackClient();
+/** The callback client for `params`' server, created on first use. */
+export function getBreakpointCallbackClient(params?: ConnectionParams): BreakpointCallbackClient {
+  const key = params ? connectionKey(params) : DEFAULT_KEY;
+  let client = _instances.get(key);
+  if (!client) {
+    client = new BreakpointCallbackClient();
+    _instances.set(key, client);
   }
-  return _instance;
+  return client;
 }
 
-/** Reset the singleton (for tests). */
-export function _resetBreakpointCallbackClient(): void {
-  if (_instance) {
-    _instance.disconnect();
-    _instance = null;
+/** Disconnect and forget every client whose target is not in `keys`. */
+export function releaseBreakpointCallbackClientsExcept(keys: ReadonlySet<string>): void {
+  for (const [key, client] of _instances) {
+    if (key !== DEFAULT_KEY && !keys.has(key)) {
+      client.disconnect();
+      _instances.delete(key);
+    }
   }
+}
+
+/** Reset every client (for tests). */
+export function _resetBreakpointCallbackClient(): void {
+  for (const client of _instances.values()) client.disconnect();
+  _instances.clear();
 }

@@ -18,7 +18,11 @@ export function useWithWholeExpectation(): (item: JsonListItem, act: (whole: Jso
         act(item);
         return;
       }
-      loadWholeExpectation(params, item).then(act, notifyWholeExpectationLoadFailed);
+      const epoch = useDashboardStore.getState().connectionEpoch;
+      loadWholeExpectation(params, item).then((whole) => {
+        // Never hand an expectation loaded from one MockServer to an action on another.
+        if (useDashboardStore.getState().connectionEpoch === epoch) act(whole);
+      }, notifyWholeExpectationLoadFailed);
     },
     [params],
   );

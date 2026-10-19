@@ -11,6 +11,13 @@ import type {
 import { ACTION_TYPES, LLM_PROVIDERS } from '../lib/clientFilters';
 import { withFullMessages, type FullMessages } from '../lib/fullBody';
 import { isShortenedExpectation, rememberShortenedExpectations } from '../lib/fullExpectation';
+import {
+  coerceConnection,
+  connectionKey,
+  effectiveConnection,
+  urlConnectionParams,
+  type WorkspaceConnection,
+} from '../lib/connectionTarget';
 
 export type ViewMode = 'dashboard' | 'traffic' | 'sessions' | 'composer' | 'library' | 'chaos' | 'performance' | 'metrics' | 'drift' | 'verification' | 'slo' | 'async' | 'grpc' | 'breakpoints' | 'contract' | 'cluster' | 'optimise' | 'mcp-health' | 'scenarios' | 'audit' | 'get-started';
 
@@ -147,16 +154,13 @@ function persistSearch(search: PersistedSearch): void {
  * user upgrading (who has no `mockserver-workspaces` entry at all) lands in a
  * single workspace carrying exactly their previously-persisted view and searches.
  *
- * That last rule assumes a SINGLE WRITER per origin. Two dashboard browser tabs
- * share one `localStorage`, so if tab B switches to workspace 2 and tab A (still
- * on workspace 1) then edits a search, the legacy keys hold workspace 1's terms
- * while the blob says workspace 2 is active, and on reload workspace 2's
- * snapshot is overwritten with workspace 1's state. Multi-tab was already
- * last-writer-wins for view and search before workspaces existed; what is new is
- * that the loss now lands on a named workspace, so it reads as data loss rather
- * than as a shared setting. The payload is a view name and five search strings,
- * which is not worth a cross-tab coordination mechanism — but anything that
- * makes a workspace hold more state should revisit this.
+ * TWO BROWSER TABS share one `localStorage`. Once the workspaces key is in use,
+ * every live change is written through to it together with the legacy keys and
+ * the writer's active id, so the legacy keys always describe the workspace the
+ * blob names as active. Each tab also adopts the other tabs' writes
+ * ({@link DashboardState.adoptWorkspacesFromOtherTab}) for every workspace except
+ * its own active one, so a tab never writes back a stale copy of a workspace it
+ * is not using. A workspace live in two tabs at once is last-writer-wins.
  * ------------------------------------------------------------------------- */
 
 /** The slice of store state that belongs to one workspace rather than the app. */
@@ -167,6 +171,8 @@ export interface WorkspaceState {
   receivedSearch: string;
   proxiedSearch: string;
   trafficSearch: string;
+  /** The MockServer this workspace targets; null follows the dashboard URL. */
+  connection: WorkspaceConnection | null;
 }
 
 /** A named workspace: an id, a user-editable label, and its own state. */
@@ -195,6 +201,7 @@ function workspaceStateOf(state: WorkspaceState): WorkspaceState {
     receivedSearch: state.receivedSearch,
     proxiedSearch: state.proxiedSearch,
     trafficSearch: state.trafficSearch,
+    connection: state.connection,
   };
 }
 
@@ -225,7 +232,8 @@ function nextWorkspaceId(existing: readonly Workspace[]): string {
   let id: string;
   do {
     workspaceIdCounter += 1;
-    id = `workspace-${workspaceIdCounter}`;
+    // The random part keeps two browser tabs creating a workspace at once from picking the same id.
+    id = `workspace-${workspaceIdCounter}-${Math.random().toString(36).slice(2, 8)}`;
   } while (existing.some((w) => w.id === id));
   return id;
 }
@@ -255,22 +263,18 @@ interface PersistedWorkspaces {
  * legacy keys — not the workspaces blob — are authoritative for whichever
  * workspace was active when the page was last open.
  */
-function getInitialWorkspaces(live: WorkspaceState): PersistedWorkspaces {
-  const fallback = (): PersistedWorkspaces => {
-    const only: Workspace = { id: 'workspace-1', name: 'Workspace 1', ...live };
-    return { activeWorkspaceId: only.id, workspaces: [only] };
-  };
+/** Parse a stored workspaces blob, field by field; null when it holds no usable workspace. */
+function parseWorkspaces(raw: string | null | undefined): PersistedWorkspaces | null {
+  if (!raw) return null;
   let parsed: unknown;
   try {
-    const raw = globalThis.localStorage?.getItem(WORKSPACES_STORAGE_KEY);
-    if (!raw) return fallback();
     parsed = JSON.parse(raw);
   } catch {
-    return fallback();
+    return null;
   }
-  if (typeof parsed !== 'object' || parsed === null) return fallback();
+  if (typeof parsed !== 'object' || parsed === null) return null;
   const candidate = parsed as Partial<PersistedWorkspaces>;
-  if (!Array.isArray(candidate.workspaces)) return fallback();
+  if (!Array.isArray(candidate.workspaces)) return null;
 
   const seen = new Set<string>();
   const workspaces: Workspace[] = [];
@@ -290,24 +294,46 @@ function getInitialWorkspaces(live: WorkspaceState): PersistedWorkspaces {
       receivedSearch: asString(e.receivedSearch),
       proxiedSearch: asString(e.proxiedSearch),
       trafficSearch: asString(e.trafficSearch),
+      // An invalid stored target is dropped (the workspace follows the URL) rather than kept half-valid.
+      connection: coerceConnection(e.connection),
     });
   }
-  if (workspaces.length === 0) return fallback();
+  if (workspaces.length === 0) return null;
 
   const activeWorkspaceId = typeof candidate.activeWorkspaceId === 'string'
     && workspaces.some((w) => w.id === candidate.activeWorkspaceId)
     ? candidate.activeWorkspaceId
     : workspaces[0]!.id;
+  return { activeWorkspaceId, workspaces };
+}
 
+/** Whether the workspaces key is in use, so live changes must be written through to it. */
+let workspacesPersisted = false;
+
+function getInitialWorkspaces(live: Omit<WorkspaceState, 'connection'>): PersistedWorkspaces {
+  let raw: string | null | undefined;
+  try {
+    raw = globalThis.localStorage?.getItem(WORKSPACES_STORAGE_KEY);
+  } catch {
+    raw = null;
+  }
+  const stored = parseWorkspaces(raw);
+  if (!stored) {
+    const only: Workspace = { id: 'workspace-1', name: 'Workspace 1', ...live, connection: null };
+    return { activeWorkspaceId: only.id, workspaces: [only] };
+  }
+  workspacesPersisted = true;
   return {
-    activeWorkspaceId,
-    // The legacy keys win for the active workspace — see the doc comment above.
-    workspaces: workspaces.map((w) => (w.id === activeWorkspaceId ? { ...w, ...live } : w)),
+    activeWorkspaceId: stored.activeWorkspaceId,
+    // The legacy keys win for the active workspace's view and searches — see the doc comment above.
+    // They carry no target, so the stored one is kept.
+    workspaces: stored.workspaces.map((w) => (w.id === stored.activeWorkspaceId ? { ...w, ...live } : w)),
   };
 }
 
 /** Persist the workspace list. Never called during store init (read-only there). */
 function persistWorkspaces(workspaces: Workspace[], activeWorkspaceId: string): void {
+  workspacesPersisted = true;
   try {
     globalThis.localStorage?.setItem(
       WORKSPACES_STORAGE_KEY,
@@ -325,6 +351,13 @@ function activateWorkspace(next: Workspace): WorkspaceState {
   persistView(next.view);
   persistSearch(searchOf(next));
   return workspaceStateOf(next);
+}
+
+/** Whether moving from one workspace target to another reaches a different server. */
+function targetChanges(from: WorkspaceConnection | null, to: WorkspaceConnection | null): boolean {
+  if (from === to) return false;
+  const base = urlConnectionParams();
+  return connectionKey(effectiveConnection(from, base)) !== connectionKey(effectiveConnection(to, base));
 }
 
 /**
@@ -527,6 +560,18 @@ interface DashboardState {
   workspaces: Workspace[];
   activeWorkspaceId: string;
 
+  /**
+   * The active workspace's own MockServer target, or null to follow the dashboard URL.
+   * Read it through `useConnectionParams`, which merges it over the URL-derived target.
+   */
+  connection: WorkspaceConnection | null;
+  /**
+   * Incremented whenever the active target changes. An async flow captures it before it
+   * starts and drops its result if it has moved on, so nothing loaded from one MockServer
+   * lands in the store after the dashboard has switched to another.
+   */
+  connectionEpoch: number;
+
   connectionStatus: ConnectionStatus;
   themeMode: ThemeMode;
   autoScroll: boolean;
@@ -641,6 +686,16 @@ interface DashboardState {
   closeWorkspace: (id: string) => void;
   /** Rename `id`. Blank names are rejected; long names are truncated. */
   renameWorkspace: (id: string, name: string) => void;
+  /**
+   * Point workspace `id` at another MockServer, or back at the dashboard URL's with null.
+   * When that changes the live target, everything held from the previous server is dropped.
+   */
+  setWorkspaceConnection: (id: string, connection: WorkspaceConnection | null) => void;
+  /**
+   * Take in a workspaces list another browser tab wrote. This tab's active workspace keeps
+   * its own live state (including its target), so nothing changes under the user's feet.
+   */
+  adoptWorkspacesFromOtherTab: (raw: string | null) => void;
 
   applyMessage: (message: WebSocketMessage) => void;
   /** Keep the whole request/response loaded for the row `key` and show it in place of the shortened one. */
@@ -694,6 +749,57 @@ const initialSearch = getInitialSearch();
 // initializer below so the seed workspace carries exactly the same values.
 const initialView = getInitialView();
 const initialWorkspaces = getInitialWorkspaces({ view: initialView, ...initialSearch });
+const initialConnection =
+  initialWorkspaces.workspaces.find((w) => w.id === initialWorkspaces.activeWorkspaceId)?.connection ?? null;
+
+/**
+ * Everything the store holds that came from the server being left: the four data arrays and
+ * their caches, loaded bodies, flags, the configuration, hand-offs and the dialogs fed by them.
+ */
+function droppedForTargetChange(s: { connectionEpoch: number }): Partial<DashboardState> {
+  logMessagesCache.clear();
+  activeExpectationsCache.clear();
+  recordedRequestsCache.clear();
+  proxiedRequestsCache.clear();
+  return {
+    logMessages: [],
+    activeExpectations: [],
+    activeExpectationsTotal: 0,
+    activeExpectationsIncludeLlm: undefined,
+    recordedRequests: [],
+    proxiedRequests: [],
+    frameLimitReached: false,
+    logMessagesLimitReached: false,
+    fullMessages: {},
+    serverConfiguration: null,
+    serverConfigurationUnavailable: false,
+    selectedTrafficKey: null,
+    pendingEditExpectation: null,
+    pendingBreakpointPrefill: null,
+    pendingVerificationDraft: null,
+    pendingChaosDraft: null,
+    error: null,
+    errorSource: null,
+    debugMismatchOpen: false,
+    debugMismatchLoading: false,
+    debugMismatchResult: null,
+    debugMismatchError: null,
+    generateStubOpen: false,
+    generateStubLoading: false,
+    generateStubSuggestions: [],
+    generateStubConfidence: 0,
+    generateStubError: null,
+    connectionEpoch: s.connectionEpoch + 1,
+  };
+}
+
+/** The state that makes `next` live, dropping the previous server's data when the target changes. */
+function liveStateFor(s: DashboardState, next: Workspace): Partial<DashboardState> {
+  const live = activateWorkspace(next);
+  return targetChanges(s.connection, next.connection)
+    ? { ...droppedForTargetChange(s), ...live }
+    : live;
+}
 
 export const useDashboardStore = create<DashboardState>()((set) => ({
   logMessages: [],
@@ -715,6 +821,8 @@ export const useDashboardStore = create<DashboardState>()((set) => ({
 
   workspaces: initialWorkspaces.workspaces,
   activeWorkspaceId: initialWorkspaces.activeWorkspaceId,
+  connection: initialConnection,
+  connectionEpoch: 0,
 
   connectionStatus: 'disconnected',
   themeMode: getInitialTheme(),
@@ -773,6 +881,7 @@ export const useDashboardStore = create<DashboardState>()((set) => ({
     const created: Workspace = {
       id: nextWorkspaceId(snapshotted),
       name: nextWorkspaceName(snapshotted),
+      connection: null,
       view: NEW_WORKSPACE_VIEW,
       ...EMPTY_SEARCH,
     };
@@ -781,7 +890,7 @@ export const useDashboardStore = create<DashboardState>()((set) => ({
     return {
       workspaces,
       activeWorkspaceId: created.id,
-      ...activateWorkspace(created),
+      ...liveStateFor(s, created),
       selectedTrafficKey: null,
     };
   }),
@@ -796,7 +905,7 @@ export const useDashboardStore = create<DashboardState>()((set) => ({
     return {
       workspaces,
       activeWorkspaceId: target.id,
-      ...activateWorkspace(target),
+      ...liveStateFor(s, target),
       selectedTrafficKey: null,
     };
   }),
@@ -824,7 +933,7 @@ export const useDashboardStore = create<DashboardState>()((set) => ({
     return {
       workspaces,
       activeWorkspaceId: next.id,
-      ...activateWorkspace(next),
+      ...liveStateFor(s, next),
       selectedTrafficKey: null,
     };
   }),
@@ -834,6 +943,45 @@ export const useDashboardStore = create<DashboardState>()((set) => ({
     if (trimmed === '' || !s.workspaces.some((w) => w.id === id)) return {};
     const workspaces = s.workspaces.map((w) => (w.id === id ? { ...w, name: trimmed } : w));
     persistWorkspaces(workspaces, s.activeWorkspaceId);
+    return { workspaces };
+  }),
+
+  setWorkspaceConnection: (id, connection) => set((s) => {
+    const existing = s.workspaces.find((w) => w.id === id);
+    if (!existing) return {};
+    if (id !== s.activeWorkspaceId) {
+      const workspaces = s.workspaces.map((w) => {
+        if (w.id === id) return { ...w, connection };
+        return w.id === s.activeWorkspaceId ? { ...w, ...workspaceStateOf(s) } : w;
+      });
+      persistWorkspaces(workspaces, s.activeWorkspaceId);
+      return { workspaces };
+    }
+    const live = { ...workspaceStateOf(s), connection };
+    const workspaces = s.workspaces.map((w) => (w.id === id ? { ...w, ...live } : w));
+    persistWorkspaces(workspaces, id);
+    return targetChanges(s.connection, connection)
+      ? { workspaces, ...droppedForTargetChange(s), connection }
+      : { workspaces, connection };
+  }),
+
+  adoptWorkspacesFromOtherTab: (raw) => set((s) => {
+    const incoming = parseWorkspaces(raw);
+    if (!incoming) return {};
+    workspacesPersisted = true;
+    const ownIndex = s.workspaces.findIndex((w) => w.id === s.activeWorkspaceId);
+    const own: Workspace = {
+      ...(s.workspaces[ownIndex] ?? { id: s.activeWorkspaceId, name: 'Workspace' }),
+      ...workspaceStateOf(s),
+    };
+    const theirs = incoming.workspaces.find((w) => w.id === own.id);
+    const workspaces = theirs
+      ? incoming.workspaces.map((w) => (w.id === own.id ? { ...own, name: w.name } : w))
+      : [
+          ...incoming.workspaces.slice(0, Math.max(0, ownIndex)),
+          own,
+          ...incoming.workspaces.slice(Math.max(0, ownIndex)),
+        ];
     return { workspaces };
   }),
 
@@ -1050,3 +1198,25 @@ export const useDashboardStore = create<DashboardState>()((set) => ({
   setGenerateStubError: (error) =>
     set({ generateStubError: error, generateStubLoading: false }),
 }));
+
+/*
+ * Write each live change of view, searches or target through to the workspaces key once it is
+ * in use, under this tab's active id, so the legacy keys and the blob always describe the same
+ * workspace even when another browser tab wrote last.
+ */
+useDashboardStore.subscribe((state, prev) => {
+  if (!workspacesPersisted || state.activeWorkspaceId !== prev.activeWorkspaceId) return;
+  if (
+    state.view === prev.view
+    && state.logSearch === prev.logSearch
+    && state.expectationSearch === prev.expectationSearch
+    && state.receivedSearch === prev.receivedSearch
+    && state.proxiedSearch === prev.proxiedSearch
+    && state.trafficSearch === prev.trafficSearch
+    && state.connection === prev.connection
+  ) return;
+  persistWorkspaces(
+    state.workspaces.map((w) => (w.id === state.activeWorkspaceId ? { ...w, ...workspaceStateOf(state) } : w)),
+    state.activeWorkspaceId,
+  );
+});
