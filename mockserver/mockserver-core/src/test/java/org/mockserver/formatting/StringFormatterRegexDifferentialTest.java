@@ -27,7 +27,7 @@ public class StringFormatterRegexDifferentialTest {
         "", "a", "\n", "\r\n", "\r", "\u0085", "\u2028", "\u2029", "\n\n", "\r\r\n",
         "line1\nline2", "line1\r\nline2", "line1\rline2", "a\u0085b\u2028c\u2029d",
         "trailing\n", "trailing\r\n", "\nleading", "{\n  \"json\" : true\n}", "x\n\n\ny", "$1 \\ back",
-        "ünïcödé\nİ\r\nſ"
+        "ünïcödé\nİ\r\nſ", "\n\r", "\r\r", "\u2028\n", "a\r", "\ud83d\ude00\n\ud83d\ude00", "\u000b\f\u0084\u0086\u2027\u202a"
     };
 
     private static final String[] MESSAGES = {
@@ -59,7 +59,7 @@ public class StringFormatterRegexDifferentialTest {
 
     @Test
     public void indentAndToStringMatchesThePerCallRegexImplementation() {
-        for (int indent = 0; indent <= 3; indent++) {
+        for (int indent = 0; indent <= 4; indent++) {
             for (String value : VALUES) {
                 StringBuilder[] actual = StringFormatter.indentAndToString(indent, new Object[]{value, null, 42});
                 StringBuilder[] expected = referenceIndentAndToString(indent, new Object[]{value, null, 42});
@@ -67,6 +67,24 @@ public class StringFormatterRegexDifferentialTest {
                     assertThat("indent=" + indent + " value=" + escape(value), actual[i].toString(), is(expected[i].toString()));
                 }
             }
+        }
+    }
+
+    @Test
+    public void indentAndToStringMatchesTheRegexOnRandomText() {
+        // every terminator, the characters either side of the scan's range checks, a surrogate pair, and replacement-syntax characters
+        char[] alphabet = {'a', ' ', '\t', '\n', '\u000b', '\f', '\r', '\u000e', '\u0084', '\u0085', '\u0086', '\u2027', '\u2028', '\u2029', '\u202a', 'ü', '\ud83d', '\ude00', '$', '\\'};
+        java.util.Random random = new java.util.Random(126);
+        for (int iteration = 0; iteration < 50_000; iteration++) {
+            char[] text = new char[random.nextInt(24)];
+            for (int i = 0; i < text.length; i++) {
+                text[i] = alphabet[random.nextInt(alphabet.length)];
+            }
+            String value = new String(text);
+            int indent = random.nextInt(INDENTS.length);
+            assertThat("indent=" + indent + " value=" + escape(value),
+                StringFormatter.indentAndToString(indent, new Object[]{value})[0].toString(),
+                is(referenceIndentAndToString(indent, new Object[]{value})[0].toString()));
         }
     }
 

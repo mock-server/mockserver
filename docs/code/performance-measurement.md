@@ -1815,6 +1815,22 @@ redaction on, before the cache covered it, 10 MiB JSON cost 487 ms and 1.04 GB u
 developer Mac, so directional only. The steady-state figure is what the benchmark reports, since each op after the
 first finds the cut kept; the first update of a body still pays one decode.
 
+### `LogMessageRenderBenchmark` JMH — on demand, not run by CI
+
+`./run.sh -prof gc LogMessageRenderBenchmark` renders one event-log message as the console does
+(`StringFormatter.formatLogMessage`, `messageLoop`) and the same message through a copy of the
+`(?m)^` regex indent that rendering used before row 126a (`messageRegex`), in one JMH run, so both arms
+share a machine (JMH forks each into its own JVM). `indentLoop` and `indentRegex` time the indent alone, of an already-serialised
+request. Shapes: a received request, a did-not-match entry (request, expectation, because text) and
+an expectation response, each quoting the perf sweep's bodiless `GET /simple` (`SIMPLE`) or a POST with
+a 1 KB pretty-printed JSON body (`JSON`). Setup fails if the two arms render different text, or if the mockserver-core on the classpath still has
+the regex (a stale `~/.m2` install would otherwise compare the regex with itself). When the
+loop replaced the regex (one fork, JDK 17, developer Mac, so directional only): the indent alone went
+from 422–498 to 199–207 ns and 2,336 to 304 B per op for `SIMPLE`, and from 2.9 to 1.4 µs and 14.9 to
+1.5 KB for `JSON`; a whole message 25–37% faster and 35–46% less allocated in every shape, for example
+a `SIMPLE` did-not-match entry 3.40 to 2.12 µs and 13.6 to 7.3 KB. The rest is mostly Jackson
+serialising the quoted request, response or expectation, which the change does not touch.
+
 ### The seven promoted dark benchmarks
 
 These classes existed but were run by no CI step before the performance programme:

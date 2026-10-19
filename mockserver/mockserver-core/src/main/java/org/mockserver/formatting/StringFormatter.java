@@ -31,8 +31,7 @@ public class StringFormatter {
     private static final Map<Integer, String> INDENTS = new HashMap<>();
     private static final Splitter fixedLengthSplitter = Splitter.fixedLength(64);
     private static final Joiner newLineJoiner = Joiner.on(NEW_LINE);
-    // compiled once; String.replaceAll / String.split(String) would compile them on every call
-    private static final Pattern START_OF_EACH_LINE = Pattern.compile("(?m)^");
+    // compiled once; String.split(String) would compile it on every call
     private static final Pattern ARGUMENT_PLACEHOLDER = Pattern.compile("\\{}");
     private static final ClassValue<Boolean> TO_STRING_IS_JSON = new ClassValue<>() {
         @Override
@@ -58,15 +57,47 @@ public class StringFormatter {
     }
 
     public static StringBuilder[] indentAndToString(final int indent, final Object... objects) {
+        final String indentation = INDENTS.get(indent);
         final StringBuilder[] indentedObjects = new StringBuilder[objects.length];
         for (int i = 0; i < objects.length; i++) {
-            indentedObjects[i] =
-                new StringBuilder(NEW_LINE)
-                    .append(NEW_LINE)
-                    .append(START_OF_EACH_LINE.matcher(String.valueOf(objects[i])).replaceAll(INDENTS.get(indent)))
-                    .append(NEW_LINE);
+            final String text = String.valueOf(objects[i]);
+            final StringBuilder indented = new StringBuilder(text.length() + (text.length() >> 3) + 16);
+            indented.append(NEW_LINE).append(NEW_LINE);
+            appendIndented(indented, text, indentation);
+            indentedObjects[i] = indented.append(NEW_LINE);
         }
         return indentedObjects;
+    }
+
+    /**
+     * Appends {@code text} with {@code indentation} before each line, as {@code (?m)^} replaced by the indentation
+     * does: before the first character and after each line terminator ({@code \r\n} counting as one), but not
+     * after a terminator that ends the text, so empty text stays empty.
+     */
+    private static void appendIndented(final StringBuilder target, final String text, final String indentation) {
+        final int length = text.length();
+        if (length == 0) {
+            return;
+        }
+        if (indentation.isEmpty()) {
+            target.append(text);
+            return;
+        }
+        target.append(indentation);
+        int lineStart = 0;
+        for (int i = 0; i < length; i++) {
+            final char c = text.charAt(i);
+            if ((c <= '\r' || c >= '\u0085') && (c == '\n' || c == '\r' || c == '\u0085' || c == '\u2028' || c == '\u2029')) {
+                if (c == '\r' && i + 1 < length && text.charAt(i + 1) == '\n') {
+                    i++;
+                }
+                if (i + 1 < length) {
+                    target.append(text, lineStart, i + 1).append(indentation);
+                    lineStart = i + 1;
+                }
+            }
+        }
+        target.append(text, lineStart, length);
     }
 
     public static String formatLogMessage(final String message, final Object... arguments) {
