@@ -510,6 +510,31 @@ bk build create -y -p mockserver-performance-test -b master -c <master commit co
 
 **Cancel and timeout.** The busy loops must not outlive the step, or they load the agent's next job. The container is named after the job and runs under `--init`; Maven runs in the background so the scripts' TERM traps fire at once; on TERM the step script `docker kill`s the container and the in-container script stops the loops; and each loop is bounded by `timeout` (4 h) in case the step is killed without a TERM.
 
+### INFO-Level Investigation
+
+**What it is.** Two on-demand steps in `pipeline-perf-test.yml` run `.buildkite/scripts/steps/perf-test-info-investigation.sh` on the `perf` queue: `PART=jfr` profiles the event-log consumer of an `INFO` SUT under the INFO arm's `sweep.js` ladder, and `PART=heap` measures live heap per counted byte for json10k, proxy10k and json100k fills at `INFO` (with a `WARN` control) under G1 and generational ZGC. They run only in an API-created build with `PERF_INFO_INVESTIGATION` set to `jfr`, `heap` or `both` and no `[perf-run]` or `[perf-soak]` marker, so such a build runs only these steps and lint. Nothing they produce is compared, persisted or published; results are the `perf-info-investigation/<part>/` artifacts. Methods and results: [memory-management.md](../code/memory-management.md#info-re-measured-on-the-perf-rig-2026-10-18).
+
+```bash
+bk build create -y -p mockserver-performance-test -b <branch> -c <full 40-character SHA> \
+  -m "INFO investigation: <why>" -e PERF_INFO_INVESTIGATION=both
+```
+
+| Variable | Meaning | Default |
+|----------|---------|---------|
+| `PERF_INV_JFR_RATES`, `PERF_INV_JFR_STEP` | `sweep.js` rungs and rung length for `jfr` | `2000,…,16000`, `30s` |
+| `PERF_INV_COLLECTORS` | `G1` and/or `ZGC` for `heap` | `G1 ZGC` |
+| `PERF_INV_PROFILES` | `json10k`, `proxy10k`, `json100k` | `json10k proxy10k` |
+| `PERF_INV_LEVELS` | `INFO` and/or `WARN` (only `INFO` gets the overload phase) | `INFO WARN` |
+| `PERF_INV_HEAP_MB` | SUT `-Xmx`/`-Xms` for `heap` | `1024` |
+| `PERF_INV_OVERLOAD_S` | overload window per `INFO` cell; 0 skips it | `60` |
+| `PERF_INV_FILL_TIMEOUT_S` | how long a fill may take to reach 93% of the budget | `240` |
+| `MOCKSERVER_IMAGE` | the SUT and upstream image | `mockserver/mockserver:mockserver-snapshot-graaljs` |
+| `PERF_HISTO_JDK_IMAGE` | the JDK sidecar that runs `jcmd` in the SUT's PID namespace | `eclipse-temurin:21-jdk` |
+
+**Agents and schedules.** Each step holds one `perf` agent, so a `both` build holds two of the three: the `jfr` step for about 5 minutes (40-minute timeout) and the default `heap` step for about 8 minutes (180-minute timeout). Keep such builds clear of the scheduled daily (04:00 UTC), the Saturday `PERF_XL` run and the Sunday soak (08:00 UTC), and confirm each step reaches `running`.
+
+**Failure and cleanup.** The `heap` step fails, with an error annotation naming each cell, when any expected cell is missing or not fully measured: a SUT that did not start, a fill short of 93% of the budget, a drained probe that is not `measured`, a proxy cell whose upstream saw no request, or an `INFO` overload phase that is missing or incomplete. The `jfr` step fails without a `sweep.js` result or a JFR recording. Every container the steps start carries the labels `mockserver-perf-inv=<run>` and `mockserver-perf-inv.agent=<agent name>`. The exception is the live-heap probe's short-lived `jcmd` sidecars, which the run's cleanup removes by name. All of them are removed on exit, cancel or timeout, and a second signal does not cut that cleanup short. A SIGKILLed job's leftovers are reaped when the next investigation step or `perf-test-run.sh` starts on the same agent. Only that agent's labelled containers are removed, so another agent's are never touched. `.buildkite/scripts/test/perf-info-investigation-test.sh`, run by the perf lint step, checks both.
+
 ### CI Build Pipeline
 
 **File:** `.buildkite/pipeline-java.yml`

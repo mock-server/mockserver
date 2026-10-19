@@ -77,6 +77,37 @@ steps:
         - exit_status: 255  # agent forced shutdown
           limit: 2
 
+  # On-demand INFO-level investigation: an API build with PERF_INFO_INVESTIGATION=jfr|heap|both and
+  # no perf marker. Never compared or baselined. See docs/infrastructure/ci-cd.md (INFO-Level Investigation).
+  - label: ":mag: INFO investigation — event-log consumer JFR"
+    command: ".buildkite/scripts/steps/perf-test-info-investigation.sh"
+    if: "build.source == 'api' && build.env('PERF_INFO_INVESTIGATION') != null && build.env('PERF_INFO_INVESTIGATION') =~ /^(jfr|both)$/ && build.message !~ /\\[perf-(run|soak)\\]/"
+    env:
+      PERF_INFO_INVESTIGATION_PART: "jfr"
+    timeout_in_minutes: 40
+    agents:
+      queue: "perf"
+    retry:
+      automatic:
+        - exit_status: -1   # agent lost (e.g. Spot reclamation)
+          limit: 2
+        - exit_status: 255  # agent forced shutdown
+          limit: 2
+  - label: ":mag: INFO investigation — event-log heap per counted byte"
+    command: ".buildkite/scripts/steps/perf-test-info-investigation.sh"
+    if: "build.source == 'api' && build.env('PERF_INFO_INVESTIGATION') != null && build.env('PERF_INFO_INVESTIGATION') =~ /^(heap|both)$/ && build.message !~ /\\[perf-(run|soak)\\]/"
+    env:
+      PERF_INFO_INVESTIGATION_PART: "heap"
+    timeout_in_minutes: 180
+    agents:
+      queue: "perf"
+    retry:
+      automatic:
+        - exit_status: -1   # agent lost (e.g. Spot reclamation)
+          limit: 2
+        - exit_status: 255  # agent forced shutdown
+          limit: 2
+
   # Repeats one mockserver-netty integration test under CPU load, only in an API-created
   # build with TEST_REPEAT_IT set and no perf marker, so no k6, guard or soak step shares
   # the build. See "Repeating One Integration Test" in docs/infrastructure/ci-cd.md.

@@ -755,9 +755,11 @@ trap cleanup EXIT
 # On cancellation Buildkite SIGKILLs after a grace period, so the post-mortem JFR dump gets a short deadline.
 trap 'LOAD_JFR_DUMP_DEADLINE_S=20 cleanup' INT TERM
 # Reap any leftover perf SUTs from a previously-cancelled/killed run before we start — otherwise a
-# lingering non-rm container from a SIGKILLed run (or a name collision) would wedge this one.
+# lingering non-rm container from a SIGKILLed run (or a name collision) would wedge this one. A killed
+# perf-test-info-investigation.sh job can leave load containers labelled with this agent's name too.
 # shellcheck disable=SC2046  # intentional word-splitting of the id list
-docker rm -f $(docker ps -aq --filter name=mockserver-perf- 2>/dev/null) >/dev/null 2>&1 || true
+docker rm -f $(docker ps -aq --filter name=mockserver-perf- 2>/dev/null) \
+  $(docker ps -aq --filter "label=mockserver-perf-inv.agent=${BUILDKITE_AGENT_NAME:-$(hostname 2>/dev/null || echo local)}" 2>/dev/null) >/dev/null 2>&1 || true
 
 # --- validity accumulation (a validity block on every result) -----------------
 # Each measurement phase appends a check {name, ok, detail}; the assembled result

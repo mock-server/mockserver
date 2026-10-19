@@ -3317,6 +3317,10 @@ the same term.
 `.buildkite/scripts/test/perf-info-heap-probe-test.sh` checks the probe against stubbed `docker`
 and `curl` (drain, order, every failure path, the deadline) and its wiring.
 
+### On-demand INFO investigation
+
+The live-heap reset probe reads only the sweep's small bodiless entries. For body-carrying profiles, and for a JFR profile of the `INFO` consumer, use the on-demand `perf-info-investigation` steps (`PERF_INFO_INVESTIGATION`, see [ci-cd.md](../infrastructure/ci-cd.md#info-level-investigation)). They run outside the daily run and are never compared or baselined.
+
 ### GC log cycle times are not stop-the-world pause times
 
 `-Xlog:gc` records GC cycle duration, not stop-the-world (STW) pause duration. A 1,000 ms p95 cycle under generational ZGC is concurrent work and is consistent with a request p95 of ~74 ms — not 1,000 ms. For STW pauses use `-Xlog:gc+phases`. ZGC's actual STW pauses are typically under 1 ms regardless of heap size.
