@@ -21,12 +21,28 @@ inv_reap() {
   [ -z "$ids" ] || docker rm -f $ids >/dev/null 2>&1 || true
 }
 
+# A cell's INFO overload phase backed the ring up when a sample held at least 93% of the in-flight cap,
+# the same threshold as the fill, or the phase added drops of either cause. Otherwise there is no ring
+# backlog to measure, and the phase is recorded as not_reached rather than failed, provided the load
+# is shown to have run through the window (load_ran).
+INV_RING_BACKED_UP_JQ='def ring_backed_up:
+  (.overload.counters_after.max_in_flight_bytes // 0) as $cap
+  | $cap > 0 and ((([.overload.samples[]?.in_flight_bytes // 0] | max // 0) >= 0.93 * $cap)
+      or (.overload.counters_after.dropped_ring_full // 0) > (.counters_after_fill.dropped_ring_full // 0)
+      or (.overload.counters_after.dropped_in_flight_bytes // 0) > (.counters_after_fill.dropped_in_flight_bytes // 0));
+def overload_status: if ring_backed_up then "measured" else "not_reached" end;
+def load_ran:
+  .overload.load_running_at_end == true
+  and ([.overload.window_open_evicted, (.overload.samples[]?.evicted)] as $e
+       | ($e | length) >= 4 and all($e[]; . != null)
+         and all(range(1; $e | length) as $i | $e[$i] > $e[$i - 1]; .));'
+
 # inv_cells_verdict <cells.jsonl> <expected cell count> <overload expected: true|false>: prints one
 # line per missing or not fully measured cell and returns 1 when there is any, else returns 0.
 inv_cells_verdict() {
   local cells="$1" expected="$2" overload="$3" got bad nl=$'\n'
   got="$(jq -s 'length' "$cells" 2>/dev/null)" || got="unreadable"
-  bad="$(jq -r --argjson overload "$overload" '
+  bad="$(jq -r --argjson overload "$overload" "$INV_RING_BACKED_UP_JQ"'
     def why:
       if .status != "measured" then "status \(.status)"
       elif (.drained_probe.status // "missing") != "measured" then "drained probe \(.drained_probe.status // "missing")"
@@ -36,8 +52,17 @@ inv_cells_verdict() {
       elif .overload == null then empty
       elif .overload.reached_93pct_before_window != true then "the overload window opened below 93% of the budget"
       elif (.overload.drained_probe.status // "missing") != "measured" then "overload drained probe \(.overload.drained_probe.status // "missing")"
-      elif ([.overload.samples[]? | select(.whole_log_bytes == null or .ring_multiple == null)] | length) > 0
-        or (.overload.samples | length) == 0 then "an overload sample has no whole-log or ring figure"
+      elif ((.overload.samples // []) | length) == 0
+        or ([.overload.samples[] | select(.whole_log_bytes == null)] | length) > 0 then "an overload sample has no whole-log figure"
+      elif ([.overload.samples[] | select(.in_flight_bytes == null)] | length) > 0 then "an overload sample has no in-flight reading"
+      elif (.overload.counters_after.max_in_flight_bytes // 0) <= 0 then "the overload has no in-flight cap reading"
+      elif .overload.status != null and .overload.status != overload_status then "overload status \(.overload.status) does not match its samples"
+      elif ring_backed_up and ([.overload.samples[] | select(.in_flight_bytes > 0 and .ring_multiple == null)] | length) > 0
+        then "an overload sample has no ring figure"
+      elif ring_backed_up and ([.overload.samples[] | select(.ring_multiple != null)] | length) == 0
+        then "the overload backed up, but no sample has a ring figure"
+      elif (ring_backed_up | not) and (load_ran | not)
+        then "the ring never backed up, but the overload load is not shown to have run through the window"
       else empty end;
     "\(.cell // "?"): \(why)"' "$cells" 2>/dev/null)" || bad="$cells is not valid JSON lines"
   if [ "$got" != "$expected" ]; then bad="${bad:+$bad$nl}expected $expected cells, found $got"; fi

@@ -1074,7 +1074,60 @@ Each figure comes from a single run, except the 2 GiB rungs past 10,000 req/s, w
   - **G1.** Drops went either way. p99 was 26.5–39.9 ms at `/12` against 19.5–27.3 at `/20`.
   - **What this shows.** Past saturation, gen-ZGC's loop at `/12` is retention plus backlog. `/20` halves the retained lifetime, which keeps the 12,000 rung below the loop, but at 14,000–16,000 the ring backlog alone (1.2–1.7 young intervals) pushes `/20` into it too.
   - **What it costs.** The loop's cost on this rig is promotion, major collections and more drops, not throughput or p50: both divisors stayed far below p50 1 ms at every rung, with no allocation stall.
-- **Confirm after merge** on the first snapshot image with `/20` at `INFO`: a perf build with `PERF_INFO_INVESTIGATION=heap` runs the shipped default, so its `INFO` cells should read `max_retained_bytes` 52,637,696 at the 1 GiB heap and keep the whole log under overload at about 16% of the ceiling. The daily run's `info_log_level_arm.config.event_log_budget` should read 47,290,368 on the 922 MiB GraalJS heap. Reopen if row 126b makes the consumer faster.
+
+##### Confirmed on the perf rig at `/20` (2026-10-19)
+
+**Outcome: the shipped `/20` ran without OOM, with the expected budget, and the whole log stayed far below a quarter of the ceiling.** Row 126b's faster consumer, which also ships on this image, changed two things against the figures above. The ring barely backs up any more: in-flight bytes peaked at 0.66–18.6 MB of the 150 MB cap, so the whole log peaked at 1.7–3.5% of the ceiling under overload rather than about 16%. No rung dropped, and p99 was lower at every rung. The builds ran on the master snapshot at `3d6875dda` (digest `sha256:db1483ca…`), with `MOCKSERVER_DISABLE_SYSTEM_OUT=true` as in every run above.
+
+- **Heap, perf build 714.** The cells were json10k, proxy10k and json100k at 1 GiB, under G1 and gen-ZGC.
+  - **Measurement.** All 12 cells were measured, and the log has no `OutOfMemoryError`.
+  - **Budget.** Every `INFO` cell read `max_retained_bytes` 52,637,696, the ceiling ÷ 20, and an in-flight cap of 150,394,880.
+  - **Whole log under overload.** It peaked at 1.7–3.5% of the ceiling, against 14.5–18.1% in build 699, because in-flight bytes peaked at 0.66–18.6 MB of the 150 MB cap (the per-cell peaks).
+  - **Drops.** There were no `ring_full` drops in any fill or overload. One cell dropped 287 events on in-flight bytes (json100k G1 overload).
+  - **Drained multiples.** `INFO` read json10k 0.324–0.346, proxy10k 0.668–0.687 and json100k 0.333–0.336, against 0.878–0.922, 0.669–0.687 and 0.992–0.998 in build 699. The `WARN` control reproduced the earlier runs.
+  - **Step result.** The step reported `failed` only because its completeness check then required a ring figure in every overload sample. The check now records a phase whose ring never backed up as `not_reached`, provided the load is shown to have run through the window, and counts in-flight byte drops as backing up, which would make json100k-INFO-G1 `measured` (see [ci-cd.md](../infrastructure/ci-cd.md#info-level-investigation)).
+- **Promotion at `/20`, perf build 717.** The cells were 1 GiB and 2 GiB at 2,000–10,000 req/s, compared with builds 708 and 709.
+  - **Drops.** No rung dropped. 709's 1 GiB 10,000 rung had dropped 343,113 under gen-ZGC and 1,616 under G1.
+  - **Promotion.** gen-ZGC promoted 0–1.28 MB/s, most at the 2,000 rung, the first after the prefill, against 0–0.08 below 10,000 before. G1 promoted 0–1.4 MB/s at 1 GiB (was 0–0.16) and 0–4.56 at 2 GiB (was 0–4.32).
+  - **p99.** G1 read 1.1–5.2 ms at 1 GiB (was 4.9–14.3) and 4.1–8.3 ms at 2 GiB (was 7.0–16.5). gen-ZGC read 0.47–0.74 ms (was 0.94–8.48).
+- **Promotion at `/20`, perf build 718.** The cells were 2 GiB at 10,000–16,000 req/s, compared with builds 710 and 711.
+  - **Drops.** No rung dropped, against 105,577–1,179,481 per window before.
+  - **Promotion.** It was at most 0.32 MB/s, with 0–1 major collections per window, against 0–19.52 MB/s and 0–13.
+  - **p99.** G1 read 8.8–14.2 ms (was 19.5–38.4) and gen-ZGC 0.57–5.85 ms (was 6.2–10.6).
+- **Not yet observed.** The daily run's `info_log_level_arm.config.event_log_budget` should read 47,290,368 on the 922 MiB GraalJS heap. No daily run had used the image yet. Build 717's 2 GiB cells, which have the same heap, read 47,290,368 on the gauge, but they set the budget explicitly.
+
+##### `/12` against `/20` again, with row 126b's consumer (2026-10-19)
+
+**Outcome: with `disableSystemOut` set, the saturation case behind the move to `/20` no longer occurs. Under gen-ZGC at 12,000–16,000 req/s, `/12`'s promotion stayed in the same 0–0.32 MB/s range as `/20`'s. Its p99 stays below 1 ms but is 0.23–0.45 ms higher than `/20` at 14,000–16,000 (within 0.04 ms at 12,000), with 1–2 major collections per window against 0–1. Under G1, `/12` still raises p99 by about 5 ms. Decided 2026-10-19: the owner keeps `INFO` at `/20` because of that G1 p99 cost. This re-measure was the reopen check that row 126b's faster consumer triggered, so that check is closed.**
+
+Perf builds 719 and 720 repeated builds 710 and 711:
+
+- 2 GiB, G1 and gen-ZGC, each at `/12` and `/20`, on a 10,000–16,000 req/s ladder.
+- Harness from a hidden ref holding the `not_reached` step change, image `3d6875dda` (`sha256:db1483ca…`).
+- All 8 cells measured, with no request errors and no `ring_full` or in-flight drop at any rung.
+
+| 2 GiB, 12,000–16,000 req/s | Builds 710/711 (before 126b) | Builds 719/720 (with 126b) |
+|---|---|---|
+| gen-ZGC `/12`: promotion, majors per window, p99 | 33.4–36.6 MB/s, 16–18, 8.5–10.5 ms | 0–0.32 MB/s, 1–2, 0.59–0.81 ms |
+| gen-ZGC `/20` | 0–19.5 MB/s, 2–13, 6.2–10.5 ms | 0–0.32 MB/s, 0–1, 0.27–0.63 ms |
+| G1 `/12` | 0.04–5.48 MB/s, 0–1, 26.5–39.9 ms | 0–5.64 MB/s (12,000 only), 0–1, 14.5–19.7 ms |
+| G1 `/20` | 0, 0, 19.5–27.3 ms | 0, 0, 9.1–15.7 ms |
+| `ring_full` drops per window | 107,633–1,253,398 | 0 |
+| p50 | 0.09–0.44 ms | 0.085–0.103 ms |
+
+- **Lifetime ÷ young interval.** Both divisors are now below the rule's 0.83 at every rung:
+  - gen-ZGC: `/12` 0.10–0.12, `/20` 0.06–0.07;
+  - G1: `/12` 0.36–0.71, `/20` 0.30–0.41.
+  - In 710/711 gen-ZGC `/12` read 2.69–3.22.
+- **The 10,000 rung** came first after the prefill again. It achieved 9,615–9,881 req/s, with 3,580–11,563 dropped iterations.
+  - G1 `/12` promoted 0.12–7.96 MB/s with p99 11.7–15.6 ms. G1 `/20` promoted at most 0.04 MB/s, with p99 7.7–8.6 ms.
+  - gen-ZGC `/20`'s p99 was 7.7 and 42.8 ms on that rung, against 0.60–0.61 at `/12`. That rung also dropped the most iterations, so read it as noise from the prefill transition, not as a divisor effect.
+- **History.** `/12` keeps 78,817,280 counted bytes at this heap, against 47,290,368 at `/20`, which is about two-thirds more.
+- **Not covered.**
+  - The 2,000–8,000 rungs, where G1 `/12` promoted up to 17.6 MB/s in build 708.
+  - The console-on default (`disableSystemOut=false`), where the consumer still renders every `INFO` entry and may still saturate as in 710/711.
+  - The 1 GiB heap, where build 709's gen-ZGC `/12` promoted 35.4 MB/s at 10,000 req/s.
+  - These gaps are recorded as unmeasured and are not open items (backlog row 204f).
 
 #### Compact retention (evaluated 2026-10-12)
 
@@ -1185,7 +1238,7 @@ Before row 126b the console took the String path only: `writeToSystemOut` called
 - *Skip.* `MockServerLogger.writeToSystemOut` now asks `LogOutputProbe` whether anything would print the message before rendering it. It answers "nothing" only for SLF4J's no-operation logger (no provider on the classpath) and for a slf4j-jdk14 logger, relocated or not, whose java.util.logging logger is below the entry's level or reaches no handler through itself or the parents it passes records to, and only when every logger on that chain is the JDK's own class. A custom log manager's logger can print without handlers: log4j-jul's `ApiLogger`, used when `java.util.logging.manager` routes JUL to log4j2, has none, so a chain holding any other logger class is taken to print. That is the perf rig's configuration, because `disableSystemOut` makes `configureLogger` install no console handler. For any other SLF4J provider (Logback, log4j2's SLF4J binding and so on), a logger with a filter, or a logger it cannot inspect, it renders as before. Every other reader renders the message from the entry when it reads it, as it already did at `WARN`, where the consumer never rendered `INFO` entries: the `LOGS` retrieve (`LogEntry.writeMessage`), verification failures, listeners, and the dashboard, which builds its message parts from the format and arguments, not the rendered text. `getMessage` memoises with a racy but safe write: the memo is a `String` or an object with final fields, and two readers that race at worst both render. Memory is unchanged or lower, because a skipped entry decodes no body and memoises no message before `releaseDerivedForms`. `MockServerEventLogDiscardedConsoleTest` runs the same entries with and without a console handler and checks that the `LOGS` retrieve, a verification failure and a listener read identical text, and that without a handler the consumer renders nothing (`LogOutputProbeTest`, which also covers a JUL logger subclass that prints without handlers as log4j-jul's does, and `LogOutputProbeDisableSystemOutTest`).
 - *Stream.* Where the text is needed, `formatLogMessage` and `indentAndToString` now serialise an argument whose `toString` is its JSON (`ObjectWithJsonToString`) straight into the message, through `LineIndentingWriter` over a reused `char[]` buffer (`MessageBuffer`), instead of building the pretty-printed `String` first. The message is built in a `char[]` that each thread reuses up to 16K characters (a plain array, so a servlet container's threads pin no MockServer class; a message formatted while it is in use gets its own), because a `StringBuilder` holding Latin-1 text copies an appended `char[]` one character at a time. If serialisation fails, what was written is removed and the argument's `toString` is used, which then shows its fields, as before. `LineIndentingWriter` and `UnquotingWriter` now pass each chunk Jackson writes in bulk instead of a character at a time, which the plain-text `LOGS` retrieve also gains from; `StringFormatterChunkedWritersTest` writes random text through both at every split point, by each of the `char[]`, `String` and single-character methods, because Jackson decides the chunks. Output is unchanged byte for byte: `StringFormatterStreamedJsonDifferentialTest` compares every entry point with the pre-change `toString`-then-indent implementation over 41 argument shapes (requests, responses, expectations, actions, verifications, lists, maps, strings with every line terminator, and arguments that format a message of their own while they are rendered) at indents 0–3 and 14 message layouts (4,592 renderings), plus `getMessage`, the redacted view and `writeMessage` with and without redaction, and 6,000 random raw and string JSON values up to 40,000 characters long. Those span several of Jackson's buffer flushes, so a `\r\n` pair or a terminator lands on each side of a chunk boundary. Two injected faults, one dropping the character held across a chunk and one forgetting the previous character at a chunk boundary, each failed it.
 
-`LogMessageRenderBenchmark` measures both (one fork, JDK 17, developer Mac, so directional only). A console write to a logger that prints nothing now takes 4.3–4.6 ns and allocates nothing, against 0.96–8.8 µs and 3.4–23.7 KB when it renders, in every shape; that run used SLF4J's no-operation logger, so the java.util.logging handler walk is not timed. Rendering a message with its JSON streamed is 5–11% faster than row 126a's `toString`-then-indent and allocates 21–40% less, for example a `JSON` did-not-match entry 7.03 to 6.38 µs and 21.0 to 12.6 KB (see [performance-measurement.md](performance-measurement.md#logmessagerenderbenchmark-jmh--on-demand-not-run-by-ci)). The perf-rig confirmation is backlog row 126b.
+`LogMessageRenderBenchmark` measures both (one fork, JDK 17, developer Mac, so directional only). A console write to a logger that prints nothing now takes 4.3–4.6 ns and allocates nothing, against 0.96–8.8 µs and 3.4–23.7 KB when it renders, in every shape; that run used SLF4J's no-operation logger, so the java.util.logging handler walk is not timed. Rendering a message with its JSON streamed is 5–11% faster than row 126a's `toString`-then-indent and allocates 21–40% less, for example a `JSON` did-not-match entry 7.03 to 6.38 µs and 21.0 to 12.6 KB (see [performance-measurement.md](performance-measurement.md#logmessagerenderbenchmark-jmh--on-demand-not-run-by-ci)). The rig results follow the 126a table below.
 
 **On the perf rig the drop onset moved from 8,000 to 10,000–12,000 req/s.** These are perf builds 700, 701, 703 and 704 (2026-10-19), run with the same `PART=jfr` sweep, two runs per arm on digest-pinned images. The after arm is the snapshot at `113c46cdf` and the before arm is build 694's image at `929bb4c0a`.
 
@@ -1202,6 +1255,25 @@ Before row 126b the console took the String path only: `writeToSystemOut` called
 - **What the shares count.** Shares are the fraction of the consumer thread's `jdk.CPUTimeSample` stacks; build 694 reads 35.0% by the same count. About a third of CPU-time samples were lost in every run, so the 14.8% share is good to a few points; the 0% regex share is not affected.
 - **Why this is the fix.** The arms differ by every commit from `929bb4c0a` to `113c46cdf`, including the `/7` `INFO` in-flight floor. No run dropped for in-flight bytes, so that floor did not bind, and the regex share falling to zero ties the gain to this change.
 - **Machines.** Both after runs landed on one perf agent and the two before runs on two others. The 21% gap in consumer CPU at 6,000 req/s is far wider than the spread across the three before runs, including build 694 (0.78–0.82).
+
+**With row 126b the consumer no longer saturates up to 16,000 req/s when `disableSystemOut` is set.** Perf builds 712–716 (2026-10-19) used the same `PART=jfr` sweep and the same SUT cpuset (`0-5`), with two runs per arm. The after arm was the master snapshot at `3d6875dda` (712, 715), and the before arm row 126a's image at `113c46cdf` (713, 716).
+
+| | Before (713, 716) | After (712, 715) |
+|---|---|---|
+| Consumer CPU at 6,000 req/s | 0.62–0.65 | 0.04 |
+| Consumer CPU, highest rung mean | 0.97–1.00 from 10,000 | 0.065 at 16,000 |
+| First `ring_full` drops | 12,000 rung (349,038) in 713; 10,000 rung (32,380) in 716 | none up to 16,000 |
+| `ring_full` drops by the end of 16,000 | 1.37–1.64 million | 0 |
+| Peak ring occupancy (of 16,384) | 16,384 | 88–90 |
+| Consumer CPU samples, whole run | 9,481–9,510 | 490–530 |
+| Samples in `messageFor`, `formatLogMessage` or `indentAndToString` | 21–22% | 0% |
+| p99 at 6,000 req/s | 0.597–0.654 ms | 0.605–0.622 ms |
+| p99 at 10,000–12,000 req/s | 0.322–0.352 ms | 0.434–0.456 ms |
+| p50 at 2,000–6,000 req/s | 0.131–0.258 ms | 0.160–0.283 ms |
+
+- **What is left under `writeToSystemOut`.** That is 4.9–5.9% of the after arm's samples, all in `LogOutputProbe.discards` or `Configuration.disableLogging`.
+- **Stack depth.** Before, 15% of the consumer's stacks end at `LogEntry.messageFor`, before its caller, so shares counted by caller are lower bounds. The CPU and drop figures do not depend on stacks.
+- **Scope.** This covers only the skip. The SUT sets `MOCKSERVER_DISABLE_SYSTEM_OUT=true`, so streamed JSON, which applies only where the console prints, was not measured on the rig. With the console on (the shipped default) the consumer still renders every `INFO` entry.
 
 ## Eviction and GC
 

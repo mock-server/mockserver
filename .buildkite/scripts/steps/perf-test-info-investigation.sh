@@ -405,24 +405,30 @@ for gc in $COLLECTORS; do
           sleep 0.5
         done
         tw="$(date +%s)"; samples='[]'
+        ev0="$(gauge mock_server_evicted_log_entries_total <<<"$(metrics "$hp")")"
         for at in $(( OVERLOAD_S / 3 )) $(( OVERLOAD_S * 2 / 3 )) $(( OVERLOAD_S * 11 / 12 )); do
           while [ $(( $(date +%s) - tw )) -lt "$at" ]; do sleep 0.5; done
           m="$(metrics "$hp")"
           inf="$(gauge mock_server_event_log_in_flight_bytes <<<"$m")"; occ="$(gauge mock_server_event_log_ring_occupancy <<<"$m")"; rb="$(gauge mock_server_event_log_retained_bytes <<<"$m")"
           hs="$(histo_total "$sut" "${uid}:${gid}" "ol-${at}s" "$CD")"
-          samples="$(jq -c --arg at "$at" --arg inf "$inf" --arg occ "$occ" --arg rb "$rb" --arg hs "$hs" \
-            'def n: if . == "" then null else tonumber end; . + [{at_s: ($at | n), in_flight_bytes: ($inf | n), ring_occupancy: ($occ | n), retained_bytes: ($rb | n), live_heap_bytes: ($hs | n)}]' <<<"$samples")"
+          ev="$(gauge mock_server_evicted_log_entries_total <<<"$m")"
+          samples="$(jq -c --arg at "$at" --arg inf "$inf" --arg occ "$occ" --arg rb "$rb" --arg hs "$hs" --arg ev "$ev" \
+            'def n: if . == "" then null else tonumber end; . + [{at_s: ($at | n), in_flight_bytes: ($inf | n), ring_occupancy: ($occ | n), retained_bytes: ($rb | n), live_heap_bytes: ($hs | n), evicted: ($ev | n)}]' <<<"$samples")"
         done
         while [ $(( $(date +%s) - tw )) -lt "$OVERLOAD_S" ]; do sleep 0.5; done
+        load_running=false
+        [ "$(docker inspect --format '{{.State.Status}}' "${k6name}-ol" 2>/dev/null || echo missing)" = running ] && load_running=true
         docker kill "${k6name}-ol" >/dev/null 2>&1 || true
         ctr2="$(counters_json "$hp")"
         probe2="$(info_heap_probe_run "$sut" "$hp" "$CD" 300)"
         for f in "$CD"/reset-probe-histogram-*.txt; do [ -e "$f" ] && [[ "$f" != *-fill.txt ]] && mv "$f" "${f%.txt}-overload.txt"; done
         overload="$(jq -nc --argjson samples "$samples" --argjson probe "$probe2" --argjson ctr "$ctr2" --arg h0b "$h0b" \
-          --argjson reached "$reached" --argjson ceiling "$CEILING_BYTES" --argjson xmx "$HEAP_BYTES" '
+          --argjson reached "$reached" --argjson ceiling "$CEILING_BYTES" --argjson xmx "$HEAP_BYTES" \
+          --arg ev0 "$ev0" --argjson load_running "$load_running" '
           ($h0b | if . == "" then null else tonumber end) as $h0
           | ($probe.live_heap_delta_bytes) as $deque
           | {reached_93pct_before_window: $reached, h0_bytes: $h0, counters_after: $ctr, drained_probe: $probe,
+             window_open_evicted: ($ev0 | if . == "" then null else tonumber end), load_running_at_end: $load_running,
              samples: [$samples[] | . + (if $h0 != null and .live_heap_bytes != null then
                  (.live_heap_bytes - $h0) as $whole
                  | {whole_log_bytes: $whole,
@@ -434,9 +440,10 @@ for gc in $COLLECTORS; do
       fi
       jq -nc --arg cell "$cell" --arg gc "$gc" --arg profile "$profile" --arg level "$level" --arg h0 "$h0" \
         --argjson fill "$fill1" --argjson counters "$ctr1" --argjson probe "$probe1" --argjson overload "$overload" \
-        --argjson upstream_retained "${up_reqs:-null}" \
-        '{cell: $cell, collector: $gc, profile: $profile, level: $level, status: "measured", h0_bytes: ($h0 | if . == "" then null else tonumber end),
-          fill: $fill, counters_after_fill: $counters, drained_probe: $probe, upstream_retained_entries: $upstream_retained, overload: $overload}' \
+        --argjson upstream_retained "${up_reqs:-null}" "$INV_RING_BACKED_UP_JQ"'
+        {cell: $cell, collector: $gc, profile: $profile, level: $level, status: "measured", h0_bytes: ($h0 | if . == "" then null else tonumber end),
+          fill: $fill, counters_after_fill: $counters, drained_probe: $probe, upstream_retained_entries: $upstream_retained, overload: $overload}
+        | if .overload != null then .overload.status = overload_status else . end' \
         | tee -a "$CELLS"
       docker rm -f "$sut" >/dev/null 2>&1 || true
     done
@@ -444,13 +451,13 @@ for gc in $COLLECTORS; do
 done
 
 jq -rs '
-  ["cell","gc","fill_frac","t93_s","drops_rf","drops_ib","drained_mult","per_entry_B","ol_deque_mult","ol_ring_mult","ol_whole_share","ol_heap_share","ol_drops_rf","ol_drops_ib"],
+  ["cell","gc","fill_frac","t93_s","drops_rf","drops_ib","drained_mult","per_entry_B","ol_deque_mult","ol_ring_mult","ol_whole_share","ol_heap_share","ol_drops_rf","ol_drops_ib","ol_status"],
   (.[] | [.cell, (.counters_after_fill.gc // .collector), .fill.peak_fraction_of_budget, .fill.reached_93pct_after_s,
           .counters_after_fill.dropped_ring_full, .counters_after_fill.dropped_in_flight_bytes,
           .drained_probe.live_heap_per_counted_byte, .drained_probe.live_heap_bytes_per_entry,
           .overload.drained_probe.live_heap_per_counted_byte, .overload.peak.ring_multiple,
           .overload.peak.whole_log_share_of_ceiling, .overload.peak.live_heap_share_of_xmx,
-          .overload.counters_after.dropped_ring_full, .overload.counters_after.dropped_in_flight_bytes])
+          .overload.counters_after.dropped_ring_full, .overload.counters_after.dropped_in_flight_bytes, .overload.status])
   | map(tostring) | join("\t")' "$CELLS" | tee "$OUT/summary.tsv"
 
 set -- $COLLECTORS; n_gc=$#; set -- $PROFILES; n_profiles=$#; set -- $LEVELS; n_levels=$#
@@ -464,3 +471,11 @@ if ! verdict="$(inv_cells_verdict "$CELLS" $(( n_gc * n_profiles * n_levels )) "
   exit 1
 fi
 echo "--- every cell fully measured"
+not_reached="$(jq -r 'select(.overload.status == "not_reached") | .cell' "$CELLS")"
+if [ -n "$not_reached" ]; then
+  printf -- '--- overload not reached: the ring never backed up, so there is no ring figure for\n%s\n' "$not_reached"
+  if command -v buildkite-agent >/dev/null 2>&1; then
+    printf ':information_source: **INFO overload not reached** - the ring never backed up in:\n\n```\n%s\n```\n' "$not_reached" \
+      | buildkite-agent annotate --style info --context perf-info-investigation-not-reached || true
+  fi
+fi

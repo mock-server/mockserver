@@ -1857,6 +1857,11 @@ Streaming into a `StringBuilder` first measured 2–9% slower than `messageToStr
 a `StringBuilder` holding Latin-1 text copies an appended `char[]` a character at a time. Building the message in
 a reused `char[]` gave the figures above.
 
+On the perf rig (builds 712, 713, 715 and 716), with `disableSystemOut` set, the skip cut the `INFO` consumer's CPU
+at 6,000 req/s from 0.62–0.65 to 0.04, and no `ring_full` drop occurred up to the 16,000 rung (before: from 10,000–12,000).
+The streamed JSON applies only where the console prints, which the rig's sweep does not run (see
+[memory-management.md](memory-management.md#ring-in-flight-bounding-and-drops)).
+
 ### The seven promoted dark benchmarks
 
 These classes existed but were run by no CI step before the performance programme:

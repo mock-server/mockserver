@@ -43,7 +43,37 @@ check "a fill with no budget reading fails" "1|json10k-INFO-G1: the fill reached
 check "an INFO cell without its overload phase fails" "1|json10k-INFO-G1: no overload phase" "$(verdict "$(mutate '.overload = null')" 8 true)"
 check "... unless the overload phase was switched off" "0|" "$(verdict "$(mutate '.overload = null')" 8 false)"
 check "an overload window opened below 93% fails" "1|json10k-INFO-G1: the overload window opened below 93% of the budget" "$(verdict "$(mutate '.overload.reached_93pct_before_window = false')" 8 true)"
-check "an overload sample without a ring figure fails" "1|json10k-INFO-G1: an overload sample has no whole-log or ring figure" "$(verdict "$(mutate '.overload.samples[1].ring_multiple = null')" 8 true)"
+check "an overload sample without a ring figure fails" "1|json10k-INFO-G1: an overload sample has no ring figure" "$(verdict "$(mutate '.overload.samples[1].ring_multiple = null')" 8 true)"
+check "an overload sample without a whole-log figure fails" "1|json10k-INFO-G1: an overload sample has no whole-log figure" "$(verdict "$(mutate '.overload.samples[1].whole_log_bytes = null')" 8 true)"
+check "an overload phase with no samples fails" "1|json10k-INFO-G1: an overload sample has no whole-log figure" "$(verdict "$(mutate '.overload.samples = []')" 8 true)"
+# The consumer kept up: the ring held a few MB at most, one sample was empty, and the load evicted throughout.
+SMALL_RING='.overload.samples |= [.[] | .in_flight_bytes = 723185 | .ring_multiple = 1.586] | .overload.samples[0] |= (.in_flight_bytes = 0 | .ring_multiple = null)
+  | .overload.window_open_evicted = 100 | .overload.samples |= [to_entries[] | .value + {evicted: (200 + .key * 100)}] | .overload.load_running_at_end = true
+  | .overload.counters_after.dropped_ring_full = .counters_after_fill.dropped_ring_full
+  | .overload.counters_after.dropped_in_flight_bytes = .counters_after_fill.dropped_in_flight_bytes'
+check "a ring that never backed up is not reached, not failed" "0|" "$(verdict "$(mutate "$SMALL_RING")" 8 true)"
+check "... and is recorded as not_reached" "not_reached" "$(jq -r "$INV_RING_BACKED_UP_JQ"' select(.cell == "json10k-INFO-G1") | overload_status' "$(mutate "$SMALL_RING")")"
+check "... with no ring figure at all" "0|" "$(verdict "$(mutate "$SMALL_RING"' | .overload.samples[].ring_multiple = null')" 8 true)"
+check "a backed-up ring is still measured" "measured" "$(jq -r "$INV_RING_BACKED_UP_JQ"' select(.cell == "json10k-INFO-G1") | overload_status' "$CELLS")"
+check "a not-reached phase still needs its whole-log figure" "1|json10k-INFO-G1: an overload sample has no whole-log figure" "$(verdict "$(mutate "$SMALL_RING"' | .overload.samples[1].whole_log_bytes = null')" 8 true)"
+check "an unreadable in-flight gauge fails, never reads as an empty ring" "1|json10k-INFO-G1: an overload sample has no in-flight reading" "$(verdict "$(mutate "$SMALL_RING"' | .overload.samples[0].in_flight_bytes = null')" 8 true)"
+check "an unreadable in-flight cap fails" "1|json10k-INFO-G1: the overload has no in-flight cap reading" "$(verdict "$(mutate "$SMALL_RING"' | .overload.counters_after.max_in_flight_bytes = null')" 8 true)"
+check "ring_full drops in the phase count as backed up, so a missing ring figure fails" "1|json10k-INFO-G1: an overload sample has no ring figure" \
+  "$(verdict "$(mutate "$SMALL_RING"' | .overload.counters_after.dropped_ring_full = ((.counters_after_fill.dropped_ring_full // 0) + 1) | .overload.samples[1].ring_multiple = null')" 8 true)"
+check "in-flight byte drops in the phase count as backed up, so a missing ring figure fails" "1|json10k-INFO-G1: an overload sample has no ring figure" \
+  "$(verdict "$(mutate "$SMALL_RING"' | .overload.counters_after.dropped_in_flight_bytes = ((.counters_after_fill.dropped_in_flight_bytes // 0) + 1) | .overload.samples[1].ring_multiple = null')" 8 true)"
+check "a phase backed up only by drops, with an empty ring at every sample and its load gone, fails" "1|json10k-INFO-G1: the overload backed up, but no sample has a ring figure" \
+  "$(verdict "$(mutate "$SMALL_RING"' | .overload.samples[].in_flight_bytes = 0 | .overload.samples[].ring_multiple = null | .overload.load_running_at_end = false
+     | .overload.counters_after.dropped_in_flight_bytes = ((.counters_after_fill.dropped_in_flight_bytes // 0) + 1)')" 8 true)"
+LOAD_STOPPED="1|json10k-INFO-G1: the ring never backed up, but the overload load is not shown to have run through the window"
+check "an overload whose load generator was gone at the end is failed, not not_reached" "$LOAD_STOPPED" "$(verdict "$(mutate "$SMALL_RING"' | .overload.load_running_at_end = false')" 8 true)"
+check "... as is one whose evictions stopped between samples" "$LOAD_STOPPED" "$(verdict "$(mutate "$SMALL_RING"' | .overload.samples[2].evicted = .overload.samples[1].evicted')" 8 true)"
+check "... or that has no eviction reading at the window's open" "$LOAD_STOPPED" "$(verdict "$(mutate "$SMALL_RING"' | .overload.window_open_evicted = null')" 8 true)"
+check "... or fewer than three samples" "$LOAD_STOPPED" "$(verdict "$(mutate "$SMALL_RING"' | .overload.samples |= .[:2]')" 8 true)"
+check "... or none in a sample" "$LOAD_STOPPED" "$(verdict "$(mutate "$SMALL_RING"' | .overload.samples[0].evicted = null')" 8 true)"
+check "... or no load record at all" "$LOAD_STOPPED" "$(verdict "$(mutate "$SMALL_RING"' | del(.overload.load_running_at_end, .overload.window_open_evicted)')" 8 true)"
+check "a recorded status that its samples contradict fails" "1|json10k-INFO-G1: overload status not_reached does not match its samples" "$(verdict "$(mutate '.overload.status = "not_reached"')" 8 true)"
+check "... as does an unknown one" "1|json10k-INFO-G1: overload status bogus does not match its samples" "$(verdict "$(mutate "$SMALL_RING"' | .overload.status = "bogus"')" 8 true)"
 jq -c 'if .profile == "proxy10k" then .upstream_retained_entries = 0 else . end' "$CELLS" > "$T/noup.jsonl"
 check "a proxy cell whose upstream saw nothing fails" "1|proxy10k-INFO-G1: no request reached the upstream" "$(verdict "$T/noup.jsonl" 8 true)"
 printf '{"cell":\n' > "$T/broken.jsonl"
@@ -96,6 +126,7 @@ PY
     [ "$cmd" = rm ] && [ -n "${STUB_SLOW_RM:-}" ] && sleep 1
     for n in "$@"; do [ "$n" = -f ] && continue; awk -v n="$n" '$1 != n' "$d/containers" > "$d/c.tmp"; mv "$d/c.tmp" "$d/containers"; done ;;
   inspect)
+    case "${*: -1}" in k6-*-ol) [ -n "${STUB_K6_DIED:-}" ] && exit 1 ;; esac
     if [ -n "${STUB_FAIL_SUT:-}" ]; then echo exited; else echo running; fi ;;
   port) echo 127.0.0.1:1 ;;
 esac
@@ -115,7 +146,8 @@ case "$*" in
       exit 0
     fi
     b=100; { [ -f "$d/reset" ] || [ -n "${STUB_NEVER_FILL:-}" ]; } && b=10
-    printf '%s\n' "mock_server_event_log_retained_bytes $b" "mock_server_event_log_retained_entries 5" \
+    e=$(( $(cat "$d/evicted" 2>/dev/null || echo 0) + 1000 )); echo "$e" > "$d/evicted"
+    printf '%s\n' "mock_server_event_log_retained_bytes $b" "mock_server_event_log_retained_entries 5" "mock_server_evicted_log_entries_total $e" \
       "mock_server_event_log_max_retained_bytes 100" "mock_server_event_log_ring_occupancy 0" \
       "mock_server_event_log_in_flight_bytes 0" "mock_server_event_log_max_in_flight_bytes 100" ;;
   */mockserver/reset*) touch "$d/reset" ;;
@@ -126,7 +158,7 @@ printf '#!/usr/bin/env bash\necho "buildkite-agent $*" >> "$STUB_DIR/calls.log"\
 chmod +x "$STUB_DIR/bin/"*
 
 run_step() { # extra env... -> runs the heap step in the background, pid in STEP_PID
-  : > "$STUB_DIR/calls.log"; : > "$STUB_DIR/containers"; rm -f "$STUB_DIR/reset"
+  : > "$STUB_DIR/calls.log"; : > "$STUB_DIR/containers"; rm -f "$STUB_DIR/reset" "$STUB_DIR/evicted"
   env PATH="$STUB_DIR/bin:$PATH" STUB_DIR="$STUB_DIR" TMPDIR="$T" BUILDKITE_BUILD_NUMBER=900 BUILDKITE_AGENT_NAME=agent-a \
     PERF_INFO_INVESTIGATION_PART=heap PERF_INV_OUT_ROOT="$T/out" PERF_INV_COLLECTORS=G1 \
     PERF_INV_PROFILES=json10k PERF_INV_LEVELS=WARN PERF_INV_OVERLOAD_S=0 "$@" \
@@ -177,6 +209,14 @@ run_step; rc=0; wait "$STEP_PID" || rc=$?
 check "a fully measured cell passes" "0" "$rc"
 check "its cell record is measured" "measured measured" "$(jq -r '"\(.status) \(.drained_probe.status)"' "$T/out/heap/cells.jsonl" 2>/dev/null)"
 check "no container is left after a pass" "0" "$(live_containers)"
+run_step PERF_INV_LEVELS=INFO PERF_INV_OVERLOAD_S=3; rc=0; wait "$STEP_PID" || rc=$?
+check "an INFO cell whose ring never backed up passes" "0" "$rc"
+check "its overload is recorded as not_reached" "not_reached" "$(jq -r '.overload.status' "$T/out/heap/cells.jsonl" 2>/dev/null)"
+check "... in the summary too" "not_reached" "$(awk -F'\t' 'NR == 2 {print $NF}' "$T/out/heap/summary.tsv" 2>/dev/null)"
+if grep -q 'annotate --style info --context perf-info-investigation-not-reached' "$STUB_DIR/calls.log"; then ok "a not-reached annotation is posted"; else bad "no not-reached annotation: $(tail -5 "$T/step.log")"; fi
+run_step PERF_INV_LEVELS=INFO PERF_INV_OVERLOAD_S=3 STUB_K6_DIED=1; rc=0; wait "$STEP_PID" || rc=$?
+check "an INFO cell whose overload load generator died fails the step" "1" "$rc"
+if grep -q 'json10k-INFO-G1: the ring never backed up, but the overload load is not shown' "$T/step.log"; then ok "the failure names the stopped load"; else bad "the failure does not name the stopped load: $(tail -5 "$T/step.log")"; fi
 
 echo "--- 5. the promotion analysis on fixture GC logs"
 PROMO_PY="$REPO_ROOT/.buildkite/scripts/steps/lib/perf-info-promotion.py"
