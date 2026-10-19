@@ -398,39 +398,75 @@ tolerance), a positive serial (RFC 5280 §4.1.2.2), a SAN covering
 When metrics are enabled, HTTP/3 requests increment the `REQUESTS_RECEIVED_COUNT`
 counter, consistent with HTTP/1.1 and HTTP/2 request counting.
 
-### UDP receive buffer
+### UDP receive buffer and read budget
 
-**The listener asks for a 4 MiB UDP receive buffer (`Http3Server.RECEIVE_BUFFER_BYTES`), and the
-operating system grants what it allows** (Linux caps it at `net.core.rmem_max`, often 208 KiB, which
-the kernel doubles).
+**The listener asks for a 4 MiB UDP receive buffer (`Http3Server.RECEIVE_BUFFER_BYTES`) and reads up to
+256 datagrams per event-loop cycle (`MAX_DATAGRAMS_PER_READ`; Netty's default is 16).** The operating
+system grants what it allows for the buffer: Linux caps it at `net.core.rmem_max`, often 208 KiB, which
+the kernel doubles.
 
 While MockServer sends a large response, the client sends a stream of small datagrams back: ACKs and
-flow-control credit (`MAX_DATA`, `MAX_STREAM_DATA`). The listener's single event loop is busy
-writing, so at the platform default these overflowed the socket's receive buffer and the kernel
-dropped them (`RcvbufErrors` in `/proc/net/snmp`). Most clients resend lost credit and only slow
-down. curl built on OpenSSL's QUIC stack (Debian 13's `curl --http3`, OpenSSL 3.5) does not: the
-server is left with no credit, the client with no data, and the response stalls until the client
-gives up or `responseWriteStallTimeoutMillis` resets the stream. A plain Netty HTTP/3 server with
-MockServer's transport parameters stalled the same way, and stopped stalling with the larger buffer.
+flow-control credit (`MAX_DATA`, `MAX_STREAM_DATA`). The listener has a single event loop. It reads a
+batch of datagrams, then the QUIC codec flushes a burst of writes before the loop reads again. Whatever
+arrives during the burst has to fit in the receive buffer, or the kernel drops it (`RcvbufErrors` in
+`/proc/net/snmp`). A bigger buffer and a bigger read batch both shrink the drops.
 
-These figures come from Linux containers in Docker Desktop's VM on a Mac, whose `rmem_max` is
-4 MiB, so the listener got the whole 4 MiB there. **Nothing has run on a real Linux host or a CI
-agent.** A stock Linux cap was simulated by having the listener ask for 212,992 bytes (granted about
-416 KiB after the kernel doubles it).
+Most clients resend lost credit and only slow down. curl built on OpenSSL's QUIC stack (Debian 13's
+`curl --http3`, OpenSSL 3.5) can stall instead: the server has no credit, the client has no data, and the
+response stalls until the client gives up or `responseWriteStallTimeoutMillis` resets the stream. A
+decrypted capture taken in Docker Desktop's VM at the platform-default buffer (commit `f13efb610`) showed
+the client's last `MAX_STREAM_DATA` in a dropped datagram and no later `MAX_STREAM_DATA` from the client.
+The CI runs below took no capture, so their stalls are consistent with that cause rather than shown to
+have it.
 
-| Client against the `-http3` jar (Docker Desktop VM, one bridge network) | Platform default buffer | 4 MiB granted (VM `rmem_max` 4 MiB) | About 416 KiB granted (stock Linux cap, simulated) |
-|---|---|---|---|
-| curl 8.14.1, OpenSSL 3.5 QUIC + nghttp3: 30 GETs of a 20 MiB body, per run | 0 to 11 stalled (rising with host load), up to 29,243 datagrams dropped | 30 complete in each of 3 runs, none dropped | 1 of 30 stalled, 4,631 datagrams dropped (one run) |
-| libcurl 8.14.1 with ngtcp2 1.11 + GnuTLS, quic-go 0.48.2, Chromium (Playwright 1.63) | all complete | all complete, except one Chromium fetch that failed once under heavy host load and did not recur in 8 further runs | not run |
+The server's read path matters, not only the client. In the same Docker Desktop tests, Cloudflare's
+quiche-server and Caddy did not stall this curl. quiche-server uses the same quiche library Netty wraps,
+and it drains its socket before it sends. A plain Netty HTTP/3 server with MockServer's transport
+parameters stalled the same way MockServer did.
 
-**Operator note: the 4 MiB request is capped by `net.core.rmem_max`.** On a stock Linux host the
-listener gets a fraction of it; in the one capped run above fewer datagrams were dropped but a
-download still stalled. Where large HTTP/3 responses
-matter, raise the cap on the host so the full buffer takes effect: `sysctl -w
-net.core.rmem_max=4194304`. It is a host setting, not one a container can set. The size is
-deliberately not a configuration property: where the cap is below 4 MiB, the cap decides the
-buffer, not the size asked for. Measuring this on a real Linux host is open (performance backlog
-row 541).
+**Evidence.** Each batch is 30 GETs of a 20 MiB body by curl 8.14.1 on OpenSSL 3.5 QUIC + nghttp3
+(Debian 13), with client and server in separate containers on one bridge network. A download counts as
+stalled when curl received nothing for 15 s.
+
+| Host | Buffer granted (`ss` `rb`) | Read budget | Stalled | Datagrams dropped (`RcvbufErrors`) |
+|---|---|---|---|---|
+| Docker Desktop VM, `-http3` jar | platform default | 16 | 0 to 11 of 30 per batch, rising with host load | up to 29,243 per batch |
+| Docker Desktop VM, `-http3` jar | 4 MiB (VM `rmem_max` 4 MiB) | 16 | 0 of 90 | 0 |
+| Docker Desktop VM, `-http3` jar asking for 212,992 bytes | about 416 KiB | 16 | 1 of 30 | 4,631 |
+| CI agent, `9.0.0-http3` image (build 3281) | 425,984 (stock cap) | 16 | 29 of 90 | 161,699 |
+| CI agent, one job, rounds alternating, stock cap (build 3284) | 425,984 | 16 / 64 / **256** | 14 / 5 / **2** of 90 | 156,101 / 76,221 / **19,458** |
+| CI agent, same job, full buffer (build 3284) | 8,388,608 (4 MiB, doubled) | 16 / 256 | 0 / 0 of 30 | 0 / 0 |
+| CI agent, `9.0.0-http3` image (builds 3280, 3281) | 8,388,608 | 16 | 0 of 120 | 0 |
+
+The CI agents are `default`-queue Amazon Linux 2023 hosts (kernel 6.18) whose own `rmem_max` is 4 MiB. The
+stock cap was produced by an `LD_PRELOAD` shim that clamps the server's `SO_RCVBUF` request to 212,992.
+That gives the same 425,984-byte buffer a stock `rmem_max` would, without changing the host. In build
+3284, completed downloads ran at about 100 MiB/s in every arm. Server CPU over 90 downloads was 25.9 s at
+16, 25.7 s at 64 and 24.4 s at 256, so the bigger budget costs nothing measurable. Both remaining stalls
+at 256 were the first download after the server started (likely before JIT warm-up; not measured). At the stock cap, completed
+downloads still lost hundreds to thousands of datagrams each, so a drop does not always stall.
+
+libcurl 8.14.1 with ngtcp2 1.11 + GnuTLS, quic-go 0.48.2 and Chromium (Playwright 1.63) completed every
+download at the platform default and at 4 MiB in Docker Desktop. One Chromium fetch failed once under heavy
+host load and did not recur in 8 further runs. Their drop counts were not recorded, and they have not been
+run on the CI agent.
+
+**Operator note: the 4 MiB request is capped by `net.core.rmem_max`.** On a stock Linux host (212,992)
+the listener gets about 416 KiB. The larger read budget makes stalls rare there but does not remove them.
+Where large HTTP/3 responses matter, raise the cap on the host so the full buffer takes effect:
+`sysctl -w net.core.rmem_max=4194304`, persisted in `/etc/sysctl.d/`. It is a host (or Kubernetes node)
+setting, not one a container or pod can set.
+
+**Why neither number is a configuration property.** The buffer request is capped by the host, so a
+property could only lower it, or raise it past 4 MiB on a host whose cap is already raised. Going past the
+cap needs `SO_RCVBUFFORCE` and `CAP_NET_ADMIN`. The JDK's datagram channel does not expose the first, and
+a container does not have the second by default. The read budget at 256 cost no CPU and helped at every
+step from 16, so there is no trade-off for a user to tune.
+
+**Not yet tried:** an epoll listener with `recvmmsg` (`EpollChannelOption.MAX_DATAGRAM_PAYLOAD_SIZE`) and
+GSO (`EpollQuicUtils.newSegmentedAllocator`). It would batch the reads and shorten write bursts, but it
+needs the listener's `closeOnReadError` logging and the IPv4 port probe re-checked (performance backlog
+row 541a). Reporting the client-side defect to OpenSSL is row 541b.
 
 ## Native QUIC Platform Requirement
 

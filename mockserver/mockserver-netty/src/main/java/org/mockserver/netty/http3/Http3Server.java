@@ -6,6 +6,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.codec.http3.DefaultHttp3SettingsFrame;
@@ -76,6 +77,13 @@ public class Http3Server {
      * stalls. The operating system caps it (Linux at {@code net.core.rmem_max}).
      */
     static final int RECEIVE_BUFFER_BYTES = 4 * 1024 * 1024;
+    /**
+     * Datagrams the listener reads per event-loop cycle before the QUIC codec flushes (Netty's default is 16). Where
+     * the operating system caps the receive buffer, draining more of it between write bursts keeps client ACKs and
+     * flow-control credit from being dropped.
+     */
+    static final int MAX_DATAGRAMS_PER_READ = 256;
+    private static final int DATAGRAM_READ_BUFFER_BYTES = 2048;
 
     private final AtomicInteger activeHttp3Connections = new AtomicInteger(0);
 
@@ -247,6 +255,7 @@ public class Http3Server {
                 .channel(NioDatagramChannel.class)
                 .option(ChannelOption.ALLOCATOR, NettyAllocator.ALLOCATOR)
                 .option(ChannelOption.SO_RCVBUF, RECEIVE_BUFFER_BYTES)
+                .option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(DATAGRAM_READ_BUFFER_BYTES).maxMessagesPerRead(MAX_DATAGRAMS_PER_READ))
                 .handler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel listener) {
