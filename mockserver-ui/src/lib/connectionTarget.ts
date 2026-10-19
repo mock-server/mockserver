@@ -25,26 +25,84 @@ export interface WorkspaceConnection {
   basePath: string;
 }
 
-/** The target named by the dashboard URL (`?host=`, `?port=`, `?secure=`, `?basePath=`), else the page origin. */
-export function urlConnectionParams(): ConnectionParams {
-  const params = new URLSearchParams(window.location.search);
-  const host =
-    params.get('host') || window.location.hostname || '127.0.0.1';
-  const port =
-    params.get('port') ||
-    window.location.port ||
-    (window.location.protocol === 'https:' ? '443' : '80');
+/** A `?host=`, `?port=` or `?basePath=` value the dashboard URL supplied but {@link resolveUrlConnection} refused. */
+export type UrlTargetField = 'host' | 'port' | 'basePath';
+
+export interface UrlConnection {
+  params: ConnectionParams;
+  /** Fields whose URL value was invalid and was replaced by the page origin's. Empty when none were. */
+  rejected: UrlTargetField[];
+  /** The server that served the page: what the dashboard targets when the link names nothing. */
+  page: ConnectionParams;
+  /** Whether a valid `?host=` names a different host from the page's, so the link sends the user's data elsewhere. */
+  foreignHost: boolean;
+}
+
+/**
+ * The target named by the dashboard URL (`?host=`, `?port=`, `?secure=`, `?basePath=`), else the
+ * page origin. A link is untrusted input, so each value passes the checks a typed target does and
+ * an invalid one falls back, field by field, to the page origin's value.
+ */
+export function resolveUrlConnection(): UrlConnection {
+  const location = window.location;
+  const params = new URLSearchParams(location.search ?? '');
+  const rejected: UrlTargetField[] = [];
+
+  const pageHost = (location.hostname || '127.0.0.1').toLowerCase();
+  const hostParam = params.get('host')?.trim();
+  let host = pageHost;
+  if (hostParam) {
+    if (hostProblem(hostParam) === null) host = hostParam.toLowerCase();
+    else rejected.push('host');
+  }
+
+  const pagePort = location.port || defaultPort(location.protocol);
+  const portParam = params.get('port')?.trim();
+  let port = pagePort;
+  if (portParam) {
+    if (portProblem(portParam) === null) port = String(Number(portParam));
+    else rejected.push('port');
+  }
+
+  const pageSecure = location.protocol === 'https:';
   const secureParam = params.get('secure');
-  const secure = secureParam !== null
-    ? secureParam === 'true'
-    : window.location.protocol === 'https:';
-  // Derive the base path from the dashboard URL: the segment before the trailing
-  // /mockserver/dashboard. Only strip when that suffix is actually present so an unexpected
-  // path is not misread as a base path; otherwise assume root (''). A ?basePath= query param
-  // overrides it (useful when host/port are also overridden).
-  const pathMatch = /^(.*)\/mockserver\/dashboard\/?$/.exec(window.location.pathname ?? '');
-  const basePath = (params.get('basePath') ?? (pathMatch ? (pathMatch[1] ?? '') : '')).replace(/\/+$/, '');
-  return { host, port, secure, basePath };
+  const secure = secureParam !== null ? secureParam === 'true' : pageSecure;
+
+  // The page's own base path is the segment before a trailing /mockserver/dashboard; without that
+  // suffix the dashboard is assumed to be at the root.
+  const pathMatch = /^(.*)\/mockserver\/dashboard\/?$/.exec(location.pathname ?? '');
+  const pageBasePath = normaliseBasePath(pathMatch ? (pathMatch[1] ?? '') : '');
+  const basePathParam = params.get('basePath');
+  const validPageBasePath = basePathProblem(pageBasePath) === null ? pageBasePath : '';
+  let basePath = validPageBasePath;
+  if (basePathParam !== null) {
+    const candidate = normaliseBasePath(basePathParam);
+    if (basePathProblem(candidate) === null) basePath = candidate;
+    else rejected.push('basePath');
+  } else if (validPageBasePath !== pageBasePath) {
+    rejected.push('basePath');
+  }
+
+  return {
+    params: { host, port, secure, basePath },
+    rejected,
+    page: { host: pageHost, port: pagePort, secure: pageSecure, basePath: validPageBasePath },
+    foreignHost: host !== pageHost,
+  };
+}
+
+/** The target named by the dashboard URL, with any invalid value replaced; see {@link resolveUrlConnection}. */
+export function urlConnectionParams(): ConnectionParams {
+  return resolveUrlConnection().params;
+}
+
+const URL_TARGET_PARAMS = ['host', 'port', 'secure', 'basePath'];
+
+/** The dashboard's own address without the link's target parameters, so it targets the server that served it. */
+export function pageOriginDashboardUrl(): string {
+  const url = new URL(window.location.href);
+  for (const name of URL_TARGET_PARAMS) url.searchParams.delete(name);
+  return url.toString();
 }
 
 /** The connection a workspace uses: its own target when it has one, else the URL's. */
@@ -105,27 +163,59 @@ export type ConnectionValidation =
   | { ok: true; value: WorkspaceConnection }
   | { ok: false; field: 'host' | 'port' | 'basePath'; message: string };
 
+const HOST_MESSAGE_URL = 'Enter only the host name, without http:// or a path; set the base path below.';
+const HOST_MESSAGE_INVALID = 'Not a valid host name; an IPv6 address goes in brackets, e.g. [::1].';
+const PORT_MESSAGE = 'A port is a whole number from 1 to 65535.';
+const BASE_PATH_MESSAGE = 'A base path starts with / and has no spaces, ?, #, %, \\, // or . and .. segments, e.g. /mock.';
+
+// RFC 3986 path characters except `%`: no `?` or `#` (either would cut off the endpoint path the
+// dashboard appends), no encoded character, no `\` (a browser reads it as `/`), no empty segment.
+const BASE_PATH_PATTERN = /^(\/[A-Za-z0-9._~!$&'()*+,;=:@-]+)+$/;
+
+function hostProblem(host: string): string | null {
+  if (host === '') return 'Enter the host MockServer is listening on.';
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(host) || host.includes('/')) return HOST_MESSAGE_URL;
+  if (host.length > 253 || !HOST_PATTERN.test(host)) return HOST_MESSAGE_INVALID;
+  return !host.startsWith('[') || isUrlHost(host) ? null : HOST_MESSAGE_INVALID;
+}
+
+/** Whether a bracketed host is an IPv6 address a URL accepts; `[1.2.3.4]` and `[:]` match the pattern but are not. */
+function isUrlHost(host: string): boolean {
+  try {
+    return new URL(`http://${host}/`).hostname !== '';
+  } catch {
+    return false;
+  }
+}
+
+function portProblem(port: string): string | null {
+  return /^\d{1,5}$/.test(port) && Number(port) >= 1 && Number(port) <= 65535 ? null : PORT_MESSAGE;
+}
+
+function normaliseBasePath(basePath: string): string {
+  return basePath.trim().replace(/\/+$/, '');
+}
+
+function basePathProblem(basePath: string): string | null {
+  if (basePath === '') return null;
+  const dotSegment = basePath.split('/').some((segment) => segment === '.' || segment === '..');
+  return BASE_PATH_PATTERN.test(basePath) && !dotSegment ? null : BASE_PATH_MESSAGE;
+}
+
 /**
  * Validate a target typed by the user. A host is a name, an IPv4 address or a bracketed IPv6
  * address: never a URL, so a pasted scheme or path is refused rather than glued into every URL.
  */
 export function validateConnection(draft: ConnectionDraft): ConnectionValidation {
   const host = draft.host.trim();
-  if (host === '') return { ok: false, field: 'host', message: 'Enter the host MockServer is listening on.' };
-  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(host) || host.includes('/')) {
-    return { ok: false, field: 'host', message: 'Enter only the host name, without http:// or a path; set the base path below.' };
-  }
-  if (!HOST_PATTERN.test(host)) {
-    return { ok: false, field: 'host', message: 'Not a valid host name; an IPv6 address goes in brackets, e.g. [::1].' };
-  }
+  const hostMessage = hostProblem(host);
+  if (hostMessage !== null) return { ok: false, field: 'host', message: hostMessage };
   const port = draft.port.trim();
-  if (!/^\d{1,5}$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
-    return { ok: false, field: 'port', message: 'A port is a whole number from 1 to 65535.' };
-  }
-  const basePath = draft.basePath.trim().replace(/\/+$/, '');
-  if (basePath !== '' && (!basePath.startsWith('/') || /[\s?#]/.test(basePath))) {
-    return { ok: false, field: 'basePath', message: 'A base path starts with / and has no spaces, ? or #, e.g. /mock.' };
-  }
+  const portMessage = portProblem(port);
+  if (portMessage !== null) return { ok: false, field: 'port', message: portMessage };
+  const basePath = normaliseBasePath(draft.basePath);
+  const basePathMessage = basePathProblem(basePath);
+  if (basePathMessage !== null) return { ok: false, field: 'basePath', message: basePathMessage };
   // Host names are case-insensitive; one spelling keeps one target from looking like two.
   return { ok: true, value: { host: host.toLowerCase(), port: String(Number(port)), secure: draft.secure, basePath } };
 }

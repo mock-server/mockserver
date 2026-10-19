@@ -28,11 +28,12 @@ import ErrorBoundary from './components/ErrorBoundary';
 import AnalyticsBanner from './components/AnalyticsBanner';
 import LogPressureBanner from './components/LogPressureBanner';
 import FrameLimitBanner from './components/FrameLimitBanner';
+import UrlTargetNotice from './components/UrlTargetNotice';
 import { getConfiguration } from './lib/configuration';
 import { initAnalytics, trackView } from './lib/analytics';
 import { CLEAR_LOGS_CONFIRM_MESSAGE, CLEAR_LOGS_CONFIRM_TITLE } from './lib/clearServerText';
 import { requestLogSearchFocus } from './lib/logSearchFocus';
-import { connectionKey, effectiveConnection, urlConnectionParams } from './lib/connectionTarget';
+import { connectionKey, effectiveConnection, resolveUrlConnection, urlConnectionParams } from './lib/connectionTarget';
 import { releaseBreakpointCallbackClientsExcept } from './lib/breakpointCallbackClient';
 import type { RequestFilter } from './types';
 
@@ -202,8 +203,11 @@ export default function App() {
       .then((config) => {
         if (!controller.signal.aborted) {
           useDashboardStore.getState().setServerConfiguration(config);
-          // Only the dashboard URL's server decides analytics, never a workspace's other target.
-          if (connectionKey(params) === connectionKey(urlConnectionParams())) {
+          // Only the dashboard URL's server decides analytics: never a workspace's other target, and
+          // never a server on another host that the link named, so then the page origin's server does.
+          const urlTarget = resolveUrlConnection();
+          const decider = urlTarget.foreignHost ? urlTarget.page : urlTarget.params;
+          if (connectionKey(params) === connectionKey(decider)) {
             initAnalytics(config, {
               validViews: ALL_VIEWS,
               initialView: useDashboardStore.getState().view,
@@ -317,6 +321,7 @@ export default function App() {
               {NAV_TAB_DESCRIPTIONS[view]}
             </Typography>
           )}
+          <UrlTargetNotice />
           {connectionLost && !bannerDismissed && (
             <Alert
               severity="warning"

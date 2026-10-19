@@ -17,7 +17,7 @@ export async function fetchFullMessage(
   if (!isLoadable(marker)) {
     throw new Error('This shortened body cannot be loaded from its log entry');
   }
-  const query = `id=${encodeURIComponent(marker.logEntryId)}&part=${marker.part}`;
+  const query = `id=${encodeURIComponent(marker.logEntryId)}&part=${encodeURIComponent(marker.part)}`;
   const res = await fetch(`${buildBaseUrl(params)}/mockserver/logEntryBody?${query}`, { signal });
   const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {

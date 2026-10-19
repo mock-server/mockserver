@@ -33,7 +33,7 @@ vi.mock('../components/OnboardingPanel', async () => {
 });
 
 import App from '../App';
-import type { WorkspaceConnection } from '../lib/connectionTarget';
+import { resolveUrlConnection, type WorkspaceConnection } from '../lib/connectionTarget';
 
 const B: WorkspaceConnection = { host: 'other-host', port: '1081', secure: false, basePath: '' };
 const C: WorkspaceConnection = { host: 'third-host', port: '1082', secure: false, basePath: '' };
@@ -95,5 +95,25 @@ describe('App on a workspace target change', () => {
 
     act(() => useDashboardStore.getState().switchWorkspace('a'));
     await waitFor(() => expect(initAnalytics).toHaveBeenCalledTimes(1));
+  });
+
+  it('never lets a server on another host named by the link decide analytics; the page origin’s server still does', async () => {
+    const original = globalThis.location.href;
+    globalThis.history.replaceState(null, '', '?host=attacker.example&port=443');
+    try {
+      const { page, foreignHost } = resolveUrlConnection();
+      expect(foreignHost).toBe(true);
+      const pageOrigin: WorkspaceConnection = { host: page.host, port: page.port, secure: page.secure, basePath: page.basePath ?? '' };
+      initAnalytics.mockClear();
+      useDashboardStore.setState({ workspaces: [ws('a', null), ws('b', pageOrigin)], activeWorkspaceId: 'a', connection: null });
+      render(<App />);
+      await waitFor(() => expect(useDashboardStore.getState().serverConfiguration).toEqual({}));
+      expect(initAnalytics).not.toHaveBeenCalled();
+
+      act(() => useDashboardStore.getState().switchWorkspace('b'));
+      await waitFor(() => expect(initAnalytics).toHaveBeenCalledTimes(1));
+    } finally {
+      globalThis.history.replaceState(null, '', original);
+    }
   });
 });

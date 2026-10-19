@@ -296,7 +296,37 @@ How the target change stays safe:
 | Breakpoints | `getBreakpointCallbackClient(params)` keeps **one callback client per target**. Matchers are owned on the server by that socket's `clientId`, so switching workspace leaves another server's matchers armed (exactly as navigating to another view does). When no workspace targets a server any more (closed or retargeted), `releaseBreakpointCallbackClientsExcept` closes its socket and the server removes those matchers and continues anything they paused. |
 | Cross-origin calls | Saving a target first sends `PUT /mockserver/status` (`probeTarget`); a failure is explained (unreachable or CORS refused, `corsAllowOrigin` excluding this origin, control-plane auth, a wrong base path, mixed content, an untrusted certificate) and the user may still choose **Save anyway**. A lost connection to a cross-origin target names CORS too. |
 
-Validation (`validateConnection`) refuses a host typed as a URL or with a path, a port outside 1-65535 and a base path that does not start with `/`; it lower-cases the host (underscores are allowed, as in Docker service names), and the breakpoint client compares targets by `connectionKey`, so a different spelling of one host never reconnects and drops matchers. Analytics is decided only by the dashboard URL's server, never by a workspace's other target.
+Validation (`validateConnection`) refuses a host typed as a URL or with a path, credentials or `#`, one longer than 253 characters, a bracketed value that is not an IPv6 address, a port outside 1-65535, and a base path that does not start with `/` or that contains `?`, `#`, `%`, `\`, whitespace, an empty segment (`//`) or a `.`/`..` segment; it lower-cases the host (underscores are allowed, as in Docker service names), and the breakpoint client compares targets by `connectionKey`, so a different spelling of one host never reconnects and drops matchers. Analytics is decided only by the dashboard URL's server, never by a workspace's other target.
+
+#### URL target validation
+
+**The dashboard's own address is untrusted input.** Anyone can send a user a dashboard link, so `?host=`, `?port=` and `?basePath=` (and the base path derived from the page path) pass the same checks as a typed target before any URL is built from them. Without that, `?basePath=/mockserver/reset%23` (or a `host` such as `127.0.0.1:1080/mockserver/stop%23`) turned the rest of every control-plane URL into a fragment, so the dashboard's next routine call went to `/mockserver/reset` on its own origin, where CORS does not apply.
+
+```mermaid
+flowchart LR
+    L["page URL\n?host ?port ?basePath\n+ page path"] --> R["resolveUrlConnection"]
+    R -->|"valid field"| P["URL target\n(urlConnectionParams)"]
+    R -->|"invalid field"| F["page origin's value\n+ field in rejected"]
+    F --> P
+    F --> N["UrlTargetNotice\ninvalid-value warning"]
+    R -->|"valid host other than the page's"| FH["UrlTargetNotice\nforeign-host warning\n+ switch back"]
+```
+
+| Piece | Behaviour |
+|-------|-----------|
+| `resolveUrlConnection()` (`lib/connectionTarget.ts`) | Returns `{ params, rejected, page, foreignHost }`; `page` is the page origin's own target and `foreignHost` is true when a valid `?host=` differs from the page's host. Each field is checked by the same `hostProblem`/`portProblem`/`basePathProblem` helpers `validateConnection` uses; an invalid one falls back, field by field, to the page origin's host, port or base path (or `''` when the page path itself is invalid). `?secure=` is a boolean and cannot inject. |
+| `urlConnectionParams()` | `resolveUrlConnection().params`; every consumer (store, `useConnectionParams`, `App`, `WorkspaceTabBar`, `WorkspaceTargetDialog`) reads the URL target through it, so none sees an unchecked value. |
+| `UrlTargetNotice` | Two warnings under the workspace bar. A dismissible one names ignored fields (`url-target-notice`). A persistent one, shown only when `foreignHost`, names the server the link points at and links to `pageOriginDashboardUrl()`, the same address without `host`/`port`/`secure`/`basePath` (`url-target-foreign-host`). |
+| Analytics | Decided only by the URL target's server, or by the page origin's server (`page`) when `foreignHost` is true, so a server a link names on another host cannot switch analytics on or choose its endpoint. |
+
+**A link to another host gets a notice, not a confirmation.** Validated, a link chooses only *which* server the dashboard talks to, never which endpoint, so it cannot turn a read into a destructive call. Two directions remain:
+
+- *Towards the user's own MockServer* — nothing new: every destructive action is a click (the clear-menu reset/clear actions confirm), and MockServer answers control-plane CORS for any origin unless `corsAllowOrigin` narrows it (see Cross-Origin Support below), so the linking page could make those calls itself.
+- *Towards a server the link's author controls* — the dashboard would show that server's data and send it whatever the user then creates (expectations, uploads, verifications, breakpoint matchers). The persistent foreign-host notice names that server and offers a one-click switch back to the page origin.
+
+The notice is keyed on the **host** only: a different `?port=`, `?secure=` or `?basePath=` on the same host stays quiet, so the documented `?port=1080` development, demo-launcher and screenshot flows show nothing. A blocking confirmation was rejected because it would interrupt those flows and protects nothing the notice does not.
+
+The other value read from the URL, the `#/<view>` hash, only ever selects a view through the `coerceView` whitelist.
 
 The Request Filter panel is shown on Dashboard, Traffic, and Trace views. It is hidden on all other views. Its header is a real button (in the Tab order, Enter or Space toggles it, `aria-expanded` reports the state), as well as Ctrl/Cmd+Shift+F.
 

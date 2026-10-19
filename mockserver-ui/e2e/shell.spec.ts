@@ -521,6 +521,62 @@ test.describe('title bar', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Dashboard link target
+// ---------------------------------------------------------------------------
+
+test.describe('dashboard link target', () => {
+  // The server also answers the un-prefixed aliases.
+  const DESTRUCTIVE = new Set(['/mockserver/reset', '/mockserver/stop', '/mockserver/clear', '/reset', '/stop', '/clear']);
+
+  for (const query of [
+    '?basePath=/mockserver/reset%23',
+    '?basePath=/mockserver/clear%23',
+    '?basePath=/reset%23',
+    `?host=${HOST}:${PORT}/mockserver/reset%23`,
+  ]) {
+    test(`E2E-SHELL-12: a link with ${query} is ignored, says so, and sends nothing to reset, stop or clear`, async ({ page, request }) => {
+      const path = `/shell/link-target-${Date.now()}`;
+      await upsert(request, path);
+      const calls: string[] = [];
+      page.on('request', (r) => {
+        const url = new URL(r.url());
+        if (!url.pathname.startsWith('/mockserver/dashboard')) calls.push(`${r.method()} ${url.pathname}`);
+      });
+
+      const destructive = () => calls.filter((call) => DESTRUCTIVE.has(call.split(' ')[1] ?? ''));
+
+      await page.goto(`./${query}#/traffic`);
+      await expect.poll(() => calls.filter((call) => call.includes(' /mockserver/')).length).toBeGreaterThan(0);
+      expect(destructive()).toEqual([]);
+      await expect(connectionChip(page, 'connected')).toBeVisible();
+      await expect(page.getByTestId('url-target-notice')).toContainText(`workspaces that follow the link use ${HOST}:${PORT}`);
+      await expect(page.getByTestId('url-target-foreign-host')).toHaveCount(0);
+      await goToView(page, 'library');
+      await goToView(page, 'dashboard');
+      await expect(page.getByText(path).first()).toBeVisible();
+
+      expect(destructive()).toEqual([]);
+      expect(await activeExpectationCount(request)).toBe(1);
+    });
+  }
+
+  test('E2E-SHELL-13: a link to a server on another host says where data goes and switches back to this server', async ({ page }) => {
+    test.skip(HOST !== '127.0.0.1' && HOST !== 'localhost', `needs a second name for ${HOST}`);
+    const otherHost = HOST === 'localhost' ? '127.0.0.1' : 'localhost';
+    await page.goto(`./?host=${otherHost}&port=${PORT}#/dashboard`);
+    await expect(connectionChip(page, 'connected')).toBeVisible();
+    const notice = page.getByTestId('url-target-foreign-host');
+    await expect(notice).toContainText(`This dashboard link points at ${otherHost}:${PORT}, not the server that served this page.`);
+
+    await notice.getByRole('link', { name: `Use ${HOST}:${PORT}` }).click();
+    await expect(page).not.toHaveURL(/[?&]host=/);
+    await expect(page).toHaveURL(/#\/dashboard$/);
+    await expect(connectionChip(page, 'connected')).toBeVisible();
+    await expect(page.getByTestId('url-target-foreign-host')).toHaveCount(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Clear / reset menu
 // ---------------------------------------------------------------------------
 
