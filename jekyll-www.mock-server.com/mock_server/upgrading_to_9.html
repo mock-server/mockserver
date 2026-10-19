@@ -405,7 +405,7 @@ sitemap:
 
 <h3>maxEventLogSizeInBytes is now on by default</h3>
 
-<p>The event log is now bounded by size as well as by count: <span class="inline_code">maxEventLogSizeInBytes</span> defaults to a twentieth of heap at <span class="inline_code">WARN</span> and below, a twelfth at <span class="inline_code">INFO</span> and above. Set it to <span class="inline_code">0</span> to restore count-only bounding (<span class="inline_code">maxLogEntries</span>) &mdash; though an explicitly-set value you already relied on may now retain fewer entries than before, since it is now enforced rather than ignored.</p>
+<p>The event log is now bounded by size as well as by count: <span class="inline_code">maxEventLogSizeInBytes</span> defaults to a twentieth of heap at <span class="inline_code">WARN</span> and below, a twelfth at <span class="inline_code">INFO</span> and above (releases after 9.0 use a twentieth at <span class="inline_code">INFO</span> too; see <a href="/mock_server/configuration_properties.html#button_configuration_max_event_log_size_in_bytes">maxEventLogSizeInBytes</a>). Set it to <span class="inline_code">0</span> to restore count-only bounding (<span class="inline_code">maxLogEntries</span>) &mdash; though an explicitly-set value you already relied on may now retain fewer entries than before, since it is now enforced rather than ignored.</p>
 
 <a id="idle_and_write_stall_timeouts" class="anchor" href="#idle_and_write_stall_timeouts">&nbsp;</a>
 

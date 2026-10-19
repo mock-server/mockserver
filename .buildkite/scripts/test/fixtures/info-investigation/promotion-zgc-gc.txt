@@ -1,0 +1,41 @@
+[2026-10-19T09:00:00.000+0000][10.000s][info][gc,init     ] Initializing The Z Garbage Collector
+[2026-10-19T09:00:01.900+0000][11.900s][info][gc          ] GC(0) Minor Collection (Allocation Rate)
+[2026-10-19T09:00:01.990+0000][11.990s][info][gc,heap     ] GC(0) y: Allocated:         -                 2M (1%)            2M (1%)            2M (1%)
+[2026-10-19T09:00:01.990+0000][11.990s][info][gc,heap     ] GC(0) y:  Promoted:         -                  -                 50M (2%)            50M (2%)
+[2026-10-19T09:00:02.000+0000][12.000s][info][gc,phases   ] GC(0) y: Young Generation 100M(20%)->20M(4%) 0.010s
+[2026-10-19T09:00:02.000+0000][12.000s][info][gc          ] GC(0) Minor Collection (Allocation Rate) 120M(26%)->40M(9%) 0.020s
+[2026-10-19T09:00:07.900+0000][17.900s][info][gc          ] GC(1) Minor Collection (Allocation Rate)
+[2026-10-19T09:00:07.990+0000][17.990s][info][gc,heap     ] GC(1) y: Allocated:         -                 2M (1%)            2M (1%)            2M (1%)
+[2026-10-19T09:00:07.990+0000][17.990s][info][gc,heap     ] GC(1) y:  Promoted:         -                  -                 10M (2%)            10M (2%)
+[2026-10-19T09:00:08.000+0000][18.000s][info][gc,phases   ] GC(1) y: Young Generation 100M(20%)->20M(4%) 0.010s
+[2026-10-19T09:00:08.000+0000][18.000s][info][gc          ] GC(1) Minor Collection (Allocation Rate) 120M(26%)->40M(9%) 0.020s
+[2026-10-19T09:00:11.900+0000][21.900s][info][gc          ] GC(2) Minor Collection (Allocation Rate)
+[2026-10-19T09:00:11.990+0000][21.990s][info][gc,heap     ] GC(2) y: Allocated:         -                 2M (1%)            2M (1%)            2M (1%)
+[2026-10-19T09:00:11.990+0000][21.990s][info][gc,heap     ] GC(2) y:  Promoted:         -                  -                 10M (2%)            10M (2%)
+[2026-10-19T09:00:12.000+0000][22.000s][info][gc,phases   ] GC(2) y: Young Generation 100M(20%)->20M(4%) 0.010s
+[2026-10-19T09:00:12.000+0000][22.000s][info][gc          ] GC(2) Minor Collection (Allocation Rate) 120M(26%)->40M(9%) 0.020s
+[2026-10-19T09:00:15.900+0000][25.900s][info][gc          ] GC(3) Minor Collection (Allocation Rate)
+[2026-10-19T09:00:15.990+0000][25.990s][info][gc,heap     ] GC(3) y: Allocated:         -                 2M (1%)            2M (1%)            2M (1%)
+[2026-10-19T09:00:15.990+0000][25.990s][info][gc,heap     ] GC(3) y:  Promoted:         -                  -                 10M (2%)            10M (2%)
+[2026-10-19T09:00:16.000+0000][26.000s][info][gc,phases   ] GC(3) y: Young Generation 100M(20%)->20M(4%) 0.010s
+[2026-10-19T09:00:16.000+0000][26.000s][info][gc          ] GC(3) Minor Collection (Allocation Rate) 120M(26%)->40M(9%) 0.020s
+[2026-10-19T09:00:19.900+0000][29.900s][info][gc          ] GC(4) Minor Collection (Allocation Rate)
+[2026-10-19T09:00:19.990+0000][29.990s][info][gc,heap     ] GC(4) y: Allocated:         -                 2M (1%)            2M (1%)            2M (1%)
+[2026-10-19T09:00:19.990+0000][29.990s][info][gc,heap     ] GC(4) y:  Promoted:         -                  -                 10M (2%)            10M (2%)
+[2026-10-19T09:00:20.000+0000][30.000s][info][gc,phases   ] GC(4) y: Young Generation 100M(20%)->20M(4%) 0.010s
+[2026-10-19T09:00:20.000+0000][30.000s][info][gc          ] GC(4) Minor Collection (Allocation Rate) 120M(26%)->40M(9%) 0.020s
+[2026-10-19T09:00:23.900+0000][33.900s][info][gc          ] GC(5) Minor Collection (Allocation Rate)
+[2026-10-19T09:00:23.990+0000][33.990s][info][gc,heap     ] GC(5) y: Allocated:         -                 2M (1%)            2M (1%)            2M (1%)
+[2026-10-19T09:00:23.990+0000][33.990s][info][gc,heap     ] GC(5) y:  Promoted:         -                  -                 10M (2%)            10M (2%)
+[2026-10-19T09:00:24.000+0000][34.000s][info][gc,phases   ] GC(5) y: Young Generation 100M(20%)->20M(4%) 0.010s
+[2026-10-19T09:00:24.000+0000][34.000s][info][gc          ] GC(5) Minor Collection (Allocation Rate) 120M(26%)->40M(9%) 0.020s
+[2026-10-19T09:00:27.900+0000][37.900s][info][gc          ] GC(6) Major Collection (Proactive)
+[2026-10-19T09:00:27.990+0000][37.990s][info][gc,heap     ] GC(6) Y: Allocated:         -                 2M (1%)            2M (1%)            2M (1%)
+[2026-10-19T09:00:27.990+0000][37.990s][info][gc,heap     ] GC(6) Y:  Promoted:         -                  -                 5M (2%)            5M (2%)
+[2026-10-19T09:00:28.000+0000][38.000s][info][gc,phases   ] GC(6) Y: Young Generation 100M(20%)->20M(4%) 0.010s
+[2026-10-19T09:00:28.500+0000][38.500s][info][gc          ] GC(6) Major Collection (Proactive) 120M(26%)->60M(13%) 0.600s
+[2026-10-19T09:00:29.000+0000][39.000s][info][gc          ] Allocation Stall (workerEventLoop1) 12.345ms
+[2026-10-19T09:00:29.000+0000][39.000s][info][gc,alloc    ] GC(7) y: Allocation Stalls:          0                0                0                0
+[2026-10-19T09:00:30.990+0000][40.990s][info][gc,heap     ] GC(7) y: Allocated:         -                 2M (1%)            2M (1%)            2M (1%)
+[2026-10-19T09:00:30.990+0000][40.990s][info][gc,heap     ] GC(7) y:  Promoted:         -                  -                 99M (2%)            99M (2%)
+[2026-10-19T09:00:31.000+0000][41.000s][info][gc,phases   ] GC(7) y: Young Generation 100M(20%)->20M(4%) 0.010s

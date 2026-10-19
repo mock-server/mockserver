@@ -2048,31 +2048,28 @@ public class ConfigurationProperties {
     // backlog) guard different failures. In-flight /7 (/12 at DEBUG/TRACE, which were not re-measured)
     // is the OOM bound: with retention, the whole log stays under a quarter of the ceiling (measured k:
     // docs/code/memory-management.md).
-    // Retention /20 at WARN is a GC bound: on the measured 2-core, 462 MiB-heap rig, entries kept at /7
-    // outlived the young-GC interval under load and were promoted. Rendering levels keep the
-    // OOM-derived /12, because rendering makes promotion structural there.
+    // Retention /20 at INFO/WARN/ERROR/OFF is a GC bound: on the measured 2-core rig, entries kept longer
+    // outlived the young-GC interval under load and were promoted (at INFO: more promotion and a higher
+    // G1 p99 at /12). DEBUG/TRACE, not measured, keep /12 (docs/code/memory-management.md).
     static final int DEFAULT_EVENT_LOG_BYTES_HEAP_DIVISOR = 20;
-    static final int DEFAULT_EVENT_LOG_BYTES_HEAP_DIVISOR_RENDERING = 12;
+    static final int DEFAULT_EVENT_LOG_BYTES_HEAP_DIVISOR_DEBUG = 12;
     static final int DEFAULT_EVENT_LOG_IN_FLIGHT_BYTES_HEAP_DIVISOR = 7;
     static final int DEFAULT_EVENT_LOG_IN_FLIGHT_BYTES_HEAP_DIVISOR_DEBUG = 12;
 
     /**
-     * True when {@code logLevel} renders every received-request / response log entry to the log
-     * (INFO/DEBUG/TRACE), which inflates each RETAINED entry's heap by the memoized formatted message
-     * string — a cost the byte-budget weigher deliberately does not count, so the default budget is made
-     * tighter at these levels to compensate (see {@link #DEFAULT_EVENT_LOG_BYTES_HEAP_DIVISOR_RENDERING}).
-     * False for WARN/ERROR/OFF (and a {@code null} level, i.e. OFF), which do not render those entries.
+     * True at DEBUG/TRACE, the levels whose event-log defaults keep their own, unmeasured divisors; false
+     * at INFO/WARN/ERROR and for a {@code null} level (OFF).
      */
-    static boolean rendersEveryLogEntry(Level logLevel) {
-        return logLevel != null && logLevel.toInt() <= Level.INFO.toInt();
+    static boolean isDebugOrTrace(Level logLevel) {
+        return logLevel != null && logLevel.toInt() < Level.INFO.toInt();
     }
 
     /**
      * Derive the default {@code maxEventLogSizeInBytes} — the byte budget bounding what the event log
      * RETAINS — from the deterministic heap <em>ceiling</em> ({@link #heapAvailableInKB()}), so it is a
      * constant for the JVM's life and does not depend on allocation ordering. A twentieth of the
-     * ceiling at a non-rendering level (WARN/ERROR/OFF), a twelfth at a rendering level
-     * (INFO/DEBUG/TRACE); see {@link #DEFAULT_EVENT_LOG_BYTES_HEAP_DIVISOR} for why. The in-flight ring
+     * ceiling at INFO/WARN/ERROR/OFF, a twelfth at DEBUG/TRACE; see
+     * {@link #DEFAULT_EVENT_LOG_BYTES_HEAP_DIVISOR} for why. The in-flight ring
      * backlog has its own, larger cap: {@link #eventLogInFlightBytes(long, long, Level)}.
      * <p>
      * Returns {@code 0} (byte budget disabled, log bounded only by {@code maxLogEntries}) when the
@@ -2086,8 +2083,8 @@ public class ConfigurationProperties {
      * @return the default byte budget in bytes, or {@code 0} to leave the byte budget disabled
      */
     static long defaultMaxEventLogSizeInBytes(long heapAvailableInKB, Level logLevel) {
-        return heapFraction(heapAvailableInKB, rendersEveryLogEntry(logLevel)
-            ? DEFAULT_EVENT_LOG_BYTES_HEAP_DIVISOR_RENDERING
+        return heapFraction(heapAvailableInKB, isDebugOrTrace(logLevel)
+            ? DEFAULT_EVENT_LOG_BYTES_HEAP_DIVISOR_DEBUG
             : DEFAULT_EVENT_LOG_BYTES_HEAP_DIVISOR);
     }
 
@@ -2097,7 +2094,7 @@ public class ConfigurationProperties {
      * and {@code 0} (disabled) when the ceiling is undefined.
      */
     static long defaultEventLogInFlightBytes(long heapAvailableInKB, Level logLevel) {
-        return heapFraction(heapAvailableInKB, logLevel != null && logLevel.toInt() < Level.INFO.toInt()
+        return heapFraction(heapAvailableInKB, isDebugOrTrace(logLevel)
             ? DEFAULT_EVENT_LOG_IN_FLIGHT_BYTES_HEAP_DIVISOR_DEBUG
             : DEFAULT_EVENT_LOG_IN_FLIGHT_BYTES_HEAP_DIVISOR);
     }
@@ -2218,11 +2215,10 @@ public class ConfigurationProperties {
      * </p>
      * <p>
      * The default is derived from the JVM heap <em>ceiling</em>, so it is on by default and constant for
-     * the JVM's life: a twentieth of the same ceiling-based budget that sizes {@code maxLogEntries} at a
-     * non-rendering level (WARN/ERROR/OFF), and a twelfth at a rendering level (INFO/DEBUG/TRACE). The
-     * budget counts an estimate of each entry's size; the real heap the log holds is a multiple of it
-     * that depends on the traffic, and is larger at a rendering level, where every retained entry also
-     * keeps its formatted log message. Entries still waiting to be processed are bounded separately, by
+     * the JVM's life: a twentieth of the same ceiling-based budget that sizes {@code maxLogEntries} at
+     * INFO, WARN, ERROR and OFF, and a twelfth at DEBUG and TRACE. The budget counts an estimate of each
+     * entry's size; the real heap the log holds is a multiple of it that depends on the traffic and the
+     * log level. Entries still waiting to be processed are bounded separately, by
      * the larger of this value and a heap-derived cap (a seventh of the ceiling, a twelfth at DEBUG and
      * TRACE), so a small budget does not drop events during a burst. Set it to {@code 0} to
      * disable both byte bounds and bound the log only by {@code maxLogEntries}. Whichever of the two
@@ -3468,7 +3464,7 @@ public class ConfigurationProperties {
      * recent one is always kept.
      * <p>
      * The default is a twentieth of the heap ceiling budget, the same share the event log keeps at
-     * WARN; {@code 0} bounds the store by count only.
+     * INFO and WARN; {@code 0} bounds the store by count only.
      *
      * @param maxOpenAiResponsesSizeInBytes maximum total size in bytes of stored Responses API turns (0 disables the limit)
      */

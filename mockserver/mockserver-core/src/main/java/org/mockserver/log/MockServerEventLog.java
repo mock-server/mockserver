@@ -872,7 +872,7 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
                 .append("(1) record less — at log level ").append(logLevel).append(" each request also logs a diagnostic entry per non-matching expectation; ")
                 .append("lowering the log level (e.g. to WARN) stops recording those and cuts entries retained per request, and does NOT affect what verify can find ")
                 .append("(received requests and mocked/forwarded responses are recorded at every level; ")
-                .append("note: the default byte budget is smaller at WARN, so raise maxEventLogSizeInBytes if it then binds); ")
+                .append("note: the default byte budget is smaller at INFO and WARN than at DEBUG and TRACE, so raise maxEventLogSizeInBytes if it then binds); ")
                 .append("or, to keep this log level, set maxLoggedMatchFailures (e.g. to 10) to cap those entries per request; ")
                 .append("(2) if you have heap headroom, raise the limit maxLogEntries (currently ").append(maxLogEntries).append("); ")
                 .append("(3) clear/reset the event log between tests.");

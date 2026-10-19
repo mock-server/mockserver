@@ -45,3 +45,26 @@ inv_cells_verdict() {
   printf '%s\n' "$bad"
   return 1
 }
+
+# inv_promo_verdict <cells.jsonl> <expected cell count>: the PART=promotion counterpart of
+# inv_cells_verdict. A cell counts only when its budget was confirmed by the server's gauges, the
+# prefill reached 93% of it, the GC log is the expected collector's, and every rung was derived with
+# no failed request.
+inv_promo_verdict() {
+  local cells="$1" expected="$2" got bad nl=$'\n'
+  got="$(jq -s 'length' "$cells" 2>/dev/null)" || got="unreadable"
+  bad="$(jq -r '
+    def why:
+      if .status != "measured" then "status \(.status)"
+      elif .gauges.max_retained_bytes != .budget_bytes then "budget \(.gauges.max_retained_bytes) is not \(.budget_bytes)"
+      elif (.prefill.peak_fraction_of_budget // 0) < 0.93 then "the prefill reached \(.prefill.peak_fraction_of_budget) of the budget"
+      elif .analysis.collector != .collector then "the GC log is \(.analysis.collector), not \(.collector)"
+      elif ((.analysis.rungs // []) | length) == 0 then "no rung was derived"
+      else ([.analysis.rungs[] | if .status != "measured" then "rung \(.offered_rps): \(.status)"
+               elif (.error_rate // 0) > 0 then "rung \(.offered_rps): error rate \(.error_rate)" else empty end] | first // empty) end;
+    "\(.cell // "?"): \(why)"' "$cells" 2>/dev/null)" || bad="$cells is not valid JSON lines"
+  if [ "$got" != "$expected" ]; then bad="${bad:+$bad$nl}expected $expected cells, found $got"; fi
+  [ -n "$bad" ] || return 0
+  printf '%s\n' "$bad"
+  return 1
+}

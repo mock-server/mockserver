@@ -3165,7 +3165,7 @@ and a matrix run at 1600 would key a series of its own.
 The INFO SUT's event-log budget is a sixth break, in every `info_*` metric. Until the image-heap
 change's harness fix (closed as item 40 of the performance plan; see its history) the INFO
 SUT was handed the harness's 256 MiB `maxEventLogSizeInBytes`, which exists for the ERROR SUT's
-`growth.js` fill. At INFO that is over three times the shipped default (heap/12, 75.2 MiB on the
+`growth.js` fill. At INFO that was over three times the shipped default then (heap/12, 75.2 MiB on the
 GraalJS SUT's 922 MiB heap), so the INFO arm never measured the out-of-the-box figure. When the
 image heap fell to 922 MiB, the INFO `regression.js` tails rose 2–9× (541). Build 565 re-ran on the
 old 1,230 MiB heap (`-Xmx1229m` reaches the INFO SUT too) and put them back down, so it points to
@@ -3198,6 +3198,13 @@ The compare step keys every `info_*` metric on `method`; a run without the block
 re-baselines from the first run after the change. While older runs remain in the window the
 annotation says so ("INFO-arm baseline reset").
 `.buildkite/scripts/test/perf-info-budget-test.sh` checks which SUTs get a budget and the key.
+
+The INFO retention default moved from heap/12 to heap/20 on 2026-10-19 (78,817,280 to 47,290,368
+bytes on the 922 MiB GraalJS heap; see
+[memory-management.md](memory-management.md#info-promotion-measured-on-the-perf-rig-2026-10-19)).
+`method` stays `shipped-default`, so `info_*` compares across it: expect the INFO arm to retain
+about 40% fewer entries, and its metrics to move, from the first run on an image with the change.
+`expected_default_bytes` records which default a run had.
 
 The main SUT's event-log budget is a seventh break, in `behaviours.*`, `rig_valid_peak_achieved_rps`
 and the `tls13` handshake arm (`tls_handshake.tls13.*`; the `mtls` and `jdk` arms run on their own SUTs). Until item 51 the main SUT was handed the harness's 256 MiB, so the daily run
@@ -3250,8 +3257,8 @@ confirms it) and `growth_phase`
 until `MIN_BASELINE` runs share the new method ("Main-SUT baseline reset"). `forward.error_rate`,
 `growth.*` and the other families keep the full baseline.
 The heap divisors the harness expects mirror `ConfigurationProperties` and must move with it:
-`els_default_divisor` for the retention budget (20 at `WARN`/`ERROR`/`OFF`, 12 at
-`INFO`/`DEBUG`/`TRACE`) and `els_inflight_divisor` for the in-flight floor (7 at `WARN`/`ERROR`/`OFF` and `INFO`, 12 at `DEBUG`/`TRACE`). `.buildkite/scripts/test/perf-default-budget-test.sh` checks the call sites, both guards,
+`els_default_divisor` for the retention budget (20 at `INFO`/`WARN`/`ERROR`/`OFF`, 12 at
+`DEBUG`/`TRACE`) and `els_inflight_divisor` for the in-flight floor (7 at `WARN`/`ERROR`/`OFF` and `INFO`, 12 at `DEBUG`/`TRACE`). `.buildkite/scripts/test/perf-default-budget-test.sh` checks the call sites, both guards,
 the scoped PUT against a stubbed SUT, the window statistics and the key.
 
 ### INFO-arm event-log pressure

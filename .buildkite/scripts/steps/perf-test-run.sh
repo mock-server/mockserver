@@ -304,7 +304,7 @@ fi
 if [ -n "${PERF_RELEASE_COMPARISON:-}" ] && [ -z "$PERF_MAX_EVENT_LOG_BYTES" ]; then PERF_MAX_EVENT_LOG_BYTES=268435456; fi
 HARNESS_FIXED_EVENT_LOG_BYTES="${PERF_MAX_EVENT_LOG_BYTES:-268435456}" # 256 MiB
 GROWTH_EVENT_LOG_BYTES="$HARNESS_FIXED_EVENT_LOG_BYTES"
-# The INFO SUT gets no budget (the shipped heap/12 default) unless this is set; setting it marks
+# The INFO SUT gets no budget (the shipped heap/20 default) unless this is set; setting it marks
 # the run tuned. PERF_MAX_EVENT_LOG_BYTES deliberately never reaches the INFO SUT.
 PERF_INFO_MAX_EVENT_LOG_BYTES="${PERF_INFO_MAX_EVENT_LOG_BYTES:-}"
 if [ -n "$PERF_INFO_MAX_EVENT_LOG_BYTES" ] && ! [[ "$PERF_INFO_MAX_EVENT_LOG_BYTES" =~ ^[1-9][0-9]*$ ]]; then
@@ -1240,7 +1240,7 @@ info_els_method() { # requested_bytes -> shipped-default | fixed-<bytes>
 # (ConfigurationProperties.defaultMaxEventLogSizeInBytes / defaultEventLogInFlightBytes); keep in step
 # with them. The in-flight cap is max(budget, heap/floor divisor). An unset level is the default, INFO.
 els_default_divisor() { # log_level
-  case "$1" in INFO|DEBUG|TRACE|"") echo 12 ;; *) echo 20 ;; esac
+  case "$1" in DEBUG|TRACE) echo 12 ;; *) echo 20 ;; esac
 }
 els_inflight_divisor() { # log_level
   case "$1" in DEBUG|TRACE) echo 12 ;; *) echo 7 ;; esac
@@ -4057,7 +4057,7 @@ HEAP_RATIO="$(ratio "$HEAP_MIN_LAST" "$HEAP_MIN_FIRST")"
 # min(heapAvailableKB/8, 250000) and CAPS at 250000 (reached by ~1.9 GiB of heap), while maxEventLogSizeInBytes
 # is (heapAvailableKB/divisor)*1024 (the divisor is els_default_divisor's, by log level) and scales with the
 # heap without limit. For the perf workload's small bodies (~1.3 KB per entry) the BYTE budget binds
-# first up to roughly a 6 GiB heap at WARN (~3.7 GiB at INFO), and the COUNT cap above that — this
+# first up to roughly a 6 GiB heap at INFO and WARN, and the COUNT cap above that — this
 # block MEASURES which one binds rather than assuming it. Resolved values come from the
 # server's own gauges (max_retained_entries / max_retained_bytes in diag-samples.csv), the EFFECTIVE
 # figures the JVM applied, not the requested ones. On an older SUT image without those gauges the

@@ -402,12 +402,14 @@ The cap is also well clear of the older large-container failure: under sustained
 
 **Heap and heap-derived defaults by container limit** (default `INFO` log level; see [memory-management.md](../code/memory-management.md#example-default-limits-by-heap-size) for the formulas):
 
-| Limit | Heap at 60% (older) | Heap at 50% (before) | Heap at 45% (now) | `maxLogEntries` 60% → 50% → 45% | `maxEventLogSizeInBytes` at `INFO` 60% → 50% → 45% |
-|---|---|---|---|---|---|
-| 512 MiB | 308 MiB | 256 MiB | 232 MiB | 36,864 → 30,208 → 27,136 | 24.0 → 19.7 → 17.7 MiB |
-| 1 GiB | 616 MiB | 512 MiB | 462 MiB | 76,288 → 62,976 → 56,576 | 49.7 → 41.0 → 36.8 MiB |
-| 2 GiB | 1,230 MiB | 1,024 MiB | 922 MiB | 154,880 → 128,512 → 115,456 | 100.8 → 83.7 → 75.2 MiB |
-| 4 GiB | 2,458 MiB | 2,048 MiB | 1,844 MiB | 250,000 (cap) → 250,000 → 233,472 | 203.2 → 169.0 → 152.0 MiB |
+| Limit | Heap at 60% (older) | Heap at 50% (before) | Heap at 45% (now) | `maxLogEntries` 60% → 50% → 45% | `maxEventLogSizeInBytes` at `INFO` at heap/12, 60% → 50% → 45% | at `INFO` now (heap/20, 45%) |
+|---|---|---|---|---|---|---|
+| 512 MiB | 308 MiB | 256 MiB | 232 MiB | 36,864 → 30,208 → 27,136 | 24.0 → 19.7 → 17.7 MiB | 10.6 MiB |
+| 1 GiB | 616 MiB | 512 MiB | 462 MiB | 76,288 → 62,976 → 56,576 | 49.7 → 41.0 → 36.8 MiB | 22.1 MiB |
+| 2 GiB | 1,230 MiB | 1,024 MiB | 922 MiB | 154,880 → 128,512 → 115,456 | 100.8 → 83.7 → 75.2 MiB | 45.1 MiB |
+| 4 GiB | 2,458 MiB | 2,048 MiB | 1,844 MiB | 250,000 (cap) → 250,000 → 233,472 | 203.2 → 169.0 → 152.0 MiB | 91.2 MiB |
+
+The `INFO` budget was heap/12 until 2026-10-19 and is now heap/20, the same as `WARN` (see [memory-management.md](../code/memory-management.md#info-promotion-measured-on-the-perf-rig-2026-10-19)).
 
 `maxExpectations` stays at its 15,000 cap at every size shown. Users who want the previous heap set an explicit `-Xmx` (and size the limit for it).
 

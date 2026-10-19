@@ -77,8 +77,8 @@ steps:
         - exit_status: 255  # agent forced shutdown
           limit: 2
 
-  # On-demand INFO-level investigation: an API build with PERF_INFO_INVESTIGATION=jfr|heap|both and
-  # no perf marker. Never compared or baselined. See docs/infrastructure/ci-cd.md (INFO-Level Investigation).
+  # On-demand INFO-level investigation: an API build with PERF_INFO_INVESTIGATION=jfr|heap|both|promotion
+  # and no perf marker. Never compared or baselined. See docs/infrastructure/ci-cd.md (INFO-Level Investigation).
   - label: ":mag: INFO investigation — event-log consumer JFR"
     command: ".buildkite/scripts/steps/perf-test-info-investigation.sh"
     if: "build.source == 'api' && build.env('PERF_INFO_INVESTIGATION') != null && build.env('PERF_INFO_INVESTIGATION') =~ /^(jfr|both)$/ && build.message !~ /\\[perf-(run|soak)\\]/"
@@ -99,6 +99,20 @@ steps:
     env:
       PERF_INFO_INVESTIGATION_PART: "heap"
     timeout_in_minutes: 180
+    agents:
+      queue: "perf"
+    retry:
+      automatic:
+        - exit_status: -1   # agent lost (e.g. Spot reclamation)
+          limit: 2
+        - exit_status: 255  # agent forced shutdown
+          limit: 2
+  - label: ":mag: INFO investigation — young-GC promotion per retention divisor"
+    command: ".buildkite/scripts/steps/perf-test-info-investigation.sh"
+    if: "build.source == 'api' && build.env('PERF_INFO_INVESTIGATION') != null && build.env('PERF_INFO_INVESTIGATION') == 'promotion' && build.message !~ /\\[perf-(run|soak)\\]/"
+    env:
+      PERF_INFO_INVESTIGATION_PART: "promotion"
+    timeout_in_minutes: 150
     agents:
       queue: "perf"
     retry:

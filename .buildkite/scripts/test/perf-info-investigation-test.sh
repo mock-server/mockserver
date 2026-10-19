@@ -2,7 +2,8 @@
 # Fixture tests for perf-test-info-investigation.sh and lib/perf-info-inv.sh, no Docker needed:
 # section 1 runs the cell verdict on build 697's own cells.jsonl and mutations of it; sections 2-4 run
 # the step with `docker`, `curl` and `buildkite-agent` stubbed on PATH (a cancelled step leaves no
-# container, an unmeasured cell fails the step, a fully measured one passes).
+# container, an unmeasured cell fails the step, a fully measured one passes); section 5 runs the
+# promotion analysis on fixture GC logs, and section 6 runs PART=promotion on the same stubs.
 # Run: .buildkite/scripts/test/perf-info-investigation-test.sh
 set -euo pipefail
 
@@ -56,11 +57,31 @@ d="$STUB_DIR"; echo "docker $*" >> "$d/calls.log"; touch "$d/containers"
 cmd="$1"; shift
 case "$cmd" in
   run)
-    all="$*"; name=""; label=""; detach=false
-    while [ $# -gt 0 ]; do case "$1" in --name) name="$2"; shift ;; --label) label="${label:+$label,}$2"; shift ;; -d) detach=true ;; esac; shift; done
+    all="$*"; name=""; label=""; detach=false; out=""; result=""
+    while [ $# -gt 0 ]; do case "$1" in
+      --name) name="$2"; shift ;; --label) label="${label:+$label,}$2"; shift ;; -d) detach=true ;;
+      -v) case "$2" in *:/out) out="${2%:/out}" ;; *:/diag) echo "${2%:/diag}" > "$d/diag" ;; esac; shift ;;
+      -e) case "$2" in K6_SWEEP_RESULT_PATH=*) result="${2#*=/out/}" ;; JAVA_TOOL_OPTIONS=*file=/diag/*) c="${2#*file=/diag/}"; echo "${c%%/*}" > "$d/gccell" ;; esac; shift ;;
+    esac; shift; done
     case "$name" in k6-*) rm -f "$d/reset" ;; esac
     if [ "$detach" = true ]; then echo "$name $label" >> "$d/containers"; echo "$name"; exit 0; fi
+    if [ -n "$result" ] && [ -n "$out" ] && [[ "$name" == *-sweep ]]; then
+      python3 - "$out/$result" "$(cat "$d/diag")/$(cat "$d/gccell")/gc-1.log" <<'PY'
+import datetime, json, sys, time
+start = time.time()
+time.sleep(4.5)
+iso = lambda t: datetime.datetime.fromtimestamp(t, datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + '+0000'
+json.dump({'points': [{'offered_rps': 2000, 'p50_ms': 0.4, 'start_epoch_ms': int(start * 1000)}]}, open(sys.argv[1], 'w'))
+with open(sys.argv[2], 'w') as f:
+    f.write('[%s][0.1s][info][gc     ] Using G1\n[%s][0.1s][info][gc,init] Heap Region Size: 1M\n' % (iso(start), iso(start)))
+    f.write('[%s][2.0s][info][gc,heap     ] GC(1) Eden regions: 40->0(60)\n' % iso(start + 2))
+    f.write('[%s][2.0s][info][gc,heap     ] GC(1) Old regions: 10->12\n' % iso(start + 2))
+    f.write('[%s][2.0s][info][gc          ] GC(1) Pause Young (Normal) (G1 Evacuation Pause) 80M->30M(200M) 3.000ms\n' % iso(start + 2))
+PY
+      exit 0
+    fi
     case "$all" in
+      *PrintFlagsFinal*) echo "   size_t MaxHeapSize                              = 484442112                                 {product} {ergonomic}" ;;
       *GC.class_histogram*) printf ' num     #instances         #bytes  class name\nTotal         10        1000000\n' ;;
       */proc/1/status*) echo "1000 1000" ;;
     esac ;;
@@ -86,6 +107,13 @@ d="$STUB_DIR"
 case "$*" in
   *169.254.169.254*) exit 7 ;;
   */mockserver/metrics*)
+    if [ -n "${STUB_PROMO:-}" ]; then
+      e=$(( $(cat "$d/evicted" 2>/dev/null || echo 0) + 1000 )); echo "$e" > "$d/evicted"
+      printf '%s\n' "mock_server_event_log_retained_bytes ${STUB_RETAINED:-38622208}" "mock_server_event_log_retained_entries 500" \
+        "mock_server_event_log_max_retained_bytes ${STUB_MAX_RETAINED:-38622208}" "mock_server_event_log_max_in_flight_bytes 66209792" \
+        "mock_server_event_log_ring_occupancy 10" "mock_server_event_log_in_flight_bytes 0" "mock_server_evicted_log_entries_total $e"
+      exit 0
+    fi
     b=100; { [ -f "$d/reset" ] || [ -n "${STUB_NEVER_FILL:-}" ]; } && b=10
     printf '%s\n' "mock_server_event_log_retained_bytes $b" "mock_server_event_log_retained_entries 5" \
       "mock_server_event_log_max_retained_bytes 100" "mock_server_event_log_ring_occupancy 0" \
@@ -149,6 +177,73 @@ run_step; rc=0; wait "$STEP_PID" || rc=$?
 check "a fully measured cell passes" "0" "$rc"
 check "its cell record is measured" "measured measured" "$(jq -r '"\(.status) \(.drained_probe.status)"' "$T/out/heap/cells.jsonl" 2>/dev/null)"
 check "no container is left after a pass" "0" "$(live_containers)"
+
+echo "--- 5. the promotion analysis on fixture GC logs"
+PROMO_PY="$REPO_ROOT/.buildkite/scripts/steps/lib/perf-info-promotion.py"
+FX="$REPO_ROOT/.buildkite/scripts/test/fixtures/info-investigation"
+if ! command -v python3 >/dev/null 2>&1; then
+  if [ "${BUILDKITE:-}" = "true" ]; then bad "python3 absent: the promotion analysis is untested"; else echo "  SKIP python3 absent"; fi
+else
+  promo() { python3 -I "$PROMO_PY" "$FX/promotion-$1-gc.txt" "$FX/promotion-sweep.json" "$FX/promotion-samples.txt" 5 30 40000000 | jq -r "$2"; }
+  check "ZGC: the collector is read from the log" "ZGC" "$(promo zgc .collector)"
+  check "ZGC: young collections, majors and stalls inside the window only" "6 1 1" "$(promo zgc '.rungs[0] | "\(.young_collections) \(.major_collections) \(.allocation_stalls)"')"
+  check "ZGC: promotion is the Relocate End Promoted row, the major's young included" "2.2 4.167" "$(promo zgc '.rungs[0] | "\(.promoted_mb_s) \(.young_interval_s)"')"
+  check "ZGC: allocation per young cycle counts the gap and the cycle" "82 19.7" "$(promo zgc '.rungs[0] | "\(.alloc_mb_per_young) \(.alloc_mb_s)"')"
+  check "ZGC: lifetime is retained entries over the eviction rate" "10 2.4 0.048" "$(promo zgc '.rungs[0] | "\(.lifetime_s) \(.lifetime_over_young_interval) \(.ring_wait_over_young_interval)"')"
+  check "ZGC: drops are the window's deltas" "7 2" "$(promo zgc '.rungs[0] | "\(.dropped_ring_full) \(.dropped_in_flight_bytes)"')"
+  check "a rung that never started is not measured" "rung did not start" "$(promo zgc '.rungs[1].status')"
+  check "G1: old-region growth in young-only pauses; the Mixed pause is counted, not summed" "G1 5 1 0.64" "$(promo g1 '"\(.collector) \(.rungs[0].young_collections) \(.rungs[0].mixed_pauses) \(.rungs[0].promoted_mb_s)"')"
+  check "G1: a concurrent mark cycle counts as a major; eden is the allocation" "1 50" "$(promo g1 '.rungs[0] | "\(.major_collections) \(.alloc_mb_per_young)"')"
+  unparsed() { python3 -I "$PROMO_PY" "$1" "$FX/promotion-sweep.json" "$FX/promotion-samples.txt" 5 30 40000000 | jq -r '.rungs[0] | "\(.status) \(.promoted_mb_s)"'; }
+  grep -v 'Promoted:' "$FX/promotion-zgc-gc.txt" > "$T/zgc-nopromoted.txt"
+  check "ZGC: a log without the Promoted row fails the rung, never reads as 0" "promotion unparsed null" "$(unparsed "$T/zgc-nopromoted.txt")"
+  grep -v 'Heap Region Size' "$FX/promotion-g1-gc.txt" > "$T/g1-noregion.txt"
+  check "G1: a log without the region size fails the rung, never reads as 0" "promotion unparsed null" "$(unparsed "$T/g1-noregion.txt")"
+  grep -v 'Allocated:' "$FX/promotion-zgc-gc.txt" > "$T/zgc-noallocated.txt"
+  check "ZGC: a log without the Allocated row fails the rung, never reads as less" "allocation unparsed" \
+    "$(python3 -I "$PROMO_PY" "$T/zgc-noallocated.txt" "$FX/promotion-sweep.json" "$FX/promotion-samples.txt" 5 30 40000000 | jq -r '.rungs[0].status')"
+  python3 -I "$PROMO_PY" "$T/zgc-nopromoted.txt" "$FX/promotion-sweep.json" "$FX/promotion-samples.txt" 5 30 40000000 > "$T/unparsed.json"
+fi
+
+echo "--- 6. the promotion part, on stubbed docker and curl"
+run_promo() { # extra env... -> runs PART=promotion to completion, rc in PROMO_RC
+  : > "$STUB_DIR/calls.log"; : > "$STUB_DIR/containers"; rm -f "$STUB_DIR/reset" "$STUB_DIR/evicted"; rm -rf "$T/out"
+  PROMO_RC=0
+  env PATH="$STUB_DIR/bin:$PATH" STUB_DIR="$STUB_DIR" TMPDIR="$T" BUILDKITE_BUILD_NUMBER=901 BUILDKITE_AGENT_NAME=agent-a \
+    PERF_INFO_INVESTIGATION_PART=promotion PERF_INV_OUT_ROOT="$T/out" PERF_INV_COLLECTORS=G1 PERF_INV_PROMO_MEMORIES=1g \
+    PERF_INV_PROMO_DIVISORS=12 PERF_INV_PROMO_STEP_S=5 PERF_INV_PROMO_SETTLE_S=1 PERF_INV_FILL_TIMEOUT_S=3 STUB_PROMO=1 "$@" \
+    bash "$STEP" > "$T/step.log" 2>&1 || PROMO_RC=$?
+}
+if command -v python3 >/dev/null 2>&1; then
+  PCELLS="$T/out/promotion/cells.jsonl"
+  run_promo
+  check "a fully measured promotion cell passes" "0" "$PROMO_RC"
+  check "its budget is heap/12 from MaxHeapSize, confirmed by the gauges" "measured 38622208 66209792 38622208" \
+    "$(jq -r '"\(.status) \(.budget_bytes) \(.in_flight_cap_bytes) \(.gauges.max_retained_bytes)"' "$PCELLS" 2>/dev/null)"
+  check "its rung is derived from the GC log and the samples" "measured G1 1" \
+    "$(jq -r '"\(.analysis.rungs[0].status) \(.analysis.collector) \(.analysis.rungs[0].young_collections)"' "$PCELLS" 2>/dev/null)"
+  if grep -q 'MOCKSERVER_MAX_EVENT_LOG_SIZE_IN_BYTES=38622208' "$STUB_DIR/calls.log" && grep -q 'Xlog:gc\*:file=/diag/INFO-G1-1g-d12/gc-%p.log' "$STUB_DIR/calls.log"; then
+    ok "the SUT gets the budget and the GC log"; else bad "the SUT was not started with the budget and GC log: $(grep 'run -d' "$STUB_DIR/calls.log" | head -2)"; fi
+  if [ -s "$T/out/promotion/INFO-G1-1g-d12/gc.log.gz" ]; then ok "the GC log is kept as an artifact"; else bad "no gc.log.gz"; fi
+  check "no container is left after a promotion pass" "0" "$(live_containers)"
+  pverdict() { local rc=0 o; o="$(inv_promo_verdict "$1" "$2")" || rc=$?; printf '%s|%s' "$rc" "$(head -1 <<<"$o")"; }
+  pmut() { jq -c "$1" "$PCELLS" > "$T/pm.jsonl"; echo "$T/pm.jsonl"; }
+  check "the verdict passes the measured cell" "0|" "$(pverdict "$PCELLS" 1)"
+  check "a missing promotion cell fails" "1|expected 2 cells, found 1" "$(pverdict "$PCELLS" 2)"
+  check "an unconfirmed budget fails" "1|INFO-G1-1g-d12: budget 1 is not 38622208" "$(pverdict "$(pmut '.gauges.max_retained_bytes = 1')" 1)"
+  check "a GC log from the other collector fails" "1|INFO-G1-1g-d12: the GC log is ZGC, not G1" "$(pverdict "$(pmut '.analysis.collector = "ZGC"')" 1)"
+  check "an underived rung fails" "1|INFO-G1-1g-d12: rung 2000: fewer than two metric samples" \
+    "$(pverdict "$(pmut '.analysis.rungs[0].status = "fewer than two metric samples"')" 1)"
+  check "a rung with failed requests fails" "1|INFO-G1-1g-d12: rung 2000: error rate 0.02" \
+    "$(pverdict "$(pmut '.analysis.rungs[0].error_rate = 0.02')" 1)"
+  jq -c --slurpfile a "$T/unparsed.json" '.analysis = ($a[0] | .collector = "G1")' "$PCELLS" > "$T/pu.jsonl"
+  check "a cell whose promotion row did not parse fails" "1|INFO-G1-1g-d12: rung 2000: promotion unparsed" "$(pverdict "$T/pu.jsonl" 1)"
+  run_promo STUB_MAX_RETAINED=123
+  check "a budget the server does not report fails the step" "1|budget_mismatch" "$PROMO_RC|$(jq -r .status "$PCELLS" 2>/dev/null)"
+  run_promo STUB_RETAINED=1000
+  check "a prefill short of 93% fails the step" "1|prefill_short" "$PROMO_RC|$(jq -r .status "$PCELLS" 2>/dev/null)"
+  check "no container is left after a promotion failure" "0" "$(live_containers)"
+fi
 
 [ "$FAILS" -eq 0 ] || { echo "FAILED: $FAILS check(s)" >&2; exit 1; }
 echo "perf-info-investigation-test: all checks passed"

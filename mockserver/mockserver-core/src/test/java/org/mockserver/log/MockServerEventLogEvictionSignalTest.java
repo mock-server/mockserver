@@ -91,7 +91,7 @@ public class MockServerEventLogEvictionSignalTest {
         assertThat(message, containsString("lowering the log level"));
         assertThat(message, containsString("does NOT affect what verify can find"));
         // and warns that lowering the level shrinks the default byte budget, which may then bind
-        assertThat(message, containsString("the default byte budget is smaller at WARN"));
+        assertThat(message, containsString("the default byte budget is smaller at INFO and WARN than at DEBUG and TRACE"));
         // or keeps the log level and caps the did-not-match entries per request instead
         assertThat(message, containsString("to keep this log level, set maxLoggedMatchFailures"));
     }

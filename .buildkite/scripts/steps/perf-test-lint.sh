@@ -131,6 +131,8 @@ if command -v python3 >/dev/null 2>&1; then
   echo "python3 -m py_compile scripts/rw-tail-attribution.py OK"
   python3 -m py_compile "$REPO_ROOT/.buildkite/scripts/steps/lib/perf-sut-recvq.py"
   echo "python3 -m py_compile .buildkite/scripts/steps/lib/perf-sut-recvq.py OK"
+  python3 -m py_compile "$REPO_ROOT/.buildkite/scripts/steps/lib/perf-info-promotion.py"
+  echo "python3 -m py_compile .buildkite/scripts/steps/lib/perf-info-promotion.py OK"
 else
   echo "python3 absent — skipping reader byte-compile (run step guards on it)"
 fi

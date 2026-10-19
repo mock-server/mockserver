@@ -1,0 +1,31 @@
+[2026-10-19T09:00:00.000+0000][10.000s][info][gc          ] Using G1
+[2026-10-19T09:00:00.000+0000][10.000s][info][gc,init     ] Heap Region Size: 1M
+[2026-10-19T09:00:01.990+0000][11.990s][info][gc,start    ] GC(0) Pause Young (Normal) (G1 Evacuation Pause)
+[2026-10-19T09:00:02.000+0000][12.000s][info][gc,heap     ] GC(0) Eden regions: 50->0(60)
+[2026-10-19T09:00:02.000+0000][12.000s][info][gc,heap     ] GC(0) Old regions: 0->100
+[2026-10-19T09:00:02.000+0000][12.000s][info][gc          ] GC(0) Pause Young (Normal) (G1 Evacuation Pause) 80M->30M(200M) 3.000ms
+[2026-10-19T09:00:07.990+0000][17.990s][info][gc,start    ] GC(1) Pause Young (Normal) (G1 Evacuation Pause)
+[2026-10-19T09:00:08.000+0000][18.000s][info][gc,heap     ] GC(1) Eden regions: 50->0(60)
+[2026-10-19T09:00:08.000+0000][18.000s][info][gc,heap     ] GC(1) Old regions: 10->14
+[2026-10-19T09:00:08.000+0000][18.000s][info][gc          ] GC(1) Pause Young (Normal) (G1 Evacuation Pause) 80M->30M(200M) 3.000ms
+[2026-10-19T09:00:11.990+0000][21.990s][info][gc,start    ] GC(2) Pause Young (Normal) (G1 Evacuation Pause)
+[2026-10-19T09:00:12.000+0000][22.000s][info][gc,heap     ] GC(2) Eden regions: 50->0(60)
+[2026-10-19T09:00:12.000+0000][22.000s][info][gc,heap     ] GC(2) Old regions: 10->14
+[2026-10-19T09:00:12.000+0000][22.000s][info][gc          ] GC(2) Pause Young (Normal) (G1 Evacuation Pause) 80M->30M(200M) 3.000ms
+[2026-10-19T09:00:15.990+0000][25.990s][info][gc,start    ] GC(3) Pause Young (Normal) (G1 Evacuation Pause)
+[2026-10-19T09:00:16.000+0000][26.000s][info][gc,heap     ] GC(3) Eden regions: 50->0(60)
+[2026-10-19T09:00:16.000+0000][26.000s][info][gc,heap     ] GC(3) Old regions: 10->14
+[2026-10-19T09:00:16.000+0000][26.000s][info][gc          ] GC(3) Pause Young (Normal) (G1 Evacuation Pause) 80M->30M(200M) 3.000ms
+[2026-10-19T09:00:19.990+0000][29.990s][info][gc,start    ] GC(4) Pause Young (Concurrent Start) (G1 Evacuation Pause)
+[2026-10-19T09:00:20.000+0000][30.000s][info][gc,heap     ] GC(4) Eden regions: 50->0(60)
+[2026-10-19T09:00:20.000+0000][30.000s][info][gc,heap     ] GC(4) Old regions: 14->18
+[2026-10-19T09:00:20.000+0000][30.000s][info][gc          ] GC(4) Pause Young (Concurrent Start) (G1 Evacuation Pause) 80M->30M(200M) 3.000ms
+[2026-10-19T09:00:21.000+0000][31.000s][info][gc          ] GC(5) Concurrent Mark Cycle 40.000ms
+[2026-10-19T09:00:23.990+0000][33.990s][info][gc,start    ] GC(6) Pause Young (Mixed) (G1 Evacuation Pause)
+[2026-10-19T09:00:24.000+0000][34.000s][info][gc,heap     ] GC(6) Eden regions: 50->0(60)
+[2026-10-19T09:00:24.000+0000][34.000s][info][gc,heap     ] GC(6) Old regions: 18->12
+[2026-10-19T09:00:24.000+0000][34.000s][info][gc          ] GC(6) Pause Young (Mixed) (G1 Evacuation Pause) 80M->30M(200M) 3.000ms
+[2026-10-19T09:00:30.990+0000][40.990s][info][gc,start    ] GC(7) Pause Young (Normal) (G1 Evacuation Pause)
+[2026-10-19T09:00:31.000+0000][41.000s][info][gc,heap     ] GC(7) Eden regions: 50->0(60)
+[2026-10-19T09:00:31.000+0000][41.000s][info][gc,heap     ] GC(7) Old regions: 12->99
+[2026-10-19T09:00:31.000+0000][41.000s][info][gc          ] GC(7) Pause Young (Normal) (G1 Evacuation Pause) 80M->30M(200M) 3.000ms

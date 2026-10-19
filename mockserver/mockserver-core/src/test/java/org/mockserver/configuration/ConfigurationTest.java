@@ -858,10 +858,10 @@ public class ConfigurationTest {
 
     @Test
     public void shouldRecomputeLogLevelAwareDefaultOnEachReadNotFreezeAtFirstLevel() {
-        // The default is log-level-aware (heap/20 at a non-rendering level, heap/12 at a rendering level).
+        // The default is log-level-aware (heap/20 at INFO/WARN/ERROR/OFF, heap/12 at DEBUG/TRACE).
         // It must be recomputed from the CURRENT log level on every read — NOT resolved through the
         // caching property reader, which would freeze it JVM-wide at whatever level was in force on the
-        // first read. On the pre-fix (caching) tree the INFO read below returns the frozen ERROR budget
+        // first read. On the pre-fix (caching) tree the DEBUG read below returns the frozen ERROR budget
         // and the second assertion fails.
         String originalLogLevel = ConfigurationProperties.logLevel().name();
         try {
@@ -871,20 +871,22 @@ public class ConfigurationTest {
             ConfigurationProperties.logLevel("ERROR");
             long errorBudget = ConfigurationProperties.maxEventLogSizeInBytes();
             // deliberately do NOT clear the budget key here — a cached default would survive to the next read
-            ConfigurationProperties.logLevel("INFO");
-            long infoBudget = ConfigurationProperties.maxEventLogSizeInBytes();
+            ConfigurationProperties.logLevel("DEBUG");
+            long debugBudget = ConfigurationProperties.maxEventLogSizeInBytes();
 
             assertThat(errorBudget, equalTo(ConfigurationProperties.defaultMaxEventLogSizeInBytes(heapAvailableInKB, Level.ERROR)));
-            assertThat(infoBudget, equalTo(ConfigurationProperties.defaultMaxEventLogSizeInBytes(heapAvailableInKB, Level.INFO)));
-            // the live static path, not just the helper, applies a twentieth at ERROR and a twelfth at INFO
+            assertThat(debugBudget, equalTo(ConfigurationProperties.defaultMaxEventLogSizeInBytes(heapAvailableInKB, Level.DEBUG)));
+            // the live static path, not just the helper, applies a twentieth at ERROR and a twelfth at DEBUG
             assertThat(errorBudget, equalTo((heapAvailableInKB / 20) * 1024L));
-            assertThat(infoBudget, equalTo((heapAvailableInKB / 12) * 1024L));
+            assertThat(debugBudget, equalTo((heapAvailableInKB / 12) * 1024L));
+            // INFO shares ERROR's twentieth
+            assertThat(new Configuration().logLevel("INFO").maxEventLogSizeInBytes(), equalTo((heapAvailableInKB / 20) * 1024L));
 
             // and a per-instance server derives the default from ITS OWN log level, not the static one:
-            // static level ERROR, instance level INFO -> the instance must get the INFO budget
+            // static level ERROR, instance level DEBUG -> the instance must get the DEBUG budget
             ConfigurationProperties.logLevel("ERROR");
-            assertThat(new Configuration().logLevel("INFO").maxEventLogSizeInBytes(),
-                equalTo(ConfigurationProperties.defaultMaxEventLogSizeInBytes(heapAvailableInKB, Level.INFO)));
+            assertThat(new Configuration().logLevel("DEBUG").maxEventLogSizeInBytes(),
+                equalTo(ConfigurationProperties.defaultMaxEventLogSizeInBytes(heapAvailableInKB, Level.DEBUG)));
         } finally {
             clearPropertyAndCache("mockserver.maxEventLogSizeInBytes");
             ConfigurationProperties.logLevel(originalLogLevel);

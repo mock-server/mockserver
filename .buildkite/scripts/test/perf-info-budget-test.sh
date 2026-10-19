@@ -424,11 +424,11 @@ assemble() { # handed_env inspect_ok declared -> event_log_budget json
       jq -c '{method, requested_bytes, requested_source, expected_default_bytes, peak_retained_bytes}' <<<"$INFO_ELS_JSON"; fi )
 }
 check "no budget handed: shipped-default" \
-  '{"method":"shipped-default","requested_bytes":null,"requested_source":"container-env","expected_default_bytes":78817280,"peak_retained_bytes":300}' \
+  '{"method":"shipped-default","requested_bytes":null,"requested_source":"container-env","expected_default_bytes":47290368,"peak_retained_bytes":300}' \
   "$(assemble "" yes "")"
-check "a handed budget is its own method" '{"method":"fixed-104857600","requested_bytes":104857600,"requested_source":"container-env","expected_default_bytes":78817280,"peak_retained_bytes":300}' \
+check "a handed budget is its own method" '{"method":"fixed-104857600","requested_bytes":104857600,"requested_source":"container-env","expected_default_bytes":47290368,"peak_retained_bytes":300}' \
   "$(assemble 104857600 yes 104857600)"
-check "uninspectable container falls back to the declared value" '{"method":"fixed-104857600","requested_bytes":104857600,"requested_source":"declared","expected_default_bytes":78817280,"peak_retained_bytes":300}' \
+check "uninspectable container falls back to the declared value" '{"method":"fixed-104857600","requested_bytes":104857600,"requested_source":"declared","expected_default_bytes":47290368,"peak_retained_bytes":300}' \
   "$(assemble "" no 104857600)"
 check "a failed budget record still carries the method, so the run is not keyed as legacy" '{"method":"fixed-104857600"}' \
   "$(BREAK_JSON=yes assemble 104857600 yes 104857600)"

@@ -1928,10 +1928,9 @@ public class Configuration {
      * </p>
      * <p>
      * The default is derived from the JVM heap ceiling and is on by default: a twentieth of the
-     * ceiling-based budget that sizes {@link #maxLogEntries} at a non-rendering level (WARN/ERROR/OFF), and
-     * a twelfth at a rendering level (INFO/DEBUG/TRACE). The budget counts an estimate of each entry's
-     * size; the real heap the log holds is a multiple of it that depends on the traffic, and is larger
-     * at a rendering level, where every retained entry also keeps its formatted log message. Entries
+     * ceiling-based budget that sizes {@link #maxLogEntries} at INFO, WARN, ERROR and OFF, and a twelfth
+     * at DEBUG and TRACE. The budget counts an estimate of each entry's size; the real heap the log holds
+     * is a multiple of it that depends on the traffic and the log level. Entries
      * waiting to be processed are bounded separately, by {@link #maxEventLogInFlightBytes()}. Set it to 0
      * to disable both byte bounds and bound the log only by {@link #maxLogEntries}; whichever retention
      * bound is reached first evicts.

@@ -112,8 +112,8 @@ check "PERF_MAX_EVENT_LOG_BYTES marks the run tuned" "tuned" "$(profile_of 26843
 
 echo "--- 3. the fail-closed budget guard at config resolution"
 load gauge_value info_els_method main_els_guard main_els_json els_default_divisor els_inflight_divisor
-check "retention divisor: 20 at ERROR and WARN" "20 20" "$(els_default_divisor ERROR) $(els_default_divisor WARN)"
-check "retention divisor: 12 at INFO and when unset" "12 12" "$(els_default_divisor INFO) $(els_default_divisor "")"
+check "retention divisor: 20 at ERROR, WARN, INFO and when unset" "20 20 20 20" "$(els_default_divisor ERROR) $(els_default_divisor WARN) $(els_default_divisor INFO) $(els_default_divisor "")"
+check "retention divisor: 12 at DEBUG and TRACE" "12 12" "$(els_default_divisor DEBUG) $(els_default_divisor TRACE)"
 check "in-flight floor divisor: 7 at ERROR, INFO and unset, 12 at DEBUG and TRACE" "7 7 7 12 12" \
   "$(els_inflight_divisor ERROR) $(els_inflight_divisor INFO) $(els_inflight_divisor "") $(els_inflight_divisor DEBUG) $(els_inflight_divisor TRACE)"
 check "no other hard-coded divisor case remains" "0" "$(grep -cE 'ELS_DIVISOR=(7|12|20)|int\(hk/(7|12|20)\)' "$F" || true)"
@@ -142,8 +142,8 @@ check "main budget record with an override: the in-flight cap follows a larger b
   "$(main_els_json 268435456 268435456 115456 268435456 966787072 ERROR | jq -r '"\(.method) \(.requested_bytes) \(.resolved_source) \(.expected_in_flight_cap_bytes)"')"
 check "a budget of 0 disables the in-flight cap too" "0" \
   "$(main_els_json 0 0 115456 0 966787072 ERROR | jq -r '.expected_in_flight_cap_bytes')"
-check "at INFO retention is heap/12 and the in-flight floor heap/7" "78817280 135115776" \
-  "$(main_els_json "" 78817280 115456 135115776 966787072 INFO | jq -r '"\(.expected_default_bytes) \(.expected_in_flight_cap_bytes)"')"
+check "at INFO retention is heap/20 and the in-flight floor heap/7" "47290368 135115776" \
+  "$(main_els_json "" 47290368 115456 135115776 966787072 INFO | jq -r '"\(.expected_default_bytes) \(.expected_in_flight_cap_bytes)"')"
 check "at DEBUG both divisors are 12" "78817280 78817280" \
   "$(main_els_json "" 78817280 115456 78817280 966787072 DEBUG | jq -r '"\(.expected_default_bytes) \(.expected_in_flight_cap_bytes)"')"
 check "unreadable gauges stay null" "null unavailable null" \

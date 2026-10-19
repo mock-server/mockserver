@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # On-demand INFO-level investigation on the perf queue, never part of the daily run or its baseline.
-# PART=jfr profiles the INFO consumer under sweep.js; PART=heap measures live heap per counted byte.
+# PART=jfr profiles the INFO consumer under sweep.js; PART=heap measures live heap per counted byte;
+# PART=promotion measures young-GC promotion per sweep.js rung at chosen retention divisors.
 # Usage, knobs and results: docs/infrastructure/ci-cd.md#info-level-investigation
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-PART="${PERF_INFO_INVESTIGATION_PART:?set PERF_INFO_INVESTIGATION_PART to jfr or heap}"
-case "$PART" in jfr|heap) ;; *) echo "ERROR: PERF_INFO_INVESTIGATION_PART='$PART' is not jfr or heap" >&2; exit 1 ;; esac
+PART="${PERF_INFO_INVESTIGATION_PART:?set PERF_INFO_INVESTIGATION_PART to jfr, heap or promotion}"
+case "$PART" in jfr|heap|promotion) ;; *) echo "ERROR: PERF_INFO_INVESTIGATION_PART='$PART' is not jfr, heap or promotion" >&2; exit 1 ;; esac
 
 # shellcheck source=lib/perf-jfr-image.sh
 . "$SCRIPT_DIR/lib/perf-jfr-image.sh"
@@ -69,14 +70,15 @@ jq -n --arg image "$MOCKSERVER_IMAGE" \
     cpusets: {server: $server_cpus, upstream: $upstream_cpus, k6: $k6_cpus}}' > "$OUT/provenance.json"
 cat "$OUT/provenance.json"
 
-# start_sut <name> <alias> <log_level> <memory> <extra JAVA_TOOL_OPTIONS> [cpus]
+# start_sut <name> <alias> <log_level> <memory> <extra JAVA_TOOL_OPTIONS> [cpus]; SUT_ENV adds -e pairs.
+SUT_ENV=()
 start_sut() {
   local name="$1" alias="$2" level="$3" mem="$4" opts="$5" cpus="${6-$SERVER_CPUS}" jto
   jto="$(compose_java_tool_options "$IMAGE_JTO" "$opts")"
   # shellcheck disable=SC2046
   docker run -d --name "$name" "${LABEL[@]}" --network "$NETWORK" --network-alias "$alias" $(cpuset "$cpus") \
     --memory="$mem" -p 127.0.0.1::1080 -v "$DIAG:/diag" \
-    ${jto:+-e "JAVA_TOOL_OPTIONS=$jto"} \
+    ${jto:+-e "JAVA_TOOL_OPTIONS=$jto"} ${SUT_ENV[@]+"${SUT_ENV[@]}"} \
     -e MOCKSERVER_LOG_LEVEL="$level" -e MOCKSERVER_DISABLE_SYSTEM_OUT=true -e MOCKSERVER_METRICS_ENABLED=true \
     "$MOCKSERVER_IMAGE" -serverPort 1080 >/dev/null
   local _
@@ -156,6 +158,134 @@ if [ "$PART" = jfr ]; then
     echo "ERROR: no JFR recording written" >&2; exit 1
   fi
   echo "--- done: $(ls -la "$OUT")"
+  exit 0
+fi
+
+# ---------------------------------------------------------------------------------------------
+# PART=promotion. Each cell (collector x container memory x retention divisor): a fresh SUT with
+# -Xlog:gc* and maxEventLogSizeInBytes = heap/divisor, a sweep.js prefill to 93% of that budget, then
+# the sweep.js ladder with 1 s event-log samples; lib/perf-info-promotion.py derives each rung.
+if [ "$PART" = promotion ]; then
+  COLLECTORS="${PERF_INV_COLLECTORS:-G1 ZGC}"
+  MEMORIES="${PERF_INV_PROMO_MEMORIES:-1g 2g}"
+  DIVISORS="${PERF_INV_PROMO_DIVISORS:-12 20}"
+  LEVEL="${PERF_INV_PROMO_LEVEL:-INFO}"
+  RATES="${PERF_INV_PROMO_RATES:-2000,3000,4000,5000,6000,8000,10000}"
+  STEP_S="${PERF_INV_PROMO_STEP_S:-30}"; SETTLE_S="${PERF_INV_PROMO_SETTLE_S:-5}"
+  PREFILL_RATE="${PERF_INV_PROMO_PREFILL_RATE:-2000}"
+  FILL_TIMEOUT_S="${PERF_INV_FILL_TIMEOUT_S:-240}"
+  PROMO_CPUS=""; [ -n "$SERVER_CPUS" ] && PROMO_CPUS="${PERF_INV_PROMO_SERVER_CPUS:-0-1}"
+  case "$LEVEL" in INFO|WARN) ;; *) echo "ERROR: PERF_INV_PROMO_LEVEL='$LEVEL' is not INFO or WARN" >&2; exit 1 ;; esac
+  CELLS="$OUT/cells.jsonl"; : > "$CELLS"
+  ENTRY_XX="$(docker image inspect --format '{{json .Config.Entrypoint}}' "$MOCKSERVER_IMAGE" 2>/dev/null \
+    | jq -r '.[]? | select(startswith("-XX:"))' 2>/dev/null | paste -sd' ' - || true)"
+
+  k6_sweep() { # name rates step_s settle_s result manage_sut [detach]
+    # shellcheck disable=SC2046
+    docker run ${7:+-d} --rm --name "$1" "${LABEL[@]}" --network "$NETWORK" $(cpuset "$K6_CPUS") \
+      -v "$REPO_ROOT/mockserver-performance-test/k6:/k6:ro" -v "$OUT:/out" \
+      -e BASE_URL=http://mockserver:1080 -e PROTO=http -e K6_SWEEP_RATES="$2" -e K6_SWEEP_STEP="${3}s" \
+      -e K6_SWEEP_GAP=5s -e K6_SWEEP_SETTLE="${4}s" -e K6_SWEEP_RESULT_PATH="$5" \
+      -e K6_SWEEP_MANAGE_SUT="$6" -e K6_SWEEP_RESET_ON_TEARDOWN=false \
+      "$K6_IMAGE" run /k6/sweep.js
+  }
+  ts_ms() { awk -v t="$(now_s)" 'BEGIN {printf "%.0f", t * 1000}'; }
+
+  for gc in $COLLECTORS; do
+    case "$gc" in G1) gc_flag="-XX:+UseG1GC" ;; ZGC) gc_flag="-XX:+UseZGC" ;; *) echo "ERROR: collector '$gc'" >&2; exit 1 ;; esac
+    for mem in $MEMORIES; do
+      # shellcheck disable=SC2086 # ENTRY_XX is one flag per word
+      max_heap="$(docker run --rm "${LABEL[@]}" --memory="$mem" --entrypoint java \
+        -e "JAVA_TOOL_OPTIONS=$(compose_java_tool_options "$IMAGE_JTO" "$gc_flag")" "$MOCKSERVER_IMAGE" \
+        $ENTRY_XX -XX:+PrintFlagsFinal -version 2>/dev/null | awk '$2 == "MaxHeapSize" {print $4; exit}' || true)"
+      heap_kb=""; [[ "$max_heap" =~ ^[0-9]+$ ]] && heap_kb=$(( max_heap / 1024 - 20480 ))
+      for div in $DIVISORS; do
+        cell="${LEVEL}-${gc}-${mem}-d${div}"; CD="$OUT/$cell"; mkdir -p "$CD" "$DIAG/$cell"; chmod 0777 "$CD" "$DIAG/$cell"
+        sut="perf-inv-sut-${RUN_ID}-${cell}"; k6name="k6-inv-${RUN_ID}-${cell}"
+        echo "+++ cell $cell (MaxHeapSize ${max_heap:-unknown})"
+        if [ -z "$heap_kb" ] || [ "$heap_kb" -le 0 ]; then
+          jq -nc --arg cell "$cell" '{cell: $cell, status: "heap_unknown"}' >> "$CELLS"; continue
+        fi
+        budget=$(( heap_kb / div * 1024 )); in_flight=$(( heap_kb / 7 * 1024 )); [ "$budget" -gt "$in_flight" ] && in_flight="$budget"
+        SUT_ENV=(-e "MOCKSERVER_MAX_EVENT_LOG_SIZE_IN_BYTES=$budget")
+        if ! start_sut "$sut" mockserver "$LEVEL" "$mem" \
+            "$gc_flag -Xlog:gc*:file=/diag/$cell/gc-%p.log:time,uptime,level,tags:filecount=0" "$PROMO_CPUS"; then
+          SUT_ENV=(); jq -nc --arg cell "$cell" '{cell: $cell, status: "sut_failed"}' >> "$CELLS"; docker rm -f "$sut" >/dev/null 2>&1 || true; continue
+        fi
+        SUT_ENV=(); hp="$HOSTPORT"; m="$(metrics "$hp")"
+        got_budget="$(gauge mock_server_event_log_max_retained_bytes <<<"$m")"; got_if="$(gauge mock_server_event_log_max_in_flight_bytes <<<"$m")"
+        status=measured; prefill='null'; analysis='null'
+        if [ "$got_budget" != "$budget" ] || [ "$got_if" != "$in_flight" ]; then
+          status=budget_mismatch
+        else
+          k6_sweep "${k6name}-prefill" "$PREFILL_RATE" 1200 3 "/out/$cell/prefill.json" true detach > /dev/null
+          t0="$(date +%s)"; peak=0
+          while [ $(( $(date +%s) - t0 )) -lt "$FILL_TIMEOUT_S" ]; do
+            b="$(metrics "$hp" | gauge mock_server_event_log_retained_bytes)"
+            [ -n "$b" ] && [ "$b" -gt "$peak" ] && peak="$b"
+            awk -v b="$peak" -v x="$budget" 'BEGIN {exit !(b >= 0.93 * x)}' && break
+            sleep 0.5
+          done
+          docker kill "${k6name}-prefill" >/dev/null 2>&1 || true
+          prefill="$(jq -nc --argjson peak "$peak" --argjson budget "$budget" --argjson el "$(( $(date +%s) - t0 ))" \
+            '{peak_retained_bytes: $peak, peak_fraction_of_budget: ($peak / $budget * 10000 | round / 10000), elapsed_s: $el}')"
+          if [ "$(jq -r '.peak_fraction_of_budget >= 0.93' <<<"$prefill")" != true ]; then
+            status=prefill_short
+          else
+            echo "ts_ms,retained_entries,retained_bytes,evicted,ring_occupancy,in_flight_bytes,dropped_ring_full,dropped_in_flight_bytes" > "$CD/samples.csv"
+            ( while :; do
+                t="$(ts_ms)"; m="$(metrics "$hp")"
+                [ -n "$m" ] && printf '%s,%s,%s,%s,%s,%s,%s,%s\n' "$t" "$(gauge mock_server_event_log_retained_entries <<<"$m")" \
+                  "$(gauge mock_server_event_log_retained_bytes <<<"$m")" "$(gauge mock_server_evicted_log_entries_total <<<"$m")" \
+                  "$(gauge mock_server_event_log_ring_occupancy <<<"$m")" "$(gauge mock_server_event_log_in_flight_bytes <<<"$m")" \
+                  "$(dropped ring_full <<<"$m")" "$(dropped in_flight_bytes <<<"$m")"
+                sleep 1
+              done >> "$CD/samples.csv" ) & SAMPLER=$!
+            k6_sweep "${k6name}-sweep" "$RATES" "$STEP_S" "$SETTLE_S" "/out/$cell/sweep.json" false > "$CD/k6-sweep.log" 2>&1 \
+              || echo "WARNING: sweep.js exited non-zero (see $cell/k6-sweep.log)" >&2
+            kill "$SAMPLER" >/dev/null 2>&1 || true; wait "$SAMPLER" 2>/dev/null || true; SAMPLER=""
+            metrics "$hp" > "$CD/sut-metrics-end.txt" || true
+          fi
+        fi
+        docker rm -f "$sut" >/dev/null 2>&1 || true
+        gclog="$DIAG/$cell/gc-1.log"
+        if [ "$status" = measured ]; then
+          if [ ! -s "$CD/sweep.json" ]; then status=no_sweep_result
+          elif [ ! -s "$gclog" ]; then status=no_gc_log
+          elif ! analysis="$(python3 -I "$SCRIPT_DIR/lib/perf-info-promotion.py" "$gclog" "$CD/sweep.json" "$CD/samples.csv" "$SETTLE_S" "$STEP_S" "$budget")"; then
+            status=analysis_failed; analysis='null'
+          fi
+        fi
+        [ -s "$gclog" ] && gzip -c "$gclog" > "$CD/gc.log.gz"
+        jq -nc --arg cell "$cell" --arg gc "$gc" --arg mem "$mem" --arg level "$LEVEL" --argjson div "$div" --arg status "$status" \
+          --argjson max_heap "$max_heap" --argjson heap_kb "$heap_kb" --argjson budget "$budget" --argjson in_flight "$in_flight" \
+          --arg got_budget "$got_budget" --arg got_if "$got_if" --argjson prefill "$prefill" --argjson analysis "$analysis" \
+          'def n: if . == "" then null else tonumber end;
+           {cell: $cell, collector: $gc, memory: $mem, level: $level, divisor: $div, status: $status,
+            max_heap_bytes: $max_heap, heap_available_kb: $heap_kb, budget_bytes: $budget, in_flight_cap_bytes: $in_flight,
+            gauges: {max_retained_bytes: ($got_budget | n), max_in_flight_bytes: ($got_if | n)},
+            prefill: $prefill, analysis: $analysis}' | tee -a "$CELLS"
+      done
+    done
+  done
+
+  jq -rs '
+    ["cell","offered","achieved","p50_ms","young_s","promoted_mb_s","alloc_mb_young","major","stalls","lifetime_s","life/young","ring/young","life_alloc/budget","drops_rf","drops_ib","status"],
+    (.[] | .cell as $c | (.analysis.rungs // [])[] | [$c, .offered_rps, .achieved_rps, .p50_ms, .young_interval_s, .promoted_mb_s,
+      .alloc_mb_per_young, .major_collections, .allocation_stalls, .lifetime_s, .lifetime_over_young_interval,
+      .ring_wait_over_young_interval, .lifetime_alloc_over_budget, .dropped_ring_full, .dropped_in_flight_bytes, .status])
+    | map(tostring) | join("\t")' "$CELLS" | tee "$OUT/summary.tsv"
+
+  set -- $COLLECTORS; n_gc=$#; set -- $MEMORIES; n_mem=$#; set -- $DIVISORS; n_div=$#
+  if ! verdict="$(inv_promo_verdict "$CELLS" $(( n_gc * n_mem * n_div )))"; then
+    printf '+++ :x: promotion investigation incomplete: every cell must be fully measured\n%s\n' "$verdict" >&2
+    if command -v buildkite-agent >/dev/null 2>&1; then
+      printf ':x: **INFO promotion investigation incomplete** - not every cell was fully measured:\n\n```\n%s\n```\n' "$verdict" \
+        | buildkite-agent annotate --style error --context perf-info-investigation || true
+    fi
+    exit 1
+  fi
+  echo "--- every cell fully measured"
   exit 0
 fi
 
