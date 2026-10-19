@@ -1,6 +1,7 @@
 package org.mockserver.netty.http3;
 
 import io.netty.channel.Channel;
+import io.netty.channel.epoll.EpollDatagramChannel;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
@@ -70,7 +71,25 @@ public class Http3ListenerExceptionLoggingIntegrationTest {
     }
 
     @Test
-    public void shouldLogAReadErrorOnceAsAnErrorWithItsCauseAndLeaveTheListenerOpen() throws Exception {
+    public void shouldLogAnUnexpectedExceptionOnceAsAnErrorWithItsCauseAndLeaveTheListenerOpen() throws Exception {
+        Channel listener = server.listener();
+        IllegalStateException unexpected = new IllegalStateException("datagram handling failed");
+
+        listener.pipeline().fireExceptionCaught(unexpected);
+
+        List<LogEntry> entries = awaitEntries();
+        assertThat(nettysLog.all(), empty());
+        assertThat(entries.toString(), entries, hasSize(1));
+        assertThat(entries.get(0).getLogLevel(), is(Level.ERROR));
+        assertThat(entries.get(0).getMessageFormat(), is("exception caught on HTTP/3 listener on:{}"));
+        assertThat(entries.get(0).getArguments()[0], is(listener.localAddress()));
+        assertThat(entries.get(0).getThrowable(), sameInstance(unexpected));
+        assertThat("the listener is left open", listener.isOpen(), is(true));
+        nettysLog.assertThatItSeesWhatNettyLogs();
+    }
+
+    @Test
+    public void shouldLogAReadErrorByWhetherTheListenersTransportKeepsReadingAfterIt() throws Exception {
         Channel listener = server.listener();
         IOException readError = new IOException("datagram read failed");
 
@@ -79,11 +98,15 @@ public class Http3ListenerExceptionLoggingIntegrationTest {
         List<LogEntry> entries = awaitEntries();
         assertThat(nettysLog.all(), empty());
         assertThat(entries.toString(), entries, hasSize(1));
-        assertThat(entries.get(0).getLogLevel(), is(Level.ERROR));
-        assertThat(entries.get(0).getMessageFormat(), is("exception caught on HTTP/3 listener on:{}"));
-        assertThat(entries.get(0).getArguments()[0], is(listener.localAddress()));
-        assertThat(entries.get(0).getThrowable(), sameInstance(readError));
-        assertThat("the listener is left open", listener.isOpen(), is(true));
+        if (listener instanceof EpollDatagramChannel) {
+            // epoll keeps reading after any read error, so it may recur
+            assertThat(entries.get(0).getLogLevel(), is(Level.WARN));
+            assertThat(entries.get(0).getThrowable(), is(nullValue()));
+        } else {
+            // NIO closes the listener after such a read error
+            assertThat(entries.get(0).getLogLevel(), is(Level.ERROR));
+            assertThat(entries.get(0).getThrowable(), sameInstance(readError));
+        }
         nettysLog.assertThatItSeesWhatNettyLogs();
     }
 

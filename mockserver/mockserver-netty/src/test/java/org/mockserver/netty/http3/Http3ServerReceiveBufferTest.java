@@ -1,5 +1,6 @@
 package org.mockserver.netty.http3;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.MaxMessagesRecvByteBufAllocator;
 import io.netty.channel.RecvByteBufAllocator;
@@ -8,9 +9,6 @@ import org.junit.Assume;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
-
-import java.net.StandardSocketOptions;
-import java.nio.channels.DatagramChannel;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -40,20 +38,22 @@ public class Http3ServerReceiveBufferTest {
     @Test
     public void shouldGiveTheListenerTheReceiveBufferTheOperatingSystemGrantsForTheSizeAskedFor() throws Exception {
         Assume.assumeTrue("native QUIC not available on this platform", Http3Server.isQuicAvailable());
-        int platformDefault;
-        int granted;
-        try (DatagramChannel probe = DatagramChannel.open()) {
-            platformDefault = probe.getOption(StandardSocketOptions.SO_RCVBUF);
-            probe.setOption(StandardSocketOptions.SO_RCVBUF, Http3Server.RECEIVE_BUFFER_BYTES);
-            granted = probe.getOption(StandardSocketOptions.SO_RCVBUF);
-        }
-        assertThat("this platform grants more than its default for the size asked for", granted, greaterThan(platformDefault));
         Configuration configuration = configuration();
         // no request pipeline: only the listener is under test
         server = new Http3Server(configuration, new MockServerLogger(configuration, Http3ServerReceiveBufferTest.class), null, null);
         Http3TestServer.startWithHttp3(server);
 
-        assertThat(server.listener().config().getOption(ChannelOption.SO_RCVBUF), is(granted));
+        // a probe of the listener's own transport, as NIO and epoll report the size differently
+        Channel probe = server.listener().getClass().getDeclaredConstructor().newInstance();
+        try {
+            int platformDefault = probe.config().getOption(ChannelOption.SO_RCVBUF);
+            probe.config().setOption(ChannelOption.SO_RCVBUF, Http3Server.RECEIVE_BUFFER_BYTES);
+            int granted = probe.config().getOption(ChannelOption.SO_RCVBUF);
+            assertThat("this platform grants more than its default for the size asked for", granted, greaterThan(platformDefault));
+            assertThat(server.listener().config().getOption(ChannelOption.SO_RCVBUF), is(granted));
+        } finally {
+            probe.unsafe().closeForcibly();
+        }
     }
 
     @Test

@@ -11,6 +11,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoop;
+import io.netty.channel.epoll.EpollDatagramChannel;
+import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.SocketProtocolFamily;
 import io.netty.channel.socket.nio.NioDatagramChannel;
@@ -26,6 +28,7 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.proxyconfiguration.InetAddressValidator;
 import org.mockserver.socket.NettyAllocator;
+import org.mockserver.socket.NettyTransport;
 import org.slf4j.event.Level;
 
 import java.net.Inet4Address;
@@ -59,8 +62,8 @@ import static org.mockserver.netty.http3.Http3ExceptionHandler.peerAddress;
  *       {@code :method = CONNECT} and {@code :protocol = connect-udp}.</li>
  *   <li>The target authority is parsed from the {@code :authority}
  *       pseudo-header (host:port).</li>
- *   <li>A UDP {@link NioDatagramChannel} is opened (IPv4 for an IPv4 target)
- *       and connected to the target address.</li>
+ *   <li>A UDP datagram channel is opened on the stream's own transport (epoll or NIO; IPv4 for an IPv4
+ *       target) and connected to the target address.</li>
  *   <li>The handler responds with {@code 200 OK} to indicate the tunnel is
  *       established.</li>
  *   <li>Subsequent HTTP/3 DATA frames received on the QUIC stream are
@@ -275,14 +278,18 @@ public class Http3ConnectUdpHandler extends ChannelInboundHandlerAdapter {
     }
 
     /**
-     * Binds the relay socket to an ephemeral port in the target's family. On macOS a dual-stack socket on port 0
-     * can be given a port another process holds on IPv4, so an IPv4 target gets an IPv4 socket.
+     * Binds the relay socket to an ephemeral port in the target's family, on the transport of the stream's event loop
+     * (epoll or NIO). On macOS a dual-stack socket on port 0 can be given a port another process holds on IPv4, so an
+     * IPv4 target gets an IPv4 socket.
      */
     static ChannelFuture bindRelaySocket(EventLoop eventLoop, InetAddress target, ChannelHandler handler) {
         boolean ipv4 = target instanceof Inet4Address;
+        boolean epoll = NettyTransport.datagramChannelClassFor(eventLoop) == EpollDatagramChannel.class;
         return new Bootstrap()
             .group(eventLoop)
-            .channelFactory((ChannelFactory<NioDatagramChannel>) () -> ipv4 ? new NioDatagramChannel(SocketProtocolFamily.INET) : new NioDatagramChannel())
+            .channelFactory((ChannelFactory<DatagramChannel>) () -> epoll
+                ? (ipv4 ? new EpollDatagramChannel(SocketProtocolFamily.INET) : new EpollDatagramChannel())
+                : (ipv4 ? new NioDatagramChannel(SocketProtocolFamily.INET) : new NioDatagramChannel()))
             .option(ChannelOption.ALLOCATOR, NettyAllocator.ALLOCATOR)
             .handler(handler)
             .bind(0);

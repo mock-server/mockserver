@@ -86,12 +86,13 @@ has zero impact on the existing TCP/HTTP server.
 
 | Class | Module | Purpose |
 |-------|--------|---------|
-| `Http3Server` | `mockserver-netty` | Bootstraps the QUIC/HTTP3 server, manages lifecycle |
+| `Http3Server` | `mockserver-netty` | Bootstraps the QUIC/HTTP3 server on its own event loop (epoll on Linux, NIO elsewhere; see [UDP receive buffer and read budget](#udp-receive-buffer-and-read-budget)), manages lifecycle |
 | `Http3MockServerHandler` | `mockserver-netty` | Per-stream handler: accumulates HTTP/3 frames, converts to HttpRequest, routes through the shared pipeline |
 | `Http3RequestBridge` | `mockserver-netty` | Pure conversion helpers: HTTP/3 frames to/from HttpRequest/HttpResponse |
 | `Http3RequestDecompressor` | `mockserver-netty` | Decompresses one `Content-Encoding` request body with the same `MockServerHttpContentDecompressor` HTTP/1.1 and HTTP/2 install, bounded by `maxRequestBodySize` on the decompressed size |
 | `Http3ResponseWriter` | `mockserver-netty` | ResponseWriter subclass that serialises HttpResponse as HTTP/3 frames |
 | `Http3StreamWriteStallHandler` / `Http3ConnectionWriteStallWatcher` | `mockserver-netty` | First in each request stream's pipeline when `responseWriteStallTimeoutMillis` is above 0: passes every write to QUIC in parts of at most 32 KiB, so a slow reader's progress shows whichever writer made the write, and resets a stream whose client takes none of its data for the timeout. One watcher per QUIC connection times its streams together, by the timeout its first watched stream read (see [netty-pipeline.md](netty-pipeline.md#response-write-stall-timeout)) |
+| `Http3SegmentedSends` | `mockserver-netty` | On the epoll listener, the QUIC codec's GSO allocator and a handler watching its segmented sends: after the first the kernel refuses, it reports no segments, so the codec sends one datagram per packet, and logs one `WARN` (see [UDP receive buffer and read budget](#udp-receive-buffer-and-read-budget)) |
 | `Http3ListenerExceptionHandler` | `mockserver-netty` | Last handler of the UDP listener's pipeline, after Netty's QUIC codec: logs an exception that reaches it in MockServer's log, a repeated socket error once at `WARN`, and closes nothing (see [Exceptions on a connection](#exceptions-on-a-connection)) |
 | `Http3ExceptionHandler` | `mockserver-netty` | Last handler of each QUIC connection's pipeline, after Netty's `Http3ServerConnectionHandler`, and of each control or QPACK stream a client opens: logs an exception that reaches it once in MockServer's log, and on the client's control stream lowers a `SETTINGS_QPACK_BLOCKED_STREAMS` Netty's encoder cannot take (see [Exceptions on a connection](#exceptions-on-a-connection)) |
 | `Http3ConnectUdpHandler` | `mockserver-netty` | CONNECT-UDP (MASQUE, RFC 9298) relay; intercepts extended CONNECT requests with `:protocol=connect-udp` when `http3ConnectUdpEnabled=true`; opens a UDP channel to the target authority and relays datagrams bidirectionally. Destination-restricted by `http3ConnectUdpAllowedTargets` (allowlist) and `forwardProxyBlockPrivateNetworks` (SSRF block) |
@@ -179,7 +180,7 @@ It closes nothing except for the direct memory limit: Netty closes the connectio
 | The client reset its CONNECT-UDP stream (`QuicStreamResetException`) or a closed stream channel | `DEBUG`, the client's address and the message; the stream is closed, as for a request stream |
 | Any other exception on a CONNECT-UDP stream | `WARN`, the client's address, the bounded description and the cause |
 
-**The UDP listener.** The listener's pipeline holds Netty's QUIC codec, which takes no exception, followed by `Http3ListenerExceptionHandler`, one per listener. It closes nothing itself, and logs by what Netty's NIO datagram channel (`Http3Server` uses it on every platform) does after a read error (`NioDatagramChannel.closeOnReadError`):
+**The UDP listener.** The listener's pipeline holds Netty's QUIC codec, which takes no exception, followed by `Http3ListenerExceptionHandler`, one per listener. It closes nothing itself, and logs by what the listener's datagram channel does after a read error. On NIO (macOS, Windows, and Linux with `useNativeTransport=false` or no epoll native) that is `NioDatagramChannel.closeOnReadError`:
 
 | What reached it | Netty after a read error | Logged |
 |-----------------|--------------------------|--------|
@@ -188,7 +189,7 @@ It closes nothing except for the direct memory limit: Netty closes the connectio
 | Netty's direct memory limit | closes the listener | `ERROR` with a hint, no stack trace |
 | Anything else (another `IOException`, an error) | closes the listener, which ends HTTP/3 on that port | `ERROR` with the cause |
 
-Netty's epoll datagram channel closes on no read error, but `Http3Server` does not use it. The codec still catches a packet it cannot process and logs it through Netty's logger at `DEBUG`.
+Netty's epoll datagram channel (the listener on Linux, see [UDP receive buffer and read budget](#udp-receive-buffer-and-read-budget)) closes on no read error, and its read errors (`Errors.NativeIoException`) are not `SocketException`s. There the handler is built with `keepsReadingAfterEveryReadError`, so every other `IOException` is logged at `WARN` once per class and message (one class carries every errno), then at `DEBUG`. The codec still catches a packet it cannot process and logs it through Netty's logger at `DEBUG`.
 
 **The streams MockServer's side opens** (its own control and QPACK streams) have no MockServer handler: Netty creates each with its handler in place and registers and activates it in the same call (`QuicChannel.createStream`), without passing it down the connection's pipeline, so Netty 4.2.18 offers no point at which to add one before the stream can fire an exception. Only one exception is known to be fired there: the QPACK encoder stream's `QPACK_ENCODER_STREAM_ERROR`, when `http3QpackMaxTableCapacity` is above 0 and the client's `SETTINGS_QPACK_BLOCKED_STREAMS` is more than an `int` holds, which RFC 9204 allows (up to 2^62-1) but Netty's encoder does not take. Netty logged it at `WARN` with a stack trace and closed the connection. The stream instance on the client's control stream sits ahead of Netty's control-stream handler, so it lowers such a value to `Integer.MAX_VALUE` before Netty acts on it and logs that once at `DEBUG`; an encoder may always block fewer streams than the client allows, so the connection is served. The local streams read nothing (a local unidirectional stream's input is shut down by spec), and the control stream's own failures close the connection without firing one. The legacy echo mode's request streams (the no-argument `Http3Server` constructor, which only tests use) are left as they were.
 
@@ -400,73 +401,111 @@ counter, consistent with HTTP/1.1 and HTTP/2 request counting.
 
 ### UDP receive buffer and read budget
 
-**The listener asks for a 4 MiB UDP receive buffer (`Http3Server.RECEIVE_BUFFER_BYTES`) and reads up to
-256 datagrams per event-loop cycle (`MAX_DATAGRAMS_PER_READ`; Netty's default is 16).** The operating
-system grants what it allows for the buffer: Linux caps it at `net.core.rmem_max`, often 208 KiB, which
-the kernel doubles.
+**On Linux the listener uses Netty's epoll datagram channel, reading up to 16 datagrams per `recvmmsg` call
+and sending up to 16 QUIC packets per `UDP_SEGMENT` (GSO) write. Elsewhere it uses NIO.** Both ask for a 4 MiB
+UDP receive buffer (`Http3Server.RECEIVE_BUFFER_BYTES`) and read up to 256 datagrams per event-loop cycle
+(`MAX_DATAGRAMS_PER_READ`; Netty's default is 16). The operating system grants what it allows for the buffer:
+Linux caps it at `net.core.rmem_max`, often 208 KiB, which the kernel doubles. At that stock cap the epoll
+listener stalled none of 122 OpenSSL-curl downloads of 20 MiB in one CI job, where NIO stalled 11.
 
-While MockServer sends a large response, the client sends a stream of small datagrams back: ACKs and
-flow-control credit (`MAX_DATA`, `MAX_STREAM_DATA`). The listener has a single event loop. It reads a
-batch of datagrams, then the QUIC codec flushes a burst of writes before the loop reads again. Whatever
-arrives during the burst has to fit in the receive buffer, or the kernel drops it (`RcvbufErrors` in
-`/proc/net/snmp`). A bigger buffer and a bigger read batch both shrink the drops.
+| Platform | Listener | Read path | Write path |
+|---|---|---|---|
+| Linux, epoll native loaded, `useNativeTransport` true (the default) | `EpollDatagramChannel` on its own `EpollEventLoopGroup(1)` | `recvmmsg`, 16 × 2048-byte slots (`EPOLL_DATAGRAMS_PER_RECVMMSG`, `MAX_DATAGRAM_PAYLOAD_SIZE`) | GSO, 16 segments (`EPOLL_GSO_MAX_SEGMENTS`, `EpollQuicUtils.newSegmentedAllocator`), until a segmented send fails; one datagram per packet (batched by `sendmmsg`) where the kernel lacks `UDP_SEGMENT` or after that failure |
+| macOS, Windows, Linux without epoll, or `useNativeTransport=false` | `NioDatagramChannel` on its own `NioEventLoopGroup(1)` | one datagram per `receive` | one datagram per `send` |
 
-Most clients resend lost credit and only slow down. curl built on OpenSSL's QUIC stack (Debian 13's
-`curl --http3`, OpenSSL 3.5) can stall instead: the server has no credit, the client has no data, and the
-response stalls until the client gives up or `responseWriteStallTimeoutMillis` resets the stream. A
-decrypted capture taken in Docker Desktop's VM at the platform-default buffer (commit `f13efb610`) showed
-the client's last `MAX_STREAM_DATA` in a dropped datagram and no later `MAX_STREAM_DATA` from the client.
-The CI runs below took no capture, so their stalls are consistent with that cause rather than shown to
-have it.
+The group comes from `NettyTransport.newEventLoopGroup`, the same selection the TCP listeners use, and the
+channel class from `NettyTransport.datagramChannelClassFor(group)`, so a group that fell back to NIO always
+gets a NIO channel.
+
+**GSO falls back at run time.** The kernel can support `UDP_SEGMENT` yet refuse a segmented send on one path:
+with `EIO` through a device without checksum offload (TUN/TAP before Linux 6.11, as under rootless Docker or
+Podman, or a VPN), or through an IPsec route. Netty fails such a write without telling anyone, so every flight
+of equal-sized packets, the handshake's included, would be lost. `Http3SegmentedSends` watches each segmented
+send: after the first failure it reports no segments, so the codec sends one datagram per packet for the rest
+of the listener's life, and it logs one `WARN` naming the cause and `useNativeTransport=false`. It is
+deliberately conservative: any failed segmented send turns GSO off for every client, not only `EIO` or
+`EINVAL`, so an error a single datagram would also hit (a route lookup failing for one client, a firewall
+rule) costs GSO too. Only a closed listener is ignored. QUIC resends what the failed send lost, as it would
+any loss.
+
+`Http3ServerSegmentedSendTest` gives the listener (epoll on Linux, NIO elsewhere) a segmented allocator,
+refuses every segmented send, and checks that two 256 KiB downloads still arrive whole, with one `WARN` and no
+segmented send after the first refusal. It also checks that the epoll listener sends segmented and NIO does
+not.
+
+CONNECT-UDP relay sockets are opened on the stream's event loop, so they use the listener's transport too.
+epoll reports a refused bind as its own `IOException`; `Http3Server` raises it as a `BindException`, as NIO
+does, so a held `http3Port` gives the same start-up message on both. Every published jar and Docker image that
+can serve HTTP/3 carries the epoll native: the `-jar-with-dependencies-http3` jar for both Linux
+architectures, each `-http3` image for its own (under the shaded name, see
+[netty-pipeline.md](netty-pipeline.md)). None carries io_uring or kqueue.
+
+**Why it matters.** While MockServer sends a large response, the client sends a stream of small datagrams
+back: ACKs and flow-control credit (`MAX_DATA`, `MAX_STREAM_DATA`). The listener has a single event loop. It
+reads a batch of datagrams, then the QUIC codec flushes a burst of writes before the loop reads again.
+Whatever arrives during the burst has to fit in the receive buffer, or the kernel drops it (`RcvbufErrors` in
+`/proc/net/snmp`). A bigger buffer and a bigger read batch both shrink the drops; GSO shortens the burst
+itself, from one system call per packet to one per 16.
+
+Most clients resend lost credit and only slow down. curl built on OpenSSL's QUIC stack (Debian 13's `curl
+--http3`, OpenSSL 3.5) can stall instead: the server has no credit, the client has no data, and the response
+stalls until the client gives up or `responseWriteStallTimeoutMillis` resets the stream. A decrypted capture
+taken in Docker Desktop's VM at the platform-default buffer (commit `f13efb610`) showed the client's last
+`MAX_STREAM_DATA` in a dropped datagram and no later `MAX_STREAM_DATA` from the client. The CI runs below took
+no capture, so their stalls are consistent with that cause rather than shown to have it.
 
 The server's read path matters, not only the client. In the same Docker Desktop tests, Cloudflare's
-quiche-server and Caddy did not stall this curl. quiche-server uses the same quiche library Netty wraps,
-and it drains its socket before it sends. A plain Netty HTTP/3 server with MockServer's transport
-parameters stalled the same way MockServer did.
+quiche-server and Caddy did not stall this curl. quiche-server uses the same quiche library Netty wraps, and
+it drains its socket before it sends. A plain Netty HTTP/3 server with MockServer's transport parameters
+stalled the same way MockServer did.
 
-**Evidence.** Each batch is 30 GETs of a 20 MiB body by curl 8.14.1 on OpenSSL 3.5 QUIC + nghttp3
-(Debian 13), with client and server in separate containers on one bridge network. A download counts as
-stalled when curl received nothing for 15 s.
+**Evidence.** Each batch is GETs of a 20 MiB body by curl 8.14.1 on OpenSSL 3.5 QUIC + nghttp3 (Debian 13),
+with client and server in separate containers on one bridge network and a fresh server per batch. A download
+counts as stalled when curl received nothing for 15 s. Build 3291 also checked each completed body's SHA-256
+(none differed) and rotated the arm order each round.
 
-| Host | Buffer granted (`ss` `rb`) | Read budget | Stalled | Datagrams dropped (`RcvbufErrors`) |
-|---|---|---|---|---|
-| Docker Desktop VM, `-http3` jar | platform default | 16 | 0 to 11 of 30 per batch, rising with host load | up to 29,243 per batch |
-| Docker Desktop VM, `-http3` jar | 4 MiB (VM `rmem_max` 4 MiB) | 16 | 0 of 90 | 0 |
-| Docker Desktop VM, `-http3` jar asking for 212,992 bytes | about 416 KiB | 16 | 1 of 30 | 4,631 |
-| CI agent, `9.0.0-http3` image (build 3281) | 425,984 (stock cap) | 16 | 29 of 90 | 161,699 |
-| CI agent, one job, rounds alternating, stock cap (build 3284) | 425,984 | 16 / 64 / **256** | 14 / 5 / **2** of 90 | 156,101 / 76,221 / **19,458** |
-| CI agent, same job, full buffer (build 3284) | 8,388,608 (4 MiB, doubled) | 16 / 256 | 0 / 0 of 30 | 0 / 0 |
-| CI agent, `9.0.0-http3` image (builds 3280, 3281) | 8,388,608 | 16 | 0 of 120 | 0 |
+| Host | Buffer granted (`ss` `rb`) | Listener | Stalled | First download after start stalled | Datagrams dropped (`RcvbufErrors`) | Throughput | Server CPU per GiB |
+|---|---|---|---|---|---|---|---|
+| Docker Desktop VM, `-http3` jar | platform default | NIO, budget 16 | 0 to 11 of 30 per batch, rising with host load | | up to 29,243 per batch | | |
+| Docker Desktop VM, `-http3` jar | 4 MiB (VM `rmem_max` 4 MiB) | NIO, budget 16 | 0 of 90 | | 0 | | |
+| CI agent, one job (build 3284) | 425,984 (stock cap) | NIO, budget 16 / 64 / 256 | 14 / 5 / 2 of 90 | | 156,101 / 76,221 / 19,458 | about 100 MiB/s each | 25.9 / 25.7 / 24.4 s per 90 downloads |
+| CI agent, one job (build 3291) | 425,984 | NIO 256 / epoll `recvmmsg` / **epoll `recvmmsg` + GSO** | 6 / 7 / **0** of 90 | 3 / 3 / **0** of 10 | 120,171 / 66,623 / **0** | 142 / 148 / **222** MiB/s | 17.4 / 17.7 / **13.2** s |
+| CI agent, same job, warm-up test | 425,984 | NIO 256 cold / after warm-up; **epoll + GSO** cold / after warm-up | 5 / 0 of 16; **0 / 0** of 16 | 5 / 0 of 8; **0 / 0** of 8 | 28,130 / 23,239; **0 / 0** | | |
+| CI agent, same job, full buffer | 8,388,608 (4 MiB, doubled) | NIO 256 / **epoll + GSO** | 0 / **0** of 30 | | 0 / **0** | 148 / **244** MiB/s | 13.5 / **11.1** s |
+| CI agent, `9.0.0-http3` image (builds 3280, 3281) | 8,388,608 | NIO, budget 16 | 0 of 120 | | 0 | | |
 
-The CI agents are `default`-queue Amazon Linux 2023 hosts (kernel 6.18) whose own `rmem_max` is 4 MiB. The
-stock cap was produced by an `LD_PRELOAD` shim that clamps the server's `SO_RCVBUF` request to 212,992.
-That gives the same 425,984-byte buffer a stock `rmem_max` would, without changing the host. In build
-3284, completed downloads ran at about 100 MiB/s in every arm. Server CPU over 90 downloads was 25.9 s at
-16, 25.7 s at 64 and 24.4 s at 256, so the bigger budget costs nothing measurable. Both remaining stalls
-at 256 were the first download after the server started (likely before JIT warm-up; not measured). At the stock cap, completed
-downloads still lost hundreds to thousands of datagrams each, so a drop does not always stall.
+The CI agents are `default`-queue Amazon Linux 2023 hosts (kernel 6.18; m6a.2xlarge for build 3284,
+m7i.2xlarge for 3291) whose own `rmem_max` is 4 MiB. The stock cap was produced by an `LD_PRELOAD` shim that
+clamps the server's `SO_RCVBUF` request to 212,992. That gives the same 425,984-byte buffer a stock `rmem_max`
+would, without changing the host. The arms ran the released `9.0.0-http3` image with only `Http3Server`
+replaced, selected by a probe property. Throughput is over completed downloads; CPU per GiB divides the server
+process's CPU by every byte sent, stalled downloads included. Build 3284 and build 3291 ran on different
+agents, so compare arms within a build.
 
-libcurl 8.14.1 with ngtcp2 1.11 + GnuTLS, quic-go 0.48.2 and Chromium (Playwright 1.63) completed every
-download at the platform default and at 4 MiB in Docker Desktop. One Chromium fetch failed once under heavy
-host load and did not recur in 8 further runs. Their drop counts were not recorded, and they have not been
-run on the CI agent.
+What the numbers show:
 
-**Operator note: the 4 MiB request is capped by `net.core.rmem_max`.** On a stock Linux host (212,992)
-the listener gets about 416 KiB. The larger read budget makes stalls rare there but does not remove them.
-Where large HTTP/3 responses matter, raise the cap on the host so the full buffer takes effect:
-`sysctl -w net.core.rmem_max=4194304`, persisted in `/etc/sysctl.d/`. It is a host (or Kubernetes node)
-setting, not one a container or pod can set.
+- `recvmmsg` alone did not help: it read faster but the write bursts were unchanged, and it stalled as often
+  as NIO. GSO is what removed the drops.
+- The NIO listener's stalls cluster on the first download after start (8 of 18 cold first downloads), and a
+  warm-up of five 2 MiB downloads removed them (0 of 8). That fits code the JIT has not yet compiled
+  lengthening the write bursts, though the burst length was not measured. Later downloads still stalled now
+  and then (3 of 88), so warm-up is not the whole cause. With GSO no download stalled, warm or cold.
 
-**Why neither number is a configuration property.** The buffer request is capped by the host, so a
-property could only lower it, or raise it past 4 MiB on a host whose cap is already raised. Going past the
-cap needs `SO_RCVBUFFORCE` and `CAP_NET_ADMIN`. The JDK's datagram channel does not expose the first, and
-a container does not have the second by default. The read budget at 256 cost no CPU and helped at every
-step from 16, so there is no trade-off for a user to tune.
+**Operator note: the 4 MiB request is capped by `net.core.rmem_max`.** On a stock Linux host (212,992) the
+listener gets about 416 KiB. With the epoll listener that was enough for every download in these tests, but
+the client's credit can still be lost under other load. Where large HTTP/3 responses matter, raise the cap on
+the host so the full buffer takes effect: `sysctl -w net.core.rmem_max=4194304`, persisted in
+`/etc/sysctl.d/`. It is a host (or Kubernetes node) setting, not one a container or pod can set. On macOS and
+Windows, and on Linux with `useNativeTransport=false`, the NIO listener is used and the advice matters more.
 
-**Not yet tried:** an epoll listener with `recvmmsg` (`EpollChannelOption.MAX_DATAGRAM_PAYLOAD_SIZE`) and
-GSO (`EpollQuicUtils.newSegmentedAllocator`). It would batch the reads and shorten write bursts, but it
-needs the listener's `closeOnReadError` logging and the IPv4 port probe re-checked (performance backlog
-row 541a). Reporting the client-side defect to OpenSSL is row 541b.
+**Why none of these numbers is a configuration property.** The buffer request is capped by the host, so a
+property could only lower it, or raise it past 4 MiB on a host whose cap is already raised. Going past the cap
+needs `SO_RCVBUFFORCE` and `CAP_NET_ADMIN`. Neither the JDK's datagram channel (the NIO listener) nor Netty's
+epoll channel options expose the first, and a container does not have the second by default. The read budget,
+batch and segment counts cost no CPU at the values chosen (GSO cut it), so there is no trade-off for a user to
+tune; `useNativeTransport=false` is the switch back to NIO.
+
+Reporting the client-side defect to OpenSSL is performance backlog row 541b.
 
 ## Native QUIC Platform Requirement
 

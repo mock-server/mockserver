@@ -6,21 +6,29 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.FixedRecvByteBufAllocator;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.epoll.EpollChannelOption;
+import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.codec.http3.DefaultHttp3SettingsFrame;
 import io.netty.handler.codec.http3.Http3;
 import io.netty.handler.codec.http3.Http3ServerConnectionHandler;
 import io.netty.handler.codec.http3.Http3SettingsFrame;
+import io.netty.handler.codec.quic.EpollQuicUtils;
 import io.netty.handler.codec.quic.QuicChannel;
+import io.netty.handler.codec.quic.QuicChannelOption;
+import io.netty.handler.codec.quic.QuicServerCodecBuilder;
 import io.netty.handler.codec.quic.QuicSslContext;
 import io.netty.handler.codec.quic.QuicSslContextBuilder;
 import io.netty.handler.codec.quic.QuicStreamChannel;
+import io.netty.handler.codec.quic.SegmentedDatagramPacketAllocator;
 import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.Promise;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.configuration.ServerTlsSettings;
 import org.mockserver.lifecycle.Ipv4UdpPortProbe;
 import org.mockserver.lifecycle.LifeCycle;
@@ -32,11 +40,15 @@ import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.netty.mcp.McpRequestProcessor;
 import org.mockserver.netty.mcp.McpSessionManager;
 import org.mockserver.socket.NettyAllocator;
+import org.mockserver.socket.NettyTransport;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.BindException;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
@@ -66,7 +78,6 @@ import static org.mockserver.socket.tls.PEMToFile.x509ChainFromPEMFile;
  * {@code netty-codec-http3} module (graduated from the incubator). HTTP/3 support
  * is labelled <strong>experimental</strong> because the API may evolve.
  */
-@SuppressWarnings("deprecation") // NioEventLoopGroup deprecation in Netty 4.2
 public class Http3Server {
 
     private static final Logger LOG = LoggerFactory.getLogger(Http3Server.class);
@@ -84,11 +95,17 @@ public class Http3Server {
      */
     static final int MAX_DATAGRAMS_PER_READ = 256;
     private static final int DATAGRAM_READ_BUFFER_BYTES = 2048;
+    /**
+     * On the epoll listener, datagrams read by one {@code recvmmsg} call, and datagrams the QUIC codec sends in one
+     * {@code UDP_SEGMENT} (GSO) write where the kernel supports it; both cut the system calls per event-loop cycle.
+     */
+    static final int EPOLL_DATAGRAMS_PER_RECVMMSG = 16;
+    static final int EPOLL_GSO_MAX_SEGMENTS = 16;
 
     private final AtomicInteger activeHttp3Connections = new AtomicInteger(0);
 
     private volatile Channel channel;
-    private volatile NioEventLoopGroup group;
+    private volatile EventLoopGroup group;
 
     // pipeline components (null when using the legacy echo-only constructor)
     private final Configuration configuration;
@@ -157,7 +174,10 @@ public class Http3Server {
      * @throws Exception if the server cannot start
      */
     public int start(int port) throws Exception {
-        NioEventLoopGroup localGroup = new NioEventLoopGroup(1);
+        // its own single-thread loop, so a large HTTP/3 response cannot hold up HTTP/1 or HTTP/2 work
+        EventLoopGroup localGroup = NettyTransport.newEventLoopGroup(1, new DefaultThreadFactory("mockserver-http3"), nativeTransport());
+        Class<? extends DatagramChannel> listenerClass = NettyTransport.datagramChannelClassFor(localGroup);
+        boolean epoll = listenerClass != NioDatagramChannel.class;
         ChannelFuture bind = null;
         boolean success = false;
         try {
@@ -194,7 +214,7 @@ public class Http3Server {
             MockServerLogger handlerLogger = mockServerLogger != null ? mockServerLogger : new MockServerLogger(Http3Server.class);
             Http3ExceptionHandler exceptionHandler = Http3ExceptionHandler.forConnection(handlerLogger, configuration, clientTlsHandshakeFailureLog);
 
-            ChannelHandler codec = Http3.newQuicServerCodecBuilder()
+            QuicServerCodecBuilder codecBuilder = Http3.newQuicServerCodecBuilder()
                 .sslContext(sslContext)
                 .maxIdleTimeout(maxIdleTimeout, TimeUnit.MILLISECONDS)
                 .initialMaxData(initialMaxData)
@@ -247,26 +267,40 @@ public class Http3Server {
                         // last: it takes what Netty's handler passes on, and sees each stream the client opens
                         ch.pipeline().addLast(exceptionHandler);
                     }
-                })
-                .build();
+                });
+            SegmentedDatagramPacketAllocator segmentedAllocator = segmentedAllocator(epoll);
+            Http3SegmentedSends segmentedSends = segmentedAllocator.maxNumSegments() > 0 ? new Http3SegmentedSends(segmentedAllocator, handlerLogger) : null;
+            if (segmentedSends != null) {
+                codecBuilder.option(QuicChannelOption.SEGMENTED_DATAGRAM_PACKET_ALLOCATOR, segmentedSends);
+            }
+            ChannelHandler codec = codecBuilder.build();
 
+            int datagramsPerReadCall = epoll ? EPOLL_DATAGRAMS_PER_RECVMMSG : 1;
             Bootstrap bootstrap = new Bootstrap()
                 .group(localGroup)
-                .channel(NioDatagramChannel.class)
+                .channel(listenerClass)
                 .option(ChannelOption.ALLOCATOR, NettyAllocator.ALLOCATOR)
                 .option(ChannelOption.SO_RCVBUF, RECEIVE_BUFFER_BYTES)
-                .option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(DATAGRAM_READ_BUFFER_BYTES).maxMessagesPerRead(MAX_DATAGRAMS_PER_READ))
+                .option(ChannelOption.RCVBUF_ALLOCATOR,
+                    new FixedRecvByteBufAllocator(DATAGRAM_READ_BUFFER_BYTES * datagramsPerReadCall).maxMessagesPerRead(MAX_DATAGRAMS_PER_READ))
                 .handler(new ChannelInitializer<Channel>() {
                     @Override
                     protected void initChannel(Channel listener) {
                         // the QUIC codec takes no exception, so without this one would reach the end of the pipeline
-                        listener.pipeline().addLast(codec, new Http3ListenerExceptionHandler(handlerLogger));
+                        listener.pipeline().addLast(codec);
+                        if (segmentedSends != null) {
+                            listener.pipeline().addLast(segmentedSends);
+                        }
+                        listener.pipeline().addLast(new Http3ListenerExceptionHandler(handlerLogger, epoll));
                     }
                 });
+            if (epoll) {
+                bootstrap.option(EpollChannelOption.MAX_DATAGRAM_PAYLOAD_SIZE, DATAGRAM_READ_BUFFER_BYTES);
+            }
             String localBoundIP = configuration != null ? configuration.localBoundIP() : null;
             InetSocketAddress listenerAddress = Ipv4UdpPortProbe.listenerAddress(localBoundIP, port);
             bind = port == 0 ? bootstrap.bind(listenerAddress) : bindExplicitPort(bootstrap, listenerAddress);
-            Channel listener = bound(bind);
+            Channel listener = bound(bind, epoll);
             int boundPort = ((InetSocketAddress) listener.localAddress()).getPort();
             if (Ipv4UdpPortProbe.loopbackReachesAnotherSocket(listener)) {
                 // taken on 0.0.0.0 between the probe and the bind, which macOS then let this socket share
@@ -274,7 +308,7 @@ public class Http3Server {
             }
             channel = listener;
 
-            LOG.info("HTTP/3 (QUIC) server started on UDP port: {}", boundPort);
+            LOG.info("HTTP/3 (QUIC) server started on UDP port: {} ({})", boundPort, epoll ? "epoll" : "NIO");
             group = localGroup;
             success = true;
             return boundPort;
@@ -314,7 +348,7 @@ public class Http3Server {
      * down, which Netty does on a task the close queues; a loop shut down with no quiet period can end without
      * running it. The second task is queued from the loop, so after it.
      */
-    private static void tearDown(Channel failed, NioEventLoopGroup group) {
+    private static void tearDown(Channel failed, EventLoopGroup group) {
         failed.close().awaitUninterruptibly(STOP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         Promise<Void> tornDown = group.next().newPromise();
         group.execute(() -> group.execute(() -> tornDown.setSuccess(null)));
@@ -325,7 +359,7 @@ public class Http3Server {
      * Not {@code sync()}, which also rethrows a failed bind's cause: an {@link InterruptedException} from here is
      * always this thread's own wait, so the interrupt flag is set again for the caller.
      */
-    private static Channel bound(ChannelFuture bind) throws Exception {
+    private static Channel bound(ChannelFuture bind, boolean epoll) throws Exception {
         try {
             bind.await();
         } catch (InterruptedException interrupted) {
@@ -334,12 +368,29 @@ public class Http3Server {
         }
         if (!bind.isSuccess()) {
             Throwable cause = bind.cause();
+            if (epoll && cause instanceof IOException && !(cause instanceof SocketException)) {
+                // epoll refuses a bind with its own IOException; start-up reports a BindException, as NIO raises.
+                // Suppressed, not the cause: the start-up message names the root cause's class
+                BindException refused = new BindException(cause.getMessage());
+                refused.setStackTrace(cause.getStackTrace());
+                refused.addSuppressed(cause);
+                throw refused;
+            }
             if (cause instanceof Error) {
                 throw (Error) cause;
             }
             throw cause instanceof Exception ? (Exception) cause : new Exception(cause);
         }
         return bind.channel();
+    }
+
+    // a seam: tests give a NIO listener a segmented allocator, to fail its sends
+    SegmentedDatagramPacketAllocator segmentedAllocator(boolean epoll) {
+        return epoll ? EpollQuicUtils.newSegmentedAllocator(EPOLL_GSO_MAX_SEGMENTS) : SegmentedDatagramPacketAllocator.NONE;
+    }
+
+    private boolean nativeTransport() {
+        return configuration != null ? Boolean.TRUE.equals(configuration.useNativeTransport()) : ConfigurationProperties.useNativeTransport();
     }
 
     /**
@@ -390,7 +441,7 @@ public class Http3Server {
         LOG.info("HTTP/3 (QUIC) server stopped");
     }
 
-    private static boolean terminated(NioEventLoopGroup group) {
+    private static boolean terminated(EventLoopGroup group) {
         return group.shutdownGracefully(0, STOP_TIMEOUT_SECONDS, TimeUnit.SECONDS).awaitUninterruptibly(STOP_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 

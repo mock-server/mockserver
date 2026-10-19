@@ -3,6 +3,9 @@ package org.mockserver.netty.http3;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollDatagramChannel;
+import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.codec.http3.DefaultHttp3DataFrame;
@@ -12,6 +15,7 @@ import io.netty.handler.codec.http3.Http3HeadersFrame;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.http3.Http3ErrorCode;
 import io.netty.handler.codec.quic.QuicStreamResetException;
+import org.junit.Assume;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
@@ -294,6 +298,25 @@ public class Http3ConnectUdpHandlerTest {
             defaultFamily = ((InetSocketAddress) reference.bind(null).getLocalAddress()).getAddress();
         }
         assertThat(relaySocketAddress(InetAddress.getByName("::1")).getClass(), equalTo(defaultFamily.getClass()));
+    }
+
+    @Test
+    @SuppressWarnings("deprecation") // EpollEventLoopGroup deprecation in Netty 4.2
+    public void shouldOpenTheRelaySocketOnAnEpollStreamsOwnTransport() throws Exception {
+        Assume.assumeTrue("epoll not available on this platform", Epoll.isAvailable());
+        EventLoopGroup group = new EpollEventLoopGroup(1);
+        try {
+            ChannelFuture bound = Http3ConnectUdpHandler.bindRelaySocket(group.next(), InetAddress.getByName("127.0.0.1"), new ChannelInboundHandlerAdapter());
+            assertTrue("relay socket bound", bound.await(10, TimeUnit.SECONDS) && bound.isSuccess());
+            try {
+                assertThat(bound.channel(), instanceOf(EpollDatagramChannel.class));
+                assertThat(((InetSocketAddress) bound.channel().localAddress()).getAddress(), instanceOf(Inet4Address.class));
+            } finally {
+                bound.channel().close().await(10, TimeUnit.SECONDS);
+            }
+        } finally {
+            group.shutdownGracefully(0, 1, TimeUnit.SECONDS).await(10, TimeUnit.SECONDS);
+        }
     }
 
     @SuppressWarnings("deprecation") // NioEventLoopGroup deprecation in Netty 4.2

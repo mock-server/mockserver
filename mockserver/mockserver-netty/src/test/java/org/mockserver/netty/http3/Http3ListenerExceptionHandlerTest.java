@@ -135,8 +135,31 @@ public class Http3ListenerExceptionHandlerTest {
         assertThat(passedOn, empty());
     }
 
+    @Test
+    public void shouldLogAnyReadErrorOnceForEachClassAndMessageOnAListenerThatKeepsReadingAfterIt() {
+        EmbeddedChannel listener = listener(true);
+
+        listener.pipeline().fireExceptionCaught(new IOException("recvmmsg(..) failed with error(-105): No buffer space available"));
+        listener.pipeline().fireExceptionCaught(new IOException("recvmmsg(..) failed with error(-105): No buffer space available"));
+        listener.pipeline().fireExceptionCaught(new IOException("recvmmsg(..) failed with error(-5): Input/output error"));
+
+        assertThat(logged, hasSize(3));
+        assertThat(logged.get(0).getLogLevel(), is(Level.WARN));
+        assertThat(logged.get(0).getMessageFormat(), is("read error on HTTP/3 listener on:{}:{}:{}; any more of this error are logged at DEBUG"));
+        assertThat(logged.get(0).getArguments()[1], is("java.io.IOException"));
+        assertThat(logged.get(0).getThrowable(), is(nullValue()));
+        assertThat(logged.get(1).getLogLevel(), is(Level.DEBUG));
+        assertThat("another errno is warned of too", logged.get(2).getLogLevel(), is(Level.WARN));
+        assertThat(listener.isOpen(), is(true));
+        assertThat(passedOn, empty());
+    }
+
     private EmbeddedChannel listener() {
-        return new EmbeddedChannel(new Http3ListenerExceptionHandler(mockServerLogger), new ChannelInboundHandlerAdapter() {
+        return listener(false);
+    }
+
+    private EmbeddedChannel listener(boolean keepsReadingAfterEveryReadError) {
+        return new EmbeddedChannel(new Http3ListenerExceptionHandler(mockServerLogger, keepsReadingAfterEveryReadError), new ChannelInboundHandlerAdapter() {
             @Override
             public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
                 passedOn.add(cause);
