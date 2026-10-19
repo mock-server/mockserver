@@ -87,6 +87,17 @@ public class LoadProfile extends ObjectWithJsonToString {
         return stages;
     }
 
+    /**
+     * The number of stages {@link #getStages()} returns, computed without expanding a shape, so a
+     * caller can enforce a stage cap before any expansion allocates.
+     */
+    public long stageCount() {
+        if (stages != null && !stages.isEmpty()) {
+            return stages.size();
+        }
+        return LoadShapes.stageCount(shape);
+    }
+
     /** The explicit stages exactly as set (never the shape expansion) — used by serialization. */
     public List<LoadStage> getRawStages() {
         return stages;
@@ -121,11 +132,15 @@ public class LoadProfile extends ObjectWithJsonToString {
         return this;
     }
 
-    /** Sum of all stage durations — the total run length (reflects the shape expansion). */
+    /**
+     * Sum of all stage durations — the total run length (reflects the shape expansion). Saturates at
+     * {@link Long#MAX_VALUE} rather than wrapping, so oversized durations cannot slip under a cap.
+     */
     public long totalDurationMillis() {
         long total = 0;
         for (LoadStage stage : getStages()) {
-            total += Math.max(0, stage.getDurationMillis());
+            long duration = Math.max(0, stage.getDurationMillis());
+            total = total > Long.MAX_VALUE - duration ? Long.MAX_VALUE : total + duration;
         }
         return total;
     }

@@ -6,6 +6,8 @@ import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -259,5 +261,61 @@ public class ForwardCircuitBreakerTest {
 
         assertThat(breaker.openCircuitCount(), is(0));
         assertThat(breaker.allowRequest(configuration, key()), is(true));
+    }
+
+    @Test
+    public void shouldEscapeLineBreaksInTheUpstreamKeyWhenLogging() {
+        String marker = "forged-breaker-entry";
+        String key = ForwardCircuitBreaker.keyFor(InetSocketAddress.createUnresolved("evil\r\n2026-01-01 INFO " + marker, 80));
+        Configuration tripOnFirstFailure = Configuration.configuration()
+            .forwardProxyCircuitBreakerEnabled(true)
+            .forwardProxyCircuitBreakerFailureThreshold(1)
+            .forwardProxyCircuitBreakerWindowMillis(1_000L);
+        java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(ForwardCircuitBreaker.class.getName());
+        List<String> captured = new ArrayList<>();
+        java.util.logging.Handler handler = new java.util.logging.Handler() {
+            @Override
+            public void publish(java.util.logging.LogRecord record) {
+                String message = String.valueOf(record.getMessage());
+                if (message.contains(marker)) {
+                    synchronized (captured) {
+                        captured.add(message);
+                    }
+                }
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        java.util.logging.Level originalLevel = julLogger.getLevel();
+        julLogger.addHandler(handler);
+        julLogger.setLevel(java.util.logging.Level.ALL);
+        try {
+            // opened
+            breaker.recordFailure(tripOnFirstFailure, key);
+            // re-opened after a failed half-open trial
+            clock.addAndGet(1_000L);
+            assertThat(breaker.allowRequest(tripOnFirstFailure, key), is(true));
+            breaker.recordFailure(tripOnFirstFailure, key);
+            // closed after a successful half-open trial
+            clock.addAndGet(1_000L);
+            assertThat(breaker.allowRequest(tripOnFirstFailure, key), is(true));
+            breaker.recordSuccess(tripOnFirstFailure, key);
+        } finally {
+            julLogger.removeHandler(handler);
+            julLogger.setLevel(originalLevel);
+        }
+
+        assertThat(captured, hasSize(3));
+        for (String message : captured) {
+            assertThat(message, not(containsString("\r")));
+            assertThat(message, not(containsString("\n")));
+            assertThat(message, containsString("evil\\r\\n2026-01-01 INFO " + marker + ":80"));
+        }
     }
 }

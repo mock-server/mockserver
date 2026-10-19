@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import static org.mockserver.formatting.StringFormatter.escapeControlCharactersForLog;
+
 /**
  * Matches inbound HTTP requests against LLM conversation predicates.
  * All predicates compose with AND semantics. Parse failures and oversize
@@ -221,14 +223,16 @@ public class LlmConversationMatcher {
 
             // If parse returned empty and we have predicates, no match
             if (messages.isEmpty()) {
-                String bodySample = "";
-                if (request != null) {
-                    String bodyStr = request.getBodyAsText();
-                    if (bodyStr != null) {
-                        bodySample = bodyStr.substring(0, Math.min(bodyStr.length(), 256));
+                if (LOGGER.isDebugEnabled()) {
+                    String bodySample = "";
+                    if (request != null) {
+                        String bodyStr = request.getBodyAsText();
+                        if (bodyStr != null) {
+                            bodySample = bodyStr.substring(0, Math.min(bodyStr.length(), 256));
+                        }
                     }
+                    LOGGER.debug("LLM conversation parse returned empty for provider {}, body sample: {}", provider, escapeControlCharactersForLog(bodySample));
                 }
-                LOGGER.debug("LLM conversation parse returned empty for provider {}, body sample: {}", provider, bodySample);
                 return false;
             }
 
@@ -314,7 +318,7 @@ public class LlmConversationMatcher {
 
             return true;
         } catch (Exception e) {
-            LOGGER.debug("LLM conversation matcher failed: {}", e.getMessage());
+            LOGGER.debug("LLM conversation matcher failed: {}", escapeControlCharactersForLog(e.getMessage()));
             return false;
         }
     }

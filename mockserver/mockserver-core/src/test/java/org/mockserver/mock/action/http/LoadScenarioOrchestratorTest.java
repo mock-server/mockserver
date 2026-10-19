@@ -1867,6 +1867,165 @@ public class LoadScenarioOrchestratorTest {
             containsString("exceeds the maximum of 5"));
     }
 
+    @Test(timeout = 10_000)
+    public void validateRejectsStairsWithHugeStepCountBeforeExpanding() {
+        orchestrator.setConfiguration(org.mockserver.configuration.Configuration.configuration().loadGenerationMaxStages(20));
+        LoadScenario scenario = new LoadScenario()
+            .withName("huge-stairs")
+            .withProfile(LoadProfile.shaped(
+                org.mockserver.load.LoadShape.stairs(
+                    org.mockserver.load.LoadShape.Metric.RATE, 1, 1, Integer.MAX_VALUE, 1L)))
+            .withSteps(new LoadStep().withRequest(request().withPath("/api")));
+
+        assertThat(orchestrator.validate(scenario),
+            is("'profile.shape' expands to 2147483647 stages, which exceeds the maximum of 20"));
+    }
+
+    @Test
+    public void validateRejectsShapeBeyondExpansionCeilingEvenWhenStageCapIsHigher() {
+        orchestrator.setConfiguration(org.mockserver.configuration.Configuration.configuration().loadGenerationMaxStages(Integer.MAX_VALUE));
+        LoadScenario scenario = new LoadScenario()
+            .withName("huge-stairs-high-cap")
+            .withProfile(LoadProfile.shaped(
+                org.mockserver.load.LoadShape.stairs(
+                    org.mockserver.load.LoadShape.Metric.VU, 1, 0, Integer.MAX_VALUE, 1L)))
+            .withSteps(new LoadStep().withRequest(request().withPath("/api")));
+
+        assertThat(orchestrator.validate(scenario),
+            containsString("which exceeds the maximum of " + org.mockserver.load.LoadShapes.MAX_EXPANDED_STAGES));
+    }
+
+    @Test
+    public void validateAcceptsStairsWithinStageCap() {
+        orchestrator.setConfiguration(org.mockserver.configuration.Configuration.configuration().loadGenerationMaxStages(20));
+        LoadScenario scenario = new LoadScenario()
+            .withName("stairs-ok")
+            .withProfile(LoadProfile.shaped(
+                org.mockserver.load.LoadShape.stairs(
+                    org.mockserver.load.LoadShape.Metric.VU, 1, 1, 20, 1_000L)))
+            .withSteps(new LoadStep().withRequest(request().withPath("/api")));
+
+        assertThat(orchestrator.validate(scenario), is(nullValue()));
+    }
+
+    @Test
+    public void validateRejectsStageDurationsWhoseSumWouldOverflow() {
+        orchestrator.setConfiguration(org.mockserver.configuration.Configuration.configuration());
+        LoadScenario scenario = new LoadScenario()
+            .withName("overflowing-durations")
+            .withProfile(LoadProfile.of(
+                LoadStage.constantVus(1, Long.MAX_VALUE),
+                LoadStage.constantVus(1, Long.MAX_VALUE),
+                LoadStage.constantVus(1, 3L)))
+            .withSteps(new LoadStep().withRequest(request().withPath("/api")));
+
+        assertThat(orchestrator.validate(scenario), containsString("total duration " + Long.MAX_VALUE + " ms exceeds the maximum"));
+    }
+
+    @Test
+    public void validateRejectsNaNArrivalRate() {
+        orchestrator.setConfiguration(org.mockserver.configuration.Configuration.configuration());
+        LoadScenario scenario = new LoadScenario()
+            .withName("nan-rate")
+            .withProfile(LoadProfile.constantRate(Double.NaN, 1_000L))
+            .withSteps(new LoadStep().withRequest(request().withPath("/api")));
+
+        assertThat(orchestrator.validate(scenario), is("stage[0] rate, startRate and endRate must be finite numbers"));
+    }
+
+    private static LoadScenario validScenario(String name) {
+        return new LoadScenario()
+            .withName(name)
+            .withProfile(LoadProfile.constant(1, 1_000L))
+            .withSteps(new LoadStep().withRequest(request().withPath("/api")));
+    }
+
+    @Test
+    public void validateRejectsNonFiniteStepWeights() {
+        orchestrator.setConfiguration(org.mockserver.configuration.Configuration.configuration());
+        for (double weight : new double[]{Double.NaN, Double.POSITIVE_INFINITY}) {
+            for (LoadScenario.StepSelection selection : LoadScenario.StepSelection.values()) {
+                LoadScenario scenario = validScenario("weight")
+                    .withStepSelection(selection)
+                    .withSteps(java.util.Arrays.asList(new LoadStep().withRequest(request().withPath("/api")).withWeight(weight)));
+
+                assertThat(selection + " " + weight, orchestrator.validate(scenario), is("step[0].weight must be a finite number"));
+            }
+        }
+    }
+
+    @Test
+    public void validateRejectsWeightedTotalThatOverflowsToInfinity() {
+        orchestrator.setConfiguration(org.mockserver.configuration.Configuration.configuration());
+        LoadScenario scenario = validScenario("weight-total")
+            .withStepSelection(LoadScenario.StepSelection.WEIGHTED)
+            .withSteps(java.util.Arrays.asList(
+                new LoadStep().withRequest(request().withPath("/a")).withWeight(Double.MAX_VALUE),
+                new LoadStep().withRequest(request().withPath("/b")).withWeight(Double.MAX_VALUE)));
+
+        assertThat(orchestrator.validate(scenario), containsString("'steps' total weight must be a finite number > 0"));
+    }
+
+    @Test
+    public void validateRejectsNonFinitePacingValueInEveryMode() {
+        orchestrator.setConfiguration(org.mockserver.configuration.Configuration.configuration());
+        for (double value : new double[]{Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY}) {
+            LoadScenario paced = validScenario("pacing").withPacing(org.mockserver.load.LoadPacing.constantPacing(value));
+            LoadScenario unpaced = validScenario("pacing-none").withPacing(org.mockserver.load.LoadPacing.loadPacing().withValue(value));
+
+            assertThat(orchestrator.validate(paced), is("'pacing.value' must be a finite number"));
+            assertThat(orchestrator.validate(unpaced), is("'pacing.value' must be a finite number"));
+        }
+    }
+
+    @Test
+    public void validateRejectsNonFiniteStageRates() {
+        orchestrator.setConfiguration(org.mockserver.configuration.Configuration.configuration());
+        LoadStage[] stages = {
+            LoadStage.constantRate(Double.POSITIVE_INFINITY, 1_000L),
+            LoadStage.rampRate(Double.NEGATIVE_INFINITY, 10, 1_000L),
+            LoadStage.rampRate(1, Double.NaN, 1_000L)
+        };
+        for (LoadStage stage : stages) {
+            LoadScenario scenario = validScenario("rate").withProfile(LoadProfile.of(stage));
+
+            assertThat(orchestrator.validate(scenario), is("stage[0] rate, startRate and endRate must be finite numbers"));
+        }
+    }
+
+    @Test
+    public void validateRejectsNonFiniteShapeParameters() {
+        orchestrator.setConfiguration(org.mockserver.configuration.Configuration.configuration());
+        LoadScenario scenario = validScenario("shape").withProfile(LoadProfile.shaped(
+            org.mockserver.load.LoadShape.stairs(org.mockserver.load.LoadShape.Metric.RATE, 1, Double.NaN, 3, 1_000L)));
+        LoadScenario negativeInfinity = validScenario("shape-vu").withProfile(LoadProfile.shaped(
+            org.mockserver.load.LoadShape.spike(org.mockserver.load.LoadShape.Metric.VU, Double.NEGATIVE_INFINITY, 10, 1_000L, 1_000L, 1_000L)));
+
+        assertThat(orchestrator.validate(scenario), is("'profile.shape.step' must be a finite number"));
+        assertThat(orchestrator.validate(negativeInfinity), is("'profile.shape.baseline' must be a finite number"));
+    }
+
+    @Test
+    public void validateRejectsVuShapeAboveIntRangeInsteadOfWrapping() {
+        orchestrator.setConfiguration(org.mockserver.configuration.Configuration.configuration().loadGenerationMaxVirtualUsers(50));
+        LoadScenario scenario = validScenario("vu-wrap").withProfile(LoadProfile.shaped(
+            org.mockserver.load.LoadShape.rampHold(org.mockserver.load.LoadShape.Metric.VU, 4_294_967_297.0, 1_000L, 1_000L)));
+
+        assertThat(orchestrator.validate(scenario), containsString("exceeding the maximum of 50"));
+    }
+
+    @Test
+    public void validateRejectsNonFiniteThreshold() {
+        orchestrator.setConfiguration(org.mockserver.configuration.Configuration.configuration());
+        LoadScenario scenario = validScenario("threshold").withThresholds(
+            org.mockserver.load.LoadThreshold.loadThreshold()
+                .withMetric(org.mockserver.load.LoadThreshold.Metric.ERROR_RATE)
+                .withComparator(org.mockserver.slo.SloObjective.Comparator.LESS_THAN)
+                .withThreshold(Double.NaN));
+
+        assertThat(orchestrator.validate(scenario), is("thresholds[0].threshold must be a finite number"));
+    }
+
     // -- Adaptive iteration pacing --
 
     /** Poll until the most-recent run's last applied pacing delay is within [min, max] (or timeout). */

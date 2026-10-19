@@ -406,7 +406,16 @@ Any zero/absent duration (or zero `steps`) simply drops that stage from the expa
 with `rampDownMillis=0` expands to ramp-up + hold only. A shape whose parameters expand to **no**
 stages — or whose expansion exceeds a cap (max stages, peak VUs/rate, total duration) — is rejected by
 `validate` with a clear error, because validation runs over the expanded stages exactly as it does for
-explicit ones.
+explicit ones. The stage cap is the exception: `validate` checks `LoadProfile.stageCount()` (computed
+by `LoadShapes.stageCount` without allocating) **before** it calls `getStages()`, so a `STAIRS` shape
+with a huge `steps` is rejected without being expanded. As a backstop for any path that expands a shape
+before validation, `LoadShapes.expand` throws `IllegalArgumentException` for a shape that would expand
+to more than `LoadShapes.MAX_EXPANDED_STAGES` (10,000) stages, and `validate` applies that ceiling too.
+`LoadProfile.totalDurationMillis()` saturates at `Long.MAX_VALUE`, so stage durations that would
+overflow cannot wrap under the total-duration cap. `validate` also rejects `NaN`/`Infinity` (which the
+lenient object mapper accepts) in every numeric input: stage rates, shape parameters, step weights
+(in any selection mode) and their weighted total, the pacing value and threshold values. VU shape
+setpoints are rounded with a saturating cast, so an oversized value hits the VU cap instead of wrapping.
 
 ## REST API
 

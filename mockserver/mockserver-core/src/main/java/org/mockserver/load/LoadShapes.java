@@ -25,18 +25,52 @@ import java.util.List;
  */
 public final class LoadShapes {
 
+    /**
+     * Absolute ceiling on the stages a shape may expand into, independent of configuration, so a
+     * shape reached through a path that has not yet been validated cannot exhaust the heap.
+     */
+    public static final int MAX_EXPANDED_STAGES = 10_000;
+
     private LoadShapes() {
+    }
+
+    /**
+     * The number of stages {@link #expand} would produce for {@code shape}, computed without
+     * allocating them, so a caller can reject an oversized shape before expanding it.
+     */
+    public static long stageCount(LoadShape shape) {
+        if (shape == null || shape.getType() == null) {
+            return 0;
+        }
+        switch (shape.getType()) {
+            case SPIKE:
+                return positiveCount(shape.getRampUpMillis(), shape.getHoldMillis(), shape.getRampDownMillis(), shape.getRecoveryHoldMillis());
+            case STAIRS:
+                int steps = shape.getSteps() != null ? shape.getSteps() : 0;
+                return steps > 0 && orZero(shape.getStepDurationMillis()) > 0 ? steps : 0;
+            case RAMP_HOLD:
+                return positiveCount(shape.getRampMillis(), shape.getHoldMillis());
+            default:
+                return 0;
+        }
     }
 
     /**
      * Expand {@code shape} into its ordered list of {@link LoadStage}s, or an empty list when
      * {@code shape} is {@code null} or has no {@link LoadShape#getType() type}. The returned list is a
      * fresh, mutable {@link ArrayList} owned by the caller.
+     *
+     * @throws IllegalArgumentException when the shape would expand to more than
+     *                                  {@link #MAX_EXPANDED_STAGES} stages
      */
     public static List<LoadStage> expand(LoadShape shape) {
         List<LoadStage> stages = new ArrayList<>();
         if (shape == null || shape.getType() == null) {
             return stages;
+        }
+        long count = stageCount(shape);
+        if (count > MAX_EXPANDED_STAGES) {
+            throw new IllegalArgumentException("'profile.shape' expands to " + count + " stages, which exceeds the maximum of " + MAX_EXPANDED_STAGES);
         }
         switch (shape.getType()) {
             case SPIKE:
@@ -109,7 +143,7 @@ public final class LoadShapes {
         if (shape.getMetric() == LoadShape.Metric.RATE) {
             return LoadStage.constantRate(value, durationMillis);
         }
-        return LoadStage.constantVus((int) Math.round(value), durationMillis);
+        return LoadStage.constantVus(toVus(value), durationMillis);
     }
 
     /** A ramp stage from {@code start} to {@code end} along {@code curve} for the shape's metric. */
@@ -117,11 +151,26 @@ public final class LoadShapes {
         if (shape.getMetric() == LoadShape.Metric.RATE) {
             return LoadStage.rampRate(start, end, durationMillis, curve);
         }
-        return LoadStage.rampVus((int) Math.round(start), (int) Math.round(end), durationMillis, curve);
+        return LoadStage.rampVus(toVus(start), toVus(end), durationMillis, curve);
+    }
+
+    /** Rounds to a whole VU count, saturating at the int range so an oversized value is not wrapped. */
+    private static int toVus(double value) {
+        return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, Math.round(value)));
     }
 
     private static RampCurve curveOf(LoadShape shape) {
         return shape.getCurve() != null ? shape.getCurve() : RampCurve.LINEAR;
+    }
+
+    private static int positiveCount(Long... durations) {
+        int count = 0;
+        for (Long duration : durations) {
+            if (orZero(duration) > 0) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private static double orZero(Double value) {

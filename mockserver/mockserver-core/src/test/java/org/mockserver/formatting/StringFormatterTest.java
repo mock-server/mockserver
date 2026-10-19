@@ -11,6 +11,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockserver.character.Character.NEW_LINE;
 import org.mockserver.mock.Expectation;
 
+import static org.mockserver.formatting.StringFormatter.escapeControlCharactersForLog;
 import static org.mockserver.formatting.StringFormatter.formatBytes;
 import static org.mockserver.formatting.StringFormatter.formatCompactLogMessage;
 import static org.mockserver.formatting.StringFormatter.hexDumpForLog;
@@ -302,4 +303,29 @@ public class StringFormatterTest {
         }
     }
 
+    @Test
+    public void shouldEscapeLineBreaksSoAValueCannotStartANewLogLine() {
+        String escaped = escapeControlCharactersForLog("host\r\n2026-01-01 INFO forged\nline\ttab");
+
+        assertThat(escaped, is("host\\r\\n2026-01-01 INFO forged\\nline\\ttab"));
+        assertThat(escaped.indexOf('\r'), is(-1));
+        assertThat(escaped.indexOf('\n'), is(-1));
+    }
+
+    @Test
+    public void shouldEscapeOtherControlAndLineSeparatorCharacters() {
+        String value = "a" + (char) 0x00 + (char) 0x1B + (char) 0x7F + (char) 0x85 + (char) 0x2028 + (char) 0x2029
+            + (char) 0x202E + (char) 0x2066 + (char) 0x200F + "b";
+
+        assertThat(escapeControlCharactersForLog(value),
+            is("a\\u0000\\u001b\\u007f\\u0085\\u2028\\u2029\\u202e\\u2066\\u200fb"));
+    }
+
+    @Test
+    public void shouldReturnPrintableValueUnchanged() {
+        String value = "upstream.example:8080 caf\u00e9 \u65e5\u672c";
+
+        assertThat(escapeControlCharactersForLog(value) == value, is(true));
+        assertThat(escapeControlCharactersForLog(null) == null, is(true));
+    }
 }

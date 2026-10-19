@@ -383,6 +383,44 @@ public class HttpStateLoadScenarioEndpointTest {
         }
     }
 
+    @Test(timeout = 10_000)
+    public void putReturns400ForStairsShapeWithHugeStepCount() {
+        String b = "{ \"name\": \"huge-stairs\", " +
+            "\"profile\": { \"shape\": { \"type\": \"STAIRS\", \"metric\": \"RATE\", \"start\": 1, \"step\": 1, " +
+            "\"steps\": 2147483647, \"stepDurationMillis\": 1 } }, " +
+            "\"steps\": [ { \"request\": { \"path\": \"/x\" } } ] }";
+
+        HttpResponse response = put(b);
+
+        assertThat(response.getStatusCode(), is(400));
+        assertThat(response.getBodyAsString(), containsString("exceeds the maximum of"));
+    }
+
+    @Test
+    public void putReturns400ForNaNStepWeight() {
+        String b = "{ \"name\": \"nan-weight\", \"stepSelection\": \"WEIGHTED\", " +
+            "\"profile\": { \"stages\": [ { \"type\": \"VU\", \"vus\": 1, \"durationMillis\": 1000 } ] }, " +
+            "\"steps\": [ { \"request\": { \"path\": \"/x\" }, \"weight\": NaN } ] }";
+
+        HttpResponse response = put(b);
+
+        assertThat(response.getStatusCode(), is(400));
+        assertThat(response.getBodyAsString(), containsString("step[0].weight must be a finite number"));
+    }
+
+    @Test
+    public void putLoadsStairsShapeWithinStageCap() throws Exception {
+        String b = "{ \"name\": \"stairs\", " +
+            "\"profile\": { \"shape\": { \"type\": \"STAIRS\", \"metric\": \"VU\", \"start\": 1, \"step\": 1, " +
+            "\"steps\": 3, \"stepDurationMillis\": 1000 } }, " +
+            "\"steps\": [ { \"request\": { \"path\": \"/x\" } } ] }";
+
+        HttpResponse response = put(b);
+
+        assertThat(response.getStatusCode(), is(200));
+        assertThat(body(response).get("status").asText(), is("loaded"));
+    }
+
     @Test
     public void putRequiresControlPlaneAuthentication() {
         AuthenticationHandler rejectingHandler = req -> false;

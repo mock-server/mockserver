@@ -67,4 +67,29 @@ public class LoadProfileTest {
         LoadProfile profile = LoadProfile.shaped(LoadShape.rampHold(LoadShape.Metric.VU, 10, 1_000L, 1_000L));
         assertThat(profile.getStages(), sameInstance(profile.getStages()));
     }
+
+    @Test
+    public void stageCountReportsShapeSizeWithoutExpanding() {
+        LoadProfile profile = LoadProfile.shaped(LoadShape.stairs(LoadShape.Metric.VU, 1, 1, Integer.MAX_VALUE, 1L));
+
+        assertThat(profile.stageCount(), is((long) Integer.MAX_VALUE));
+    }
+
+    @Test
+    public void stageCountPrefersExplicitStages() {
+        LoadProfile profile = LoadProfile.of(LoadStage.constantVus(3, 5_000L), LoadStage.constantVus(4, 5_000L))
+            .withShape(LoadShape.stairs(LoadShape.Metric.VU, 1, 1, Integer.MAX_VALUE, 1L));
+
+        assertThat(profile.stageCount(), is(2L));
+    }
+
+    @Test
+    public void totalDurationSaturatesInsteadOfWrapping() {
+        LoadProfile profile = LoadProfile.of(
+            LoadStage.constantVus(1, Long.MAX_VALUE),
+            LoadStage.constantVus(1, Long.MAX_VALUE),
+            LoadStage.constantVus(1, 3L));
+
+        assertThat(profile.totalDurationMillis(), is(Long.MAX_VALUE));
+    }
 }

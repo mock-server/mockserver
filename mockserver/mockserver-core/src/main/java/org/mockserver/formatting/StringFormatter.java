@@ -315,6 +315,48 @@ public class StringFormatter {
     }
 
     /**
+     * Escapes control characters in a value taken from a request or other untrusted source before it is written to a
+     * log, so the value always stays on one log line. CR, LF and tab become {@code \r}, {@code \n} and {@code \t};
+     * other C0/C1 controls, DEL, the Unicode line and paragraph separators and the bidirectional-text controls become a
+     * Java-style unicode escape. Backslashes are not escaped, so the result is for reading, not for reversing.
+     * Returns {@code null} for {@code null} and the same instance when nothing needs escaping.
+     */
+    public static String escapeControlCharactersForLog(String value) {
+        if (value == null) {
+            return null;
+        }
+        StringBuilder escaped = null;
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            boolean control = c < 0x20 || (c >= 0x7F && c <= 0x9F) || c == 0x200E || c == 0x200F
+                || (c >= 0x2028 && c <= 0x202E) || (c >= 0x2066 && c <= 0x2069);
+            if (!control) {
+                if (escaped != null) {
+                    escaped.append(c);
+                }
+                continue;
+            }
+            if (escaped == null) {
+                escaped = new StringBuilder(value.length() + 16).append(value, 0, i);
+            }
+            switch (c) {
+                case '\r':
+                    escaped.append("\\r");
+                    break;
+                case '\n':
+                    escaped.append("\\n");
+                    break;
+                case '\t':
+                    escaped.append("\\t");
+                    break;
+                default:
+                    escaped.append(String.format("\\u%04x", (int) c));
+            }
+        }
+        return escaped == null ? value : escaped.toString();
+    }
+
+    /**
      * What follows a binary message cut to its first bytes: as a body cut by maxLoggedBodyBytes, it gives the
      * message's whole length.
      */

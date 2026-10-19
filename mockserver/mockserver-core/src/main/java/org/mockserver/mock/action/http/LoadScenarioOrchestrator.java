@@ -14,6 +14,8 @@ import org.mockserver.load.LoadProfile;
 import org.mockserver.load.LoadScenario;
 import org.mockserver.load.LoadStage;
 import org.mockserver.load.LoadScenarioState;
+import org.mockserver.load.LoadShape;
+import org.mockserver.load.LoadShapes;
 import org.mockserver.load.LoadStageType;
 import org.mockserver.load.LoadStep;
 import org.mockserver.load.LoadThreshold;
@@ -1239,6 +1241,9 @@ public class LoadScenarioOrchestrator {
             if (steps.get(i) == null || steps.get(i).getRequest() == null) {
                 return "step[" + i + "] must have a request";
             }
+            if (!isFiniteOrNull(steps.get(i).getWeight())) {
+                return "step[" + i + "].weight must be a finite number";
+            }
         }
         // WEIGHTED step selection: each iteration runs one step chosen proportional to its weight, so
         // every step's effective weight (absent = 1.0) must be > 0 and the total positive. SEQUENTIAL
@@ -1254,13 +1259,30 @@ public class LoadScenarioOrchestrator {
                 }
                 totalWeight += effective;
             }
-            if (totalWeight <= 0) {
-                return "'steps' total weight must be > 0 when stepSelection is WEIGHTED";
+            if (!(totalWeight > 0) || !Double.isFinite(totalWeight)) {
+                return "'steps' total weight must be a finite number > 0 when stepSelection is WEIGHTED";
             }
         }
         LoadProfile profile = scenario.getProfile();
         if (profile == null) {
             return "'profile' is required";
+        }
+        // The stage cap is checked on the count BEFORE getStages() expands a shape, so an oversized
+        // shape (e.g. STAIRS with a huge 'steps') is rejected without allocating its stages.
+        int maxStages = configuration.loadGenerationMaxStages();
+        long stageCount = profile.stageCount();
+        boolean shapeOnly = profile.getShape() != null && (profile.getRawStages() == null || profile.getRawStages().isEmpty());
+        if (shapeOnly) {
+            String shapeError = nonFiniteShapeParameter(profile.getShape());
+            if (shapeError != null) {
+                return shapeError;
+            }
+            long limit = Math.min(maxStages, LoadShapes.MAX_EXPANDED_STAGES);
+            if (stageCount > limit) {
+                return "'profile.shape' expands to " + stageCount + " stages, which exceeds the maximum of " + limit;
+            }
+        } else if (stageCount > maxStages) {
+            return "'profile.stages' exceeds the maximum of " + maxStages;
         }
         // getStages() returns the explicit stages, or — when only a 'shape' is set — the stages that
         // shape expands into; so all the per-stage / cap checks below cover shaped profiles for free.
@@ -1270,10 +1292,6 @@ public class LoadScenarioOrchestrator {
                 return "'profile.shape' expands to no stages; check its parameters (durations and step count must be > 0)";
             }
             return "'profile' must contain either 'stages' or a 'shape'";
-        }
-        int maxStages = configuration.loadGenerationMaxStages();
-        if (stages.size() > maxStages) {
-            return "'profile.stages' exceeds the maximum of " + maxStages;
         }
         int maxVus = configuration.loadGenerationMaxVirtualUsers();
         double maxRate = configuration.loadGenerationMaxRate();
@@ -1285,6 +1303,9 @@ public class LoadScenarioOrchestrator {
             }
             if (stage.getType() == null) {
                 return "stage[" + i + "] must have a type";
+            }
+            if (!isFiniteOrNull(stage.getRate()) || !isFiniteOrNull(stage.getStartRate()) || !isFiniteOrNull(stage.getEndRate())) {
+                return "stage[" + i + "] rate, startRate and endRate must be finite numbers";
             }
             if (stage.getDurationMillis() <= 0) {
                 return "stage[" + i + "].durationMillis must be > 0";
@@ -1345,9 +1366,20 @@ public class LoadScenarioOrchestrator {
             return "templateType JAVASCRIPT is not supported for load steps; use VELOCITY or MUSTACHE";
         }
         LoadPacing pacing = scenario.getPacing();
+        if (pacing != null && !Double.isFinite(pacing.getValue())) {
+            return "'pacing.value' must be a finite number";
+        }
         if (pacing != null && pacing.getMode() != null && pacing.getMode() != LoadPacing.Mode.NONE
             && pacing.getValue() <= 0) {
             return "'pacing.value' must be > 0 when 'pacing.mode' is " + pacing.getMode();
+        }
+        List<LoadThreshold> thresholds = scenario.getThresholds();
+        if (thresholds != null) {
+            for (int i = 0; i < thresholds.size(); i++) {
+                if (thresholds.get(i) != null && !Double.isFinite(thresholds.get(i).getThreshold())) {
+                    return "thresholds[" + i + "].threshold must be a finite number";
+                }
+            }
         }
         LoadFeeder feeder = scenario.getFeeder();
         if (feeder != null) {
@@ -1361,6 +1393,21 @@ public class LoadScenarioOrchestrator {
             }
             if (feederRows == null || feederRows.isEmpty()) {
                 return "'feeder' must resolve to at least one row (set 'feeder.rows' or 'feeder.data'+'feeder.format')";
+            }
+        }
+        return null;
+    }
+
+    private static boolean isFiniteOrNull(Double value) {
+        return value == null || Double.isFinite(value);
+    }
+
+    private static String nonFiniteShapeParameter(LoadShape shape) {
+        String[] names = {"baseline", "peak", "start", "step", "target"};
+        Double[] values = {shape.getBaseline(), shape.getPeak(), shape.getStart(), shape.getStep(), shape.getTarget()};
+        for (int i = 0; i < names.length; i++) {
+            if (!isFiniteOrNull(values[i])) {
+                return "'profile.shape." + names[i] + "' must be a finite number";
             }
         }
         return null;

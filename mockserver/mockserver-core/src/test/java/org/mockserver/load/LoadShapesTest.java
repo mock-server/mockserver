@@ -161,4 +161,55 @@ public class LoadShapesTest {
         assertThat(ramp.getCurve(), is(RampCurve.EXPONENTIAL));
         assertThat(stages.get(1).getRate(), is(500.0));
     }
+
+    @Test
+    public void stageCountMatchesExpansionForEachShapeType() {
+        LoadShape[] shapes = {
+            LoadShape.spike(LoadShape.Metric.VU, 2, 40, 10_000L, 30_000L, 5_000L).withRecoveryHoldMillis(8_000L),
+            LoadShape.spike(LoadShape.Metric.RATE, 1, 10, 0L, 5_000L, 0L),
+            LoadShape.stairs(LoadShape.Metric.RATE, 10, 5, 4, 2_000L),
+            LoadShape.stairs(LoadShape.Metric.VU, 1, 1, 7, 0L),
+            LoadShape.rampHold(LoadShape.Metric.VU, 20, 10_000L, 50_000L),
+            new LoadShape()
+        };
+        for (LoadShape shape : shapes) {
+            assertThat(LoadShapes.stageCount(shape), is((long) LoadShapes.expand(shape).size()));
+        }
+        assertThat(LoadShapes.stageCount(null), is(0L));
+    }
+
+    @Test
+    public void stageCountOfHugeStairsIsComputedWithoutExpanding() {
+        LoadShape shape = LoadShape.stairs(LoadShape.Metric.RATE, 1, 1, Integer.MAX_VALUE, 1L);
+
+        assertThat(LoadShapes.stageCount(shape), is((long) Integer.MAX_VALUE));
+    }
+
+    @Test(timeout = 10_000)
+    public void expandRejectsStairsBeyondCeilingWithoutAllocatingStages() {
+        LoadShape shape = LoadShape.stairs(LoadShape.Metric.VU, 1, 1, Integer.MAX_VALUE, 1L);
+
+        try {
+            LoadShapes.expand(shape);
+            org.junit.Assert.fail("expected the oversized STAIRS shape to be rejected");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage(), containsString("exceeds the maximum of " + LoadShapes.MAX_EXPANDED_STAGES));
+        }
+    }
+
+    @Test
+    public void expandAllowsStairsAtTheCeiling() {
+        LoadShape shape = LoadShape.stairs(LoadShape.Metric.VU, 1, 0, LoadShapes.MAX_EXPANDED_STAGES, 1L);
+
+        assertThat(LoadShapes.expand(shape), hasSize(LoadShapes.MAX_EXPANDED_STAGES));
+    }
+
+    @Test
+    public void vuSetpointsSaturateAtTheIntRangeInsteadOfWrapping() {
+        List<LoadStage> stages = LoadShapes.expand(LoadShape.rampHold(LoadShape.Metric.VU, 4_294_967_297.0, 1_000L, 1_000L));
+
+        assertThat(stages.get(0).getEndVus(), is(Integer.MAX_VALUE));
+        assertThat(stages.get(1).getVus(), is(Integer.MAX_VALUE));
+        assertThat(LoadShapes.expand(LoadShape.rampHold(LoadShape.Metric.VU, -1e300, 1_000L, 1_000L)).get(1).getVus(), is(Integer.MIN_VALUE));
+    }
 }

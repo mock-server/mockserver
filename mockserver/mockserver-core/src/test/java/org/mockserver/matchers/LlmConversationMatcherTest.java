@@ -6,11 +6,15 @@ import org.mockserver.llm.ParsedMessage;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.Provider;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.fail;
 import static org.mockserver.model.HttpRequest.request;
@@ -887,5 +891,51 @@ public class LlmConversationMatcherTest {
             .withBody("{\"systemInstruction\": {\"parts\": [{\"text\": \"Be brief.\"}]}, \"contents\": []}");
 
         assertThat(matcher.matches(request), is(true));
+    }
+
+    @Test
+    public void shouldEscapeLineBreaksInTheLoggedBodySample() {
+        String marker = "forged-llm-entry";
+        LlmConversationMatcher matcher = new LlmConversationMatcher()
+            .withProvider(Provider.ANTHROPIC)
+            .withTurnIndex(0);
+        HttpRequest request = request().withBody("{\"messages\": [],\r\n\"2026-01-01 INFO " + marker + "\": 1}");
+        java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(LlmConversationMatcher.class.getName());
+        List<String> captured = new ArrayList<>();
+        java.util.logging.Handler handler = new java.util.logging.Handler() {
+            @Override
+            public void publish(java.util.logging.LogRecord record) {
+                String message = String.valueOf(record.getMessage());
+                if (message.contains(marker)) {
+                    synchronized (captured) {
+                        captured.add(message);
+                    }
+                }
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        java.util.logging.Level originalLevel = julLogger.getLevel();
+        julLogger.addHandler(handler);
+        julLogger.setLevel(java.util.logging.Level.ALL);
+        try {
+            assertThat(matcher.matches(request), is(false));
+        } finally {
+            julLogger.removeHandler(handler);
+            julLogger.setLevel(originalLevel);
+        }
+
+        assertThat(captured, not(empty()));
+        for (String message : captured) {
+            assertThat(message, not(containsString("\r")));
+            assertThat(message, not(containsString("\n")));
+            assertThat(message, containsString("\\r\\n\"2026-01-01 INFO " + marker));
+        }
     }
 }

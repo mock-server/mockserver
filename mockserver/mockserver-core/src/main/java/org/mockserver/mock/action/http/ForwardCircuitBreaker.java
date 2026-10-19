@@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongSupplier;
 
+import static org.mockserver.formatting.StringFormatter.escapeControlCharactersForLog;
+
 /**
  * Per-upstream circuit breaker for forwarded/proxied requests. State is keyed by upstream
  * {@code host:port}. After {@code forwardProxyCircuitBreakerFailureThreshold} consecutive failures
@@ -138,7 +140,7 @@ public class ForwardCircuitBreaker {
             state.consecutiveFailures.set(0);
             state.trialInFlight.set(0);
             if (wasOpen) {
-                LOG.info("forward circuit breaker closed for upstream {} after a successful trial request", key);
+                LOG.info("forward circuit breaker closed for upstream {} after a successful trial request", escapeControlCharactersForLog(key));
             }
             // Evict only if still fully healthy; if a concurrent failure mutated the state the
             // value-conditional remove is a no-op and the entry (correctly) survives.
@@ -161,7 +163,7 @@ public class ForwardCircuitBreaker {
         // A failed half-open trial re-opens immediately for another window.
         if (state.trialInFlight.compareAndSet(1, 0) && state.openedAtMillis.get() != 0) {
             state.openedAtMillis.set(clock.getAsLong());
-            LOG.warn("forward circuit breaker re-opened for upstream {} after a failed half-open trial request", key);
+            LOG.warn("forward circuit breaker re-opened for upstream {} after a failed half-open trial request", escapeControlCharactersForLog(key));
             return;
         }
         int failures = state.consecutiveFailures.incrementAndGet();
@@ -170,7 +172,7 @@ public class ForwardCircuitBreaker {
             LOG.warn(
                 "forward circuit breaker opened for upstream {} after {} consecutive failures (threshold {}) — "
                     + "failing requests fast for {} ms",
-                key,
+                escapeControlCharactersForLog(key),
                 failures,
                 threshold,
                 configuration.forwardProxyCircuitBreakerWindowMillis()
