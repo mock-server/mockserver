@@ -1818,13 +1818,17 @@ first finds the cut kept; the first update of a body still pays one decode.
 ### `LogMessageRenderBenchmark` JMH — on demand, not run by CI
 
 `./run.sh -prof gc LogMessageRenderBenchmark` renders one event-log message as the console does
-(`StringFormatter.formatLogMessage`, `messageLoop`) and the same message through a copy of the
-`(?m)^` regex indent that rendering used before row 126a (`messageRegex`), in one JMH run, so both arms
+(`StringFormatter.formatLogMessage`, `messageLoop`), the same message through a copy of the rendering row 126a
+left, each argument's `toString` and then the indent loop (`messageToString`), and through a copy of the
+`(?m)^` regex indent that rendering used before row 126a (`messageRegex`), in one JMH run, so the arms
 share a machine (JMH forks each into its own JVM). `indentLoop` and `indentRegex` time the indent alone, of an already-serialised
 request. Shapes: a received request, a did-not-match entry (request, expectation, because text) and
 an expectation response, each quoting the perf sweep's bodiless `GET /simple` (`SIMPLE`) or a POST with
-a 1 KB pretty-printed JSON body (`JSON`). Setup fails if the two arms render different text, or if the mockserver-core on the classpath still has
-the regex (a stale `~/.m2` install would otherwise compare the regex with itself). When the
+a 1 KB pretty-printed JSON body (`JSON`). `consoleDiscarded` and `consoleRendered` time `MockServerLogger.writeToSystemOut` of the same entry, to SLF4J's
+no-operation logger and to a logger that takes the rendered text. Setup fails if the arms render different text,
+or if the mockserver-core on the classpath predates the indent loop or the streamed arguments (a stale `~/.m2`
+install would otherwise compare an old rendering with itself); `run.sh` uses the installed core, so either
+install this tree's core or put its `target/classes` first on the classpath. When the
 loop replaced the regex (one fork, JDK 17, developer Mac, so directional only): the indent alone went
 from 422–498 to 199–207 ns and 2,336 to 304 B per op for `SIMPLE`, and from 2.9 to 1.4 µs and 14.9 to
 1.5 KB for `JSON`; a whole message 25–37% faster and 35–46% less allocated in every shape, for example
@@ -1833,6 +1837,25 @@ serialising the quoted request, response or expectation, which the change does n
 perf rig (builds 700, 701, 703 and 704) the change cut the `INFO` consumer's CPU at 6,000 req/s from 0.78–0.79 to 0.62. It also moved the first
 `ring_full` drops from the 8,000 rung to 10,000–12,000 (see
 [memory-management.md](memory-management.md#ring-in-flight-bounding-and-drops)).
+
+Row 126b (one fork, JDK 17.0.20, developer Mac, so directional only; `-f 1 -wi 3 -i 5 -w 1 -r 1`): the console
+write to a logger that prints nothing went to 4.3–4.6 ns and 0 B per op in every shape, against 0.96–8.8 µs and
+3.4–23.7 KB rendered. The java.util.logging probe, which walks the logger's handlers, is not timed: the benchmark
+module has no slf4j-jdk14 provider. A rendered message with its JSON arguments streamed is 5–11% faster than
+`messageToString` and allocates 21–40% less:
+
+| Request | Shape | `messageLoop` | `messageToString` (126a) |
+|---|---|---|---|
+| `SIMPLE` | received | 834 ns, 3.1 KB | 895 ns, 3.9 KB |
+| `SIMPLE` | did not match | 1.91 µs, 4.4 KB | 2.02 µs, 7.3 KB |
+| `SIMPLE` | response | 1.48 µs, 4.7 KB | 1.57 µs, 7.1 KB |
+| `JSON` | received | 4.88 µs, 11.2 KB | 5.47 µs, 16.0 KB |
+| `JSON` | did not match | 6.38 µs, 12.6 KB | 7.03 µs, 21.0 KB |
+| `JSON` | response | 5.87 µs, 12.9 KB | 6.29 µs, 21.5 KB |
+
+Streaming into a `StringBuilder` first measured 2–9% slower than `messageToString` while allocating 6–12% less:
+a `StringBuilder` holding Latin-1 text copies an appended `char[]` a character at a time. Building the message in
+a reused `char[]` gave the figures above.
 
 ### The seven promoted dark benchmarks
 

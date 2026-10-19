@@ -207,10 +207,15 @@ public class MockServerLogger {
         return ConfigurationProperties.disableLogging();
     }
 
+    /**
+     * Writes the entry's message to {@code logger} when the configuration enables its level. The message is not
+     * rendered when nothing would print it, such as a java.util.logging logger with no handler once
+     * {@code disableSystemOut} is set; every other reader renders it from the entry when it reads it.
+     */
     public static void writeToSystemOut(Logger logger, LogEntry logEntry, Configuration configuration) {
         if (!configuration.disableLogging()) {
             Level effectiveLevel = resolveEffectiveLevel(logEntry.getType(), configuration.logLevelOverrides(), configuration.logLevel());
-            if (logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel(), effectiveLevel)) {
+            if ((logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel(), effectiveLevel)) && !LogOutputProbe.discards(logger, logEntry.getLogLevel())) {
                 LogEntry.RedactedView redacted = logEntry.redactedView(configuration);
                 String message = redacted.getMessage();
                 if (isNotBlank(message)) {
@@ -223,7 +228,7 @@ public class MockServerLogger {
     public static void writeToSystemOut(Logger logger, LogEntry logEntry) {
         if (!ConfigurationProperties.disableLogging()) {
             Level effectiveLevel = resolveEffectiveLevel(logEntry.getType(), ConfigurationProperties.logLevelOverrides(), ConfigurationProperties.logLevel());
-            if (logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel(), effectiveLevel)) {
+            if ((logEntry.isAlwaysLog() || isEnabled(logEntry.getLogLevel(), effectiveLevel)) && !LogOutputProbe.discards(logger, logEntry.getLogLevel())) {
                 LogEntry.RedactedView redacted = logEntry.redactedView(null);
                 String message = redacted.getMessage();
                 if (isNotBlank(message)) {

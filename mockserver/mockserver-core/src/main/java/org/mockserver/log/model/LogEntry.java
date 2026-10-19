@@ -197,7 +197,8 @@ public class LogEntry implements EventTranslator<LogEntry> {
      * {@link DeferredLogArgument} for the same reason) — so they are excluded, as is the memoized
      * {@code message} string. The {@code message} is the one large
      * term that is level-dependent: it is materialized on the retained entry only at a rendering log
-     * level ({@code INFO}/{@code DEBUG}/{@code TRACE}, where {@code writeToSystemOut} renders each entry),
+     * level ({@code INFO}/{@code DEBUG}/{@code TRACE}, where {@code writeToSystemOut} renders each entry that
+     * something prints), or by any later reader,
      * and it is populated <em>after</em> this weight is first computed and memoized, so it cannot be
      * counted here without either double-counting it at non-rendering levels or making the weight depend
      * on when it happens to be rendered — both of which would break the invariant that the add-time

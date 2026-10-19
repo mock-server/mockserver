@@ -16,6 +16,7 @@ import org.mockserver.serialization.ObjectMapperFactory;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -60,13 +61,33 @@ public class StringFormatter {
         final String indentation = INDENTS.get(indent);
         final StringBuilder[] indentedObjects = new StringBuilder[objects.length];
         for (int i = 0; i < objects.length; i++) {
-            final String text = String.valueOf(objects[i]);
-            final StringBuilder indented = new StringBuilder(text.length() + (text.length() >> 3) + 16);
-            indented.append(NEW_LINE).append(NEW_LINE);
-            appendIndented(indented, text, indentation);
-            indentedObjects[i] = indented.append(NEW_LINE);
+            final MessageBuffer indented = new MessageBuffer(new char[64]);
+            appendFormattedArgument(indented, objects[i], indentation);
+            indentedObjects[i] = new StringBuilder(indented.toString());
         }
         return indentedObjects;
+    }
+
+    /**
+     * Appends what {@link #indentAndToString(int, Object...)} gives for {@code argument}. An argument whose text is
+     * its JSON is serialised straight into {@code target}; if that fails, what was written is removed and the
+     * argument's text is appended instead, as {@code toString} then gives it.
+     */
+    private static void appendFormattedArgument(final MessageBuffer target, final Object argument, final String indentation) {
+        target.add(NEW_LINE).add(NEW_LINE);
+        final ObjectWriter jsonWriter = argument != null && TO_STRING_IS_JSON.get(argument.getClass()) ? ObjectMapperFactory.createObjectMapper(true, false) : null;
+        if (jsonWriter == null) {
+            appendIndented(target, String.valueOf(argument), indentation);
+        } else {
+            final int start = target.length();
+            try {
+                writeJson(jsonWriter, new LineIndentingWriter(target, indentation), argument);
+            } catch (IOException e) {
+                target.setLength(start);
+                appendIndented(target, String.valueOf(argument), indentation);
+            }
+        }
+        target.add(NEW_LINE);
     }
 
     /**
@@ -74,16 +95,16 @@ public class StringFormatter {
      * does: before the first character and after each line terminator ({@code \r\n} counting as one), but not
      * after a terminator that ends the text, so empty text stays empty.
      */
-    private static void appendIndented(final StringBuilder target, final String text, final String indentation) {
+    private static void appendIndented(final MessageBuffer target, final String text, final String indentation) {
         final int length = text.length();
         if (length == 0) {
             return;
         }
         if (indentation.isEmpty()) {
-            target.append(text);
+            target.add(text);
             return;
         }
-        target.append(indentation);
+        target.add(indentation);
         int lineStart = 0;
         for (int i = 0; i < length; i++) {
             final char c = text.charAt(i);
@@ -92,12 +113,12 @@ public class StringFormatter {
                     i++;
                 }
                 if (i + 1 < length) {
-                    target.append(text, lineStart, i + 1).append(indentation);
+                    target.add(text, lineStart, i + 1).add(indentation);
                     lineStart = i + 1;
                 }
             }
         }
-        target.append(text, lineStart, length);
+        target.add(text, lineStart, length);
     }
 
     public static String formatLogMessage(final String message, final Object... arguments) {
@@ -105,23 +126,27 @@ public class StringFormatter {
     }
 
     public static String formatLogMessage(final int indent, final String message, final Object... arguments) {
-        final StringBuilder logMessage = new StringBuilder();
-        final StringBuilder[] formattedArguments = indentAndToString(indent + 1, arguments);
-        final String[] messageParts = ARGUMENT_PLACEHOLDER.split(message);
-        for (int messagePartIndex = 0; messagePartIndex < messageParts.length; messagePartIndex++) {
-            logMessage.append(INDENTS.get(indent)).append(messageParts[messagePartIndex]);
-            if (formattedArguments.length > 0 &&
-                formattedArguments.length > messagePartIndex) {
-                logMessage.append(formattedArguments[messagePartIndex]);
-            }
-            if (messagePartIndex < messageParts.length - 1) {
-                logMessage.append(NEW_LINE);
-                if (!messageParts[messagePartIndex + 1].startsWith(" ")) {
-                    logMessage.append(" ");
+        final String indentation = INDENTS.get(indent);
+        final String argumentIndentation = INDENTS.get(indent + 1);
+        final MessageBuffer logMessage = MessageBuffer.acquire();
+        try {
+            final String[] messageParts = ARGUMENT_PLACEHOLDER.split(message);
+            for (int messagePartIndex = 0; messagePartIndex < messageParts.length; messagePartIndex++) {
+                logMessage.add(indentation).add(messageParts[messagePartIndex]);
+                if (arguments.length > messagePartIndex) {
+                    appendFormattedArgument(logMessage, arguments[messagePartIndex], argumentIndentation);
+                }
+                if (messagePartIndex < messageParts.length - 1) {
+                    logMessage.add(NEW_LINE);
+                    if (!messageParts[messagePartIndex + 1].startsWith(" ")) {
+                        logMessage.add(" ");
+                    }
                 }
             }
+            return logMessage.toString();
+        } finally {
+            logMessage.release();
         }
-        return logMessage.toString();
     }
 
     /**
@@ -150,16 +175,21 @@ public class StringFormatter {
 
     private static void writeArgument(Writer writer, Object argument) throws IOException {
         if (argument != null && TO_STRING_IS_JSON.get(argument.getClass())) {
-            UnquotingWriter unquoted = new UnquotingWriter(writer);
-            try {
-                ArgumentWriter.INSTANCE.writeValue(unquoted, argument);
-            } catch (Exception e) {
-                throw new IOException("could not write log message argument as JSON", e);
-            }
-            unquoted.finish();
+            writeJson(ArgumentWriter.INSTANCE, writer, argument);
         } else {
             writer.write(String.valueOf(argument));
         }
+    }
+
+    // writes the JSON ObjectWithJsonToString.toString gives, throwing where toString would fall back to the fields
+    private static void writeJson(ObjectWriter jsonWriter, Writer writer, Object argument) throws IOException {
+        UnquotingWriter unquoted = new UnquotingWriter(writer);
+        try {
+            jsonWriter.writeValue(unquoted, argument);
+        } catch (Exception e) {
+            throw new IOException("could not write log message argument as JSON", e);
+        }
+        unquoted.finish();
     }
 
     public static String formatLogMessage(final String[] messageParts, final Object... arguments) {
@@ -303,40 +333,78 @@ public class StringFormatter {
      * does: before the first character and after each line terminator (a {@code \r\n} pair counting as one), but
      * not after a line terminator that ends the text.
      */
-    private static final class LineIndentingWriter extends Writer {
+    static final class LineIndentingWriter extends Writer {
 
         private final Writer writer;
         private final String indent;
         private boolean lineStart = true;
         private char previous;
 
-        private LineIndentingWriter(Writer writer, String indent) {
+        LineIndentingWriter(Writer writer, String indent) {
             this.writer = writer;
             this.indent = indent;
         }
 
         @Override
         public void write(int c) throws IOException {
-            if (lineStart && !(previous == '\r' && c == '\n')) {
+            if (startsLine((char) c)) {
                 writer.write(indent);
             }
             writer.write(c);
-            previous = (char) c;
-            lineStart = c == '\n' || c == '\r' || c == '\u0085' || c == '\u2028' || c == '\u2029';
         }
 
         @Override
         public void write(char[] chars, int offset, int length) throws IOException {
-            for (int i = offset; i < offset + length; i++) {
-                write(chars[i]);
+            final int end = offset + length;
+            int unwritten = offset;
+            boolean atLineStart = lineStart;
+            char last = previous;
+            for (int i = offset; i < end; i++) {
+                final char c = chars[i];
+                if (atLineStart && !(last == '\r' && c == '\n')) {
+                    writer.write(chars, unwritten, i - unwritten);
+                    writer.write(indent);
+                    unwritten = i;
+                }
+                last = c;
+                atLineStart = isLineTerminator(c);
             }
+            writer.write(chars, unwritten, end - unwritten);
+            lineStart = atLineStart;
+            previous = last;
         }
 
         @Override
         public void write(String text, int offset, int length) throws IOException {
-            for (int i = offset; i < offset + length; i++) {
-                write(text.charAt(i));
+            final int end = offset + length;
+            int unwritten = offset;
+            boolean atLineStart = lineStart;
+            char last = previous;
+            for (int i = offset; i < end; i++) {
+                final char c = text.charAt(i);
+                if (atLineStart && !(last == '\r' && c == '\n')) {
+                    writer.write(text, unwritten, i - unwritten);
+                    writer.write(indent);
+                    unwritten = i;
+                }
+                last = c;
+                atLineStart = isLineTerminator(c);
             }
+            writer.write(text, unwritten, end - unwritten);
+            lineStart = atLineStart;
+            previous = last;
+        }
+
+        // whether c, the next character written, needs the indent before it
+        private boolean startsLine(char c) {
+            final boolean indented = lineStart && !(previous == '\r' && c == '\n');
+            previous = c;
+            lineStart = isLineTerminator(c);
+            return indented;
+        }
+
+        private static boolean isLineTerminator(char c) {
+            return (c <= '\r' || c >= '\u0085') && (c == '\n' || c == '\r' || c == '\u0085' || c == '\u2028' || c == '\u2029');
         }
 
         @Override
@@ -351,14 +419,14 @@ public class StringFormatter {
     /**
      * Writes JSON as {@link ObjectWithJsonToString#toString()} gives it: a JSON string without its quotes.
      */
-    private static final class UnquotingWriter extends Writer {
+    static final class UnquotingWriter extends Writer {
 
         private final Writer writer;
         private boolean started;
         private boolean quoted;
         private int held = -1;
 
-        private UnquotingWriter(Writer writer) {
+        UnquotingWriter(Writer writer) {
             this.writer = writer;
         }
 
@@ -384,22 +452,147 @@ public class StringFormatter {
 
         @Override
         public void write(char[] chars, int offset, int length) throws IOException {
-            for (int i = offset; i < offset + length; i++) {
-                write(chars[i]);
+            if (length > 0 && !started) {
+                write(chars[offset]);
+                offset++;
+                length--;
             }
+            if (length <= 0) {
+                return;
+            }
+            if (!quoted) {
+                writer.write(chars, offset, length);
+                return;
+            }
+            if (held >= 0) {
+                writer.write(held);
+            }
+            writer.write(chars, offset, length - 1);
+            held = chars[offset + length - 1];
         }
 
         @Override
         public void write(String text, int offset, int length) throws IOException {
-            for (int i = offset; i < offset + length; i++) {
-                write(text.charAt(i));
+            if (length > 0 && !started) {
+                write(text.charAt(offset));
+                offset++;
+                length--;
             }
+            if (length <= 0) {
+                return;
+            }
+            if (!quoted) {
+                writer.write(text, offset, length);
+                return;
+            }
+            if (held >= 0) {
+                writer.write(held);
+            }
+            writer.write(text, offset, length - 1);
+            held = text.charAt(offset + length - 1);
         }
 
         void finish() throws IOException {
             if (quoted && held != '"') {
                 throw new IOException("log message argument's JSON string did not end with a quote");
             }
+        }
+
+        @Override
+        public void flush() {
+        }
+
+        @Override
+        public void close() {
+        }
+    }
+
+    /**
+     * A message as it is built: unlike a StringBuilder holding Latin-1 text, it copies each char[] chunk in bulk.
+     * Each thread reuses one array of at most {@link #RETAINED_CHARACTERS}, held as a plain char[] so no class of
+     * this library is pinned by a container's threads; a message formatted while that array is in use, by an
+     * argument's toString, gets an array of its own.
+     */
+    private static final class MessageBuffer extends Writer {
+
+        private static final int INITIAL_CHARACTERS = 1024;
+        private static final int RETAINED_CHARACTERS = 16 * 1024;
+        private static final ThreadLocal<char[]> REUSED = new ThreadLocal<>();
+
+        private char[] chars;
+        private int length;
+
+        private MessageBuffer(char[] chars) {
+            this.chars = chars;
+        }
+
+        static MessageBuffer acquire() {
+            char[] reused = REUSED.get();
+            if (reused == null) {
+                return new MessageBuffer(new char[INITIAL_CHARACTERS]);
+            }
+            REUSED.set(null);
+            return new MessageBuffer(reused);
+        }
+
+        void release() {
+            if (chars.length <= RETAINED_CHARACTERS) {
+                REUSED.set(chars);
+            }
+        }
+
+        MessageBuffer add(String text) {
+            return add(text, 0, text.length());
+        }
+
+        MessageBuffer add(String text, int start, int end) {
+            final int added = end - start;
+            ensureCapacity(added);
+            text.getChars(start, end, chars, length);
+            length += added;
+            return this;
+        }
+
+        int length() {
+            return length;
+        }
+
+        void setLength(int length) {
+            this.length = length;
+        }
+
+        @Override
+        public void write(int c) {
+            ensureCapacity(1);
+            chars[length++] = (char) c;
+        }
+
+        @Override
+        public void write(char[] source, int offset, int count) {
+            ensureCapacity(count);
+            System.arraycopy(source, offset, chars, length, count);
+            length += count;
+        }
+
+        @Override
+        public void write(String text, int offset, int count) {
+            add(text, offset, offset + count);
+        }
+
+        @Override
+        public void write(String text) {
+            add(text);
+        }
+
+        private void ensureCapacity(int added) {
+            if (length + added > chars.length) {
+                chars = Arrays.copyOf(chars, Math.max(chars.length * 2, length + added));
+            }
+        }
+
+        @Override
+        public String toString() {
+            return new String(chars, 0, length);
         }
 
         @Override
