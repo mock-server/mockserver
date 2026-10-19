@@ -512,6 +512,8 @@ check "  ... nor from a build other than the one that measured the run" "1|yes|y
   "$(cat "$T/otherbuild.rc")|$(has 'REFRESH NOT WRITTEN' "$T/otherbuild.log")|$(untouched "$HAND")"
 
 echo "--- 6. a lower bound, with nothing from the arm committed yet, is published as one"
+# Publish branches are named to the second: drop the one "publish real" left.
+git -C "$R" for-each-ref --format='%(refname:short)' refs/heads/perf/ | while read -r b; do git -C "$R" branch -q -D "$b"; done
 put "$T/v-lb.json" "$RW_KEY"
 publish lbreal
 check "the patch is emitted (exit 0), the annotation says \"at least\", and no first failure is published" "0|yes|\"none\"|true" \

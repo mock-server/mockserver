@@ -24,7 +24,9 @@ check() { # name expected actual
   if [ "$2" = "$3" ]; then ok "$1"; else bad "$1: expected '$2', got '$3'"; fi
 }
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/perf-info-budget-test.XXXXXX")"
-trap 'rm -rf "$WORK"' EXIT
+# A subshell signalled just after it forks runs this trap too; only the main shell may remove $WORK.
+in_main_shell() { [ "${BASHPID:-$(exec sh -c 'echo "$PPID"')}" = "$$" ]; }
+trap '! in_main_shell || rm -rf "$WORK"' EXIT
 
 extract() { # a top-level function's text, from `name() {` to its closing `}`
   awk -v n="$1" '$0 ~ "^"n"\\(\\) *\\{" {p=1; print; if ($0 ~ /}$/) exit; next} p {print} p && /^}/ {exit}' "$F"
@@ -250,7 +252,7 @@ printf '%s\n' "$METRICS_STUB" > "$WORK/metrics"; mkdir -p "$WORK/bin"
 # The first scrape fails as curl does on a timeout (28); the sampler must keep going.
 cat > "$WORK/bin/curl" <<EOS
 #!/bin/sh
-n=\$(cat "$WORK/curl-calls" 2>/dev/null || echo 0); n=\$((n + 1)); echo "\$n" > "$WORK/curl-calls"
+n=\$(cat "$WORK/curl-calls" 2>/dev/null || echo 0); n=\$((n + 1)); echo "\$n" > "$WORK/curl-calls.\$\$"; mv "$WORK/curl-calls.\$\$" "$WORK/curl-calls"
 [ "\$n" -gt 1 ] || exit 28
 case "\$*" in *" http://127.0.0.1:9/mockserver/metrics") cat "$WORK/metrics" ;;
   *" http://127.0.0.1:10/mockserver/metrics") /bin/sleep 1.1; cat "$WORK/metrics"; date -u +%s >> "$WORK/slow-scrape-done" ;;
@@ -289,7 +291,7 @@ check "stop kills the sampler" "dead" "$(kill -0 "$PID" 2>/dev/null && echo aliv
 check "the samples file stops growing" "$n1" "$(wc -l < "$SAMP")"
 stop_info_els_sampler; check "stop with no sampler is a no-op" "" "$INFO_ELS_SAMPLER_PID"
 one_row() { # metrics_text -> the first pressure row an older or partial server yields, without its timestamp
-  local m="$WORK/metrics.keep" r="$WORK/one-row.csv"
+  local m="$WORK/metrics.keep" r; r="$(mktemp "$WORK/one-row.XXXXXX")"
   cp "$WORK/metrics" "$m"; printf '%s\n' "$1" > "$WORK/metrics"
   start_info_els_sampler "127.0.0.1:9" "$WORK/one-row.samples" "$r"
   wait_samples "$r" 2 || true
