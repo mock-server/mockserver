@@ -202,9 +202,9 @@ public class LogEntry implements EventTranslator<LogEntry> {
      * counted here without either double-counting it at non-rendering levels or making the weight depend
      * on when it happens to be rendered — both of which would break the invariant that the add-time
      * weight equals the evict-time weight exactly. The residual message cost is instead handled at the
-     * budget-sizing layer: the in-flight cap's default divisor is tighter at rendering levels, so the
-     * whole log stays near a quarter of the heap although kept entries are heavier there — see
-     * {@code ConfigurationProperties.defaultEventLogInFlightBytes}. So the
+     * budget-sizing layer, whose default divisors are set from the multiples measured at each level so
+     * the whole log stays under a quarter of the heap — see
+     * {@code ConfigurationProperties.defaultMaxEventLogSizeInBytes}. So the
      * estimate has measured at or above real retention at {@code WARN} (a request body shared by an
      * exchange's entries is charged to each of them) and below it at {@code INFO}.
      * <p>

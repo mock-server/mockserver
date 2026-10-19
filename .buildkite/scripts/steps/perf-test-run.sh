@@ -1243,7 +1243,7 @@ els_default_divisor() { # log_level
   case "$1" in INFO|DEBUG|TRACE|"") echo 12 ;; *) echo 20 ;; esac
 }
 els_inflight_divisor() { # log_level
-  case "$1" in INFO|DEBUG|TRACE|"") echo 12 ;; *) echo 7 ;; esac
+  case "$1" in DEBUG|TRACE) echo 12 ;; *) echo 7 ;; esac
 }
 # One CONFIG_ERRORS line per failure, nothing when sound. An override is proven by the container env
 # (and by the gauge when the image has one); the shipped default only by the gauge, the JVM's own word.

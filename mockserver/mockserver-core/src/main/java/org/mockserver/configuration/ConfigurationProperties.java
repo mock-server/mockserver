@@ -2044,16 +2044,17 @@ public class ConfigurationProperties {
         return heapBased > 0 ? heapBased : Math.min(floor, cap);
     }
 
-    // Retention divisors (what verify/retrieve/dashboard see) and in-flight cap divisors (the ring
-    // backlog) guard different failures. In-flight /7 and /12 are the OOM bound: with retention, the
-    // whole log stays near a quarter of the ceiling (measured k: docs/code/memory-management.md).
+    // Retention divisors (what verify/retrieve/dashboard see) and the in-flight cap divisor (the ring
+    // backlog) guard different failures. In-flight /7 (/12 at DEBUG/TRACE, which were not re-measured)
+    // is the OOM bound: with retention, the whole log stays under a quarter of the ceiling (measured k:
+    // docs/code/memory-management.md).
     // Retention /20 at WARN is a GC bound: on the measured 2-core, 462 MiB-heap rig, entries kept at /7
     // outlived the young-GC interval under load and were promoted. Rendering levels keep the
     // OOM-derived /12, because rendering makes promotion structural there.
     static final int DEFAULT_EVENT_LOG_BYTES_HEAP_DIVISOR = 20;
     static final int DEFAULT_EVENT_LOG_BYTES_HEAP_DIVISOR_RENDERING = 12;
     static final int DEFAULT_EVENT_LOG_IN_FLIGHT_BYTES_HEAP_DIVISOR = 7;
-    static final int DEFAULT_EVENT_LOG_IN_FLIGHT_BYTES_HEAP_DIVISOR_RENDERING = 12;
+    static final int DEFAULT_EVENT_LOG_IN_FLIGHT_BYTES_HEAP_DIVISOR_DEBUG = 12;
 
     /**
      * True when {@code logLevel} renders every received-request / response log entry to the log
@@ -2092,12 +2093,12 @@ public class ConfigurationProperties {
 
     /**
      * The heap-derived default cap on the bytes held by log entries published to the event log's ring
-     * but not yet processed: a seventh of the ceiling at a non-rendering level, a twelfth at a
-     * rendering level, and {@code 0} (disabled) when the ceiling is undefined.
+     * but not yet processed: a seventh of the ceiling at INFO/WARN/ERROR/OFF, a twelfth at DEBUG/TRACE,
+     * and {@code 0} (disabled) when the ceiling is undefined.
      */
     static long defaultEventLogInFlightBytes(long heapAvailableInKB, Level logLevel) {
-        return heapFraction(heapAvailableInKB, rendersEveryLogEntry(logLevel)
-            ? DEFAULT_EVENT_LOG_IN_FLIGHT_BYTES_HEAP_DIVISOR_RENDERING
+        return heapFraction(heapAvailableInKB, logLevel != null && logLevel.toInt() < Level.INFO.toInt()
+            ? DEFAULT_EVENT_LOG_IN_FLIGHT_BYTES_HEAP_DIVISOR_DEBUG
             : DEFAULT_EVENT_LOG_IN_FLIGHT_BYTES_HEAP_DIVISOR);
     }
 
@@ -2222,8 +2223,8 @@ public class ConfigurationProperties {
      * budget counts an estimate of each entry's size; the real heap the log holds is a multiple of it
      * that depends on the traffic, and is larger at a rendering level, where every retained entry also
      * keeps its formatted log message. Entries still waiting to be processed are bounded separately, by
-     * the larger of this value and a heap-derived cap (a seventh of the ceiling, a twelfth at a
-     * rendering level), so a small budget does not drop events during a burst. Set it to {@code 0} to
+     * the larger of this value and a heap-derived cap (a seventh of the ceiling, a twelfth at DEBUG and
+     * TRACE), so a small budget does not drop events during a burst. Set it to {@code 0} to
      * disable both byte bounds and bound the log only by {@code maxLogEntries}. Whichever of the two
      * retention bounds is reached first evicts; eviction is announced once per server in the log and
      * (with the default {@code failVerificationOnEvictedLog=true}) makes upper-bound verifications fail

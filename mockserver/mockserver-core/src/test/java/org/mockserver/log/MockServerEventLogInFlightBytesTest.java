@@ -349,15 +349,22 @@ public class MockServerEventLogInFlightBytesTest {
             assertThat(log.getMaxInFlightBytes(), is(configuration.maxEventLogInFlightBytes()));
             assertThat(log.getMaxInFlightBytes(), is(warnFloor));
 
-            // a WARN -> INFO change re-derives the floor at the rendering-level (heap/12) default
+            // a WARN -> INFO change keeps the same heap/7 floor
             configuration.logLevel(Level.INFO);
             log.applyConfigurationCapacity();
-            long infoFloor = configuration.maxEventLogInFlightBytes();
-            assertThat(infoFloor, is((ConfigurationProperties.heapAvailableInKB() / 12) * 1024L));
-            assertThat(infoFloor, is(lessThan(warnFloor)));
-            assertThat(infoFloor, is(greaterThan(small)));
+            assertThat(configuration.maxEventLogInFlightBytes(), is(warnFloor));
             assertThat(log.getMaxRetainedBytes(), is(small));
-            assertThat(log.getMaxInFlightBytes(), is(infoFloor));
+            assertThat(log.getMaxInFlightBytes(), is(warnFloor));
+
+            // an INFO -> DEBUG change re-derives the floor at the heap/12 default
+            configuration.logLevel(Level.DEBUG);
+            log.applyConfigurationCapacity();
+            long debugFloor = configuration.maxEventLogInFlightBytes();
+            assertThat(debugFloor, is((ConfigurationProperties.heapAvailableInKB() / 12) * 1024L));
+            assertThat(debugFloor, is(lessThan(warnFloor)));
+            assertThat(debugFloor, is(greaterThan(small)));
+            assertThat(log.getMaxRetainedBytes(), is(small));
+            assertThat(log.getMaxInFlightBytes(), is(debugFloor));
         } finally {
             log.stop();
         }

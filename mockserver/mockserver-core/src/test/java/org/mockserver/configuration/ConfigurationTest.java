@@ -784,8 +784,9 @@ public class ConfigurationTest {
             // default: retention is heap/20, and the in-flight cap is the larger heap/7 default
             assertThat(new Configuration().maxEventLogSizeInBytes(), equalTo((heapAvailableInKB / 20) * 1024L));
             assertThat(new Configuration().maxEventLogInFlightBytes(), equalTo(inFlightDefault));
-            // per-instance log level selects the rendering-level in-flight default
-            assertThat(new Configuration().logLevel("INFO").maxEventLogInFlightBytes(), equalTo((heapAvailableInKB / 12) * 1024L));
+            // per-instance log level: INFO shares the heap/7 in-flight default, DEBUG keeps heap/12
+            assertThat(new Configuration().logLevel("INFO").maxEventLogInFlightBytes(), equalTo(inFlightDefault));
+            assertThat(new Configuration().logLevel("DEBUG").maxEventLogInFlightBytes(), equalTo((heapAvailableInKB / 12) * 1024L));
 
             // explicit static budget below the default: retention honours it, in-flight stays at the default
             ConfigurationProperties.maxEventLogSizeInBytes(1048576L);

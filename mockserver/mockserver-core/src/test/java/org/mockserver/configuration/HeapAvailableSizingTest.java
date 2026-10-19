@@ -6,7 +6,6 @@ import org.slf4j.event.Level;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
-import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
@@ -255,27 +254,25 @@ public class HeapAvailableSizingTest {
     }
 
     @Test
-    public void shouldDeriveDefaultInFlightCapAsASeventhAtNonRenderingAndATwelfthAtRenderingLevel() {
-        // the in-flight cap keeps the budget every level had before retention was cut, and stays
-        // tighter at a rendering level so the whole log, whose kept entries are heavier there, stays near a quarter
-        long warn = ConfigurationProperties.defaultEventLogInFlightBytes(200000L, Level.WARN);
-        long info = ConfigurationProperties.defaultEventLogInFlightBytes(200000L, Level.INFO);
+    public void shouldDeriveDefaultInFlightCapAsASeventhAtInfoAndQuieterAndATwelfthAtDebugAndTrace() {
+        long seventh = ConfigurationProperties.defaultEventLogInFlightBytes(200000L, Level.INFO);
 
-        assertThat(warn, is((200000L / 7) * 1024L));
-        assertThat(warn, is(29_256_704L));
-        assertThat(info, is((200000L / 12) * 1024L));
-        assertThat(info, is(lessThan(warn)));
-        assertThat(ConfigurationProperties.defaultEventLogInFlightBytes(200000L, Level.ERROR), is(warn));
-        assertThat(ConfigurationProperties.defaultEventLogInFlightBytes(200000L, null), is(warn));
-        assertThat(ConfigurationProperties.defaultEventLogInFlightBytes(200000L, Level.DEBUG), is(info));
-        assertThat(ConfigurationProperties.defaultEventLogInFlightBytes(200000L, Level.TRACE), is(info));
+        assertThat(seventh, is((200000L / 7) * 1024L));
+        assertThat(seventh, is(29_256_704L));
+        assertThat(ConfigurationProperties.defaultEventLogInFlightBytes(200000L, Level.WARN), is(seventh));
+        assertThat(ConfigurationProperties.defaultEventLogInFlightBytes(200000L, Level.ERROR), is(seventh));
+        assertThat(ConfigurationProperties.defaultEventLogInFlightBytes(200000L, null), is(seventh));
+        assertThat(ConfigurationProperties.defaultEventLogInFlightBytes(200000L, Level.DEBUG), is((200000L / 12) * 1024L));
+        assertThat(ConfigurationProperties.defaultEventLogInFlightBytes(200000L, Level.TRACE), is((200000L / 12) * 1024L));
+        // at INFO the in-flight default is above the retention default, so a default retention budget never sets the cap
+        assertThat(seventh, is(greaterThan(ConfigurationProperties.defaultMaxEventLogSizeInBytes(200000L, Level.INFO))));
     }
 
     @Test
     public void shouldResolveRetentionAndInFlightDefaultsAtHalfOneAndTwoGigabyteHeaps() {
         // heapAvailableInKB = -Xmx in KB less the 20 MB reservation; then (heapKB / divisor) * 1024
         long[][] cases = {
-            // -Xmx (MB), retention WARN (/20), retention INFO (/12), in-flight WARN (/7), in-flight INFO (/12)
+            // -Xmx (MB), retention WARN (/20), retention INFO (/12), in-flight WARN and INFO (/7), in-flight DEBUG (/12)
             {512, 25_794_560L, 42_991_616L, 73_699_328L, 42_991_616L},
             {1024, 52_637_696L, 87_730_176L, 150_394_880L, 87_730_176L},
             {2048, 106_324_992L, 177_209_344L, 303_787_008L, 177_209_344L},
@@ -290,12 +287,14 @@ public class HeapAvailableSizingTest {
             assertThat(heap, warnRetention, is(c[1]));
             assertThat(heap, infoRetention, is(c[2]));
             assertThat(heap, ConfigurationProperties.defaultEventLogInFlightBytes(heapKB, Level.WARN), is(c[3]));
-            assertThat(heap, ConfigurationProperties.defaultEventLogInFlightBytes(heapKB, Level.INFO), is(c[4]));
+            assertThat(heap, ConfigurationProperties.defaultEventLogInFlightBytes(heapKB, Level.INFO), is(c[3]));
+            assertThat(heap, ConfigurationProperties.defaultEventLogInFlightBytes(heapKB, Level.DEBUG), is(c[4]));
 
             // with no explicit budget the event log runs on the default retention budget, and the
             // in-flight cap resolved from it is the in-flight default, not the smaller retention budget
             assertThat(heap, ConfigurationProperties.eventLogInFlightBytes(warnRetention, heapKB, Level.WARN), is(c[3]));
-            assertThat(heap, ConfigurationProperties.eventLogInFlightBytes(infoRetention, heapKB, Level.INFO), is(c[4]));
+            assertThat(heap, ConfigurationProperties.eventLogInFlightBytes(infoRetention, heapKB, Level.INFO), is(c[3]));
+            assertThat(heap, ConfigurationProperties.eventLogInFlightBytes(infoRetention, heapKB, Level.DEBUG), is(c[4]));
         }
     }
 
@@ -303,7 +302,7 @@ public class HeapAvailableSizingTest {
     public void shouldResolveInFlightCapFromAnExplicitRetentionBudget() {
         long oneGigabyte = 1024L * 1024 * 1024;
         long heapKB = ConfigurationProperties.computeHeapAvailableInKB(oneGigabyte, oneGigabyte);
-        long inFlightDefault = 150_394_880L; // heap/7 at WARN for a 1 GB heap
+        long inFlightDefault = 150_394_880L; // heap/7 at WARN and INFO for a 1 GB heap
 
         // an explicit budget below the in-flight default keeps its meaning for retention, but the
         // in-flight cap stays at the default, so the smaller budget does not drop bursts
@@ -312,11 +311,11 @@ public class HeapAvailableSizingTest {
         // an explicit budget above the default raises the in-flight cap with it, as before
         assertThat(ConfigurationProperties.eventLogInFlightBytes(500_000_000L, heapKB, Level.WARN), is(500_000_000L));
         assertThat(ConfigurationProperties.eventLogInFlightBytes(inFlightDefault, heapKB, Level.WARN), is(inFlightDefault));
-        // at a rendering level the floor is the rendering in-flight default
-        assertThat(ConfigurationProperties.eventLogInFlightBytes(4L * 1024 * 1024, heapKB, Level.INFO), is(87_730_176L));
+        // INFO shares that floor; DEBUG and TRACE keep the heap/12 floor
+        assertThat(ConfigurationProperties.eventLogInFlightBytes(4L * 1024 * 1024, heapKB, Level.INFO), is(inFlightDefault));
+        assertThat(ConfigurationProperties.eventLogInFlightBytes(4L * 1024 * 1024, heapKB, Level.DEBUG), is(87_730_176L));
         // 0 disables both byte bounds, so the ring is bounded by slot count alone
         assertThat(ConfigurationProperties.eventLogInFlightBytes(0L, heapKB, Level.WARN), is(0L));
-        assertThat(ConfigurationProperties.eventLogInFlightBytes(0L, heapKB, Level.INFO), is(0L));
         // with no heap ceiling (native image) an explicit budget is used as is
         assertThat(ConfigurationProperties.eventLogInFlightBytes(4L * 1024 * 1024, 0L, Level.WARN), is(4L * 1024 * 1024));
     }
@@ -326,24 +325,23 @@ public class HeapAvailableSizingTest {
         // Retained deque and in-flight ring backlog fill at once while the consumer lags, so the whole
         // log holds k_deque x retention + k_ring x in-flight. Composite bound: the largest measured
         // k_deque plus the largest k_ring at each level, from different runs
-        // (docs/code/memory-management.md, Validation at the current divisors).
+        // (docs/code/memory-management.md, Validation at the current divisors and INFO re-measured on
+        // the perf rig; DEBUG/TRACE were not re-measured and keep the earlier rendering-level bound).
         double[] warnK = {0.974d, 0.704d};
-        double[] infoK = {2.314d, 0.724d};
+        double[] infoK = {0.999d, 0.760d};
+        double[] debugK = {2.314d, 0.724d};
         for (long heapAvailableInKB : new long[]{45_056L, 241_664L, 1_028_096L, 4_173_824L}) {
             double ceilingBytes = heapAvailableInKB * 1024d;
             for (Level level : new Level[]{Level.TRACE, Level.DEBUG, Level.INFO, Level.WARN, Level.ERROR, null}) {
-                boolean rendering = ConfigurationProperties.rendersEveryLogEntry(level);
-                double[] k = rendering ? infoK : warnK;
+                boolean debug = level == Level.DEBUG || level == Level.TRACE;
+                double[] k = debug ? debugK : level == Level.INFO ? infoK : warnK;
                 long retention = ConfigurationProperties.defaultMaxEventLogSizeInBytes(heapAvailableInKB, level);
                 long inFlight = ConfigurationProperties.eventLogInFlightBytes(retention, heapAvailableInKB, level);
                 double wholeLogShare = (k[0] * retention + k[1] * inFlight) / ceilingBytes;
                 String label = "heap " + heapAvailableInKB + " KB at " + level;
                 assertThat(label, wholeLogShare, is(lessThanOrEqualTo(0.255d)));
                 // the in-flight term alone may not shrink below what it held before retention was cut
-                assertThat(label, k[1] * inFlight / ceilingBytes, is(greaterThan(rendering ? 0.059d : 0.099d)));
-                if (rendering) {
-                    assertThat(label, wholeLogShare, is(greaterThan(0.20d)));
-                }
+                assertThat(label, k[1] * inFlight / ceilingBytes, is(greaterThan(debug ? 0.059d : 0.099d)));
             }
         }
     }
@@ -371,7 +369,7 @@ public class HeapAvailableSizingTest {
         assertThat(ConfigurationProperties.defaultMaxEventLogSizeInBytes(0L, Level.INFO), is(0L));
         assertThat(ConfigurationProperties.defaultMaxEventLogSizeInBytes(0L, Level.WARN), is(0L));
         assertThat(ConfigurationProperties.defaultEventLogInFlightBytes(0L, Level.INFO), is(0L));
-        assertThat(ConfigurationProperties.defaultEventLogInFlightBytes(0L, Level.WARN), is(0L));
+        assertThat(ConfigurationProperties.defaultEventLogInFlightBytes(0L, Level.DEBUG), is(0L));
         assertThat(ConfigurationProperties.eventLogInFlightBytes(ConfigurationProperties.defaultMaxEventLogSizeInBytes(0L, Level.WARN), 0L, Level.WARN), is(0L));
     }
 

@@ -3209,7 +3209,7 @@ until `MIN_BASELINE` runs share the new method ("Main-SUT baseline reset"). `for
 `growth.*` and the other families keep the full baseline.
 The heap divisors the harness expects mirror `ConfigurationProperties` and must move with it:
 `els_default_divisor` for the retention budget (20 at `WARN`/`ERROR`/`OFF`, 12 at
-`INFO`/`DEBUG`/`TRACE`) and `els_inflight_divisor` for the in-flight floor (7 and 12). `.buildkite/scripts/test/perf-default-budget-test.sh` checks the call sites, both guards,
+`INFO`/`DEBUG`/`TRACE`) and `els_inflight_divisor` for the in-flight floor (7 at `WARN`/`ERROR`/`OFF` and `INFO`, 12 at `DEBUG`/`TRACE`). `.buildkite/scripts/test/perf-default-budget-test.sh` checks the call sites, both guards,
 the scoped PUT against a stubbed SUT, the window statistics and the key.
 
 ### INFO-arm event-log pressure

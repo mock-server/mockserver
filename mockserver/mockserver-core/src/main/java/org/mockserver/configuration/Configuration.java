@@ -1912,7 +1912,7 @@ public class Configuration {
     /**
      * The cap on bytes held by log entries published to the event log's ring but not yet processed.
      * Derived, not settable: the larger of {@link #maxEventLogSizeInBytes()} and a heap-derived default
-     * (a seventh of the heap ceiling, a twelfth at INFO/DEBUG/TRACE), or {@code 0} (disabled) when
+     * (a seventh of the heap ceiling, a twelfth at DEBUG/TRACE), or {@code 0} (disabled) when
      * {@link #maxEventLogSizeInBytes()} is {@code 0}. It is kept at least as large as the retention
      * budget so that a small retention budget does not drop events during a burst.
      */
