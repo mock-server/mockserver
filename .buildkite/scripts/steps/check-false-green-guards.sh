@@ -9,8 +9,8 @@
 # false green — the recognisable pattern of a test or gate that passes having
 # proven nothing. Those categories lived only in plan documents, so nothing
 # stopped them recurring; the repository then produced roughly a dozen fresh
-# instances in a single day (see docs/plans/test-coverage-gaps.md). This guard
-# turns the highest-value, mechanically-checkable shapes into a standing control.
+# instances in a single day. This guard turns the highest-value,
+# mechanically-checkable shapes into a standing control.
 #
 # It is deliberately NARROW. A noisy grep everyone learns to ignore is worse than
 # nothing, so it enforces only patterns that can be pinned down precisely and that

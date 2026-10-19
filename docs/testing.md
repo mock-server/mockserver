@@ -590,6 +590,28 @@ Reports are generated in each module's `target/site/jacoco/` directory. See [AI-
 | Excessive mocking (>100 mocks) | 2 | `MockServerClientTest` (130), `HttpActionHandlerTest` (109) |
 | TODO comments about missing coverage | 4 | `NottableStringMultiMapContainAllTest`, `HttpRequestsPropertiesMatcherTest` |
 
+### Known Coverage Limits
+
+The July 2026 coverage audit's gaps are closed, except gaps 1 and 82, which were declined (see
+[False-Green Guards → Other coverage-audit proposals](operations/false-green-guards.md#other-coverage-audit-proposals));
+one further gap no longer applies. Method note: CI execution for the closed CI-truth gaps was inferred
+from pom/pipeline wiring, not from reading build logs. The transparent-proxy end-to-end suites
+(gaps 19–21) are the exception, confirmed from `mockserver-java` build logs 3279 and 3282. Some of the
+coverage that closed the gaps has limits:
+
+- The UI Playwright e2e suite runs only when `mockserver-ui/` changes, so a server-only change that breaks the dashboard does not trigger it.
+- Cloud persist-and-reload is tested end to end for S3 only; GCS and Azure have factory-wiring tests only.
+- The h2c suite is bespoke rather than a subclass of the abstract mocking suite, so the matcher matrix is not re-run over h2c.
+- HTTP/3 covers the streaming forward relay, but not a mocked `httpSseResponse` over QUIC.
+- The AsyncAPI live-broker control-plane test covers Kafka. The MQTT load path is not driven.
+- The IPv6 SAN case is covered; the netmask/CIDR branch is not.
+- **Gap 47:** the Go, .NET and Rust live tests do not drive a forward **class** callback, because the server image ships no `ExpectationForwardCallback` class to name. The Rust client also has no closure API for a forward object callback, so only Go and .NET drive that one.
+- **Gap 47:** a Go `DnsRecord` cannot set TTL 0. `TTL` is an `int` with `omitempty`, so 0 is served as the server default of 300. Fixing it means making the field `*int`, which is a breaking change.
+- **Gap 6:** embedded-secret masking is asserted at the configuration serializer, not through an HTTP GET.
+- **Gap 5:** runtime mTLS enforcement is toggled through the live `Configuration` object, not an HTTP PUT. The enforcement itself is still asserted over the wire.
+- **Gap 73:** cassette auto-registration is proven in two halves: one test shows the MCP tool registers it, and a separate test shows `GET` lists it. No single test spans both.
+- **Gap 62:** `ConnectionLifecycleChaos` relies on the Failsafe shard configuration to run. No CI log was read to confirm it actually executes.
+
 ## CI Test Execution
 
 ### Buildkite

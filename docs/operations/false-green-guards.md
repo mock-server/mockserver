@@ -333,6 +333,27 @@ integration suite") is also not covered: which npm script is the "real" one is n
 mechanically distinguishable. Rule 2 covers only the crisp contradiction — mount
 the socket **and** deselect the tests that need it.
 
+### Other coverage-audit proposals
+
+Two broader proposals from the July 2026 coverage audit (gaps 1 and 82) were declined. The
+October 2026 recheck kept both declines; neither is enforced here:
+
+- **Gap 1: mutation / degrade-and-confirm-red gate.** No pitest/mutation plugin and no scripted
+  degrade list exist, so negative controls stay ad hoc inside individual tests. Declined in commit
+  `adf935e66` (2026-08-17, where it was Gap #5 of the coverage-gaps plan; `9a1497928` on 2026-09-26
+  only deleted that plan, it did not make this decision): "a pitest gate is a large investment
+  against a much-reduced risk." Nothing since has changed that calculus.
+- **Gap 82: standing sweep for the audit's tell categories** (`CONFIGURES_AROUND_DEFAULT` /
+  `TOLERANCE_COVERS_BUG` / `WRONG_MODULE`, per `adf935e66` Gap #4). No Rule 8 (or equivalent) in
+  `check-false-green-guards.sh` flags `not(is(4xx))` / `anyOf(is(2xx)...)`-style assertions. Declined
+  in the same commit `adf935e66`: the named instances were all fixed, so the remaining value is
+  preventing recurrence. That is bookkeeping unless this audit style continues, and worth a standing
+  CI grep only in that case. The October 2026 recheck found 7 status-tolerance assertions present at
+  the time, the exact shape the sweep would have caught, found again by hand: 6 in three dashboard
+  tests in `HttpRequestHandlerTest.java`, and 1 in `DashboardWebSocketHandlerTest.java:2306`. That
+  recurrence does not by itself reopen the decline. The decline stands; whether the recurrence
+  warrants a rule is for the owner to decide.
+
 ## Allow-lists — how to add an entry
 
 Some Docker-gated files are legitimately **not** assert-suite-ran-paired (for

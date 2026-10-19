@@ -88,7 +88,6 @@ Build process, releases, dependencies, security scanning, and the documentation 
 |----------|-------------|
 | [Performance Measurement Backlog](plans/performance-measurement-backlog.md) | Open performance-measurement items, most waiting on one more CI/rig run |
 | [Release 9.0.0 Follow-ups](plans/release-9-follow-ups.md) | Remaining follow-up items from the 9.0.0 release | <!-- version-ref:keep -->
-| [Test Coverage Gaps](plans/test-coverage-gaps.md) | Open items from the test-coverage audit |
 | [Security Defaults](plans/later/security-defaults.md) | Insecure default flips planned for a future major release |
 | [Jackson 3 Upgrade](plans/later/jackson-3-upgrade.md) | Migration to Jackson 3, blocked on upstream `swagger-parser`/`swagger-core` |
 | [UI Competitor Feature Ideas](plans/later/ui-competitor-feature-ideas.md) | Open residue from the UI competitor-feature backlog |
