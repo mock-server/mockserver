@@ -56,6 +56,22 @@ public class MetricsHandlerTest {
     }
 
     @Test
+    public void shouldNotReflectAForeignOrigin() throws Exception {
+        for (String origin : new String[]{"https://attacker.example", "null"}) {
+            HttpRequest request = request()
+                .withMethod("GET")
+                .withHeader("host", "localhost:1080")
+                .withHeader("origin", origin)
+                .withKeepAlive(true);
+
+            HttpResponse response = renderAndCapture(configuration().metricsEnabled(true).corsAllowOrigin("*"), request);
+
+            assertThat(origin, response.getStatusCode(), is(200));
+            assertThat(origin, response.containsHeader("access-control-allow-origin"), is(false));
+        }
+    }
+
+    @Test
     public void shouldReflectOriginOnDisabledNotFound() throws Exception {
         // given - metrics disabled (the default); the UI still needs to read the
         // 404 cross-origin to show its "metrics disabled" guidance rather than a

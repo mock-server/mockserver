@@ -19,6 +19,7 @@ import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.log.model.LogEntry.LogMessageType.INFO;
 import static org.mockserver.mock.HttpState.PATH_PREFIX;
+import static org.mockserver.mock.HttpState.isControlPlanePathCandidate;
 import static org.mockserver.model.Header.header;
 import static org.mockserver.model.HttpResponse.notFoundResponse;
 import static org.mockserver.model.HttpResponse.response;
@@ -71,17 +72,35 @@ public abstract class ResponseWriter {
         writeResponse(request, response, true);
     }
 
+    /**
+     * Answers a CORS preflight for a request MockServer's own API would not serve, under the
+     * {@code corsAllowOrigin} policy. On a path the control plane also serves with other methods (a bare
+     * alias such as {@code /graphql}) only the requested method is allowed, so a cached preflight can
+     * never cover a cross-site control-plane request on the same URL.
+     */
+    public void writeDataPlanePreflightResponse(final HttpRequest request) {
+        HttpResponse response = response()
+            .withStatusCode(HttpResponseStatus.OK.code())
+            .withReasonPhrase(HttpResponseStatus.OK.reasonPhrase())
+            .withBody("")
+            .withHeader("version", Version.getVersion());
+        String requestedMethod = request.getFirstHeader(ACCESS_CONTROL_REQUEST_METHOD.toString());
+        if (request.getPath() != null && isControlPlanePathCandidate(request.getPath().getValue()) && !requestedMethod.isEmpty()) {
+            response.withHeader(ACCESS_CONTROL_ALLOW_METHODS.toString(), requestedMethod);
+        }
+        corsHeaders().addCORSHeaders(request, response);
+        writeResponse(request, response, false);
+    }
+
     public void writeResponse(final HttpRequest request, HttpResponse response, final boolean apiResponse) {
         if (response == null) {
             response = notFoundResponse();
         }
-        // Control-plane / dashboard responses (apiResponse == true) always carry CORS headers so
-        // the dashboard works cross-origin — e.g. when it is pointed at a different MockServer via
-        // its host/port fields, or served from a separate dev server. This is consistent with the
-        // dashboard-specific endpoints that already add CORS unconditionally, and independent of
-        // enableCORSForAPI. Mock/proxy responses (apiResponse == false) remain governed solely by
-        // enableCORSForAllResponses so mocked APIs are unaffected unless explicitly opted in.
-        if (configuration.enableCORSForAllResponses() || apiResponse) {
+        // control-plane responses always get the control-plane origin policy; mock and proxy
+        // responses get the corsAllowOrigin policy, and only when enableCORSForAllResponses is on
+        if (apiResponse) {
+            corsHeaders().addControlPlaneCORSHeaders(request, response);
+        } else if (configuration.enableCORSForAllResponses()) {
             corsHeaders().addCORSHeaders(request, response);
         }
         // Stamp the configured default response headers (add-if-absent) onto every response

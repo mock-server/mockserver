@@ -9,7 +9,7 @@ subsection: true
 sitemap:
   priority: 0.8
   changefreq: 'monthly'
-  lastmod: 2026-10-14T08:00:00+01:00
+  lastmod: 2026-10-20T08:00:00+01:00
 ---
 
 <p style="background-color: #f8f9fa; border-left: 4px solid #9c0000; padding: 12px; margin-bottom: 16px;">
@@ -31,6 +31,7 @@ sitemap:
         </tr>
     </thead>
     <tbody>
+        <tr><td><a href="#browser_origins">Only trusted web pages can use MockServer's own API from a browser</a> (later 9.x)</td><td>Anyone whose browser page on another host, or dashboard pointed at another host or behind a <span class="inline_code">Host</span>-rewriting proxy, calls MockServer's API; anyone who set <span class="inline_code">corsAllowOrigin</span> so a page could call it</td><td>Set <span class="inline_code">controlPlaneCorsAllowOrigin</span> to that page's origin</td></tr>
         <tr><td><a href="#templates_500">Failed template answers 500</a></td><td>Anyone using a response or forward template</td><td>Handle a <span class="inline_code">500</span> instead of a <span class="inline_code">404</span>/<span class="inline_code">502</span>, or set <span class="inline_code">templateFailureAsServerError=false</span></td></tr>
         <tr><td><a href="#max_logged_match_failures">maxLoggedMatchFailures defaults to 50</a></td><td>Anyone with &gt;50 expectations who reads did-not-match log entries at <span class="inline_code">INFO</span></td><td>Set <span class="inline_code">maxLoggedMatchFailures=-1</span> to keep logging every comparison</td></tr>
         <tr><td><a href="#init_duplicate_id">Init files: repeated id keeps the last entry</a></td><td>Anyone with a repeated <span class="inline_code">id</span> across expectations in an initialisation file</td><td>Remove the repeated ids, or reorder so the one you want is last</td></tr>
@@ -479,6 +480,50 @@ sitemap:
     </ul>
   </li>
 </ul>
+
+<a id="later_9x_changes" class="anchor" href="#later_9x_changes">&nbsp;</a>
+
+<h2>Changes in later 9.x releases</h2>
+
+<a id="browser_origins" class="anchor" href="#browser_origins">&nbsp;</a>
+
+<h3>Only trusted web pages can use MockServer's own API from a browser</h3>
+
+<p>From 7.0.0 to 9.0.0, MockServer's own API (every <span class="inline_code">/mockserver/...</span> path), the dashboard's live log and the callback WebSocket answered every web page, so any site open in your browser could read recorded traffic from, or change, a MockServer running on your machine. A new property, <span class="inline_code">controlPlaneCorsAllowOrigin</span>, now decides which pages they answer. Left blank (the default), they only answer:</p>
+
+<ul>
+  <li>pages on <span class="inline_code">localhost</span>, <span class="inline_code">127.0.0.1</span> or <span class="inline_code">[::1]</span>, on any port, over http or https, and</li>
+  <li>pages MockServer serves itself, such as the dashboard, at the same host and port.</li>
+</ul>
+
+<p>A request MockServer's own API serves &mdash; any <span class="inline_code">/mockserver/...</span> path, a legacy path such as <span class="inline_code">/reset</span> or <span class="inline_code">/expectation</span> with a method the API serves there, the liveness path, or a dashboard or callback WebSocket &mdash; that comes from any other page is refused with <span class="inline_code">403</span>, whatever its method, before it is handled and before any expectation can answer it. <span class="inline_code">Origin: null</span> (a sandboxed iframe, or a page opened from a file) is refused too. The browser's preflight for such a request is answered without CORS headers. Clients that are not browsers, such as curl and the client libraries, send no <span class="inline_code">Origin</span> and are not affected.</p>
+
+<p><span class="inline_code">controlPlaneCorsAllowOrigin</span> can only be set at startup (system property, environment variable, properties file or <span class="inline_code">Configuration</span>); <span class="inline_code">PUT /mockserver/configuration</span> ignores it and logs a warning.</p>
+
+<p><span class="inline_code">corsAllowOrigin</span> no longer affects MockServer's own API. It, and <span class="inline_code">enableCORSForAllResponses</span>, still apply to mocked and proxied responses as before, with these differences:</p>
+<ul>
+  <li>a preflight for a request MockServer's own API serves (a legacy path such as <span class="inline_code">/reset</span> or <span class="inline_code">/graphql</span> counts only with a method the API serves there, <span class="inline_code">PUT</span> for most) is answered by MockServer under <span class="inline_code">controlPlaneCorsAllowOrigin</span>, not by an <span class="inline_code">OPTIONS</span> expectation or <span class="inline_code">corsAllowOrigin</span>;</li>
+  <li>a <span class="inline_code">respondBeforeBody</span> expectation no longer answers a request MockServer's own API serves;</li>
+  <li>a browser request from a page that <span class="inline_code">controlPlaneCorsAllowOrigin</span> does not allow is refused with <span class="inline_code">403</span> even where a mock, not the control plane, would have answered it, for these requests: <span class="inline_code">GET</span> or <span class="inline_code">DELETE</span> on <span class="inline_code">/loadScenario/start</span> or <span class="inline_code">/loadScenario/stop</span>; <span class="inline_code">PUT /pact</span>; <span class="inline_code">GET</span> or <span class="inline_code">DELETE</span> on any deeper path under <span class="inline_code">/loadScenario/&lt;name&gt;/</span> other than <span class="inline_code">GET /loadScenario/&lt;name&gt;/report</span>; <span class="inline_code">GET</span>, <span class="inline_code">PUT</span> or <span class="inline_code">DELETE</span> under <span class="inline_code">/chaosExperiment/profiles/&lt;name&gt;/</span>; <span class="inline_code">POST</span> under <span class="inline_code">/chaosExperiment/apply/&lt;name&gt;/</span>; and any method on a <span class="inline_code">/mockserver</span> or <span class="inline_code">/_mockserver_</span> path that is not a route;</li>
+  <li>an unmatched preflight for another method on a legacy path, for example <span class="inline_code">POST /graphql</span> to a mocked GraphQL API, allows only the requested method in <span class="inline_code">Access-Control-Allow-Methods</span>.</li>
+</ul>
+<p>Preflights for mocked paths also no longer carry the stray <span class="inline_code">deprecated</span> header.</p>
+
+<p><strong>Who needs to act:</strong></p>
+<ul>
+  <li>anyone whose browser page on another host calls MockServer's API, for example a front-end on <span class="inline_code">https://app.example.com</span> or a browser test served from a CI host name;</li>
+  <li>anyone who points the dashboard at a MockServer on another host, or opens it through a reverse proxy or ingress that changes the <span class="inline_code">Host</span> header;</li>
+  <li>anyone who set <span class="inline_code">corsAllowOrigin</span> so that a page could call MockServer's API;</li>
+  <li>anyone running a Java client older than this release behind a proxy that changes the <span class="inline_code">Host</span> header: older Java clients send an <span class="inline_code">Origin</span> header on their callback and breakpoint WebSockets, built from the address they connect to. Upgrade the client, or add that address (for example <span class="inline_code">http://mockserver-proxy:1080</span>) to <span class="inline_code">controlPlaneCorsAllowOrigin</span>.</li>
+</ul>
+
+<p>Set <span class="inline_code">controlPlaneCorsAllowOrigin</span> on that MockServer to the page's origin, or a comma-separated list of origins:</p>
+
+<pre class="prettyprint code"><code class="code">-Dmockserver.controlPlaneCorsAllowOrigin=https://app.example.com
+# or, in Docker
+-e MOCKSERVER_CONTROL_PLANE_CORS_ALLOW_ORIGIN=https://app.example.com</code></pre>
+
+<p>The same release makes the callback WebSocket require control-plane authentication when it is turned on, as the dashboard's WebSocket already did. The Java, Node, Python, Go, Rust and .NET clients of this release send their bearer token on it, so upgrade them with the server; a browser cannot, so the Node client's browser build and the dashboard need mTLS for callbacks and breakpoints when JWT or OIDC authentication is on. See <a href="/mock_server/CORS_support.html#browser_origins">CORS</a>.</p>
 
 <a id="see_also" class="anchor" href="#see_also">&nbsp;</a>
 

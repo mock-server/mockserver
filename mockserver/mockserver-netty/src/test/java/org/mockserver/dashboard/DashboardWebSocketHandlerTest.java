@@ -2295,6 +2295,92 @@ public class DashboardWebSocketHandlerTest {
         assertUpgradeAllowed(channel);
     }
 
+    @Test
+    public void shouldRejectWebSocketUpgradeFromAForeignOrNullOrigin() {
+        for (String origin : new String[]{"https://attacker.example", "null", "http://localhost.attacker.example"}) {
+            HttpState httpState = newAsyncHttpState();
+            DashboardWebSocketHandler handler = new DashboardWebSocketHandler(httpState, false, false);
+            EmbeddedChannel channel = track(new EmbeddedChannel(handler));
+            DefaultFullHttpRequest upgrade = webSocketUpgradeRequest();
+            upgrade.headers().set(HttpHeaderNames.ORIGIN, origin);
+
+            channel.writeInbound(upgrade);
+
+            FullHttpResponse response = channel.readOutbound();
+            assertThat(origin, response.status().code(), is(403));
+            assertThat(origin, DashboardWebSocketHandler.handshakerForChannel(channel), is(nullValue()));
+            response.release();
+        }
+    }
+
+    @Test
+    public void shouldAllowWebSocketUpgradeFromALoopbackOrSameHostOrigin() {
+        String[][] hostAndOrigin = {
+            {"localhost", "http://localhost:5173"},
+            {"localhost", "http://127.0.0.1:3000"},
+            {"mockserver.internal:1080", "http://mockserver.internal:1080"},
+            {"mockserver.internal:1080", "https://[::1]:1080"},
+        };
+        for (String[] pair : hostAndOrigin) {
+            HttpState httpState = newAsyncHttpState();
+            DashboardWebSocketHandler handler = new DashboardWebSocketHandler(httpState, false, false);
+            EmbeddedChannel channel = track(new EmbeddedChannel(handler));
+            DefaultFullHttpRequest upgrade = webSocketUpgradeRequest();
+            upgrade.headers().set(HttpHeaderNames.HOST, pair[0]);
+            upgrade.headers().set(HttpHeaderNames.ORIGIN, pair[1]);
+
+            channel.writeInbound(upgrade);
+
+            assertUpgradeAllowed(channel);
+        }
+    }
+
+    @Test
+    public void shouldAllowWebSocketUpgradeFromAnOriginInTheControlPlaneAllowList() {
+        HttpState httpState = newAsyncHttpState();
+        httpState.getConfiguration().controlPlaneCorsAllowOrigin("https://app.example.com");
+        DashboardWebSocketHandler handler = new DashboardWebSocketHandler(httpState, false, false);
+        EmbeddedChannel channel = track(new EmbeddedChannel(handler));
+        DefaultFullHttpRequest upgrade = webSocketUpgradeRequest();
+        upgrade.headers().set(HttpHeaderNames.ORIGIN, "https://app.example.com");
+
+        channel.writeInbound(upgrade);
+
+        assertUpgradeAllowed(channel);
+    }
+
+    @Test
+    public void shouldNotLetCorsAllowOriginOpenTheDashboardWebSocket() {
+        HttpState httpState = newAsyncHttpState();
+        httpState.getConfiguration().corsAllowOrigin("*");
+        DashboardWebSocketHandler handler = new DashboardWebSocketHandler(httpState, false, false);
+        EmbeddedChannel channel = track(new EmbeddedChannel(handler));
+        DefaultFullHttpRequest upgrade = webSocketUpgradeRequest();
+        upgrade.headers().set(HttpHeaderNames.ORIGIN, "https://attacker.example");
+
+        channel.writeInbound(upgrade);
+
+        FullHttpResponse response = channel.readOutbound();
+        assertThat(response.status().code(), is(403));
+        response.release();
+    }
+
+    @Test
+    public void shouldCheckTheOriginBeforeControlPlaneAuthentication() {
+        HttpState httpState = newAsyncHttpState();
+        httpState.setControlPlaneAuthenticationHandler(request -> true);
+        DashboardWebSocketHandler handler = new DashboardWebSocketHandler(httpState, false, false);
+        EmbeddedChannel channel = track(new EmbeddedChannel(handler));
+        DefaultFullHttpRequest upgrade = webSocketUpgradeRequest();
+        upgrade.headers().set(HttpHeaderNames.ORIGIN, "https://attacker.example");
+
+        channel.writeInbound(upgrade);
+
+        FullHttpResponse response = channel.readOutbound();
+        assertThat(response.status().code(), is(403));
+        response.release();
+    }
+
     private static void assertUpgradeAllowed(EmbeddedChannel channel) {
         Object written = channel.readOutbound();
         assertThat(String.valueOf(written), written, is(nullValue()));

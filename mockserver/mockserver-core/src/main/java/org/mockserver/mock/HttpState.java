@@ -77,12 +77,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
+import static io.netty.handler.codec.http.HttpHeaderNames.ORIGIN;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.*;
+import static org.mockserver.formatting.StringFormatter.escapeControlCharactersForLog;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.log.model.LogEntry.LogMessageType.CLEARED;
 import static org.mockserver.log.model.LogEntry.LogMessageType.RETRIEVED;
@@ -193,6 +196,92 @@ public class HttpState {
         "/scenario/", "/loadScenario/", "/chaosExperiment/profiles/", "/chaosExperiment/apply/"
     };
 
+    // The methods the control plane serves on each bare alias, so a CORS preflight is decided by the
+    // same routing as the request it precedes. ControlPlaneGateCoverageTest keeps it complete.
+    private static final Map<String, Set<String>> CONTROL_PLANE_BARE_ROUTE_METHODS = Map.ofEntries(
+        Map.entry("/asyncapi", Set.of("GET", "PUT")),
+        Map.entry("/asyncapi/http", Set.of("PUT")),
+        Map.entry("/asyncapi/verify", Set.of("PUT")),
+        Map.entry("/audit", Set.of("GET")),
+        Map.entry("/baseline/compare", Set.of("PUT")),
+        Map.entry("/bind", Set.of("PUT")),
+        Map.entry("/breakpoint/matcher", Set.of("PUT")),
+        Map.entry("/breakpoint/matcher/clear", Set.of("PUT")),
+        Map.entry("/breakpoint/matcher/remove", Set.of("PUT")),
+        Map.entry("/breakpoint/matchers", Set.of("GET", "PUT")),
+        Map.entry("/cassettes", Set.of("DELETE", "GET", "PUT")),
+        Map.entry("/chaosExperiment", Set.of("DELETE", "GET", "PUT")),
+        Map.entry("/chaosExperiment/history", Set.of("GET")),
+        Map.entry("/chaosExperiment/profiles", Set.of("GET")),
+        Map.entry("/clear", Set.of("PUT")),
+        Map.entry("/clock", Set.of("GET", "PUT")),
+        Map.entry("/cluster", Set.of("GET")),
+        Map.entry("/config", Set.of("GET")),
+        Map.entry("/configuration", Set.of("GET", "PUT")),
+        Map.entry("/contractTest", Set.of("PUT")),
+        Map.entry("/crud", Set.of("PUT")),
+        Map.entry("/debugMismatch", Set.of("PUT")),
+        Map.entry("/diff", Set.of("PUT")),
+        Map.entry("/drift", Set.of("GET")),
+        Map.entry("/drift/clear", Set.of("PUT")),
+        Map.entry("/expectation", Set.of("PUT")),
+        Map.entry("/explainUnmatched", Set.of("PUT")),
+        Map.entry("/files/delete", Set.of("PUT")),
+        Map.entry("/files/list", Set.of("PUT")),
+        Map.entry("/files/retrieve", Set.of("PUT")),
+        Map.entry("/files/store", Set.of("PUT")),
+        Map.entry("/generateExpectation", Set.of("PUT")),
+        Map.entry("/graphql", Set.of("PUT")),
+        Map.entry("/grpc/clear", Set.of("PUT")),
+        Map.entry("/grpc/descriptors", Set.of("PUT")),
+        Map.entry("/grpc/health", Set.of("GET", "PUT")),
+        Map.entry("/grpc/services", Set.of("PUT")),
+        Map.entry("/grpcChaos", Set.of("GET", "PATCH", "PUT")),
+        Map.entry("/http3status", Set.of("GET")),
+        Map.entry("/import", Set.of("PUT")),
+        Map.entry("/llm/diffRuns", Set.of("PUT")),
+        Map.entry("/llm/optimisationReport", Set.of("GET")),
+        Map.entry("/loadScenario", Set.of("DELETE", "GET", "PUT")),
+        Map.entry("/loadScenario/generateFromOpenAPI", Set.of("PUT")),
+        Map.entry("/loadScenario/generateFromRecording", Set.of("PUT")),
+        Map.entry("/loadScenario/start", Set.of("PUT")),
+        Map.entry("/loadScenario/stop", Set.of("PUT")),
+        Map.entry("/logEntryBody", Set.of("GET")),
+        Map.entry("/mode", Set.of("GET", "PUT")),
+        Map.entry("/oidc", Set.of("PUT")),
+        Map.entry("/openapi", Set.of("PUT")),
+        Map.entry("/pact", Set.of("PUT")),
+        Map.entry("/pact/import", Set.of("PUT")),
+        Map.entry("/pact/verify", Set.of("PUT")),
+        Map.entry("/preemption", Set.of("DELETE", "GET", "PUT")),
+        Map.entry("/proxyConfiguration", Set.of("GET")),
+        Map.entry("/ready", Set.of("GET")),
+        Map.entry("/recordings/promote", Set.of("PUT")),
+        Map.entry("/replay", Set.of("PUT")),
+        Map.entry("/reset", Set.of("PUT")),
+        Map.entry("/retrieve", Set.of("PUT")),
+        Map.entry("/saml", Set.of("PUT")),
+        Map.entry("/scenario", Set.of("GET")),
+        Map.entry("/scim", Set.of("PUT")),
+        Map.entry("/serviceChaos", Set.of("GET", "PATCH", "PUT")),
+        Map.entry("/status", Set.of("PUT")),
+        Map.entry("/stop", Set.of("PUT")),
+        Map.entry("/tcpChaos", Set.of("GET", "PATCH", "PUT")),
+        Map.entry("/trafficValidate", Set.of("PUT")),
+        Map.entry("/verify", Set.of("PUT")),
+        Map.entry("/verifySLO", Set.of("PUT")),
+        Map.entry("/verifySequence", Set.of("PUT")),
+        Map.entry("/wasm/modules", Set.of("DELETE", "GET", "PUT")),
+        Map.entry("/wasm/test", Set.of("POST")),
+        Map.entry("/wsdl", Set.of("PUT"))
+    );
+    private static final Map<String, Set<String>> CONTROL_PLANE_BARE_PREFIX_METHODS = Map.of(
+        "/scenario/", Set.of("GET", "PUT"),
+        "/loadScenario/", Set.of("DELETE", "GET"),
+        "/chaosExperiment/profiles/", Set.of("DELETE", "GET", "PUT"),
+        "/chaosExperiment/apply/", Set.of("POST")
+    );
+
     // PUT routes whose handler loads the OpenAPI spec its body names (see mayLoadOpenAPISpec). Every route listed
     // must be one the PUT dispatch always handles.
     /**
@@ -223,6 +312,35 @@ public class HttpState {
         }
         return false;
     }
+    /**
+     * Whether a request with this method and path is served by the control plane rather than by
+     * expectations: anything under {@link #PATH_PREFIX} or {@code /_mockserver_}, or a bare alias with a
+     * method the control plane serves there. A CORS preflight for such a request is answered under the
+     * control-plane origin policy, before expectation matching.
+     */
+    public static boolean isControlPlaneRoute(String method, String path) {
+        if (path == null) {
+            return false;
+        }
+        if (path.equals(PATH_PREFIX) || path.startsWith(PATH_PREFIX_SLASH) || path.startsWith("/_mockserver_")) {
+            return true;
+        }
+        if (method == null) {
+            return false;
+        }
+        String upperCaseMethod = method.trim().toUpperCase(java.util.Locale.ROOT);
+        Set<String> methods = CONTROL_PLANE_BARE_ROUTE_METHODS.get(path);
+        if (methods != null && methods.contains(upperCaseMethod)) {
+            return true;
+        }
+        for (Map.Entry<String, Set<String>> prefix : CONTROL_PLANE_BARE_PREFIX_METHODS.entrySet()) {
+            if (path.startsWith(prefix.getKey()) && prefix.getValue().contains(upperCaseMethod)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static final ThreadLocal<Integer> LOCAL_PORT = new ThreadLocal<>();
     private final String uniqueLoopPreventionHeaderValue = "MockServer_" + UUIDService.getUUID();
     private final MockServerEventLog mockServerLog;
@@ -245,9 +363,7 @@ public class HttpState {
     // T1.9: opt-in cluster verify/retrieve fan-in coordinator (default OFF = per-node)
     private ClusterFanIn clusterFanIn;
     private final Configuration configuration;
-    // Adds CORS headers to dashboard-facing control-plane responses (e.g. service
-    // chaos) so the dashboard works when served from another origin (a dev server),
-    // matching the unconditional CORS already applied by the metrics and MCP endpoints.
+    // CORS for dashboard-facing control-plane responses; which origins get it is CORSOriginPolicy's decision.
     private final CORSHeaders corsHeaders;
     private final MockServerLogger mockServerLogger;
     private final WebSocketClientRegistry webSocketClientRegistry;
@@ -982,11 +1098,83 @@ public class HttpState {
      * before the request body is aggregated.
      */
     public Expectation firstMatchingEarlyExpectation(HttpRequest headersOnly) {
-        if (requestMatchers.isEmpty()) {
+        if (requestMatchers.isEmpty() || isControlPlaneRequest(headersOnly)) {
             return null;
         }
         return requestMatchers.firstMatchingEarlyExpectation(headersOnly);
     }
+
+    /**
+     * Whether the control plane serves this request, or, for a CORS preflight, the request it
+     * precedes (by its {@code Access-Control-Request-Method}): {@link #isControlPlaneRoute(String, String)}
+     * or the configured liveness {@code GET} path. The single routing decision shared by the
+     * control-plane origin check, the preflight classifier and the early-expectation guard.
+     */
+    public boolean isControlPlaneRequest(HttpRequest request) {
+        if (request == null || request.getPath() == null) {
+            return false;
+        }
+        String method = request.getMethod() != null ? request.getMethod().getValue() : null;
+        if (CORSHeaders.isCorsPreflight(request)) {
+            method = request.getFirstHeader(ACCESS_CONTROL_REQUEST_METHOD.toString());
+        }
+        return isControlPlaneRequest(method, request.getPath().getValue());
+    }
+
+    public boolean isControlPlaneRequest(String method, String path) {
+        if (isControlPlaneRoute(method, path)) {
+            return true;
+        }
+        String livenessPath = configuration.livenessHttpGetPath();
+        return method != null && "GET".equalsIgnoreCase(method.trim()) && isNotBlank(livenessPath) && livenessPath.equals(path);
+    }
+
+    /**
+     * Whether a request the control plane serves carries a browser {@code Origin} that
+     * {@code controlPlaneCorsAllowOrigin} does not allow (blank allows only loopback and same-host
+     * origins; {@code null} is never allowed by default). Such a request must be refused with
+     * {@code 403} before any handler or expectation runs. A CORS preflight is not refused: it is
+     * answered without allow headers instead. A request with no {@code Origin} is never refused.
+     */
+    public boolean isControlPlaneOriginRefused(String method, String path, String origin, String hostHeader, boolean corsPreflight) {
+        if (origin == null || origin.isEmpty() || corsPreflight || !isControlPlaneRequest(method, path)) {
+            return false;
+        }
+        return !org.mockserver.cors.CORSOriginPolicy.isControlPlaneOriginAllowed(configuration.controlPlaneCorsAllowOrigin(), origin, hostHeader);
+    }
+
+    public boolean isControlPlaneOriginRefused(HttpRequest request) {
+        if (request == null || request.getPath() == null) {
+            return false;
+        }
+        return isControlPlaneOriginRefused(
+            request.getMethod() != null ? request.getMethod().getValue() : null,
+            request.getPath().getValue(),
+            request.getFirstHeader(ORIGIN.toString()),
+            request.getFirstHeader(HOST.toString()),
+            CORSHeaders.isCorsPreflight(request)
+        );
+    }
+
+    /**
+     * Writes the {@code 403} for a request {@link #isControlPlaneOriginRefused(HttpRequest)} refuses.
+     */
+    public void writeControlPlaneOriginRefused(HttpRequest request, ResponseWriter responseWriter) {
+        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+            String origin = escapeControlCharactersForLog(request.getFirstHeader(ORIGIN.toString()));
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.AUTHENTICATION_FAILED)
+                    .setLogLevel(Level.INFO)
+                    .setCorrelationId(request.getLogCorrelationId())
+                    .setMessageFormat("control plane request refused with status 403 - origin {} is not allowed, set controlPlaneCorsAllowOrigin to allow it")
+                    .setArguments(origin)
+            );
+        }
+        responseWriter.writeResponse(request, FORBIDDEN, CONTROL_PLANE_ORIGIN_REFUSED_MESSAGE, MediaType.create("text", "plain").toString());
+    }
+
+    public static final String CONTROL_PLANE_ORIGIN_REFUSED_MESSAGE = "Forbidden for control plane - this browser origin is not allowed (see controlPlaneCorsAllowOrigin)";
 
     /**
      * True when at least one registered expectation currently carries respondBeforeBody=true.
@@ -2593,6 +2781,11 @@ public class HttpState {
                     .setMessageFormat(RECEIVED_REQUEST_MESSAGE_FORMAT)
                     .setArguments(request)
             );
+        }
+
+        if (request.getFirstHeader(ORIGIN.toString()).length() > 0 && isControlPlaneOriginRefused(request)) {
+            writeControlPlaneOriginRefused(request, responseWriter);
+            return true;
         }
 
         // Cheapest-first gate: a path that can be no control-plane route skips the whole per-method
@@ -4384,16 +4577,14 @@ public class HttpState {
     }
 
     /**
-     * Add CORS headers to a dashboard-facing control-plane response unconditionally,
-     * so the dashboard works when served from a different origin (e.g. the UI dev
-     * server) without requiring {@code enableCORSForAPI} to be set. This mirrors the
-     * always-on CORS already applied by the metrics ({@code MetricsHandler}) and MCP
-     * endpoints. {@code CORSHeaders.addCORSHeaders} is idempotent
-     * ({@code setHeaderIfNotAlreadyExists}), so it composes safely with the
-     * conditional CORS that {@code ResponseWriter} may also apply.
+     * Add CORS headers to a dashboard-facing control-plane response without requiring
+     * {@code enableCORSForAPI}, for the origins {@code controlPlaneCorsAllowOrigin} allows (by
+     * default a loopback or same-host origin). {@code CORSHeaders.addControlPlaneCORSHeaders} is
+     * idempotent ({@code setHeaderIfNotAlreadyExists}), so it composes safely with the CORS that
+     * {@code ResponseWriter} also applies.
      */
     private HttpResponse withDashboardCORS(HttpRequest request, HttpResponse response) {
-        corsHeaders.addCORSHeaders(request, response);
+        corsHeaders.addControlPlaneCORSHeaders(request, response);
         return response;
     }
 
@@ -7197,6 +7388,11 @@ public class HttpState {
                 "the log event ring buffer is a fixed-size array allocated when the server started");
             configuration.ringBufferSize(ringBufferSizeInForce);
         }
+        String suppliedControlPlaneCorsAllowOrigin = suppliedConfiguration.getControlPlaneCorsAllowOrigin();
+        if (suppliedControlPlaneCorsAllowOrigin != null && !suppliedControlPlaneCorsAllowOrigin.equals(configuration.controlPlaneCorsAllowOrigin())) {
+            warnInitOnlyProperty("controlPlaneCorsAllowOrigin", "\"" + suppliedControlPlaneCorsAllowOrigin + "\"", "\"" + configuration.controlPlaneCorsAllowOrigin() + "\"",
+                "it decides which web sites may use the control plane, so a request to the control plane cannot widen it");
+        }
         Integer suppliedMaxWebSocketExpectations = suppliedConfiguration.getMaxWebSocketExpectations();
         if (suppliedMaxWebSocketExpectations != null && configuration.maxWebSocketExpectations() != maxWebSocketExpectationsInForce) {
             warnInitOnlyProperty("maxWebSocketExpectations", configuration.maxWebSocketExpectations(), maxWebSocketExpectationsInForce,
@@ -7279,6 +7475,10 @@ public class HttpState {
      * effect on the running server, naming the value in force and how to actually apply the change.
      */
     private void warnInitOnlyProperty(String property, int suppliedValue, int valueInForce, String reason) {
+        warnInitOnlyProperty(property, String.valueOf(suppliedValue), String.valueOf(valueInForce), reason);
+    }
+
+    private void warnInitOnlyProperty(String property, String suppliedValue, String valueInForce, String reason) {
         if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
             mockServerLogger.logEvent(new LogEntry()
                 .setType(LogEntry.LogMessageType.SERVER_CONFIGURATION)

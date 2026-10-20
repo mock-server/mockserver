@@ -241,6 +241,7 @@ public class Configuration {
     private volatile Boolean enableCORSForAPI;
     private volatile Boolean enableCORSForAllResponses;
     private volatile String corsAllowOrigin;
+    private volatile String controlPlaneCorsAllowOrigin;
     private volatile String corsAllowMethods;
     private volatile String corsAllowHeaders;
     private volatile Boolean corsAllowCredentials;
@@ -3578,13 +3579,36 @@ public class Configuration {
     }
 
     /**
-     * <p>the value used for CORS in the access-control-allow-origin header.</p>
-     * <p>The default is ""</p>
+     * <p>the value used for CORS in the access-control-allow-origin header of mocked and proxied responses
+     * (when enableCORSForAllResponses is on); it does not affect MockServer's own API, see
+     * {@link #controlPlaneCorsAllowOrigin(String)}.</p>
+     * <p>The default is "", which reflects the request's origin</p>
      *
-     * @param corsAllowOrigin the value used for CORS in the access-control-allow-methods header
+     * @param corsAllowOrigin the value used for CORS in the access-control-allow-origin header
      */
     public Configuration corsAllowOrigin(String corsAllowOrigin) {
         this.corsAllowOrigin = corsAllowOrigin;
+        return this;
+    }
+
+    public String controlPlaneCorsAllowOrigin() {
+        if (controlPlaneCorsAllowOrigin == null) {
+            return ConfigurationProperties.controlPlaneCorsAllowOrigin();
+        }
+        return controlPlaneCorsAllowOrigin;
+    }
+
+    /**
+     * <p>the browser origins allowed to use MockServer's own API, the dashboard and the callback WebSocket,
+     * as a comma-separated list, or * for any origin.</p>
+     * <p>The default is "", which allows only localhost, 127.0.0.1 and [::1] pages (http or https, any port);
+     * pages MockServer serves itself, such as the dashboard, are always allowed. See
+     * {@link org.mockserver.cors.CORSOriginPolicy}</p>
+     *
+     * @param controlPlaneCorsAllowOrigin the allowed browser origins, comma-separated
+     */
+    public Configuration controlPlaneCorsAllowOrigin(String controlPlaneCorsAllowOrigin) {
+        this.controlPlaneCorsAllowOrigin = controlPlaneCorsAllowOrigin;
         return this;
     }
 

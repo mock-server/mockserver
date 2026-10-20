@@ -19,8 +19,8 @@ export function connectionLostMessage(params: ConnectionParams, workspaceTarget:
     message += ' This dashboard is served over https, so the browser blocks calls to an http target: use https for it.';
   } else if (isCrossOrigin(params)) {
     message += ` ${where} is a different origin from this dashboard, so its control-plane calls are cross-origin:` +
-      ' it must answer CORS for this origin (MockServer does unless corsAllowOrigin is set to exclude it,' +
-      ' or a proxy in front of it strips the CORS headers).';
+      ' it must answer CORS for this origin (by default MockServer does for a dashboard on localhost; otherwise' +
+      ' list this origin in its controlPlaneCorsAllowOrigin, and check no proxy in front of it strips the CORS headers).';
   }
   return message;
 }

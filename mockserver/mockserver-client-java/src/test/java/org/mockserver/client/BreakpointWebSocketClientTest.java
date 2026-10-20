@@ -834,6 +834,33 @@ public class BreakpointWebSocketClientTest {
     }
 
     @Test
+    public void handshakeSendsNoOriginHeaderBecauseItIsNotABrowser() throws Exception {
+        assertThat(handshakeLines(null).stream().anyMatch(line -> line.toLowerCase().startsWith("origin:")), is(false));
+    }
+
+    @Test
+    public void handshakeSendsTheAuthorizationHeaderWhenOneIsConfigured() throws Exception {
+        assertThat(handshakeLines("Bearer some.jwt.value"), hasItem("Authorization: Bearer some.jwt.value"));
+        assertThat(handshakeLines(null).stream().anyMatch(line -> line.toLowerCase().startsWith("authorization:")), is(false));
+        assertThat(handshakeLines(" ").stream().anyMatch(line -> line.toLowerCase().startsWith("authorization:")), is(false));
+    }
+
+    private static java.util.List<String> handshakeLines(String authorization) throws Exception {
+        EmbeddedChannel ch = new EmbeddedChannel(new io.netty.handler.codec.http.HttpClientCodec());
+        ch.pipeline().addLast(new BreakpointWebSocketClient.BreakpointWebSocketClientHandler(
+            LOGGER, "test-client-id", new java.net.InetSocketAddress("localhost", 1080), "", null, false, authorization));
+        ch.pipeline().fireChannelActive();
+        StringBuilder written = new StringBuilder();
+        Object outbound;
+        while ((outbound = ch.readOutbound()) != null) {
+            written.append(((io.netty.buffer.ByteBuf) outbound).toString(java.nio.charset.StandardCharsets.US_ASCII));
+            ((io.netty.buffer.ByteBuf) outbound).release();
+        }
+        ch.finishAndReleaseAll();
+        return java.util.Arrays.asList(written.toString().split("\r\n"));
+    }
+
+    @Test
     public void aMessageTypeFromANewerServerIsIgnoredWithoutAReplyOrAnError() throws Exception {
         MockServerLogger logger = org.mockito.Mockito.mock(MockServerLogger.class);
         org.mockito.Mockito.when(logger.isEnabledForInstance(org.mockito.ArgumentMatchers.any())).thenReturn(true);

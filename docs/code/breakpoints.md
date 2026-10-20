@@ -669,6 +669,10 @@ Language clients supply the header; the dashboard (browser WebSocket) does not,
 so the server generates a UUID. In both cases, `registerClient(clientId, ctx)`
 sends a `WebSocketClientIdDTO{clientId}` to the client and registers the
 channel. The dashboard reads its assigned `clientId` from that first message.
+A client reconnecting with its id replaces the previous connection, and the
+replaced connection's later close does not unregister it. Before any of this,
+the upgrade passes the shared origin and control-plane authentication gate
+(`ControlPlaneWebSocketUpgradeGate`).
 
 ### Connection lifecycle
 

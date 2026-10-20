@@ -227,8 +227,8 @@ describe('ConfigurationDialog', () => {
       'Proxy unmatched requests',
       'Disable logging',
       'Compact log format',
-      'CORS for control plane API',
-      'CORS for all responses',
+      'Answer CORS preflights on every path',
+      'CORS for mocked responses',
     ]) {
       const formControl = screen.getByText(label).closest('label')!;
       expect(within(formControl).getByRole('switch')).toBeInTheDocument();

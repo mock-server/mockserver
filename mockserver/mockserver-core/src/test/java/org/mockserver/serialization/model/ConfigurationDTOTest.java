@@ -30,7 +30,8 @@ public class ConfigurationDTOTest {
             .logLevel(Level.DEBUG)
             .maxExpectations(500)
             .metricsEnabled(true)
-            .corsAllowOrigin("https://example.com"));
+            .corsAllowOrigin("https://example.com")
+            .controlPlaneCorsAllowOrigin("https://dashboard.example.com"));
 
         Configuration config = dto.buildObject();
 
@@ -38,6 +39,7 @@ public class ConfigurationDTOTest {
         assertThat(config.maxExpectations(), is(500));
         assertThat(config.metricsEnabled(), is(true));
         assertThat(config.corsAllowOrigin(), is("https://example.com"));
+        assertThat(config.controlPlaneCorsAllowOrigin(), is("https://dashboard.example.com"));
     }
 
     @Test
@@ -58,6 +60,20 @@ public class ConfigurationDTOTest {
         assertThat(target.maxExpectations(), is(999));
         assertThat(target.metricsEnabled(), is(false));
         assertThat(target.corsAllowOrigin(), is("https://original.com"));
+    }
+
+    @Test
+    public void shouldNotApplyControlPlaneCorsAllowOriginToARunningServer() {
+        Configuration target = configuration().controlPlaneCorsAllowOrigin("https://app.example.com");
+
+        ConfigurationDTO dto = new ConfigurationDTO();
+        dto.setControlPlaneCorsAllowOrigin("*");
+        dto.setCorsAllowOrigin("https://mocks.example.com");
+
+        dto.applyTo(target);
+
+        assertThat(target.controlPlaneCorsAllowOrigin(), is("https://app.example.com"));
+        assertThat(target.corsAllowOrigin(), is("https://mocks.example.com"));
     }
 
     @Test
@@ -467,6 +483,12 @@ public class ConfigurationDTOTest {
             dropped, is(empty()));
     }
 
+    // Properties a running server must never take from PUT /mockserver/configuration: applyTo skips them.
+    private static final Set<String> STARTUP_ONLY_PROPERTIES = new HashSet<>(Arrays.asList(
+        // decides which web sites may use the control plane, so a control-plane request must not widen it
+        "controlPlaneCorsAllowOrigin"
+    ));
+
     @Test
     public void shouldApplyEveryMirroredConfigurationPropertyToTarget() throws Exception {
         // a fully-populated source DTO applied onto a fresh target must transfer every covered
@@ -485,6 +507,9 @@ public class ConfigurationDTOTest {
 
         List<String> dropped = new ArrayList<>();
         for (PropertyAccessor accessor : accessors) {
+            if (STARTUP_ONLY_PROPERTIES.contains(accessor.name)) {
+                continue;
+            }
             Object expected = accessor.getter.invoke(source);
             Object actual = accessor.getter.invoke(target);
             if (!equalsForRoundTrip(expected, actual)) {

@@ -2396,6 +2396,32 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetControlPlaneCorsAllowOrigin() {
+        String original = ConfigurationProperties.controlPlaneCorsAllowOrigin();
+        try {
+            // then - default value
+            assertThat(configuration.controlPlaneCorsAllowOrigin(), equalTo(""));
+
+            // when - system property setter
+            ConfigurationProperties.controlPlaneCorsAllowOrigin("https://app.example.com");
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.controlPlaneCorsAllowOrigin(), equalTo("https://app.example.com"));
+            assertThat(System.getProperty("mockserver.controlPlaneCorsAllowOrigin"), equalTo("https://app.example.com"));
+            assertThat(configuration.controlPlaneCorsAllowOrigin(), equalTo("https://app.example.com"));
+
+            // when - setter
+            configuration.controlPlaneCorsAllowOrigin("https://other.example.com");
+
+            // then - getter, independent of corsAllowOrigin
+            assertThat(configuration.controlPlaneCorsAllowOrigin(), equalTo("https://other.example.com"));
+            assertThat(configuration.corsAllowOrigin(), equalTo(""));
+        } finally {
+            ConfigurationProperties.controlPlaneCorsAllowOrigin(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetCorsAllowMethods() {
         String original = ConfigurationProperties.corsAllowMethods();
         try {

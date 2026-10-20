@@ -990,19 +990,24 @@ If false, requests with non-standard methods are assumed binary.
 ### CORS Configuration
 
 **enableCORSForAPI**
-Enable CORS for MockServer REST API (for browser-based JavaScript).
+Answer CORS preflight requests no expectation matches, for every path, using the corsAllowOrigin policy; the first preflight MockServer answers itself turns it on. MockServer's own API answers preflights under controlPlaneCorsAllowOrigin whatever it is set to.
 - Default: false
 - Environment variable: MOCKSERVER_ENABLE_CORS_FOR_API
 
 **enableCORSForAllResponses**
-Enable CORS for all responses (REST API and expectation responses).
+Enable CORS for mocked and proxied responses, using corsAllowOrigin.
 - Default: false
 - Environment variable: MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES
 
 **corsAllowOrigin**
-Value for access-control-allow-origin header.
+Value for access-control-allow-origin header on mocked and proxied responses (when enableCORSForAllResponses is on). When blank, the request's origin is reflected. It does not affect MockServer's own API.
 - Default: ""
 - Environment variable: MOCKSERVER_CORS_ALLOW_ORIGIN
+
+**controlPlaneCorsAllowOrigin**
+Browser origins (comma-separated, or *) allowed to use MockServer's own API, the dashboard and the callback WebSocket. When blank, only pages on localhost, 127.0.0.1 or [::1] (http or https), and pages MockServer serves itself, are allowed. A control-plane request from any other browser origin is refused with 403. Set at startup only; PUT /mockserver/configuration ignores it.
+- Default: ""
+- Environment variable: MOCKSERVER_CONTROL_PLANE_CORS_ALLOW_ORIGIN
 
 **corsAllowMethods**
 Value for access-control-allow-methods header.

@@ -282,7 +282,7 @@ export async function probeTarget(params: ConnectionParams, fetchImpl: typeof fe
     // fetch reports a CORS refusal and an unreachable server identically.
     const cors = isCrossOrigin(params)
       ? ` Calls to it are cross-origin, so the browser also refuses them when it does not answer CORS for this dashboard's origin` +
-        ` (MockServer does unless corsAllowOrigin excludes it, or a proxy in front of it drops the CORS headers).`
+        ` (by default MockServer does for a dashboard on localhost; otherwise list this dashboard's origin in its controlPlaneCorsAllowOrigin, and check no proxy in front of it drops the CORS headers).`
       : '';
     const tls = params.secure ? ' With https, the browser must also trust its certificate: open the target in a tab once to check.' : '';
     return { ok: false, message: `Could not reach MockServer at ${where}.${cors}${tls}` };

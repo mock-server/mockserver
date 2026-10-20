@@ -33,15 +33,29 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     private final String clientId;
 
     WebSocketClientHandler(MockServerLogger mockServerLogger, String clientId, InetSocketAddress serverAddress, String contextPath, WebSocketClient webSocketClient, boolean isSecure) throws URISyntaxException {
+        this(mockServerLogger, clientId, serverAddress, contextPath, webSocketClient, isSecure, null);
+    }
+
+    WebSocketClientHandler(MockServerLogger mockServerLogger, String clientId, InetSocketAddress serverAddress, String contextPath, WebSocketClient webSocketClient, boolean isSecure, String authorization) throws URISyntaxException {
         this.mockServerLogger = mockServerLogger;
         this.clientId = clientId;
+        HttpHeaders upgradeHeaders = new DefaultHttpHeaders().add(CLIENT_REGISTRATION_ID_HEADER, clientId);
+        if (isNotBlank(authorization)) {
+            upgradeHeaders.add(HttpHeaderNames.AUTHORIZATION, authorization);
+        }
         this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
             new URI((isSecure ? "wss" : "ws") + "://" + serverAddress.getHostName() + ":" + serverAddress.getPort() + cleanContextPath(contextPath) + "/_mockserver_callback_websocket"),
             WebSocketVersion.V13,
             null,
             false,
-            new DefaultHttpHeaders().add(CLIENT_REGISTRATION_ID_HEADER, clientId),
-            Integer.MAX_VALUE
+            upgradeHeaders,
+            Integer.MAX_VALUE,
+            true,
+            false,
+            10_000L,
+            false,
+            // no Origin: a non-browser client is not subject to MockServer's browser-origin check
+            false
         );
         this.webSocketClient = webSocketClient;
     }

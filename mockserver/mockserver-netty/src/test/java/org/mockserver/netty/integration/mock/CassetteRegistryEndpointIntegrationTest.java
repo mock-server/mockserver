@@ -345,7 +345,7 @@ public class CassetteRegistryEndpointIntegrationTest {
 
     @Test
     public void shouldReturnCORSHeadersSoDashboardCanCallCassetteEndpointsCrossOrigin() throws Exception {
-        String origin = "https://dashboard.example.com";
+        String origin = "http://localhost:5173";
 
         // when - each verb is called with an Origin header, as a browser would
         HttpResponse putResponse = send("PUT", "/mockserver/cassettes", "{\"path\":\"/c/cors.json\"}", "origin", origin);
@@ -364,6 +364,14 @@ public class CassetteRegistryEndpointIntegrationTest {
             assertThat("cassette responses must advertise the cassette verbs", allowMethods, containsString("PUT"));
             assertThat("cassette responses must advertise the cassette verbs", allowMethods, containsString("DELETE"));
         }
+    }
+
+    @Test
+    public void shouldRefuseAForeignOriginWithoutCORSHeaders() throws Exception {
+        HttpResponse response = send("GET", "/mockserver/cassettes", null, "origin", "https://attacker.example");
+
+        assertThat(response.getStatusCode(), is(403));
+        assertThat(response.containsHeader("access-control-allow-origin"), is(false));
     }
 
     // ------------------------------------------------------------------

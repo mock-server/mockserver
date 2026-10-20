@@ -654,6 +654,29 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
+     * The {@code Authorization} header value for a callback WebSocket upgrade, so it passes control-plane
+     * authentication as this client's HTTP requests do: the control-plane JWT as a bearer token, else the
+     * request override's {@code Authorization} header, else null.
+     */
+    String webSocketAuthorization() {
+        Supplier<String> supplier = controlPlaneJWTSupplier;
+        if (supplier != null) {
+            String jwt = supplier.get();
+            if (isNotBlank(jwt)) {
+                return "Bearer " + jwt;
+            }
+        }
+        HttpRequest override = requestOverride;
+        if (override != null) {
+            String authorization = override.getFirstHeader(AUTHORIZATION.toString());
+            if (isNotBlank(authorization)) {
+                return authorization;
+            }
+        }
+        return null;
+    }
+
+    /**
      * The TLS context for this client's callback and breakpoint WebSockets to MockServer: the same trust and
      * client certificate as its HTTP requests, without ALPN because a WebSocket upgrade is HTTP/1.1.
      */
@@ -4278,7 +4301,7 @@ public class MockServerClient implements Stoppable {
                 bpClientId,
                 MOCK_SERVER_LOGGER,
                 this::webSocketSslContext
-            );
+            ).withAuthorization(this::webSocketAuthorization);
             wsClient.register(
                 remoteAddress(),
                 contextPath(),

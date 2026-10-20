@@ -1515,6 +1515,39 @@ public class McpStreamableHttpHandlerTest {
         response.release();
     }
 
+    @Test
+    public void shouldAnswerAForeignOriginPreflightWithoutCorsHeaders() {
+        FullHttpRequest request = new DefaultFullHttpRequest(
+            HttpVersion.HTTP_1_1, HttpMethod.OPTIONS, "/mockserver/mcp");
+        request.headers().set(HttpHeaderNames.HOST, "localhost:1080");
+        request.headers().set(HttpHeaderNames.ORIGIN, "https://attacker.example");
+        request.headers().set(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD, "POST");
+        request.headers().set(HttpHeaderNames.ACCESS_CONTROL_REQUEST_HEADERS, "content-type, mcp-session-id");
+        channel.writeInbound(request);
+
+        FullHttpResponse response = awaitOutbound();
+        assertThat(response.status(), is(HttpResponseStatus.OK));
+        assertThat(response.headers().contains(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN), is(false));
+        assertThat(response.headers().contains(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS), is(false));
+        assertThat(response.headers().contains(HttpHeaderNames.ACCESS_CONTROL_EXPOSE_HEADERS), is(false));
+        response.release();
+    }
+
+    @Test
+    public void shouldNotEchoANullOriginOnMcpResponse() {
+        String body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\"}}";
+        FullHttpRequest request = new DefaultFullHttpRequest(
+            HttpVersion.HTTP_1_1, HttpMethod.POST, "/mockserver/mcp",
+            Unpooled.copiedBuffer(body, StandardCharsets.UTF_8));
+        request.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/json");
+        request.headers().set(HttpHeaderNames.ORIGIN, "null");
+        channel.writeInbound(request);
+
+        FullHttpResponse response = awaitOutbound();
+        assertThat(response.headers().contains(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN), is(false));
+        response.release();
+    }
+
     private String initializeAndGetSessionId() throws Exception {
         String requestBody = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{}}";
         FullHttpResponse response = sendPost(requestBody);

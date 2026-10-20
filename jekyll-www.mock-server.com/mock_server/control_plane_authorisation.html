@@ -220,7 +220,8 @@ ConfigurationProperties.controlPlaneScopeMapping(Map.of(
 <h3>Control plane &amp; CORS</h3>
 <ul>
     <li>Require authentication on every control-plane request &mdash; enable <a href="#control_plane_authentication">mTLS and/or JWT</a> as described above.</li>
-    <li><code class="inline_code">mockserver.corsAllowOrigin</code> &mdash; set this to the specific origin(s) you trust rather than allowing any origin, and keep <code class="inline_code">mockserver.corsAllowCredentials=false</code> unless credentialed cross-origin requests are genuinely required. See <a href="/mock_server/CORS_support.html">CORS</a>.</li>
+    <li><code class="inline_code">mockserver.controlPlaneCorsAllowOrigin</code> &mdash; by default only pages on <code class="inline_code">localhost</code> and pages MockServer serves itself can use the control plane from a browser. Add only the origins you trust, never <code class="inline_code">*</code>, and keep <code class="inline_code">mockserver.corsAllowCredentials=false</code> unless credentialed cross-origin requests are genuinely required. <code class="inline_code">mockserver.corsAllowOrigin</code> only affects mocked and proxied responses. See <a href="/mock_server/CORS_support.html#browser_origins">CORS</a>.</li>
+    <li>What the browser-origin check does not stop &mdash; a DNS-rebinding attack (a malicious site points its own host name at MockServer, so the browser treats MockServer as part of that site), and any site visited in a browser that uses MockServer as its proxy. Control-plane authentication stops both: the attacker's page has no credentials to send.</li>
 </ul>
 
 <h2>See Also</h2>

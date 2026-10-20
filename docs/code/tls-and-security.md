@@ -545,6 +545,49 @@ default AuthenticationResult authenticate(HttpRequest request) {
 
 `AuthenticationResult` is immutable and carries `authenticated`, `principal` (null = anonymous), `principalSource`, a read-only `claims` map and a read-only `scopes` set. Existing and third-party handlers that implement only the boolean method keep working unchanged — the default adapter treats their `true` as authenticated-but-anonymous. `ChainedAuthenticationHandler.authenticate()` ANDs every delegate, returns unauthenticated if any fails, and otherwise selects the first delegate with a non-null principal (so an OIDC/JWT principal wins over an mTLS-only null) while unioning all delegates' scopes.
 
+### Browser Origins (CORS and WebSocket Upgrades)
+
+**Outcome.** `controlPlaneCorsAllowOrigin` decides which browser origins may use the control plane. A request the control plane serves (`HttpState.isControlPlaneRequest`: any `/mockserver` or `/_mockserver_` path, including MCP, metrics, the dashboard and both WebSocket upgrades; a bare legacy alias with a method the control plane routes there; the liveness `GET` path), with any method, that carries an `Origin` the property does not allow is refused with `403` before any handler runs and before any expectation (including a `respondBeforeBody` one) can answer it (`HttpState.handle`, `McpStreamableHttpHandler`, `Http3MockServerHandler`, `ControlPlaneWebSocketUpgradeGate`). A CORS preflight for such a request is not refused: it is answered first, before CRUD and expectation matching, without `Access-Control-Allow-*` headers. Blank (the default) allows an http or https origin on `localhost`, `127.0.0.1` or `[::1]` (any port); an explicit value is a comma-separated allow-list, where `*` allows any origin. An origin whose host and port equal the request's `Host` header (a page MockServer served itself, such as the dashboard) is always allowed; `Origin: null` is not. A request with no `Origin` (any non-browser client) is unaffected. Data-plane CORS is unchanged: mocked and proxied responses get CORS only with `enableCORSForAllResponses`, under `corsAllowOrigin`, which reflects any origin when blank and does not affect the control plane.
+
+```mermaid
+flowchart TD
+    R(["Control-plane request\nor WebSocket upgrade"]) --> O{"Origin header?"}
+    O -->|none| A([Allowed])
+    O -->|present| P{"same Host, or allowed by\ncontrolPlaneCorsAllowOrigin?"}
+    P -->|yes| A
+    P -->|no| D(["request or upgrade: 403\npreflight: no Access-Control-* headers"])
+    A --> W{"WebSocket upgrade?"}
+    W -->|yes| C{"control-plane auth\nconfigured?"}
+    C -->|yes| V(["evaluateControlPlaneAuthentication\n401 / 403 on failure"])
+    C -->|no| U([Upgrade])
+```
+
+| Piece | Where | What it does |
+|---|---|---|
+| `CORSOriginPolicy` | `mockserver-core/.../cors/` | The single control-plane origin decision, `isControlPlaneOriginAllowed(controlPlaneCorsAllowOrigin, origin, host)` |
+| `CORSHeaders.addControlPlaneCORSHeaders` | `mockserver-core/.../cors/` | Control-plane CORS headers (`ResponseWriter` with `apiResponse == true`, `HttpState.withDashboardCORS`, `MetricsHandler`); reads `controlPlaneCorsAllowOrigin` from the server's `Configuration`, as the WebSocket gate does, so the two never disagree |
+| `HttpState.isControlPlaneRequest(request)` / `isControlPlaneRoute(method, path)` | `mockserver-core/.../mock/` | The single routing decision: anything under `/mockserver` or `/_mockserver_`, a bare legacy alias with a method the control plane routes there (`CONTROL_PLANE_BARE_ROUTE_METHODS`, kept complete by `ControlPlaneGateCoverageTest`), or the liveness `GET` path; for a preflight, the method is its `Access-Control-Request-Method`. Used by the origin check, the preflight classifier in `HttpActionHandler` and the `respondBeforeBody` guard in `HttpState.firstMatchingEarlyExpectation`, so they cannot disagree. It over-approximates, so a foreign-origin browser request is refused even where a mock would have answered it, for exactly: `GET` or `DELETE` on `/loadScenario/start` or `/loadScenario/stop`; `PUT /pact`; `GET` or `DELETE` on any deeper path under `/loadScenario/<name>/` other than `GET /loadScenario/<name>/report`; `GET`, `PUT` or `DELETE` under `/chaosExperiment/profiles/<name>/`; `POST` under `/chaosExperiment/apply/<name>/`; and any method on a `/mockserver` or `/_mockserver_` path that is not a route |
+| `HttpState.isControlPlaneOriginRefused` / `writeControlPlaneOriginRefused` | `mockserver-core/.../mock/` | The `403` for a control-plane request with a disallowed `Origin`, applied at the top of `HttpState.handle`, which every transport calls before its own control-plane routes and before expectation matching |
+| `CORSHeaders.addCORSHeaders`, `ResponseWriter.writeDataPlanePreflightResponse` | `mockserver-core` | Data-plane CORS (mocked and proxied responses with `enableCORSForAllResponses`, and any other answered preflight), unchanged, except that an unmatched preflight on a bare alias path allows only the requested method. Security does not depend on this: a preflight an expectation answers can list any method, and a browser may then send a control-plane request without a new preflight, but that request is refused by the origin check |
+| `McpStreamableHttpHandler`, `Http3MockServerHandler` | `mockserver-netty` | The MCP endpoint's own CORS headers use `isControlPlaneOriginAllowed` |
+| `ControlPlaneWebSocketUpgradeGate` | `mockserver-netty/.../websocketregistry/` | Shared upgrade gate for the dashboard and callback WebSockets: origin check (`403`), then control-plane authentication (`401`/`403`) |
+
+**Why a separate property.** From 7.0.0 to 9.0.0 a blank `corsAllowOrigin` reflected any origin on every control-plane response and `/mockserver/*` preflights were always answered, so any web site a developer visited could read recorded traffic from, and write expectations to, a MockServer on their machine. Tightening `corsAllowOrigin` itself would have changed CORS for users' mocked APIs, and its only remedy (`*`) would have reopened the control plane, so the two policies are now separate.
+
+**Fixed at startup.** `controlPlaneCorsAllowOrigin` is never applied by `PUT /mockserver/configuration` (`ConfigurationDTO.applyTo` skips it; `HttpState.applyConfigurationUpdate` WARNs), so a blind cross-site write to the control plane cannot widen it.
+
+**Non-browser clients send no `Origin`.** The Java callback and breakpoint WebSocket clients build their Netty handshaker with `generateOriginHeader=false`, so a proxy that rewrites `Host` cannot turn their own URL-derived `Origin` into a cross-origin refusal. Java clients up to 9.0.0 do send one.
+
+**Why enforce on the request, not only on its CORS headers.** CORS headers only stop a page *reading* the answer. A request that needs no preflight (a `text/plain` `POST` or `PUT`), or one whose preflight an expectation answered or the browser cached, still reaches the server; a single blind `PUT /expectation` that forwards to `/mockserver/retrieve` then exposes recorded traffic. Refusing the request itself by its `Origin` closes every such path without relying on browser cache semantics.
+
+**What this does not stop, by decision.**
+- *DNS rebinding.* A rebound page is same-origin with the `Host` it sends. Validating `Host` against loopback names would stop it, but would break every client that reaches MockServer by a container, service or machine name (Docker Compose, Kubernetes, remote CI). Tracked as DEF-9 in `docs/plans/later/security-defaults.md`.
+- *A browser proxied through MockServer.* The control plane is routed by path whatever the `Host`, so a page on any site, fetched through MockServer as the browser's proxy, reaches `/mockserver/*` from its own origin.
+
+Control-plane authentication stops both: the attacker's page has no bearer token or client certificate to send. Binding to loopback (DEF-6) narrows the first.
+
+**Callback WebSocket authentication.** When control-plane authentication is configured, the callback upgrade is authenticated exactly like the dashboard's. The Java client sends its control-plane JWT (or its request override's `Authorization` header) on the callback and breakpoint WebSocket upgrades, resolved before connecting, and presents its control-plane client certificate for mTLS; the Node, Python, Go, Rust and .NET clients send their bearer token. Browser clients cannot set headers, so with JWT or OIDC they can only use these WebSockets with mTLS. A client that reconnects with its `X-CLIENT-REGISTRATION-ID` replaces the previous connection, as before; when the replaced connection later closes, it no longer unregisters the new one (`WebSocketClientRegistry.unregisterClient(id, channel)` removes the entry only if it is still bound to the closing channel). Hardening against an authenticated principal reusing another's id is tracked as DEF-10.
+
 ### MCP Endpoint Authentication
 
 The MCP endpoint (`/mockserver/mcp`) enforces the same control-plane **authentication** as all other control-plane routes. When `controlPlaneTLSMutualAuthenticationCAChain` and/or `controlPlaneJWTAuthenticationJWKSource` are configured, MCP requests must satisfy the same mTLS and/or JWT requirements. Unauthenticated MCP requests receive a `401 Unauthorized` response with a JSON-RPC error body. This ensures that enabling MCP does not widen the attack surface of a secured MockServer instance.

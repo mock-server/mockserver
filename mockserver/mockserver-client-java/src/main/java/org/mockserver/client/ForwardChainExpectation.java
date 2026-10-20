@@ -578,6 +578,7 @@ public class ForwardChainExpectation {
                 mockServerLogger,
                 () -> mockServerClient.webSocketSslContext()
             );
+            webSocketClient.withAuthorization(mockServerClient::webSocketAuthorization);
             final Future<String> register = webSocketClient.registerExpectationCallback(
                 expectationCallback,
                 expectationForwardResponseCallback,

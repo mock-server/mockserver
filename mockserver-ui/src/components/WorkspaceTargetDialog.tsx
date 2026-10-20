@@ -130,8 +130,8 @@ export default function WorkspaceTargetDialog({
         {crossOrigin && probeFailure === null && (
           <Alert severity="info" sx={{ mt: 2 }}>
             This is a different origin from the dashboard, so the browser applies CORS to every call.
-            MockServer answers CORS for its control plane unless <code>corsAllowOrigin</code> excludes
-            this origin.
+            By default MockServer answers CORS for its control plane when this dashboard is on localhost;
+            otherwise list this dashboard&apos;s origin in the target&apos;s <code>controlPlaneCorsAllowOrigin</code>.
           </Alert>
         )}
         {probeFailure !== null && (

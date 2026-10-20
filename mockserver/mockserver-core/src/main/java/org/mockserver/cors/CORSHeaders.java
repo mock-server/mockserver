@@ -27,6 +27,7 @@ public class CORSHeaders {
     private final String corsAllowMethods;
     private final boolean corsAllowCredentials;
     private final String corsMaxAge;
+    private final Configuration configuration;
 
     public CORSHeaders(String corsAllowOrigin, String corsAllowHeaders, String corsAllowMethods, boolean corsAllowCredentials, int corsMaxAge) {
         this(
@@ -45,25 +46,39 @@ public class CORSHeaders {
         this.corsAllowMethods = configuration.corsAllowMethods();
         this.corsAllowCredentials = configuration.corsAllowCredentials();
         this.corsMaxAge = "" + configuration.corsMaxAgeInSeconds();
+        this.configuration = configuration;
+    }
+
+    /**
+     * Whether the request is a browser CORS preflight: an {@code OPTIONS} with {@code Origin} and
+     * {@code Access-Control-Request-Method}. Unlike {@link #isPreflightRequest(Configuration, HttpRequest)}
+     * it changes no configuration.
+     */
+    public static boolean isCorsPreflight(HttpRequest request) {
+        final Headers headers = request.getHeaders();
+        return request.getMethod() != null && OPTIONS.name().equals(request.getMethod().getValue()) &&
+            headers != null &&
+            headers.containsEntry(HttpHeaderNames.ORIGIN.toString()) &&
+            headers.containsEntry(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD.toString());
     }
 
     public static boolean isPreflightRequest(Configuration configuration, HttpRequest request) {
-        final Headers headers = request.getHeaders();
-        boolean isPreflightRequest = request.getMethod().getValue().equals(OPTIONS.name()) &&
-            headers.containsEntry(HttpHeaderNames.ORIGIN.toString()) &&
-            headers.containsEntry(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD.toString());
+        boolean isPreflightRequest = isCorsPreflight(request);
         if (isPreflightRequest) {
             configuration.enableCORSForAPI(true);
         }
         return isPreflightRequest;
     }
 
+    /**
+     * Adds CORS headers to a mocked or proxied response (with {@code enableCORSForAllResponses}) or a
+     * preflight for one, using {@code corsAllowOrigin}. MockServer's own API uses
+     * {@link #addControlPlaneCORSHeaders(HttpRequest, HttpResponse)} instead.
+     */
     public void addCORSHeaders(HttpRequest request, HttpResponse response) {
         String origin = request.getFirstHeader(HttpHeaderNames.ORIGIN.toString());
-        // An explicit corsAllowOrigin (e.g. an allow-list) is always honoured; when it
-        // is left blank (the default) the requesting Origin is reflected so the API /
-        // dashboard works from any origin, instead of emitting an empty (invalid)
-        // Access-Control-Allow-Origin header.
+        // An explicit corsAllowOrigin is always honoured; when it is left blank (the default) the
+        // requesting Origin is reflected, instead of emitting an empty (invalid) header.
         boolean explicitAllowOrigin = corsAllowOrigin != null && !corsAllowOrigin.isEmpty();
         if (NULL_ORIGIN.equals(origin)) {
             setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), NULL_ORIGIN);
@@ -83,6 +98,32 @@ public class CORSHeaders {
                 setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(), "" + corsAllowCredentials);
             }
         }
+        addAllowMethodsAndHeaders(request, response);
+    }
+
+    /**
+     * Adds CORS headers to a response from MockServer's own API, dashboard or metrics endpoint. The
+     * request's Origin is reflected only when {@link CORSOriginPolicy} allows it for
+     * {@code controlPlaneCorsAllowOrigin}; any other Origin, including {@code null}, gets no CORS
+     * headers at all, so a browser refuses the response or preflight. {@code corsAllowOrigin} is not used.
+     */
+    public void addControlPlaneCORSHeaders(HttpRequest request, HttpResponse response) {
+        String origin = request.getFirstHeader(HttpHeaderNames.ORIGIN.toString());
+        if (origin.isEmpty()) {
+            setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), ANY_ORIGIN);
+            if (!corsAllowCredentials) {
+                setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(), "false");
+            }
+        } else if (CORSOriginPolicy.isControlPlaneOriginAllowed(configuration.controlPlaneCorsAllowOrigin(), origin, request.getFirstHeader(HttpHeaderNames.HOST.toString()))) {
+            setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), origin);
+            setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(), "" + corsAllowCredentials);
+        } else {
+            return;
+        }
+        addAllowMethodsAndHeaders(request, response);
+    }
+
+    private void addAllowMethodsAndHeaders(HttpRequest request, HttpResponse response) {
         String allowMethods = (corsAllowMethods != null && !corsAllowMethods.isEmpty()) ? corsAllowMethods : DEFAULT_ALLOW_METHODS;
         setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS.toString(), allowMethods);
         String requestedHeaders = request.getFirstHeader(HttpHeaderNames.ACCESS_CONTROL_REQUEST_HEADERS.toString());

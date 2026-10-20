@@ -49,7 +49,7 @@ public class MetricsHandler {
         // served from another origin (e.g. a dev server) is blocked by CORS,
         // including the disabled-state 404 (which the UI needs to read to show
         // its "metrics disabled" guidance rather than a fetch error).
-        corsHeaders.addCORSHeaders(request, response);
+        corsHeaders.addControlPlaneCORSHeaders(request, response);
         // Because this endpoint bypasses ResponseWriter (see above) nothing has copied the request's
         // HTTP/2 stream id onto the response, and the response mapper reads that field rather than a
         // header - so on HTTP/2 the scrape would go out on a fresh server-initiated stream and

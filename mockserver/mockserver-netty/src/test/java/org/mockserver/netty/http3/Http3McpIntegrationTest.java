@@ -478,6 +478,34 @@ public class Http3McpIntegrationTest {
     }
 
     @Test
+    public void shouldNotIncludeCorsHeadersForAForeignOrNullOrigin() throws Exception {
+        startMockServer();
+
+        for (String origin : new String[]{"https://attacker.example", "null"}) {
+            Map<String, String> preflightHeaders = new ConcurrentHashMap<>();
+            preflightHeaders.put("origin", origin);
+            preflightHeaders.put("access-control-request-method", "POST");
+            preflightHeaders.put("access-control-request-headers", "content-type, mcp-session-id");
+            Http3ResponseCapture preflight = doSendHttp3Request(
+                mockServer.getHttp3Port(), "OPTIONS", "/mockserver/mcp", null, preflightHeaders);
+
+            Map<String, String> postHeaders = new ConcurrentHashMap<>();
+            postHeaders.put("content-type", "application/json");
+            postHeaders.put("origin", origin);
+            String initBody = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{}}";
+            Http3ResponseCapture post = doSendHttp3Request(
+                mockServer.getHttp3Port(), "POST", "/mockserver/mcp",
+                initBody.getBytes(StandardCharsets.UTF_8), postHeaders);
+
+            assertThat(origin, preflight.status, is("200"));
+            assertThat(origin, preflight.headers.keySet().stream().anyMatch(name -> name.startsWith("access-control-")), is(false));
+            assertThat(origin, post.status, is("403"));
+            assertThat(origin, post.headers.containsKey("access-control-allow-origin"), is(false));
+            assertThat(origin, post.headers.containsKey("mcp-session-id"), is(false));
+        }
+    }
+
+    @Test
     public void shouldNotIncludeCorsHeadersWhenNoOrigin() throws Exception {
         startMockServer();
 

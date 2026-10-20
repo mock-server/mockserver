@@ -59,6 +59,10 @@ public class ControlPlaneGateCoverageTest {
     private static final Pattern TWO_FORM_ROUTE = Pattern.compile(
         "matches\\s*\\(\\s*\"[A-Z]+\"\\s*,\\s*PATH_PREFIX\\s*\\+\\s*\"(/[^\"]*)\"\\s*,\\s*\"(/[^\"]*)\"\\s*\\)");
 
+    /** The same two-form call, capturing its method (group 1) and bare form (group 2). */
+    private static final Pattern TWO_FORM_ROUTE_WITH_METHOD = Pattern.compile(
+        "matches\\s*\\(\\s*\"([A-Z]+)\"\\s*,\\s*PATH_PREFIX\\s*\\+\\s*\"/[^\"]*\"\\s*,\\s*\"(/[^\"]*)\"\\s*\\)");
+
     /** Block and line comments, blanked before scanning so prose cannot create a false route. */
     private static final Pattern COMMENT = Pattern.compile("/\\*.*?\\*/|//[^\\n]*", Pattern.DOTALL);
 
@@ -96,6 +100,43 @@ public class ControlPlaneGateCoverageTest {
                 HttpState.isControlPlanePathCandidate(alias));
             assertTrue("control-plane route \"" + alias + "\" is rejected in its prefixed form",
                 HttpState.isControlPlanePathCandidate(HttpState.PATH_PREFIX + alias));
+        }
+    }
+
+    @Test
+    public void everyBareRouteMethodInTheRoutingSourcesIsAControlPlaneRouteForPreflights() throws IOException {
+        int sites = 0;
+        for (Path source : ROUTING_SOURCES) {
+            Matcher matcher = TWO_FORM_ROUTE_WITH_METHOD.matcher(readWithoutComments(source));
+            while (matcher.find()) {
+                sites++;
+                assertTrue("control-plane route " + matcher.group(1) + " " + matcher.group(2) + " is declared in the routing"
+                        + " chain but HttpState.isControlPlaneRoute rejects it, so a CORS preflight for it would be decided by"
+                        + " an expectation or the corsAllowOrigin policy — add the method to CONTROL_PLANE_BARE_ROUTE_METHODS",
+                    HttpState.isControlPlaneRoute(matcher.group(1), matcher.group(2)));
+            }
+        }
+        assertTrue("scanned only " + sites + " two-form route sites, failing closed", sites >= MIN_EXPECTED_TWO_FORM_SITES);
+    }
+
+    @Test
+    public void namedRoutePrefixMethodsAreControlPlaneRoutesForPreflights() {
+        String[][] routes = {
+            {"GET", "/scenario"}, {"GET", "/scenario/checkout"}, {"PUT", "/scenario/checkout"},
+            {"GET", "/loadScenario/name"}, {"GET", "/loadScenario/name/report"}, {"DELETE", "/loadScenario/name"},
+            {"GET", "/chaosExperiment/profiles/name"}, {"PUT", "/chaosExperiment/profiles/name"}, {"DELETE", "/chaosExperiment/profiles/name"},
+            {"POST", "/chaosExperiment/apply/name"},
+            {"POST", "/mockserver/anything"}, {"OPTIONS", "/mockserver"}, {"GET", "/_mockserver_ui_websocket"},
+        };
+        for (String[] route : routes) {
+            assertTrue(route[0] + " " + route[1], HttpState.isControlPlaneRoute(route[0], route[1]));
+        }
+        String[][] dataPlane = {
+            {"POST", "/graphql"}, {"GET", "/status"}, {"POST", "/config"}, {"POST", "/scenario/checkout"},
+            {"GET", "/api/orders"}, {"PUT", "/api/orders"},
+        };
+        for (String[] route : dataPlane) {
+            assertTrue(route[0] + " " + route[1], !HttpState.isControlPlaneRoute(route[0], route[1]));
         }
     }
 

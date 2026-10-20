@@ -1,5 +1,6 @@
 package org.mockserver.netty.websocketregistry;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -56,10 +57,12 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
     private static final String CAPABILITIES_PARAMETER = "capabilities";
     private static final String CAPABILITIES_HEADER = "X-MockServer-Capabilities";
     private static final String BREAKPOINT_RELEASED_CAPABILITY = "breakpointReleased";
+    private final HttpState httpState;
     private final MockServerLogger mockServerLogger;
     private final WebSocketClientRegistry webSocketClientRegistry;
 
     public CallbackWebSocketServerHandler(HttpState httpStateHandler) {
+        httpState = httpStateHandler;
         webSocketClientRegistry = httpStateHandler.getWebSocketClientRegistry();
         mockServerLogger = httpStateHandler.getMockServerLogger();
     }
@@ -84,7 +87,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                     DefaultFullHttpResponse notImplemented = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_IMPLEMENTED, Unpooled.EMPTY_BUFFER);
                     Http2StreamIds.stampFromNettyRequest(notImplemented, (FullHttpRequest) msg);
                     ctx.channel().writeAndFlush(notImplemented);
-                } else {
+                } else if (ControlPlaneWebSocketUpgradeGate.allowUpgrade(ctx, (FullHttpRequest) msg, httpState, mockServerLogger, isSslEnabledUpstream(ctx.channel()), "callback")) {
                     upgradeChannel(ctx, (FullHttpRequest) msg);
                     ctx.channel().attr(CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET).set(true);
                 }
@@ -148,7 +151,8 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                             );
                         }
                         webSocketClientRegistry.registerClient(clientId, ctx, acceptsBreakpointReleased(httpRequest));
-                        future.channel().closeFuture().addListener((ChannelFutureListener) closeFuture -> {
+                        final Channel registeredChannel = future.channel();
+                        registeredChannel.closeFuture().addListener((ChannelFutureListener) closeFuture -> {
                             if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
                                 mockServerLogger.logEvent(
                                     new LogEntry()
@@ -156,7 +160,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                                         .setMessageFormat("unregistering callback for client " + clientId)
                                 );
                             }
-                            webSocketClientRegistry.unregisterClient(clientId);
+                            webSocketClientRegistry.unregisterClient(clientId, registeredChannel);
                         });
                     });
             }

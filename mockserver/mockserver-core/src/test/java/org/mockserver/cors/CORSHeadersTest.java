@@ -246,4 +246,119 @@ public class CORSHeadersTest {
         assertThat(response.getFirstHeader("access-control-allow-origin"), is("*"));
     }
 
+
+    @Test
+    public void shouldKeepReflectingAnyOriginForMockResponsesWhenAllowOriginBlank() {
+        // the corsAllowOrigin policy for mocked and proxied responses is unchanged: any Origin is reflected
+        HttpRequest request = request()
+            .withHeader("host", "localhost:1080")
+            .withHeader("origin", "http://frontend:3000");
+        HttpResponse response = response();
+
+        new CORSHeaders("", "", "", false, 300).addCORSHeaders(request, response);
+
+        assertThat(response.getFirstHeader("access-control-allow-origin"), is("http://frontend:3000"));
+    }
+
+    @Test
+    public void shouldKeepExplicitAllowOriginForMockResponses() {
+        HttpRequest request = request()
+            .withHeader("host", "localhost:1080")
+            .withHeader("origin", "https://attacker.example");
+        HttpResponse response = response();
+
+        new CORSHeaders("https://app.example.com", "", "", false, 300).addCORSHeaders(request, response);
+
+        assertThat(response.getFirstHeader("access-control-allow-origin"), is("https://app.example.com"));
+    }
+
+    @Test
+    public void shouldAddNoControlPlaneCORSHeadersForAForeignOrigin() {
+        // a preflight from a page on another site
+        HttpRequest request = request()
+            .withMethod("OPTIONS")
+            .withHeader("host", "localhost:1080")
+            .withHeader("origin", "https://attacker.example")
+            .withHeader("access-control-request-method", "PUT")
+            .withHeader("access-control-request-headers", "content-type");
+        HttpResponse response = response();
+
+        new CORSHeaders(configuration()).addControlPlaneCORSHeaders(request, response);
+
+        assertThat(response.getHeaderList().stream().anyMatch(header -> header.getName().getValue().toLowerCase().startsWith("access-control-")), is(false));
+    }
+
+    @Test
+    public void shouldAddNoControlPlaneCORSHeadersForAForeignOriginEvenWithCredentialsOrCorsAllowOrigin() {
+        HttpRequest request = request()
+            .withHeader("host", "localhost:1080")
+            .withHeader("origin", "https://attacker.example");
+        HttpResponse response = response();
+
+        new CORSHeaders(configuration().corsAllowOrigin("*").corsAllowCredentials(true)).addControlPlaneCORSHeaders(request, response);
+
+        assertThat(response.containsHeader("access-control-allow-origin"), is(false));
+        assertThat(response.containsHeader("access-control-allow-credentials"), is(false));
+    }
+
+    @Test
+    public void shouldAddNoControlPlaneCORSHeadersForNullOrigin() {
+        HttpRequest request = request()
+            .withHeader("host", "localhost:1080")
+            .withHeader("origin", "null");
+        HttpResponse response = response();
+
+        new CORSHeaders(configuration()).addControlPlaneCORSHeaders(request, response);
+
+        assertThat(response.containsHeader("access-control-allow-origin"), is(false));
+    }
+
+    @Test
+    public void shouldReflectLoopbackOriginsOnControlPlaneResponses() {
+        for (String origin : new String[]{"http://localhost:3000", "https://localhost", "http://127.0.0.1:5173", "http://[::1]:8080"}) {
+            HttpRequest request = request()
+                .withHeader("host", "mockserver.internal:1080")
+                .withHeader("origin", origin);
+            HttpResponse response = response();
+
+            new CORSHeaders(configuration()).addControlPlaneCORSHeaders(request, response);
+
+            assertThat(origin, response.getFirstHeader("access-control-allow-origin"), is(origin));
+            assertThat(origin, response.getFirstHeader("access-control-allow-methods"), containsString("PUT"));
+        }
+    }
+
+    @Test
+    public void shouldReflectSameHostOriginOnControlPlaneResponses() {
+        HttpRequest request = request()
+            .withHeader("host", "mockserver.internal:1080")
+            .withHeader("origin", "https://mockserver.internal:1080");
+        HttpResponse response = response();
+
+        new CORSHeaders(configuration()).addControlPlaneCORSHeaders(request, response);
+
+        assertThat(response.getFirstHeader("access-control-allow-origin"), is("https://mockserver.internal:1080"));
+    }
+
+    @Test
+    public void shouldReflectAnOriginInTheControlPlaneAllowList() {
+        HttpRequest request = request()
+            .withHeader("host", "localhost:1080")
+            .withHeader("origin", "https://app.example.com");
+        HttpResponse response = response();
+
+        new CORSHeaders(configuration().controlPlaneCorsAllowOrigin("https://other.example.com, https://app.example.com")).addControlPlaneCORSHeaders(request, response);
+
+        assertThat(response.getFirstHeader("access-control-allow-origin"), is("https://app.example.com"));
+    }
+
+    @Test
+    public void shouldAnswerControlPlaneRequestsWithoutOriginWithAnyOrigin() {
+        HttpResponse response = response();
+
+        new CORSHeaders(configuration()).addControlPlaneCORSHeaders(request(), response);
+
+        assertThat(response.getFirstHeader("access-control-allow-origin"), is("*"));
+    }
+
 }

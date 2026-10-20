@@ -142,7 +142,7 @@ public class MockServerServletControlPlaneFailureTest {
                 return new FailingServletInputStream();
             }
         };
-        request.addHeader("Origin", "https://dashboard.example.com");
+        request.addHeader("Origin", "http://localhost:3000");
 
         // when
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -153,7 +153,7 @@ public class MockServerServletControlPlaneFailureTest {
         assertThat(response.getStatus(), is(500));
         assertThat(body, startsWith(UNEXPECTED_FAILURE_MESSAGE));
         assertThat(body, not(containsString("connection reset reading body")));
-        assertThat(response.getHeader("Access-Control-Allow-Origin"), is("https://dashboard.example.com"));
+        assertThat(response.getHeader("Access-Control-Allow-Origin"), is("http://localhost:3000"));
 
         // and - logged once at ERROR, against the request as far as it could be read
         ArgumentCaptor<LogEntry> logged = ArgumentCaptor.forClass(LogEntry.class);

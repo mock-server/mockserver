@@ -294,7 +294,7 @@ How the target change stays safe:
 | A push or a reply from the old server arriving after the switch | The dashboard socket ignores messages once `connectionEpoch` has moved on; `useWithWholeExpectation`, `useLoadFullRow` and the auth probe drop late results the same way; the auto-load markers reset per epoch. |
 | Two live sockets | A target change re-creates `useWebSocket`'s `start`, and `connect()` closes the previous socket first, reconnecting with the last filter. |
 | Breakpoints | `getBreakpointCallbackClient(params)` keeps **one callback client per target**. Matchers are owned on the server by that socket's `clientId`, so switching workspace leaves another server's matchers armed (exactly as navigating to another view does). When no workspace targets a server any more (closed or retargeted), `releaseBreakpointCallbackClientsExcept` closes its socket and the server removes those matchers and continues anything they paused. |
-| Cross-origin calls | Saving a target first sends `PUT /mockserver/status` (`probeTarget`); a failure is explained (unreachable or CORS refused, `corsAllowOrigin` excluding this origin, control-plane auth, a wrong base path, mixed content, an untrusted certificate) and the user may still choose **Save anyway**. A lost connection to a cross-origin target names CORS too. |
+| Cross-origin calls | Saving a target first sends `PUT /mockserver/status` (`probeTarget`); a failure is explained (unreachable or CORS refused, `controlPlaneCorsAllowOrigin` excluding this origin, control-plane auth, a wrong base path, mixed content, an untrusted certificate) and the user may still choose **Save anyway**. A lost connection to a cross-origin target names CORS too. |
 
 Validation (`validateConnection`) refuses a host typed as a URL or with a path, credentials or `#`, one longer than 253 characters, a bracketed value that is not an IPv6 address, a port outside 1-65535, and a base path that does not start with `/` or that contains `?`, `#`, `%`, `\`, whitespace, an empty segment (`//`) or a `.`/`..` segment; it lower-cases the host (underscores are allowed, as in Docker service names), and the breakpoint client compares targets by `connectionKey`, so a different spelling of one host never reconnects and drops matchers. Analytics is decided only by the dashboard URL's server, never by a workspace's other target.
 
@@ -1675,6 +1675,7 @@ MockServer has two distinct WebSocket systems:
 | Purpose | Real-time UI data push | Closure callback execution |
 | Direction | Server → Client (push) | Bidirectional (request/response) |
 | Client | Browser (React SPA) | Java `WebSocketClient` |
+| Upgrade checks | Origin, then control-plane auth (`ControlPlaneWebSocketUpgradeGate`) | Origin, then control-plane auth (`ControlPlaneWebSocketUpgradeGate`) |
 | Pipeline impact | Keeps all handlers | Removes downstream handlers |
 | Max clients | 100 (CircularHashMap) | Bounded by configuration |
 
@@ -1753,20 +1754,23 @@ The `MOCKSERVER_URL` env var is set by `local_ui_dev.sh` to match the configured
 
 ### Cross-Origin (CORS) Support
 
-The dashboard is designed to connect to a MockServer at an arbitrary `host`/`port` (set per workspace
-or via the `?host=`/`?port=` query parameters), which is inherently a cross-origin
-request when the dashboard is not served from that same MockServer. To make this work without any
-configuration, **MockServer always returns CORS headers on control-plane responses** (every
-`/mockserver/*` API response, written with `apiResponse == true`) and **answers the CORS preflight**
-(`OPTIONS`) for control-plane paths — both independent of the `enableCORSForAPI` setting. This is
-applied centrally in `ResponseWriter.writeResponse(...)` and `HttpActionHandler` (preflight), so it
-covers every control-plane endpoint, not just the dashboard-specific ones.
+The dashboard can connect to a MockServer at another `host`/`port` (set per workspace or via the
+`?host=`/`?port=` query parameters), which is a cross-origin request when the dashboard is not served
+from that MockServer. MockServer returns CORS headers on every control-plane response
+(`ResponseWriter.writeResponse(...)` with `apiResponse == true`) and answers the preflight for
+every request the control plane serves (`HttpActionHandler`, by `HttpState.isControlPlaneRequest`: any
+`/mockserver/*` path, a bare legacy alias with a method the control plane routes there, and the
+liveness path), independent of `enableCORSForAPI`, but **only to origins `controlPlaneCorsAllowOrigin`
+allows** (`CORSOriginPolicy`): when blank, a loopback origin (`localhost`, `127.0.0.1`, `[::1]`); always,
+one matching the request's `Host`. A control-plane request, or a `/_mockserver_ui_websocket` upgrade,
+from any other origin is refused with `403` (`HttpState.handle`, `ControlPlaneWebSocketUpgradeGate`). So a dashboard served from `localhost` (the
+Vite dev server, the demo launcher's `?port=`, the VS Code and JetBrains panels) can target any
+MockServer, while a dashboard on another host needs `controlPlaneCorsAllowOrigin` set on the target
+server. See [tls-and-security.md → Browser Origins](tls-and-security.md#browser-origins-cors-and-websocket-upgrades).
 
-Mock/proxy responses (`apiResponse == false`) are unaffected — they only receive CORS headers when
-`enableCORSForAllResponses` is enabled — so enabling cross-origin dashboard access never changes how
-mocked APIs respond. The Vite dev proxy above is therefore optional; the demo launcher
-(`launch-with-demo-data.sh`) points the dashboard straight at the MockServer port via `?port=` and
-relies on this CORS support.
+Mock/proxy responses (`apiResponse == false`) only receive CORS headers when
+`enableCORSForAllResponses` is enabled, under `corsAllowOrigin`, so the dashboard's settings never
+change how mocked APIs respond.
 
 ## Usage Analytics
 

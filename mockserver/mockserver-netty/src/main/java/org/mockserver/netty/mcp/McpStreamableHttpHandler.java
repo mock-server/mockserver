@@ -8,6 +8,7 @@ import io.netty.handler.codec.http.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import org.mockserver.cors.CORSHeaders;
+import org.mockserver.cors.CORSOriginPolicy;
 import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.authentication.AuthenticationResult;
@@ -52,6 +53,7 @@ public class McpStreamableHttpHandler extends ChannelInboundHandlerAdapter {
     // deeper in the handler can echo the requesting origin / requested headers.
     private static final AttributeKey<String> CORS_ORIGIN = AttributeKey.valueOf("mockserver.mcp.cors.origin");
     private static final AttributeKey<String> CORS_REQUEST_HEADERS = AttributeKey.valueOf("mockserver.mcp.cors.requestHeaders");
+    private static final AttributeKey<String> CORS_HOST = AttributeKey.valueOf("mockserver.mcp.cors.host");
 
     private final HttpState httpState;
     private final McpSessionManager sessionManager;
@@ -137,12 +139,20 @@ public class McpStreamableHttpHandler extends ChannelInboundHandlerAdapter {
         String origin = request.headers().get(HttpHeaderNames.ORIGIN);
         ctx.channel().attr(CORS_ORIGIN).set(origin);
         ctx.channel().attr(CORS_REQUEST_HEADERS).set(request.headers().get(HttpHeaderNames.ACCESS_CONTROL_REQUEST_HEADERS));
+        ctx.channel().attr(CORS_HOST).set(request.headers().get(HttpHeaderNames.HOST));
         // On HTTP/2 the response must be written on the stream the request arrived on, so capture
         // the inbound stream id once and thread it through every write path below. It is captured as
         // a plain Integer rather than by holding the request, because the POST path answers from a
         // background executor after the request buffer has been released. Null on HTTP/1.1.
         final Integer streamId = Http2StreamIds.streamIdOf(request);
         HttpMethod method = request.method();
+        boolean corsPreflight = method.equals(HttpMethod.OPTIONS) && origin != null && !origin.isEmpty()
+            && request.headers().contains(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD);
+        if (httpState.isControlPlaneOriginRefused(method.name(), new QueryStringDecoder(request.uri()).path(), origin, request.headers().get(HttpHeaderNames.HOST), corsPreflight)) {
+            writeMcpResult(ctx, new McpRequestProcessor.McpResult(403,
+                ("{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32600,\"message\":\"" + HttpState.CONTROL_PLANE_ORIGIN_REFUSED_MESSAGE + "\"},\"id\":null}").getBytes(StandardCharsets.UTF_8), null), streamId);
+            return;
+        }
         if (method.equals(HttpMethod.OPTIONS) && origin != null && !origin.isEmpty()) {
             // CORS preflight from a browser
             McpRequestProcessor.McpResult result = processor.handleOptions(true);
@@ -169,11 +179,12 @@ public class McpStreamableHttpHandler extends ChannelInboundHandlerAdapter {
     }
 
     /**
-     * Echo CORS headers onto an MCP response so the dashboard works cross-origin.
+     * Echo CORS headers onto an MCP response for an origin {@link CORSOriginPolicy} allows.
      */
     private void addCorsHeaders(ChannelHandlerContext ctx, io.netty.handler.codec.http.HttpResponse response) {
         String origin = ctx.channel().attr(CORS_ORIGIN).get();
-        if (origin == null || origin.isEmpty()) {
+        if (origin == null || origin.isEmpty()
+            || !CORSOriginPolicy.isControlPlaneOriginAllowed(httpState.getConfiguration().controlPlaneCorsAllowOrigin(), origin, ctx.channel().attr(CORS_HOST).get())) {
             return;
         }
         response.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin);

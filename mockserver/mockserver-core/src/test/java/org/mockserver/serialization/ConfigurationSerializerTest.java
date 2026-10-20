@@ -58,7 +58,8 @@ public class ConfigurationSerializerTest {
             .disableLogging(true)
             .metricsEnabled(true)
             .enableCORSForAPI(false)
-            .corsAllowOrigin("https://example.com");
+            .corsAllowOrigin("https://example.com")
+            .controlPlaneCorsAllowOrigin("https://dashboard.example.com");
 
         String json = serializer.serialize(original);
         Configuration deserialized = serializer.deserialize(json);
@@ -70,6 +71,7 @@ public class ConfigurationSerializerTest {
         assertThat(deserialized.metricsEnabled(), is(true));
         assertThat(deserialized.enableCORSForAPI(), is(false));
         assertThat(deserialized.corsAllowOrigin(), is("https://example.com"));
+        assertThat(deserialized.controlPlaneCorsAllowOrigin(), is("https://dashboard.example.com"));
     }
 
     @Test

@@ -92,6 +92,7 @@ class BreakpointWebSocketClient {
     private final EventLoopGroup eventLoopGroup;
     private final String clientId;
     private final Supplier<SslContext> sslContextSupplier;
+    private volatile Supplier<String> authorizationSupplier;
     private volatile Channel channel;
     private volatile boolean isStopped = false;
 
@@ -114,6 +115,15 @@ class BreakpointWebSocketClient {
 
     String getClientId() {
         return clientId;
+    }
+
+    /**
+     * @param authorizationSupplier the {@code Authorization} header value sent on each WebSocket upgrade, so the
+     *                              upgrade passes control-plane authentication; a null or blank value sends none
+     */
+    BreakpointWebSocketClient withAuthorization(Supplier<String> authorizationSupplier) {
+        this.authorizationSupplier = authorizationSupplier;
+        return this;
     }
 
     /**
@@ -171,6 +181,8 @@ class BreakpointWebSocketClient {
         CompletableFuture<String> registrationFuture = new CompletableFuture<>();
         try {
             final SslContext sslContext = isSecure ? sslContextSupplier.get() : null;
+            final Supplier<String> supplier = authorizationSupplier;
+            final String authorization = supplier != null ? supplier.get() : null;
             new Bootstrap()
                 .group(this.eventLoopGroup)
                 .channel(NioSocketChannel.class)
@@ -187,7 +199,7 @@ class BreakpointWebSocketClient {
                         ch.pipeline().addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
                         ch.pipeline().addLast(new BreakpointWebSocketClientHandler(
                             mockServerLogger, clientId, serverAddress, contextPath,
-                            BreakpointWebSocketClient.this, isSecure
+                            BreakpointWebSocketClient.this, isSecure, authorization
                         ));
                     }
                 })
@@ -467,6 +479,14 @@ class BreakpointWebSocketClient {
                                          InetSocketAddress serverAddress, String contextPath,
                                          BreakpointWebSocketClient webSocketClient, boolean isSecure)
             throws URISyntaxException {
+            this(mockServerLogger, clientId, serverAddress, contextPath, webSocketClient, isSecure, null);
+        }
+
+        BreakpointWebSocketClientHandler(MockServerLogger mockServerLogger, String clientId,
+                                         InetSocketAddress serverAddress, String contextPath,
+                                         BreakpointWebSocketClient webSocketClient, boolean isSecure,
+                                         String authorization)
+            throws URISyntaxException {
             this.mockServerLogger = mockServerLogger;
             this.clientId = clientId;
             String cleanedContextPath = "";
@@ -481,12 +501,25 @@ class BreakpointWebSocketClient {
                 false,
                 // the capability is a header, not a query parameter: servers up to 8.0.0 open the
                 // callback WebSocket only for the exact bare URI, and ignore headers they do not know
-                new DefaultHttpHeaders()
-                    .add(CLIENT_REGISTRATION_ID_HEADER, clientId)
-                    .add(CAPABILITIES_HEADER, "breakpointReleased"),
-                Integer.MAX_VALUE
+                upgradeHeaders(clientId, authorization),
+                Integer.MAX_VALUE,
+                true,
+                false,
+                10_000L,
+                false,
+                // no Origin: a non-browser client is not subject to MockServer's browser-origin check
+                false
             );
             this.webSocketClient = webSocketClient;
+        }
+
+        private static DefaultHttpHeaders upgradeHeaders(String clientId, String authorization) {
+            DefaultHttpHeaders headers = new DefaultHttpHeaders();
+            headers.add(CLIENT_REGISTRATION_ID_HEADER, clientId).add(CAPABILITIES_HEADER, "breakpointReleased");
+            if (authorization != null && !authorization.trim().isEmpty()) {
+                headers.add("Authorization", authorization);
+            }
+            return headers;
         }
 
         @Override

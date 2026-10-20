@@ -57,6 +57,7 @@ public class WebSocketClient<T extends HttpMessage> {
     private final EventLoopGroup eventLoopGroup;
     private final String clientId;
     private final Supplier<SslContext> sslContextSupplier;
+    private volatile Supplier<String> authorizationSupplier;
     public static final String CLIENT_REGISTRATION_ID_HEADER = "X-CLIENT-REGISTRATION-ID";
 
     /**
@@ -84,10 +85,25 @@ public class WebSocketClient<T extends HttpMessage> {
         this.sslContextSupplier = sslContextSupplier;
     }
 
+    private String authorization() {
+        Supplier<String> supplier = authorizationSupplier;
+        return supplier != null ? supplier.get() : null;
+    }
+
+    /**
+     * @param authorizationSupplier the {@code Authorization} header value sent on each WebSocket upgrade, so the
+     *                              upgrade passes control-plane authentication; a null or blank value sends none
+     */
+    public WebSocketClient<T> withAuthorization(Supplier<String> authorizationSupplier) {
+        this.authorizationSupplier = authorizationSupplier;
+        return this;
+    }
+
     private Future<String> register(final InetSocketAddress serverAddress, final String contextPath, final boolean isSecure, int reconnectAttempts) {
         CompletableFuture<String> registrationFuture = new CompletableFuture<>();
         try {
             final SslContext sslContext = isSecure ? sslContextSupplier.get() : null;
+            final String authorization = authorization();
             new Bootstrap()
                 .group(this.eventLoopGroup)
                 .channel(NioSocketChannel.class)
@@ -102,7 +118,7 @@ public class WebSocketClient<T extends HttpMessage> {
 
                         ch.pipeline().addLast(new HttpClientCodec());
                         ch.pipeline().addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
-                        ch.pipeline().addLast(new WebSocketClientHandler(mockServerLogger, clientId, serverAddress, contextPath, WebSocketClient.this, isSecure));
+                        ch.pipeline().addLast(new WebSocketClientHandler(mockServerLogger, clientId, serverAddress, contextPath, WebSocketClient.this, isSecure, authorization));
                         // add logging
                         if (mockServerLogger.isEnabledForInstance(TRACE)) {
                             ch.pipeline().addLast(new LoggingHandler(WebSocketClient.class.getName() + "-last"));

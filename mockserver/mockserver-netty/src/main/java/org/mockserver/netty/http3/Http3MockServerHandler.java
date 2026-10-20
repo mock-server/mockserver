@@ -22,6 +22,7 @@ import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.codec.HttpObjectAggregators;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.cors.CORSHeaders;
+import org.mockserver.cors.CORSOriginPolicy;
 import org.mockserver.grpc.GrpcDerivedHeaders;
 import org.mockserver.grpc.GrpcException;
 import org.mockserver.grpc.GrpcProtoDescriptorStore;
@@ -606,6 +607,13 @@ public class Http3MockServerHandler extends Http3RequestStreamInboundHandler {
     private void handleMcpOverHttp3(ChannelHandlerContext ctx, HttpRequest request) {
         String method = request.getMethod() != null ? request.getMethod().getValue() : "GET";
         String origin = request.getFirstHeader("origin");
+        if (httpState.isControlPlaneOriginRefused(request)) {
+            writeMcpResultAsHttp3(ctx, new McpRequestProcessor.McpResult(403,
+                ("{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32600,\"message\":\"" + HttpState.CONTROL_PLANE_ORIGIN_REFUSED_MESSAGE + "\"},\"id\":null}").getBytes(java.nio.charset.StandardCharsets.UTF_8), null),
+                null, null, Http3ResponseWriter.isHead(method));
+            return;
+        }
+        String corsOrigin = CORSOriginPolicy.isControlPlaneOriginAllowed(configuration.controlPlaneCorsAllowOrigin(), origin, request.getFirstHeader("host")) ? origin : null;
         String accessControlRequestHeaders = request.getFirstHeader("access-control-request-headers");
         String mcpSessionId = request.getFirstHeader("mcp-session-id");
         McpRequestProcessor.McpResult result;
@@ -644,7 +652,7 @@ public class Http3MockServerHandler extends Http3RequestStreamInboundHandler {
                 break;
         }
 
-        writeMcpResultAsHttp3(ctx, result, origin, accessControlRequestHeaders, Http3ResponseWriter.isHead(method));
+        writeMcpResultAsHttp3(ctx, result, corsOrigin, accessControlRequestHeaders, Http3ResponseWriter.isHead(method));
     }
 
     /**
@@ -716,7 +724,7 @@ public class Http3MockServerHandler extends Http3RequestStreamInboundHandler {
      * including CORS headers when the request had an Origin header --
      * mirroring the TCP path's {@code McpStreamableHttpHandler.addCorsHeaders()}.
      *
-     * @param origin the request's Origin header value (may be null/empty)
+     * @param origin the request's Origin header value when {@link CORSOriginPolicy} allows it, otherwise null
      * @param accessControlRequestHeaders the request's Access-Control-Request-Headers value (may be null)
      * @param head whether the request was HEAD, whose response is sent without its body
      */

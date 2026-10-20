@@ -240,6 +240,28 @@ mockServerClient
 
 ---
 
+#### 9. Browser access to the control plane - **LOCALHOST PAGES ONLY BY DEFAULT**
+
+**What it does:** the control plane has no authentication by default, so a web page that could call it from a
+developer's browser could read recorded traffic and change or stop MockServer. MockServer's API, the dashboard's
+live log WebSocket and the callback WebSocket therefore only answer the origins in `controlPlaneCorsAllowOrigin`:
+by default, pages on `localhost`, `127.0.0.1` or `[::1]` (http or https, any port) and pages MockServer serves
+itself, such as the dashboard. A request the control plane serves (any method, including its WebSocket upgrades
+and requests that need no preflight) that carries any other `Origin`, including `null`, is refused with `403`
+before it is handled and before any expectation can answer it; preflights for such requests get no CORS headers.
+From 7.0.0 to 9.0.0 any origin was allowed; that was a vulnerability, not a feature.
+Mocked and proxied responses keep their own, opt-in CORS policy (`enableCORSForAllResponses`, `corsAllowOrigin`).
+
+**What it does not stop:** a DNS-rebinding attack makes MockServer same-origin with the attacker's site, and a
+browser that uses MockServer as its proxy reaches `/mockserver/*` from any site's own origin; in both the request
+carries an allowed (same-origin) `Origin`, or none.
+
+**Security control:** add only origins you trust to `controlPlaneCorsAllowOrigin`, which can only be set at
+startup. If untrusted pages may run in a browser that can reach MockServer, turn on control-plane authentication
+(mTLS, JWT or OIDC), which also applies to the callback WebSocket and stops both cases above.
+
+---
+
 ### Summary: Features vs Vulnerabilities
 
 | Behavior | In Production Service | In Testing Tool |

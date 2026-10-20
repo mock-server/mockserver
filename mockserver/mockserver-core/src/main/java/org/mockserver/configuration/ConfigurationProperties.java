@@ -301,6 +301,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_ENABLE_CORS_FOR_API = "mockserver.enableCORSForAPI";
     private static final String MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES = "mockserver.enableCORSForAllResponses";
     private static final String MOCKSERVER_CORS_ALLOW_ORIGIN = "mockserver.corsAllowOrigin";
+    private static final String MOCKSERVER_CONTROL_PLANE_CORS_ALLOW_ORIGIN = "mockserver.controlPlaneCorsAllowOrigin";
     private static final String MOCKSERVER_CORS_ALLOW_METHODS = "mockserver.corsAllowMethods";
     private static final String MOCKSERVER_CORS_ALLOW_HEADERS = "mockserver.corsAllowHeaders";
     private static final String MOCKSERVER_CORS_ALLOW_CREDENTIALS = "mockserver.corsAllowCredentials";
@@ -4610,13 +4611,32 @@ public class ConfigurationProperties {
     }
 
     /**
-     * <p>the value used for CORS in the access-control-allow-origin header.</p>
-     * <p>The default is ""</p>
+     * <p>the value used for CORS in the access-control-allow-origin header of mocked and proxied responses
+     * (when enableCORSForAllResponses is on); it does not affect MockServer's own API, see
+     * {@link #controlPlaneCorsAllowOrigin(String)}.</p>
+     * <p>The default is "", which reflects the request's origin</p>
      *
-     * @param corsAllowOrigin the value used for CORS in the access-control-allow-methods header
+     * @param corsAllowOrigin the value used for CORS in the access-control-allow-origin header
      */
     public static void corsAllowOrigin(String corsAllowOrigin) {
         setProperty(MOCKSERVER_CORS_ALLOW_ORIGIN, corsAllowOrigin);
+    }
+
+    public static String controlPlaneCorsAllowOrigin() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_CORS_ALLOW_ORIGIN, "MOCKSERVER_CONTROL_PLANE_CORS_ALLOW_ORIGIN", "");
+    }
+
+    /**
+     * <p>the browser origins allowed to use MockServer's own API, the dashboard and the callback WebSocket,
+     * as a comma-separated list, or * for any origin.</p>
+     * <p>The default is "", which allows only localhost, 127.0.0.1 and [::1] pages (http or https, any port);
+     * pages MockServer serves itself, such as the dashboard, are always allowed. See
+     * {@link org.mockserver.cors.CORSOriginPolicy}</p>
+     *
+     * @param controlPlaneCorsAllowOrigin the allowed browser origins, comma-separated
+     */
+    public static void controlPlaneCorsAllowOrigin(String controlPlaneCorsAllowOrigin) {
+        setProperty(MOCKSERVER_CONTROL_PLANE_CORS_ALLOW_ORIGIN, controlPlaneCorsAllowOrigin);
     }
 
     public static String corsAllowMethods() {

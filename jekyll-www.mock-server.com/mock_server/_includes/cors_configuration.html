@@ -2,9 +2,21 @@
 
 <h2>CORS Configuration:</h2>
 
+<a id="browser_origins" class="anchor" href="#browser_origins">&nbsp;</a>
+
+<p><strong>Which web pages can use MockServer's own API.</strong> MockServer's own API (every <span class="constant">/mockserver/...</span> path, including MCP and metrics), the dashboard's live log and the callback WebSocket only answer browser pages they trust. This is set by <a href="#button_configuration_control_plane_cors_allow_origin">controlPlaneCorsAllowOrigin</a>. Left blank (the default), a page is trusted when it is:</p>
+<ul>
+    <li>on <span class="constant">localhost</span>, <span class="constant">127.0.0.1</span> or <span class="constant">[::1]</span>, on any port, over http or https (for example a front-end dev server on <span class="constant">http://localhost:3000</span> or a browser test), or</li>
+    <li>served by the same MockServer, at the same host and port, such as the dashboard.</li>
+</ul>
+<p>A request to MockServer's own API, or a WebSocket connection, from any other page is refused with <span class="constant">403</span>, whatever its method, before MockServer handles it and before any expectation can answer it; its preflight gets no <span class="constant">Access-Control-Allow-*</span> headers. That includes <span class="constant">Origin: null</span>, which sandboxed iframes and pages opened from a file send. Tools that are not browsers (curl, the client libraries, your tests' HTTP clients) send no <span class="constant">Origin</span> and are not affected.</p>
+<p>If a page on another host needs to call MockServer's API, for example a front-end served from <span class="constant">https://app.example.com</span>, or the dashboard pointed at a MockServer on another host, set <a href="#button_configuration_control_plane_cors_allow_origin">controlPlaneCorsAllowOrigin</a> on that MockServer to the page's origin. The same applies when MockServer sits behind a reverse proxy or Kubernetes ingress that changes the <span class="constant">Host</span> header: the dashboard then looks like a page on another host, so set it to the address you open the dashboard at, for example <span class="constant">https://mockserver.example.com</span>.</p>
+<p>Mocked and proxied responses are separate: they only get CORS headers when <a href="#button_configuration_enable_cors_for_all_responses">enableCORSForAllResponses</a> is on, and then follow <a href="#button_configuration_cors_allow_origin">corsAllowOrigin</a>, which no longer affects MockServer's own API. A CORS preflight for a request MockServer's own API serves (any <span class="constant">/mockserver/...</span> path, or a legacy path such as <span class="constant">/reset</span> or <span class="constant">/graphql</span> with a method the API serves there) is answered by MockServer under its own rule, not by an expectation. An unmatched preflight for another method on such a legacy path, for example <span class="constant">POST /graphql</span> to a mocked GraphQL API, allows only the requested method.</p>
+<p>This check stops other web sites using MockServer's API or WebSockets through a visitor's browser. It does not stop a DNS-rebinding attack (where a malicious site makes its own host name point at MockServer), or a site visited in a browser that uses MockServer as its proxy, because in both the page is same-origin with MockServer. If untrusted pages may run in a browser that can reach MockServer, also turn on <a href="/mock_server/control_plane_authorisation.html">control-plane authentication</a>.</p>
+
 <button id="button_configuration_enable_cors_for_api" class="accordion title"><strong>Enable CORS For MockServer REST API</strong></button>
 <div class="panel title">
-    <p>Enable CORS for MockServer REST API so that the API can be used for javascript running in browsers, such as selenium</p>
+    <p>Answer CORS preflight (<span class="constant">OPTIONS</span>) requests that no expectation matches, for every path, using the <a href="#button_configuration_cors_allow_origin">corsAllowOrigin</a> policy. In practice it is always on once a preflight has been received: the first CORS preflight MockServer answers itself turns it on. MockServer's own API answers preflights under its own rule (see <a href="#browser_origins">which web pages can use MockServer's own API</a>) whatever this is set to.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.enableCORSForAPI(boolean enableCORSForAPI)</code></pre>
@@ -20,7 +32,7 @@
 
 <button id="button_configuration_enable_cors_for_all_responses" class="accordion title"><strong>Enable CORS For All Responses</strong></button>
 <div class="panel title">
-    <p>Enable CORS for all responses from MockServer, including the REST API and expectation responses</p>
+    <p>Enable CORS for mocked and proxied responses, using the <a href="#button_configuration_cors_allow_origin">corsAllowOrigin</a> policy. MockServer's own API always answers <a href="#browser_origins">trusted pages</a>, whatever this is set to.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.enableCORSForAllResponses(boolean enableCORSForAllResponses)</code></pre>
@@ -36,7 +48,7 @@
 
 <button id="button_configuration_cors_allow_origin" class="accordion title"><strong>CORS Allow Origin Value</strong></button>
 <div class="panel title">
-    <p>The value used for CORS in the <span class="constant">access-control-allow-origin</span> header.</p>
+    <p>The value used for CORS in the <span class="constant">access-control-allow-origin</span> header of mocked and proxied responses (when <a href="#button_configuration_enable_cors_for_all_responses">enableCORSForAllResponses</a> is on). When blank, the request's <span class="constant">origin</span> is sent back. It does not affect MockServer's own API, the dashboard or the callback WebSocket; use <a href="#button_configuration_control_plane_cors_allow_origin">controlPlaneCorsAllowOrigin</a> for those.</p>
     <p><strong>Note:</strong> To ensure <span class="constant">access-control-allow-credentials</span> works correctly, when <a href="#button_configuration_cors_allow_credentials">corsAllowCredentials</a> is <strong>true</strong> the CORS header <span class="constant">access-control-allow-origin</span> will set its value using the <span class="constant">origin</span> header on requests instead of <a href="#button_configuration_cors_allow_origin">corsAllowOrigin</a> property.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
     <p>Java Code:</p>
@@ -49,6 +61,24 @@
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.corsAllowOrigin=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.corsAllowOrigin="*"</code></pre>
+</div>
+
+<button id="button_configuration_control_plane_cors_allow_origin" class="accordion title"><strong>Control Plane CORS Allow Origin</strong></button>
+<div class="panel title">
+    <p>The browser origins allowed to use MockServer's own API (every <span class="constant">/mockserver/...</span> path), the dashboard's live log and the callback WebSocket, as a comma-separated list such as <span class="constant">https://app.example.com, http://ci-browser:8080</span>. An allowed page gets its <span class="constant">origin</span> sent back in <span class="constant">access-control-allow-origin</span>; any other page's requests and WebSocket connections are refused with <span class="constant">403</span>, and its preflights get no CORS headers.</p>
+    <p>When blank (the default), pages on <span class="constant">localhost</span>, <span class="constant">127.0.0.1</span> or <span class="constant">[::1]</span> (http or https, any port) are allowed. Pages MockServer serves itself, such as the dashboard, are always allowed. <span class="this_value">*</span> allows every web site to read from and change MockServer through a visitor's browser, so only use it when nothing sensitive can be reached. See <a href="#browser_origins">which web pages can use MockServer's own API</a>.</p>
+    <p>It can only be set when MockServer starts: <span class="constant">PUT /mockserver/configuration</span> ignores it and logs a warning, so a request to the control plane cannot widen it.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneCorsAllowOrigin(String controlPlaneCorsAllowOrigin)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneCorsAllowOrigin=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_CORS_ALLOW_ORIGIN=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneCorsAllowOrigin=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneCorsAllowOrigin="https://app.example.com"</code></pre>
 </div>
 
 <button id="button_configuration_cors_allow_methods" class="accordion title"><strong>CORS Allow Methods Value</strong></button>

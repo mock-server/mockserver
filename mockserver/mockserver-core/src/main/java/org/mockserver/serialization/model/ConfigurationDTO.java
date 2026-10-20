@@ -92,6 +92,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Boolean enableCORSForAPI;
     private Boolean enableCORSForAllResponses;
     private String corsAllowOrigin;
+    private String controlPlaneCorsAllowOrigin;
     private String corsAllowMethods;
     private String corsAllowHeaders;
     private Boolean corsAllowCredentials;
@@ -457,6 +458,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.enableCORSForAPI = configuration.enableCORSForAPI();
             this.enableCORSForAllResponses = configuration.enableCORSForAllResponses();
             this.corsAllowOrigin = configuration.corsAllowOrigin();
+            this.controlPlaneCorsAllowOrigin = configuration.controlPlaneCorsAllowOrigin();
             this.corsAllowMethods = configuration.corsAllowMethods();
             this.corsAllowHeaders = configuration.corsAllowHeaders();
             this.corsAllowCredentials = configuration.corsAllowCredentials();
@@ -926,6 +928,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.enableCORSForAPI(enableCORSForAPI);
         configuration.enableCORSForAllResponses(enableCORSForAllResponses);
         configuration.corsAllowOrigin(corsAllowOrigin);
+        configuration.controlPlaneCorsAllowOrigin(controlPlaneCorsAllowOrigin);
         configuration.corsAllowMethods(corsAllowMethods);
         configuration.corsAllowHeaders(corsAllowHeaders);
         configuration.corsAllowCredentials(corsAllowCredentials);
@@ -1538,6 +1541,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (corsAllowOrigin != null) {
             target.corsAllowOrigin(corsAllowOrigin);
         }
+        // controlPlaneCorsAllowOrigin is deliberately not applied: a runtime update could widen which
+        // web sites may use the control plane, so it is fixed at startup (see HttpState.applyConfigurationUpdate)
         if (corsAllowMethods != null) {
             target.corsAllowMethods(corsAllowMethods);
         }
@@ -2998,6 +3003,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setCorsAllowOrigin(String corsAllowOrigin) {
         this.corsAllowOrigin = corsAllowOrigin;
+        return this;
+    }
+
+    public String getControlPlaneCorsAllowOrigin() {
+        return controlPlaneCorsAllowOrigin;
+    }
+
+    public ConfigurationDTO setControlPlaneCorsAllowOrigin(String controlPlaneCorsAllowOrigin) {
+        this.controlPlaneCorsAllowOrigin = controlPlaneCorsAllowOrigin;
         return this;
     }
 

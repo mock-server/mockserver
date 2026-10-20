@@ -346,16 +346,16 @@ export const EDITABLE_PROPERTIES: readonly EditablePropertyDescriptor[] = [
   // CORS — read live when building responses / handling preflight, so safe to change at runtime
   {
     key: 'enableCORSForAPI',
-    label: 'CORS for control plane API',
+    label: 'Answer CORS preflights on every path',
     type: 'boolean',
-    help: 'Add CORS headers (and answer preflight) for the MockServer control-plane API. Read live per request.',
+    help: 'Answer CORS preflights that no expectation matches, for mocked paths, using corsAllowOrigin; the first preflight MockServer answers itself turns this on. MockServer\'s own API answers preflights under controlPlaneCorsAllowOrigin (set at startup) whatever this is. Read live per request.',
     group: 'CORS',
   },
   {
     key: 'enableCORSForAllResponses',
-    label: 'CORS for all responses',
+    label: 'CORS for mocked responses',
     type: 'boolean',
-    help: 'Add CORS headers to every response, not just the control-plane API. Read live per response.',
+    help: 'Add CORS headers, using corsAllowOrigin, to mocked and proxied responses. Does not change which pages may use MockServer\'s own API. Read live per response.',
     group: 'CORS',
   },
 

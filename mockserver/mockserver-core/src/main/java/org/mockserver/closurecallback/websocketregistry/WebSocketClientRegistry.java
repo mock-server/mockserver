@@ -193,13 +193,40 @@ public class WebSocketClientRegistry {
         }
     }
 
+    /**
+     * Unregisters the client when its id is still bound to this channel (or to no channel), so a
+     * closing connection never removes a newer connection that re-registered the same id.
+     */
+    public void unregisterClient(String clientId, Channel channel) {
+        synchronized (clientRegistry) {
+            Channel current = clientId != null ? clientRegistry.get(clientId) : null;
+            if (current != null && current != channel) {
+                return;
+            }
+            if (current != null) {
+                clientRegistry.remove(clientId);
+            }
+        }
+        if (clientId != null && clientRegistry.get(clientId) != null) {
+            // re-registered since the remove above: keep the id-keyed state the new connection owns
+            if (channel != null && channel.isOpen()) {
+                channel.close();
+            }
+            return;
+        }
+        cleanUpClient(clientId, channel);
+    }
+
     public void unregisterClient(String clientId) {
+        cleanUpClient(clientId, clientRegistry.remove(clientId));
+    }
+
+    private void cleanUpClient(String clientId, Channel removeChannel) {
         LocalCallbackRegistry.unregisterCallback(clientId);
         // An object-callback expectation with no client id unregisters null; a concurrent key set rejects it.
         if (clientId != null) {
             breakpointReleasedClients.remove(clientId);
         }
-        Channel removeChannel = clientRegistry.remove(clientId);
         if (removeChannel != null && removeChannel.isOpen()) {
             removeChannel.close();
         }

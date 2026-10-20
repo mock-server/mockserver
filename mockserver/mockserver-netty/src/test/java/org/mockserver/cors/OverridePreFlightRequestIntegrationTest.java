@@ -169,7 +169,7 @@ public class OverridePreFlightRequestIntegrationTest {
             httpClient.sendRequest(
                 request()
                     .withMethod("OPTIONS")
-                    .withPath("/expectation")
+                    .withPath("/some/mocked/path")
                     .withHeader("Access-Control-Request-Method", "PUT")
                     .withHeader(HOST.toString(), "localhost:" + clientAndServer.getPort())
                     .withHeader("Origin", "http://127.0.0.1:1234"),

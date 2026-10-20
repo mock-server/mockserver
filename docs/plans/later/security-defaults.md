@@ -16,7 +16,7 @@ actively probed; users who never opted in have no SSRF protection at all, so a t
 protects far more users now that the check itself is fixed. The owner should weigh moving DEF-5
 ahead of this release on that basis, not on the DEF-2/DEF-3 precedent being identical.
 **Created:** 2026-05-26 (supersedes `security-remediation.md`)
-**Last verified against code:** 2026-10-18
+**Last verified against code:** 2026-10-20
 **Scope:** Configuration default changes only. All underlying mitigations (timeouts, validators, body limits, secure RNG, XXE blocks) have already shipped and are wired behind these properties; only the defaults remain.
 
 ## Goals
@@ -102,6 +102,24 @@ If the disruption is judged too high, an alternative is to keep `0.0.0.0` and ad
 
 ---
 
+## Under consideration: DEF-9 — Control-plane `Host` allow-list and browser-request residue
+
+**Not yet scheduled; no property exists.** The browser-origin check (`controlPlaneCorsAllowOrigin`) refuses control-plane requests from other sites' pages. Two browser paths remain:
+
+- **DNS rebinding.** A malicious site re-points its own host name at MockServer, and its page is then same-origin with the `Host` it sends. A control-plane `Host` allow-list (loopback names plus configured names) would stop it, but a default that only admits loopback names breaks every client that reaches MockServer by a container, service or machine name, which is the common Docker Compose, Kubernetes and CI deployment. Options: an opt-in property in a minor release, or a default tied to DEF-6 (a loopback-bound server only needs loopback `Host` names).
+- **Requests the page cannot read** (closed). A control-plane request with a disallowed `Origin` is now refused with `403` whatever its method, so simple cross-site requests and requests approved by an expectation-answered or cached preflight no longer run.
+- **A browser proxied through MockServer.** The control plane is routed by path whatever the `Host`, so any site fetched through MockServer as the browser's proxy reaches `/mockserver/*` from its own origin. Option: serve the control plane only for requests addressed to MockServer itself (its own `Host` names), not for proxied ones.
+
+Today's mitigations are control-plane authentication (which stops both), DEF-6 and browsers' local-network-access protections.
+
+---
+
+## Under consideration: DEF-10 — Bind a callback client id to its connection
+
+**Low severity; not yet scheduled.** A callback WebSocket that registers with an `X-CLIENT-REGISTRATION-ID` already in use replaces the existing connection, so it receives that client's object callbacks and breakpoints. Replacement is deliberate: refusing a duplicate id locked clients out after a half-open drop (no ping or idle timeout on callback channels), and was reverted. Exploiting it needs a leaked 122-bit client id, and since the callback upgrade now requires control-plane authentication when it is on, only an authenticated principal can do it; with authentication off, the whole control plane is already open. Options: bind the id to the authenticated principal that registered it, or ping the existing connection and refuse only if it answers.
+
+---
+
 ## Items considered and rejected
 
 For the record so future contributors don't re-litigate:
@@ -111,7 +129,7 @@ For the record so future contributors don't re-litigate:
 - **`dynamicallyCreateCertificateAuthorityCertificate` → `true`**: rejected. Flipping breaks every client that has already trusted the bundled MockServer CA. The default static CA is documented as a test-only convenience.
 - **`preventCertificateDynamicUpdate` → `true`**: rejected. Dynamic SAN updates are part of the documented proxy flow; flipping would silently break in-flight tests.
 - **`initializationClass` allowlist**: not in this release. The property is empty by default, so the attack surface only opens if a user already configures arbitrary class loading. Track separately if a real exploit path emerges.
-- **CORS defaults**: already safe — `corsAllowOrigin`, `corsAllowMethods`, `corsAllowHeaders` all default to empty and `corsAllowCredentials` to `false`. Nothing to flip.
+- **CORS defaults**: not a flip here. This item used to say the CORS defaults were "already safe"; that was wrong from 7.0.0, when a blank `corsAllowOrigin` began reflecting any request `Origin` on every control-plane response and `/mockserver/*` preflights began to be answered regardless of `enableCORSForAPI`, so any web site could read and write a MockServer on the developer's machine. It was fixed as a security fix ahead of this bundle (2026-10, see `changelog.md` → Security): a new `controlPlaneCorsAllowOrigin` (blank = loopback origins plus the server's own `Host`) governs the control plane, `Origin: null` is refused, the dashboard and callback WebSocket upgrades apply the same rule, and `corsAllowOrigin` now only governs mocked and proxied responses, unchanged. What the fix does not cover is DEF-9. See [tls-and-security.md → Browser Origins](../../code/tls-and-security.md#browser-origins-cors-and-websocket-upgrades).
 
 ---
 

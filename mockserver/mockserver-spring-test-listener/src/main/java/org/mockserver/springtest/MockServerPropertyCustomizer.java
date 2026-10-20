@@ -141,6 +141,9 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
             case "corsAllowOrigin":
                 config.corsAllowOrigin(value);
                 break;
+            case "controlPlaneCorsAllowOrigin":
+                config.controlPlaneCorsAllowOrigin(value);
+                break;
             case "corsAllowMethods":
                 config.corsAllowMethods(value);
                 break;

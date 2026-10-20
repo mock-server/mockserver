@@ -121,7 +121,7 @@ describe('probeTarget', () => {
     expect(!notFound.ok && notFound.message).toMatch(/not a MockServer at that base path/);
     const blocked = await probeTarget(target, vi.fn(async () => { throw new TypeError('Failed to fetch'); }));
     expect(!blocked.ok && blocked.message).toMatch(/Could not reach MockServer at other:1081\/m\. Calls to it are cross-origin/);
-    expect(!blocked.ok && blocked.message).toMatch(/corsAllowOrigin/);
+    expect(!blocked.ok && blocked.message).toMatch(/controlPlaneCorsAllowOrigin/);
   });
 
   it('refuses an http target from an https dashboard without sending anything', async () => {
