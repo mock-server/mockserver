@@ -576,7 +576,7 @@ flowchart TD
 
 **Fixed at startup.** `controlPlaneCorsAllowOrigin` is never applied by `PUT /mockserver/configuration` (`ConfigurationDTO.applyTo` skips it; `HttpState.applyConfigurationUpdate` WARNs), so a blind cross-site write to the control plane cannot widen it.
 
-**Non-browser clients send no `Origin`.** The Java callback and breakpoint WebSocket clients build their Netty handshaker with `generateOriginHeader=false`, so a proxy that rewrites `Host` cannot turn their own URL-derived `Origin` into a cross-origin refusal. Java clients up to 9.0.0 do send one.
+**Non-browser clients send no `Origin`.** The Java callback and breakpoint WebSocket clients build their Netty handshaker with `generateOriginHeader=false`, so a proxy that rewrites `Host` cannot turn their own URL-derived `Origin` into a cross-origin refusal. Java clients up to 9.0.0 do send one. <!-- version-ref:keep -->
 
 **Why enforce on the request, not only on its CORS headers.** CORS headers only stop a page *reading* the answer. A request that needs no preflight (a `text/plain` `POST` or `PUT`), or one whose preflight an expectation answered or the browser cached, still reaches the server; a single blind `PUT /expectation` that forwards to `/mockserver/retrieve` then exposes recorded traffic. Refusing the request itself by its `Origin` closes every such path without relying on browser cache semantics.
 
