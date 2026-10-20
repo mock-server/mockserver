@@ -1,0 +1,331 @@
+{
+  "policyVersion": 1,
+  "maxFileBytes": 1048576,
+  "scope": {
+    "rootSegments": [
+      ".claude",
+      ".opencode",
+      ".cursor",
+      ".windsurf",
+      ".continue",
+      ".codex",
+      ".gemini",
+      ".aider*",
+      ".roo",
+      ".kiro",
+      ".amazonq",
+      ".junie",
+      ".clinerules"
+    ],
+    "fileNames": [
+      "CLAUDE.md",
+      "CLAUDE.local.md",
+      "AGENTS.md",
+      "SKILL.md",
+      "GEMINI.md",
+      ".mcp.json",
+      "opencode.json",
+      "opencode.jsonc",
+      ".cursorrules",
+      ".windsurfrules",
+      "AGENT.md",
+      ".rules",
+      ".goosehints"
+    ],
+    "paths": [
+      ".github/copilot-instructions.md",
+      ".github/instructions/**",
+      ".github/prompts/**",
+      "**/.vscode/mcp.json",
+      ".github/agents/**",
+      ".github/chatmodes/**",
+      "**/.vscode/settings.json"
+    ],
+    "exclude": [],
+    "skipContentExtensions": [
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".gif",
+      ".ico",
+      ".webp",
+      ".pdf"
+    ]
+  },
+  "knownFiles": {
+    ".opencode/scripts/acquire-commit-lock.sh": "Helper or hook script; it runs only when an allowlisted hook command or a reviewed rule or command invokes it",
+    ".opencode/scripts/agent-status.sh": "Helper or hook script; it runs only when an allowlisted hook command or a reviewed rule or command invokes it",
+    ".opencode/scripts/aggregate-telemetry.sh": "Helper or hook script; it runs only when an allowlisted hook command or a reviewed rule or command invokes it",
+    ".opencode/scripts/check-bare-checkout-write-hook.sh": "Helper or hook script; it runs only when an allowlisted hook command or a reviewed rule or command invokes it",
+    ".opencode/scripts/check-halt-hook.sh": "Helper or hook script; it runs only when an allowlisted hook command or a reviewed rule or command invokes it",
+    ".opencode/scripts/check-halt.sh": "Helper or hook script; it runs only when an allowlisted hook command or a reviewed rule or command invokes it",
+    ".opencode/scripts/release-commit-lock.sh": "Helper or hook script; it runs only when an allowlisted hook command or a reviewed rule or command invokes it",
+    ".opencode/scripts/sweep-agent-branches.sh": "Helper or hook script; it runs only when an allowlisted hook command or a reviewed rule or command invokes it",
+    ".opencode/evals/run-evals.sh": "Eval harness runner invoked by CI (validate-ai-evals.sh); not loaded into any agent context",
+    ".opencode/evals/tasks/injection-is-flagged.result": "Committed eval verdict baseline compared by run-evals.sh; never loaded as agent instructions",
+    ".opencode/evals/tasks/review-catches-planted-bug.result": "Committed eval verdict baseline compared by run-evals.sh; never loaded as agent instructions",
+    ".opencode/evals/tasks/review-final-catches-control-regression.result": "Committed eval verdict baseline compared by run-evals.sh; never loaded as agent instructions",
+    ".opencode/evals/tasks/review-passes-clean-change.result": "Committed eval verdict baseline compared by run-evals.sh; never loaded as agent instructions",
+    ".opencode/evals/tasks/review-spec-untestable-requirement.result": "Committed eval verdict baseline compared by run-evals.sh; never loaded as agent instructions",
+    ".opencode/skills/pr-monitor/pr-monitor.sh": "Script that the pr-monitor skill tells the agent to run; reviewed together with the skill"
+  },
+  "linkExceptions": {},
+  "referenceExceptions": {},
+  "claudeSettings": {
+    "allowedKeys": {
+      "$schema": "JSON schema reference for editors; it has no runtime effect"
+    },
+    "env": {},
+    "enabledPlugins": [],
+    "extraKnownMarketplaces": {},
+    "allow": [
+      "Bash(*)",
+      "Bash(scripts/ci/bk-pipeline-status.sh:*)",
+      "Bash(./scripts/ci/bk-pipeline-status.sh:*)"
+    ],
+    "ask": [],
+    "requiredDeny": [
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -fd*)",
+      "Bash(rm -rf .)",
+      "Bash(rm -rf ..)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)"
+    ],
+    "additionalDirectories": [],
+    "forbiddenSettings": {
+      "enableAllProjectMcpServers": [
+        true
+      ],
+      "disableAllHooks": [
+        true
+      ]
+    }
+  },
+  "claudeAgentTools": {
+    ".claude/agents/code-reviewer.md": [
+      "Read",
+      "Bash",
+      "Glob",
+      "Grep",
+      "LS"
+    ],
+    ".claude/agents/council-seat.md": [
+      "Read",
+      "Glob",
+      "Grep",
+      "LS"
+    ],
+    ".claude/agents/debugger.md": [
+      "Read",
+      "Bash",
+      "Glob",
+      "Grep",
+      "LS"
+    ],
+    ".claude/agents/pipeline-investigator.md": [
+      "Read",
+      "Bash",
+      "Glob",
+      "Grep",
+      "LS"
+    ],
+    ".claude/agents/review-cheap.md": [
+      "Read",
+      "Bash",
+      "Glob",
+      "Grep",
+      "LS"
+    ],
+    ".claude/agents/review-final.md": [
+      "Read",
+      "Bash",
+      "Glob",
+      "Grep",
+      "LS"
+    ],
+    ".claude/agents/security-auditor.md": [
+      "Read",
+      "Bash",
+      "Glob",
+      "Grep",
+      "LS"
+    ],
+    ".claude/agents/test-runner.md": [
+      "Read",
+      "Bash",
+      "Glob",
+      "Grep",
+      "LS"
+    ]
+  },
+  "opencode": {
+    "file": "opencode.jsonc",
+    "permission": {
+      "bash": {
+        "*": "allow",
+        "scripts/ci/bk-pipeline-status.sh*": "allow",
+        "./scripts/ci/bk-pipeline-status.sh*": "allow",
+        "git push --force*": "deny",
+        "git reset --hard*": "deny",
+        "git clean -fd*": "deny",
+        "rm -rf .": "deny",
+        "rm -rf ..": "deny",
+        "rm -rf ~": "deny",
+        "rm -rf /": "deny",
+        "rm -rf /*": "deny"
+      }
+    },
+    "agentTools": {
+      "test-runner": {
+        "write": false,
+        "edit": false,
+        "skill": false
+      },
+      "code-reviewer": {
+        "write": false,
+        "edit": false,
+        "skill": false
+      },
+      "security-auditor": {
+        "write": false,
+        "edit": false,
+        "skill": false
+      },
+      "review-cheap": {
+        "write": false,
+        "edit": false
+      },
+      "review-final": {
+        "write": false,
+        "edit": false
+      },
+      "debugger": {
+        "write": false,
+        "edit": false,
+        "skill": true
+      },
+      "pipeline-investigator": {
+        "write": false,
+        "edit": false,
+        "skill": true
+      },
+      "council-seat": {
+        "write": false,
+        "edit": false,
+        "bash": false,
+        "skill": false
+      }
+    },
+    "plugins": [],
+    "extraFiles": [],
+    "allowedKeys": {
+      "$schema": "JSON schema reference for editors; no runtime effect",
+      "compaction": "Context compaction toggles; cannot run code or change permissions",
+      "watcher": "File-watcher ignore globs; affects only which changes opencode notices"
+    },
+    "exactKeys": {
+      "default_agent": "plan",
+      "small_model": "openai/gpt-4o-mini",
+      "provider": {
+        "openai": {}
+      },
+      "enabled_providers": [
+        "openai"
+      ],
+      "share": "manual"
+    },
+    "experimentalAllowedKeys": {},
+    "experimentalHook": {},
+    "formatter": {},
+    "lsp": {},
+    "agentAllowedKeys": {
+      "description": "Prose shown when choosing an agent; grants nothing",
+      "model": "Model routing for the agent; grants no tools or permissions",
+      "temperature": "Sampling temperature; grants no tools or permissions",
+      "agent": "Path to the agent's prompt file under .opencode/agents/, which is itself in scope and checked"
+    }
+  },
+  "frontmatterKnownKeys": {
+    "model": "Selects the model for an agent or command; grants no tools or permissions",
+    "effort": "Reasoning-effort hint for an agent; grants no tools or permissions",
+    "mode": "opencode agent mode (subagent/primary); the agent's tools and permissions stay gated in opencode.jsonc",
+    "agent": "Routes a command to a named agent whose own tools and permissions apply",
+    "subtask": "Runs a command as a subagent task; grants no extra tools",
+    "id": "Eval task metadata read by run-evals.sh; not agent configuration",
+    "category": "Eval task metadata read by run-evals.sh; not agent configuration",
+    "expected_verdict": "Eval task metadata read by run-evals.sh; not agent configuration"
+  },
+  "frontmatterAllow": {},
+  "vscodeSettings": {
+    "aiKeyPrefixes": [
+      "chat.",
+      "github.copilot",
+      "mcp",
+      "inlineChat.",
+      "copilot",
+      "roo-cline.",
+      "cline.",
+      "claudeCode.",
+      "claude-code.",
+      "amazonQ.",
+      "aws.amazonq",
+      "continue.",
+      "geminicodeassist.",
+      "codeium.",
+      "windsurf.",
+      "kilo-code.",
+      "cody.",
+      "codex.",
+      "cursor."
+    ],
+    "inertKeyPrefixes": {
+      "editor.": "Editor display and editing behaviour; configures no programs, commands or model endpoints",
+      "files.": "File associations, exclusions and encodings; runs nothing",
+      "search.": "Search exclusions and behaviour; runs nothing",
+      "workbench.": "Workbench layout, themes and icons; runs nothing",
+      "explorer.": "File explorer display; runs nothing",
+      "diffEditor.": "Diff view display; runs nothing",
+      "breadcrumbs.": "Breadcrumb bar display; runs nothing",
+      "window.": "Window title and zoom; runs nothing"
+    },
+    "inertKeys": {
+      "terminal.integrated.fontSize": "Terminal font size only; other terminal.integrated keys (env, profiles, shell args) can run code",
+      "terminal.integrated.fontFamily": "Terminal font only; other terminal.integrated keys can run code"
+    },
+    "allowedKeys": {},
+    "exactKeys": {}
+  },
+  "hooks": {
+    "commands": [
+      "bash .opencode/scripts/check-halt-hook.sh",
+      "bash .opencode/scripts/check-bare-checkout-write-hook.sh",
+      "osascript -e 'display notification \"Task completed\" with title \"Claude Code — MockServer\"'",
+      "bash .opencode/scripts/aggregate-telemetry.sh .tmp/decisions --csv .tmp/telemetry-latest.csv >/dev/null 2>&1 || true"
+    ],
+    "opencodePluginFiles": [
+      ".opencode/plugins/buildkite-status.ts",
+      ".opencode/plugins/operator-halt.ts",
+      ".opencode/plugins/session-notification.ts"
+    ]
+  },
+  "mcp": {
+    "allowedServers": [],
+    "localCommands": [],
+    "enabledMcpjsonServers": []
+  },
+  "codeowners": {
+    "files": [
+      ".github/CODEOWNERS",
+      "CODEOWNERS",
+      "docs/CODEOWNERS"
+    ],
+    "requiredOwnedPaths": [
+      "scripts/security/agent_config_scan.py",
+      "scripts/security/agent-config-policy.json",
+      ".github/workflows/agent-config-scan.yml"
+    ]
+  }
+}

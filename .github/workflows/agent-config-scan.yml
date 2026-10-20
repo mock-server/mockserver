@@ -1,0 +1,48 @@
+name: agent-config-scan
+
+# Deterministic scan of the AI agent configuration (the paths in the policy's
+# scope) against scripts/security/agent-config-policy.json. Findings are uploaded as SARIF
+# (category `agent-config`) and appear as code scanning alerts in the Security tab.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '41 5 * * 3'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: agent-config-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  agent-config-scan:
+    name: Scan AI agent configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write  # upload SARIF to code scanning
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Self-test the scanner rules
+        run: python3 -I -m unittest discover -s scripts/security/tests -p 'test_*.py'
+
+      # Exits 1 when there are findings, so the job goes red; the SARIF is still uploaded.
+      - name: Scan AI agent configuration
+        run: python3 -I scripts/security/agent_config_scan.py --sarif "$RUNNER_TEMP/agent-config.sarif"
+
+      - name: Upload SARIF to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d  # v4.38.3
+        with:
+          sarif_file: ${{ runner.temp }}/agent-config.sarif
+          category: agent-config

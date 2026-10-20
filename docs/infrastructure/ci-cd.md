@@ -20,6 +20,8 @@ Cancel & Delete"]
 Security scanning"]
         GA_ZIZMOR["zizmor
 Workflow audit"]
+        GA_AGENTCFG["agent-config-scan
+AI config audit"]
     end
 
     subgraph "GitHub Built-in"
@@ -32,6 +34,7 @@ Auto-indexed"]
     BK_CLEANUP -->|triggered by| GH_WH[GitHub Webhook]
     GA_CODEQL -->|reports to| GH_SEC[GitHub Security]
     GA_ZIZMOR -->|SARIF to| GH_SEC
+    GA_AGENTCFG -->|SARIF to| GH_SEC
 ```
 
 ### CI Security Model
@@ -45,7 +48,7 @@ All custom CI pipelines run on Buildkite with self-managed EC2 agents. This keep
 | Build & test | Buildkite (EC2 agents, secrets in AWS Secrets Manager) for in-repo branches; **fork PRs** build & test on GitHub Actions (`pr-tests.yml`, secret-free, read-only token) since Buildkite must not run fork code |
 | Docker push | Buildkite (Docker Hub credentials in AWS Secrets Manager) |
 | GitHub event reactions | Buildkite Pipeline Triggers (GitHub webhook → Buildkite, no secrets in GitHub) |
-| Security scanning | GitHub Actions CodeQL and zizmor (read-only plus `security-events: write`, no secrets needed); both report as code scanning alerts in the Security tab |
+| Security scanning | GitHub Actions CodeQL, zizmor and agent-config-scan (read-only plus `security-events: write`, no secrets needed); all report as code scanning alerts in the Security tab |
 | Dependency graph | GitHub built-in (auto-indexed from manifests, no workflow needed) |
 
 ## Buildkite Pipelines
@@ -997,7 +1000,7 @@ It prints `build#<n> <commit> build=<state> <job>=<state> exit=<code>` and exits
 
 ## GitHub Actions
 
-Several workflows run on GitHub Actions (CodeQL, zizmor, Maven dependency submission, scheduled hygiene jobs such as certificate-expiry, and issue/label automation). The security-relevant ones are described below.
+Several workflows run on GitHub Actions (CodeQL, zizmor, agent-config-scan, Maven dependency submission, scheduled hygiene jobs such as certificate-expiry, and issue/label automation). The security-relevant ones are described below.
 
 ### CodeQL Security Analysis
 
@@ -1045,6 +1048,18 @@ one category per language"]
 **Results:** code scanning alerts in the Security tab, tool `zizmor`, category `zizmor`. Findings never fail the job; only an error does. The job is check run `Audit GitHub Actions`.
 
 **Permissions:** `permissions: {}` at workflow level; the job grants only `contents: read` and `security-events: write`. Checkout uses `persist-credentials: false`, and no third-party action is used. See [security.md → Static Analysis: zizmor](../operations/security.md#static-analysis-zizmor-github-actions).
+
+### agent-config-scan (AI agent configuration audit)
+
+**File:** `.github/workflows/agent-config-scan.yml`
+
+**Triggers:** push to `master`, pull requests targeting `master`, weekly on Wednesdays at 05:41 UTC, and `workflow_dispatch`.
+
+**What it does:** runs the scanner's self-test (`python3 -I -m unittest discover -s scripts/security/tests`), then `python3 -I scripts/security/agent_config_scan.py --sarif …`, and uploads the SARIF with `github/codeql-action/upload-sarif` (same SHA as the CodeQL workflow) under the category `agent-config`. It uses the runner's `python3` and the standard library only, so nothing is installed.
+
+**Results:** code scanning alerts in the Security tab, tool `agent-config-scan`, category `agent-config`. **Unlike zizmor, a finding fails the job** (exit 1); the upload step runs with `if: always()`, so the alerts are still recorded. The job is check run `Scan AI agent configuration`. Because `dependabot-auto-merge.yml` requires every check run to be green, an open finding on `master` also blocks Dependabot auto-merge until it is fixed or baselined.
+
+**Permissions:** `permissions: {}` at workflow level; the job grants only `contents: read` and `security-events: write`. Checkout uses `persist-credentials: false`, and no third-party action is used. See [security.md → AI agent configuration scan](../operations/security.md#ai-agent-configuration-scan) for the rules and how to change the policy.
 
 ### Maven Dependency Submission
 

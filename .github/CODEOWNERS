@@ -21,6 +21,7 @@
 /AGENTS.md                     @jamesdbloom
 /CLAUDE.md                     @jamesdbloom
 /opencode.jsonc                @jamesdbloom
+/scripts/security/**           @jamesdbloom
 
 # Infrastructure as Code
 /terraform/**                  @jamesdbloom
@@ -35,3 +36,38 @@
 # Maven release coordinates
 /mockserver/pom.xml            @jamesdbloom
 /pom.xml                       @jamesdbloom
+
+# AI agent configuration anywhere in the tree (last so no later rule overrides it)
+AGENTS.md                      @jamesdbloom
+CLAUDE.md                      @jamesdbloom
+CLAUDE.local.md                @jamesdbloom
+GEMINI.md                      @jamesdbloom
+SKILL.md                       @jamesdbloom
+.mcp.json                      @jamesdbloom
+opencode.json                  @jamesdbloom
+opencode.jsonc                 @jamesdbloom
+.claude/                       @jamesdbloom
+.opencode/                     @jamesdbloom
+.cursor/                       @jamesdbloom
+.cursorrules                   @jamesdbloom
+.windsurf/                     @jamesdbloom
+.windsurfrules                 @jamesdbloom
+.continue/                     @jamesdbloom
+.codex/                        @jamesdbloom
+.gemini/                       @jamesdbloom
+.aider*                        @jamesdbloom
+.roo/                          @jamesdbloom
+.kiro/                         @jamesdbloom
+.amazonq/                      @jamesdbloom
+.junie/                        @jamesdbloom
+.clinerules                    @jamesdbloom
+AGENT.md                       @jamesdbloom
+.rules                         @jamesdbloom
+.goosehints                    @jamesdbloom
+/.github/copilot-instructions.md @jamesdbloom
+/.github/instructions/         @jamesdbloom
+/.github/prompts/              @jamesdbloom
+/.github/agents/               @jamesdbloom
+/.github/chatmodes/            @jamesdbloom
+**/.vscode/settings.json       @jamesdbloom
+**/.vscode/mcp.json            @jamesdbloom
