@@ -71,3 +71,6 @@ AGENT.md                       @jamesdbloom
 /.github/chatmodes/            @jamesdbloom
 **/.vscode/settings.json       @jamesdbloom
 **/.vscode/mcp.json            @jamesdbloom
+*.code-workspace               @jamesdbloom
+.devcontainer/                 @jamesdbloom
+.devcontainer.json             @jamesdbloom

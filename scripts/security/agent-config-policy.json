@@ -39,7 +39,10 @@
       "**/.vscode/mcp.json",
       ".github/agents/**",
       ".github/chatmodes/**",
-      "**/.vscode/settings.json"
+      "**/.vscode/settings.json",
+      "**/*.code-workspace",
+      "**/.devcontainer/**/devcontainer.json",
+      "**/.devcontainer.json"
     ],
     "exclude": [],
     "skipContentExtensions": [
@@ -297,6 +300,21 @@
     },
     "allowedKeys": {},
     "exactKeys": {}
+  },
+  "codeWorkspace": {
+    "allowedKeys": {}
+  },
+  "devcontainer": {
+    "commands": [],
+    "images": [],
+    "inertKeys": {
+      "$schema": "JSON schema reference for editors; it has no runtime effect",
+      "name": "Display name of the dev container; runs nothing",
+      "forwardPorts": "Container ports forwarded to localhost on the host; runs nothing",
+      "workspaceFolder": "Path inside the container where the workspace opens; runs nothing",
+      "hostRequirements": "Minimum CPU, memory and storage for the host; runs nothing",
+      "waitFor": "Which lifecycle command the editor waits for; the commands themselves are checked"
+    }
   },
   "hooks": {
     "commands": [
