@@ -613,7 +613,7 @@ public class Http3MockServerHandler extends Http3RequestStreamInboundHandler {
                 null, null, Http3ResponseWriter.isHead(method));
             return;
         }
-        String corsOrigin = CORSOriginPolicy.isControlPlaneOriginAllowed(configuration.controlPlaneCorsAllowOrigin(), origin, request.getFirstHeader("host")) ? origin : null;
+        String corsOrigin = CORSOriginPolicy.isControlPlaneOriginAllowed(configuration, origin, request.getHeader("host")) ? origin : null;
         String accessControlRequestHeaders = request.getFirstHeader("access-control-request-headers");
         String mcpSessionId = request.getFirstHeader("mcp-session-id");
         McpRequestProcessor.McpResult result;

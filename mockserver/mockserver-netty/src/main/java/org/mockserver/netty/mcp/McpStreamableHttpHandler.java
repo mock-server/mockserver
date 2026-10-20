@@ -139,7 +139,8 @@ public class McpStreamableHttpHandler extends ChannelInboundHandlerAdapter {
         String origin = request.headers().get(HttpHeaderNames.ORIGIN);
         ctx.channel().attr(CORS_ORIGIN).set(origin);
         ctx.channel().attr(CORS_REQUEST_HEADERS).set(request.headers().get(HttpHeaderNames.ACCESS_CONTROL_REQUEST_HEADERS));
-        ctx.channel().attr(CORS_HOST).set(request.headers().get(HttpHeaderNames.HOST));
+        String host = CORSOriginPolicy.consistentHost(request.headers().getAll(HttpHeaderNames.HOST));
+        ctx.channel().attr(CORS_HOST).set(host);
         // On HTTP/2 the response must be written on the stream the request arrived on, so capture
         // the inbound stream id once and thread it through every write path below. It is captured as
         // a plain Integer rather than by holding the request, because the POST path answers from a
@@ -148,7 +149,7 @@ public class McpStreamableHttpHandler extends ChannelInboundHandlerAdapter {
         HttpMethod method = request.method();
         boolean corsPreflight = method.equals(HttpMethod.OPTIONS) && origin != null && !origin.isEmpty()
             && request.headers().contains(HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD);
-        if (httpState.isControlPlaneOriginRefused(method.name(), new QueryStringDecoder(request.uri()).path(), origin, request.headers().get(HttpHeaderNames.HOST), corsPreflight)) {
+        if (httpState.isControlPlaneOriginRefused(method.name(), new QueryStringDecoder(request.uri()).path(), origin, host, corsPreflight)) {
             writeMcpResult(ctx, new McpRequestProcessor.McpResult(403,
                 ("{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32600,\"message\":\"" + HttpState.CONTROL_PLANE_ORIGIN_REFUSED_MESSAGE + "\"},\"id\":null}").getBytes(StandardCharsets.UTF_8), null), streamId);
             return;
@@ -184,7 +185,7 @@ public class McpStreamableHttpHandler extends ChannelInboundHandlerAdapter {
     private void addCorsHeaders(ChannelHandlerContext ctx, io.netty.handler.codec.http.HttpResponse response) {
         String origin = ctx.channel().attr(CORS_ORIGIN).get();
         if (origin == null || origin.isEmpty()
-            || !CORSOriginPolicy.isControlPlaneOriginAllowed(httpState.getConfiguration().controlPlaneCorsAllowOrigin(), origin, ctx.channel().attr(CORS_HOST).get())) {
+            || !CORSOriginPolicy.isControlPlaneOriginAllowed(httpState.getConfiguration().controlPlaneCorsAllowOrigin(), httpState.getConfiguration().controlPlaneTrustedHostSuffixes(), origin, ctx.channel().attr(CORS_HOST).get())) {
             return;
         }
         response.headers().set(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, origin);

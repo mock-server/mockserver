@@ -48,15 +48,14 @@ public final class ControlPlaneWebSocketUpgradeGate {
     private static boolean originAllowed(ChannelHandlerContext ctx, FullHttpRequest httpRequest, HttpState httpState, MockServerLogger mockServerLogger, String description) {
         String origin = httpRequest.headers().get(HttpHeaderNames.ORIGIN);
         Configuration configuration = httpState.getConfiguration();
-        String allowedOrigins = configuration != null ? configuration.controlPlaneCorsAllowOrigin() : null;
-        if (CORSOriginPolicy.isControlPlaneOriginAllowed(allowedOrigins, origin, httpRequest.headers().get(HttpHeaderNames.HOST))) {
+        if (CORSOriginPolicy.isControlPlaneOriginAllowed(configuration, origin, httpRequest.headers().getAll(HttpHeaderNames.HOST))) {
             return true;
         }
         if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.INFO)
-                    .setMessageFormat("{} web socket upgrade rejected with status 403 - origin {} is not allowed, set controlPlaneCorsAllowOrigin to allow it")
+                    .setMessageFormat("{} web socket upgrade rejected with status 403 - origin {} is not allowed, set controlPlaneCorsAllowOrigin to allow it (a page MockServer serves itself at a host name that is not rebinding-safe can instead be allowed with controlPlaneTrustedHostSuffixes)")
                     .setArguments(description, escapeControlCharactersForLog(origin))
             );
         }

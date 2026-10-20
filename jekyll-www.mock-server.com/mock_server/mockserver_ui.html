@@ -53,6 +53,8 @@ sitemap:
 <p>For example, if MockServer is running on <strong>localhost</strong> on port <strong>1080</strong>:</p>
 <p><strong>http://localhost:1080/mockserver/dashboard</strong></p>
 
+<p>The dashboard works as-is at <code>localhost</code>, an IP address, a single-word name such as a Docker or Compose service name, or a name ending in <code>.svc</code>, <code>.svc.cluster.local</code> or <code>.internal</code>. At any other name, for example a shared environment's host name or the Kubernetes <code>service.namespace</code> short form, MockServer refuses its API and live log calls with 403 (this protects against DNS rebinding) unless you list the dashboard's address in <code>controlPlaneCorsAllowOrigin</code> or add the name's private suffix to <code>controlPlaneTrustedHostSuffixes</code>. See <a href="/mock_server/CORS_support.html#browser_origins">which web pages can use MockServer's own API</a>.</p>
+
 <h3>MockServerClient or ClientAndServer</h3>
 
 <p>The UI can be opened programmatically using the <span class="keyword">openUI()</span> method:</p>

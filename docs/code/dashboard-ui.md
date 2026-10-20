@@ -1762,7 +1762,11 @@ every request the control plane serves (`HttpActionHandler`, by `HttpState.isCon
 `/mockserver/*` path, a bare legacy alias with a method the control plane routes there, and the
 liveness path), independent of `enableCORSForAPI`, but **only to origins `controlPlaneCorsAllowOrigin`
 allows** (`CORSOriginPolicy`): when blank, a loopback origin (`localhost`, `127.0.0.1`, `[::1]`); always,
-one matching the request's `Host`. A control-plane request, or a `/_mockserver_ui_websocket` upgrade,
+one matching the request's `Host` when that is a rebinding-safe name (localhost, an IP literal, a single-label
+name, a name ending in `.svc`, `.svc.cluster.local` or `.internal`, or a `controlPlaneTrustedHostSuffixes` entry). A
+dashboard MockServer serves at any other name, such as `mockserver.example.com` or the Kubernetes
+`service.namespace` short form, needs its origin listed in `controlPlaneCorsAllowOrigin` (even when that property
+already lists other origins) or its suffix in `controlPlaneTrustedHostSuffixes`. A control-plane request, or a `/_mockserver_ui_websocket` upgrade,
 from any other origin is refused with `403` (`HttpState.handle`, `ControlPlaneWebSocketUpgradeGate`). So a dashboard served from `localhost` (the
 Vite dev server, the demo launcher's `?port=`, the VS Code and JetBrains panels) can target any
 MockServer, while a dashboard on another host needs `controlPlaneCorsAllowOrigin` set on the target

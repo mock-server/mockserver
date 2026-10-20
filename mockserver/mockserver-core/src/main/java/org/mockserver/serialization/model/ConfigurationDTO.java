@@ -93,6 +93,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Boolean enableCORSForAllResponses;
     private String corsAllowOrigin;
     private String controlPlaneCorsAllowOrigin;
+    private String controlPlaneTrustedHostSuffixes;
     private String corsAllowMethods;
     private String corsAllowHeaders;
     private Boolean corsAllowCredentials;
@@ -459,6 +460,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.enableCORSForAllResponses = configuration.enableCORSForAllResponses();
             this.corsAllowOrigin = configuration.corsAllowOrigin();
             this.controlPlaneCorsAllowOrigin = configuration.controlPlaneCorsAllowOrigin();
+            this.controlPlaneTrustedHostSuffixes = configuration.controlPlaneTrustedHostSuffixes();
             this.corsAllowMethods = configuration.corsAllowMethods();
             this.corsAllowHeaders = configuration.corsAllowHeaders();
             this.corsAllowCredentials = configuration.corsAllowCredentials();
@@ -929,6 +931,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.enableCORSForAllResponses(enableCORSForAllResponses);
         configuration.corsAllowOrigin(corsAllowOrigin);
         configuration.controlPlaneCorsAllowOrigin(controlPlaneCorsAllowOrigin);
+        configuration.controlPlaneTrustedHostSuffixes(controlPlaneTrustedHostSuffixes);
         configuration.corsAllowMethods(corsAllowMethods);
         configuration.corsAllowHeaders(corsAllowHeaders);
         configuration.corsAllowCredentials(corsAllowCredentials);
@@ -1541,8 +1544,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (corsAllowOrigin != null) {
             target.corsAllowOrigin(corsAllowOrigin);
         }
-        // controlPlaneCorsAllowOrigin is deliberately not applied: a runtime update could widen which
-        // web sites may use the control plane, so it is fixed at startup (see HttpState.applyConfigurationUpdate)
+        // controlPlaneCorsAllowOrigin and controlPlaneTrustedHostSuffixes are deliberately not applied: a runtime
+        // update could widen which web sites may use the control plane, so they are fixed at startup
+        // (see HttpState.applyConfigurationUpdate)
         if (corsAllowMethods != null) {
             target.corsAllowMethods(corsAllowMethods);
         }
@@ -3012,6 +3016,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setControlPlaneCorsAllowOrigin(String controlPlaneCorsAllowOrigin) {
         this.controlPlaneCorsAllowOrigin = controlPlaneCorsAllowOrigin;
+        return this;
+    }
+
+    public String getControlPlaneTrustedHostSuffixes() {
+        return controlPlaneTrustedHostSuffixes;
+    }
+
+    public ConfigurationDTO setControlPlaneTrustedHostSuffixes(String controlPlaneTrustedHostSuffixes) {
+        this.controlPlaneTrustedHostSuffixes = controlPlaneTrustedHostSuffixes;
         return this;
     }
 

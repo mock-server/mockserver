@@ -2318,8 +2318,9 @@ public class DashboardWebSocketHandlerTest {
         String[][] hostAndOrigin = {
             {"localhost", "http://localhost:5173"},
             {"localhost", "http://127.0.0.1:3000"},
-            {"mockserver.internal:1080", "http://mockserver.internal:1080"},
-            {"mockserver.internal:1080", "https://[::1]:1080"},
+            {"mockserver:1080", "http://mockserver:1080"},
+            {"mockserver.default.svc.cluster.local:1080", "http://mockserver.default.svc.cluster.local:1080"},
+            {"evil.example.com:1080", "https://[::1]:1080"},
         };
         for (String[] pair : hostAndOrigin) {
             HttpState httpState = newAsyncHttpState();

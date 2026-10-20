@@ -36,6 +36,7 @@ public class ControlPlaneOriginIntegrationTest {
     private static MockServer dataPlaneCorsMockServer;
     private static MockServer allowListMockServer;
     private static MockServer catchAllMockServer;
+    private static MockServer trustedSuffixMockServer;
 
     @BeforeClass
     public static void startServers() {
@@ -44,6 +45,7 @@ public class ControlPlaneOriginIntegrationTest {
         dataPlaneCorsMockServer = new MockServer(configuration().enableCORSForAllResponses(true));
         allowListMockServer = new MockServer(configuration().controlPlaneCorsAllowOrigin(ALLOWED).corsAllowOrigin("*"));
         catchAllMockServer = new MockServer(configuration().enableCORSForAllResponses(true));
+        trustedSuffixMockServer = new MockServer(configuration().controlPlaneTrustedHostSuffixes("k8s.example"));
     }
 
     @AfterClass
@@ -53,6 +55,7 @@ public class ControlPlaneOriginIntegrationTest {
         stopQuietly(dataPlaneCorsMockServer);
         stopQuietly(allowListMockServer);
         stopQuietly(catchAllMockServer);
+        stopQuietly(trustedSuffixMockServer);
     }
 
     // ---- API responses and preflights ----
@@ -70,10 +73,72 @@ public class ControlPlaneOriginIntegrationTest {
 
     @Test
     public void shouldReflectTheSameHostOriginOnAPreflight() throws IOException {
-        String host = "mockserver.internal:" + mockServer.getLocalPort();
-        Response response = preflight(mockServer.getLocalPort(), host, "http://" + host);
+        for (String name : new String[]{"mockserver", "mockserver.default.svc.cluster.local", "10.0.0.5"}) {
+            String host = name + ":" + mockServer.getLocalPort();
+            Response response = preflight(mockServer.getLocalPort(), host, "http://" + host);
 
-        assertThat(response.header("access-control-allow-origin"), is("http://" + host));
+            assertThat(host, response.header("access-control-allow-origin"), is("http://" + host));
+        }
+    }
+
+    // ---- DNS rebinding: a same-host page on a public name ----
+
+    @Test
+    public void shouldRefuseARebindingPageOnAPublicName() throws IOException {
+        for (String name : new String[]{"evil.example.com", "internal.evil.com"}) {
+            assertRebindingPageRefused(mockServer.getLocalPort(), name + ":" + mockServer.getLocalPort());
+        }
+        assertRebindingPageRefused(allowListMockServer.getLocalPort(), "evil.example.com:" + allowListMockServer.getLocalPort());
+    }
+
+    private static void assertRebindingPageRefused(int port, String host) throws IOException {
+        Response api = send(port,
+            "PUT /mockserver/retrieve?type=REQUESTS HTTP/1.1\r\n" +
+                "Host: " + host + "\r\n" +
+                "Origin: http://" + host + "\r\n" +
+                "Content-Length: 0\r\n" +
+                "Connection: close\r\n\r\n");
+
+        assertThat(api.status, startsWith("HTTP/1.1 403"));
+        assertNoCorsHeaders(api);
+        assertNoCorsHeaders(preflight(port, host, "http://" + host));
+        for (String path : new String[]{"/_mockserver_ui_websocket", "/_mockserver_callback_websocket"}) {
+            assertThat(path, upgradeStatus(port, path, host, "http://" + host, null), startsWith("HTTP/1.1 403"));
+        }
+    }
+
+    @Test
+    public void shouldAllowASameHostPageOnADockerOrKubernetesName() throws IOException {
+        int port = mockServer.getLocalPort();
+        for (String name : new String[]{"mockserver", "mockserver.default.svc", "mockserver.default.svc.cluster.local", "host.docker.internal", "ip-10-0-0-1.ec2.internal"}) {
+            String host = name + ":" + port;
+            Response api = send(port,
+                "PUT /mockserver/retrieve?type=REQUESTS HTTP/1.1\r\n" +
+                    "Host: " + host + "\r\n" +
+                    "Origin: http://" + host + "\r\n" +
+                    "Content-Length: 0\r\n" +
+                    "Connection: close\r\n\r\n");
+
+            assertThat(host, api.status, startsWith("HTTP/1.1 200"));
+            assertThat(host, api.header("access-control-allow-origin"), is("http://" + host));
+            for (String path : new String[]{"/_mockserver_ui_websocket", "/_mockserver_callback_websocket"}) {
+                assertThat(host + path, upgradeStatus(port, path, host, "http://" + host, null), startsWith("HTTP/1.1 101"));
+            }
+        }
+    }
+
+    @Test
+    public void shouldAllowASameHostPageOnAConfiguredTrustedSuffix() throws IOException {
+        int port = trustedSuffixMockServer.getLocalPort();
+        String trusted = "mockserver.ns.svc.k8s.example:" + port;
+        String untrusted = "mockserver.k8s.example.evil.com:" + port;
+
+        assertThat(preflight(port, trusted, "http://" + trusted).header("access-control-allow-origin"), is("http://" + trusted));
+        assertNoCorsHeaders(preflight(port, untrusted, "http://" + untrusted));
+        for (String path : new String[]{"/_mockserver_ui_websocket", "/_mockserver_callback_websocket"}) {
+            assertThat(path, upgradeStatus(port, path, trusted, "http://" + trusted, null), startsWith("HTTP/1.1 101"));
+            assertThat(path, upgradeStatus(port, path, untrusted, "http://" + untrusted, null), startsWith("HTTP/1.1 403"));
+        }
     }
 
     @Test
@@ -135,7 +200,7 @@ public class ControlPlaneOriginIntegrationTest {
         for (String path : new String[]{"/_mockserver_ui_websocket", "/_mockserver_callback_websocket"}) {
             assertThat(path, upgradeStatus(port, path, "localhost:" + port, "http://localhost:3000", null), startsWith("HTTP/1.1 101"));
             assertThat(path, upgradeStatus(port, path, "127.0.0.1:" + port, "http://127.0.0.1:" + port, null), startsWith("HTTP/1.1 101"));
-            assertThat(path, upgradeStatus(port, path, "mockserver.internal:" + port, "http://mockserver.internal:" + port, null), startsWith("HTTP/1.1 101"));
+            assertThat(path, upgradeStatus(port, path, "mockserver:" + port, "http://mockserver:" + port, null), startsWith("HTTP/1.1 101"));
             assertThat(path, upgradeStatus(port, path, "localhost:" + port, null, null), startsWith("HTTP/1.1 101"));
         }
     }
@@ -146,7 +211,7 @@ public class ControlPlaneOriginIntegrationTest {
         for (String path : new String[]{"/_mockserver_ui_websocket", "/_mockserver_callback_websocket"}) {
             assertThat(path, upgradeStatus(port, path, "localhost:" + port, FOREIGN, null), startsWith("HTTP/1.1 403"));
             assertThat(path, upgradeStatus(port, path, "localhost:" + port, "null", null), startsWith("HTTP/1.1 403"));
-            assertThat(path, upgradeStatus(port, path, "mockserver.internal:" + port, "http://mockserver.internal:" + (port + 1), null), startsWith("HTTP/1.1 403"));
+            assertThat(path, upgradeStatus(port, path, "mockserver:" + port, "http://mockserver:" + (port + 1), null), startsWith("HTTP/1.1 403"));
         }
     }
 

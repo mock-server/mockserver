@@ -302,6 +302,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES = "mockserver.enableCORSForAllResponses";
     private static final String MOCKSERVER_CORS_ALLOW_ORIGIN = "mockserver.corsAllowOrigin";
     private static final String MOCKSERVER_CONTROL_PLANE_CORS_ALLOW_ORIGIN = "mockserver.controlPlaneCorsAllowOrigin";
+    private static final String MOCKSERVER_CONTROL_PLANE_TRUSTED_HOST_SUFFIXES = "mockserver.controlPlaneTrustedHostSuffixes";
     private static final String MOCKSERVER_CORS_ALLOW_METHODS = "mockserver.corsAllowMethods";
     private static final String MOCKSERVER_CORS_ALLOW_HEADERS = "mockserver.corsAllowHeaders";
     private static final String MOCKSERVER_CORS_ALLOW_CREDENTIALS = "mockserver.corsAllowCredentials";
@@ -4630,13 +4631,32 @@ public class ConfigurationProperties {
      * <p>the browser origins allowed to use MockServer's own API, the dashboard and the callback WebSocket,
      * as a comma-separated list, or * for any origin.</p>
      * <p>The default is "", which allows only localhost, 127.0.0.1 and [::1] pages (http or https, any port);
-     * pages MockServer serves itself, such as the dashboard, are always allowed. See
-     * {@link org.mockserver.cors.CORSOriginPolicy}</p>
+     * pages MockServer serves itself, such as the dashboard, are also allowed when MockServer is reached by
+     * localhost, an IP address, a single-label name, or a .svc, .svc.cluster.local or .internal name, even when
+     * this is set (see
+     * {@link #controlPlaneTrustedHostSuffixes(String)}). See {@link org.mockserver.cors.CORSOriginPolicy}</p>
      *
      * @param controlPlaneCorsAllowOrigin the allowed browser origins, comma-separated
      */
     public static void controlPlaneCorsAllowOrigin(String controlPlaneCorsAllowOrigin) {
         setProperty(MOCKSERVER_CONTROL_PLANE_CORS_ALLOW_ORIGIN, controlPlaneCorsAllowOrigin);
+    }
+
+    public static String controlPlaneTrustedHostSuffixes() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_TRUSTED_HOST_SUFFIXES, "MOCKSERVER_CONTROL_PLANE_TRUSTED_HOST_SUFFIXES", "");
+    }
+
+    /**
+     * <p>extra host-name suffixes, comma-separated (e.g. "corp.example"), on which a page MockServer serves
+     * itself, such as the dashboard, may use the control plane, in addition to localhost, IP addresses,
+     * single-label names and names ending in .svc, .svc.cluster.local or .internal. Only list private suffixes that
+     * public DNS cannot resolve: a page on a listed name is trusted however that name resolved.</p>
+     * <p>The default is ""</p>
+     *
+     * @param controlPlaneTrustedHostSuffixes the extra host-name suffixes, comma-separated
+     */
+    public static void controlPlaneTrustedHostSuffixes(String controlPlaneTrustedHostSuffixes) {
+        setProperty(MOCKSERVER_CONTROL_PLANE_TRUSTED_HOST_SUFFIXES, controlPlaneTrustedHostSuffixes);
     }
 
     public static String corsAllowMethods() {

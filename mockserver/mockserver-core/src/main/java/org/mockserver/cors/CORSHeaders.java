@@ -114,7 +114,7 @@ public class CORSHeaders {
             if (!corsAllowCredentials) {
                 setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(), "false");
             }
-        } else if (CORSOriginPolicy.isControlPlaneOriginAllowed(configuration.controlPlaneCorsAllowOrigin(), origin, request.getFirstHeader(HttpHeaderNames.HOST.toString()))) {
+        } else if (CORSOriginPolicy.isControlPlaneOriginAllowed(configuration, origin, request.getHeader(HttpHeaderNames.HOST.toString()))) {
             setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN.toString(), origin);
             setHeaderIfNotAlreadyExists(response, HttpHeaderNames.ACCESS_CONTROL_ALLOW_CREDENTIALS.toString(), "" + corsAllowCredentials);
         } else {

@@ -242,6 +242,7 @@ public class Configuration {
     private volatile Boolean enableCORSForAllResponses;
     private volatile String corsAllowOrigin;
     private volatile String controlPlaneCorsAllowOrigin;
+    private volatile String controlPlaneTrustedHostSuffixes;
     private volatile String corsAllowMethods;
     private volatile String corsAllowHeaders;
     private volatile Boolean corsAllowCredentials;
@@ -3602,13 +3603,36 @@ public class Configuration {
      * <p>the browser origins allowed to use MockServer's own API, the dashboard and the callback WebSocket,
      * as a comma-separated list, or * for any origin.</p>
      * <p>The default is "", which allows only localhost, 127.0.0.1 and [::1] pages (http or https, any port);
-     * pages MockServer serves itself, such as the dashboard, are always allowed. See
-     * {@link org.mockserver.cors.CORSOriginPolicy}</p>
+     * pages MockServer serves itself, such as the dashboard, are also allowed when MockServer is reached by
+     * localhost, an IP address, a single-label name, or a .svc, .svc.cluster.local or .internal name, even when
+     * this is set (see
+     * {@link #controlPlaneTrustedHostSuffixes(String)}). See {@link org.mockserver.cors.CORSOriginPolicy}</p>
      *
      * @param controlPlaneCorsAllowOrigin the allowed browser origins, comma-separated
      */
     public Configuration controlPlaneCorsAllowOrigin(String controlPlaneCorsAllowOrigin) {
         this.controlPlaneCorsAllowOrigin = controlPlaneCorsAllowOrigin;
+        return this;
+    }
+
+    public String controlPlaneTrustedHostSuffixes() {
+        if (controlPlaneTrustedHostSuffixes == null) {
+            return ConfigurationProperties.controlPlaneTrustedHostSuffixes();
+        }
+        return controlPlaneTrustedHostSuffixes;
+    }
+
+    /**
+     * <p>extra host-name suffixes, comma-separated (e.g. "corp.example"), on which a page MockServer serves
+     * itself, such as the dashboard, may use the control plane, in addition to localhost, IP addresses,
+     * single-label names and names ending in .svc, .svc.cluster.local or .internal. Only list private suffixes that
+     * public DNS cannot resolve: a page on a listed name is trusted however that name resolved.</p>
+     * <p>The default is ""</p>
+     *
+     * @param controlPlaneTrustedHostSuffixes the extra host-name suffixes, comma-separated
+     */
+    public Configuration controlPlaneTrustedHostSuffixes(String controlPlaneTrustedHostSuffixes) {
+        this.controlPlaneTrustedHostSuffixes = controlPlaneTrustedHostSuffixes;
         return this;
     }
 

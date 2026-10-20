@@ -2422,6 +2422,32 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetControlPlaneTrustedHostSuffixes() {
+        String original = ConfigurationProperties.controlPlaneTrustedHostSuffixes();
+        try {
+            // then - default value
+            assertThat(configuration.controlPlaneTrustedHostSuffixes(), equalTo(""));
+
+            // when - system property setter
+            ConfigurationProperties.controlPlaneTrustedHostSuffixes("k8s.example");
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.controlPlaneTrustedHostSuffixes(), equalTo("k8s.example"));
+            assertThat(System.getProperty("mockserver.controlPlaneTrustedHostSuffixes"), equalTo("k8s.example"));
+            assertThat(configuration.controlPlaneTrustedHostSuffixes(), equalTo("k8s.example"));
+
+            // when - setter
+            configuration.controlPlaneTrustedHostSuffixes("corp.example");
+
+            // then - getter, independent of controlPlaneCorsAllowOrigin
+            assertThat(configuration.controlPlaneTrustedHostSuffixes(), equalTo("corp.example"));
+            assertThat(configuration.controlPlaneCorsAllowOrigin(), equalTo(""));
+        } finally {
+            ConfigurationProperties.controlPlaneTrustedHostSuffixes(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetCorsAllowMethods() {
         String original = ConfigurationProperties.corsAllowMethods();
         try {

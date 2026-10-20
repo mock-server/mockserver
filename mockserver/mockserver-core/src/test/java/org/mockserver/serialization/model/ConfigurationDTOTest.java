@@ -31,7 +31,8 @@ public class ConfigurationDTOTest {
             .maxExpectations(500)
             .metricsEnabled(true)
             .corsAllowOrigin("https://example.com")
-            .controlPlaneCorsAllowOrigin("https://dashboard.example.com"));
+            .controlPlaneCorsAllowOrigin("https://dashboard.example.com")
+            .controlPlaneTrustedHostSuffixes("k8s.example"));
 
         Configuration config = dto.buildObject();
 
@@ -40,6 +41,7 @@ public class ConfigurationDTOTest {
         assertThat(config.metricsEnabled(), is(true));
         assertThat(config.corsAllowOrigin(), is("https://example.com"));
         assertThat(config.controlPlaneCorsAllowOrigin(), is("https://dashboard.example.com"));
+        assertThat(config.controlPlaneTrustedHostSuffixes(), is("k8s.example"));
     }
 
     @Test
@@ -64,15 +66,17 @@ public class ConfigurationDTOTest {
 
     @Test
     public void shouldNotApplyControlPlaneCorsAllowOriginToARunningServer() {
-        Configuration target = configuration().controlPlaneCorsAllowOrigin("https://app.example.com");
+        Configuration target = configuration().controlPlaneCorsAllowOrigin("https://app.example.com").controlPlaneTrustedHostSuffixes("k8s.example");
 
         ConfigurationDTO dto = new ConfigurationDTO();
         dto.setControlPlaneCorsAllowOrigin("*");
+        dto.setControlPlaneTrustedHostSuffixes("com");
         dto.setCorsAllowOrigin("https://mocks.example.com");
 
         dto.applyTo(target);
 
         assertThat(target.controlPlaneCorsAllowOrigin(), is("https://app.example.com"));
+        assertThat(target.controlPlaneTrustedHostSuffixes(), is("k8s.example"));
         assertThat(target.corsAllowOrigin(), is("https://mocks.example.com"));
     }
 
@@ -485,8 +489,9 @@ public class ConfigurationDTOTest {
 
     // Properties a running server must never take from PUT /mockserver/configuration: applyTo skips them.
     private static final Set<String> STARTUP_ONLY_PROPERTIES = new HashSet<>(Arrays.asList(
-        // decides which web sites may use the control plane, so a control-plane request must not widen it
-        "controlPlaneCorsAllowOrigin"
+        // decide which web sites may use the control plane, so a control-plane request must not widen them
+        "controlPlaneCorsAllowOrigin",
+        "controlPlaneTrustedHostSuffixes"
     ));
 
     @Test

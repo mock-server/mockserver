@@ -650,6 +650,7 @@ public class HttpState {
                 );
             }
             initGrpcDescriptorStore();
+            reportTrustedHostSuffixProblems();
             // All synchronous startup work (expectation initializers, OpenAPI seeding, gRPC descriptor
             // loading) is now complete — flip the readiness flag so the /mockserver/ready probe reports
             // ready. Set last so a partially-constructed HttpState never reports ready.
@@ -1131,8 +1132,8 @@ public class HttpState {
 
     /**
      * Whether a request the control plane serves carries a browser {@code Origin} that
-     * {@code controlPlaneCorsAllowOrigin} does not allow (blank allows only loopback and same-host
-     * origins; {@code null} is never allowed by default). Such a request must be refused with
+     * {@code controlPlaneCorsAllowOrigin} does not allow (blank allows only loopback origins, and
+     * same-host origins on a rebinding-safe host; {@code null} is never allowed by default). Such a request must be refused with
      * {@code 403} before any handler or expectation runs. A CORS preflight is not refused: it is
      * answered without allow headers instead. A request with no {@code Origin} is never refused.
      */
@@ -1140,7 +1141,7 @@ public class HttpState {
         if (origin == null || origin.isEmpty() || corsPreflight || !isControlPlaneRequest(method, path)) {
             return false;
         }
-        return !org.mockserver.cors.CORSOriginPolicy.isControlPlaneOriginAllowed(configuration.controlPlaneCorsAllowOrigin(), origin, hostHeader);
+        return !org.mockserver.cors.CORSOriginPolicy.isControlPlaneOriginAllowed(configuration.controlPlaneCorsAllowOrigin(), configuration.controlPlaneTrustedHostSuffixes(), origin, hostHeader);
     }
 
     public boolean isControlPlaneOriginRefused(HttpRequest request) {
@@ -1151,7 +1152,7 @@ public class HttpState {
             request.getMethod() != null ? request.getMethod().getValue() : null,
             request.getPath().getValue(),
             request.getFirstHeader(ORIGIN.toString()),
-            request.getFirstHeader(HOST.toString()),
+            org.mockserver.cors.CORSOriginPolicy.consistentHost(request.getHeader(HOST.toString())),
             CORSHeaders.isCorsPreflight(request)
         );
     }
@@ -1167,7 +1168,7 @@ public class HttpState {
                     .setType(LogEntry.LogMessageType.AUTHENTICATION_FAILED)
                     .setLogLevel(Level.INFO)
                     .setCorrelationId(request.getLogCorrelationId())
-                    .setMessageFormat("control plane request refused with status 403 - origin {} is not allowed, set controlPlaneCorsAllowOrigin to allow it")
+                    .setMessageFormat("control plane request refused with status 403 - origin {} is not allowed, set controlPlaneCorsAllowOrigin to allow it (a page MockServer serves itself at a host name that is not rebinding-safe can instead be allowed with controlPlaneTrustedHostSuffixes)")
                     .setArguments(origin)
             );
         }
@@ -4579,7 +4580,7 @@ public class HttpState {
     /**
      * Add CORS headers to a dashboard-facing control-plane response without requiring
      * {@code enableCORSForAPI}, for the origins {@code controlPlaneCorsAllowOrigin} allows (by
-     * default a loopback or same-host origin). {@code CORSHeaders.addControlPlaneCORSHeaders} is
+     * default a loopback origin, or a same-host origin on a rebinding-safe host). {@code CORSHeaders.addControlPlaneCORSHeaders} is
      * idempotent ({@code setHeaderIfNotAlreadyExists}), so it composes safely with the CORS that
      * {@code ResponseWriter} also applies.
      */
@@ -7393,6 +7394,11 @@ public class HttpState {
             warnInitOnlyProperty("controlPlaneCorsAllowOrigin", "\"" + suppliedControlPlaneCorsAllowOrigin + "\"", "\"" + configuration.controlPlaneCorsAllowOrigin() + "\"",
                 "it decides which web sites may use the control plane, so a request to the control plane cannot widen it");
         }
+        String suppliedControlPlaneTrustedHostSuffixes = suppliedConfiguration.getControlPlaneTrustedHostSuffixes();
+        if (suppliedControlPlaneTrustedHostSuffixes != null && !suppliedControlPlaneTrustedHostSuffixes.equals(configuration.controlPlaneTrustedHostSuffixes())) {
+            warnInitOnlyProperty("controlPlaneTrustedHostSuffixes", "\"" + suppliedControlPlaneTrustedHostSuffixes + "\"", "\"" + configuration.controlPlaneTrustedHostSuffixes() + "\"",
+                "it decides which web sites may use the control plane, so a request to the control plane cannot widen it");
+        }
         Integer suppliedMaxWebSocketExpectations = suppliedConfiguration.getMaxWebSocketExpectations();
         if (suppliedMaxWebSocketExpectations != null && configuration.maxWebSocketExpectations() != maxWebSocketExpectationsInForce) {
             warnInitOnlyProperty("maxWebSocketExpectations", configuration.maxWebSocketExpectations(), maxWebSocketExpectationsInForce,
@@ -7489,6 +7495,24 @@ public class HttpState {
                         + valueInForce + "; set it before the server starts (system property, environment variable "
                         + "or startup configuration) to change it"
                 ));
+        }
+    }
+
+    private void reportTrustedHostSuffixProblems() {
+        String suffixes = configuration.controlPlaneTrustedHostSuffixes();
+        logServerConfiguration(Level.ERROR, org.mockserver.cors.CORSOriginPolicy.trustedHostSuffixErrors(suffixes));
+        logServerConfiguration(Level.WARN, org.mockserver.cors.CORSOriginPolicy.trustedHostSuffixWarnings(suffixes));
+    }
+
+    private void logServerConfiguration(Level level, List<String> messages) {
+        if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(level)) {
+            for (String message : messages) {
+                mockServerLogger.logEvent(new LogEntry()
+                    .setType(LogEntry.LogMessageType.SERVER_CONFIGURATION)
+                    .setLogLevel(level)
+                    .setMessageFormat("{}")
+                    .setArguments(escapeControlCharactersForLog(message)));
+            }
         }
     }
 

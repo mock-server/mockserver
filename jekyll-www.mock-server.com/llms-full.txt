@@ -1005,9 +1005,14 @@ Value for access-control-allow-origin header on mocked and proxied responses (wh
 - Environment variable: MOCKSERVER_CORS_ALLOW_ORIGIN
 
 **controlPlaneCorsAllowOrigin**
-Browser origins (comma-separated, or *) allowed to use MockServer's own API, the dashboard and the callback WebSocket. When blank, only pages on localhost, 127.0.0.1 or [::1] (http or https), and pages MockServer serves itself, are allowed. A control-plane request from any other browser origin is refused with 403. Set at startup only; PUT /mockserver/configuration ignores it.
+Browser origins (comma-separated, or *) allowed to use MockServer's own API, the dashboard and the callback WebSocket. When blank, only pages on localhost, 127.0.0.1 or [::1] (http or https), and pages MockServer serves itself when reached by localhost, an IP address, a single-label name, a name ending in .svc, .svc.cluster.local or .internal, or a controlPlaneTrustedHostSuffixes entry, are allowed, even when this property is set. A control-plane request from any other browser origin is refused with 403. Set at startup only; PUT /mockserver/configuration ignores it.
 - Default: ""
 - Environment variable: MOCKSERVER_CONTROL_PLANE_CORS_ALLOW_ORIGIN
+
+**controlPlaneTrustedHostSuffixes**
+Extra host-name suffixes (comma-separated, e.g. corp.example) at which pages MockServer serves itself, such as the dashboard, may use the control plane. Only list private suffixes public DNS cannot resolve, because a page on a listed name is trusted (DNS rebinding); public suffixes such as com, co.uk or github.io are rejected at startup. Set at startup only; PUT /mockserver/configuration ignores it.
+- Default: ""
+- Environment variable: MOCKSERVER_CONTROL_PLANE_TRUSTED_HOST_SUFFIXES
 
 **corsAllowMethods**
 Value for access-control-allow-methods header.

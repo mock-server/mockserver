@@ -331,13 +331,37 @@ public class CORSHeadersTest {
     @Test
     public void shouldReflectSameHostOriginOnControlPlaneResponses() {
         HttpRequest request = request()
-            .withHeader("host", "mockserver.internal:1080")
-            .withHeader("origin", "https://mockserver.internal:1080");
+            .withHeader("host", "mockserver.default.svc.cluster.local:1080")
+            .withHeader("origin", "https://mockserver.default.svc.cluster.local:1080");
         HttpResponse response = response();
 
         new CORSHeaders(configuration()).addControlPlaneCORSHeaders(request, response);
 
-        assertThat(response.getFirstHeader("access-control-allow-origin"), is("https://mockserver.internal:1080"));
+        assertThat(response.getFirstHeader("access-control-allow-origin"), is("https://mockserver.default.svc.cluster.local:1080"));
+    }
+
+    @Test
+    public void shouldNotReflectASameHostOriginOnAPublicName() {
+        HttpRequest request = request()
+            .withHeader("host", "evil.example.com:1080")
+            .withHeader("origin", "http://evil.example.com:1080");
+        HttpResponse response = response();
+
+        new CORSHeaders(configuration()).addControlPlaneCORSHeaders(request, response);
+
+        assertThat(response.containsHeader("access-control-allow-origin"), is(false));
+    }
+
+    @Test
+    public void shouldReflectASameHostOriginOnAConfiguredTrustedSuffix() {
+        HttpRequest request = request()
+            .withHeader("host", "mockserver.corp.example:1080")
+            .withHeader("origin", "https://mockserver.corp.example:1080");
+        HttpResponse response = response();
+
+        new CORSHeaders(configuration().controlPlaneTrustedHostSuffixes("corp.example")).addControlPlaneCORSHeaders(request, response);
+
+        assertThat(response.getFirstHeader("access-control-allow-origin"), is("https://mockserver.corp.example:1080"));
     }
 
     @Test
