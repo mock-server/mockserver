@@ -396,6 +396,16 @@ client.removeBreakpointMatcher(breakpointId);
 client.clearBreakpointMatchers();
 ```
 
+### Control-plane authentication
+
+When MockServer requires a control-plane JWT, pass `bearerToken` or `bearerTokenSupplier` in the client options. In Node the client sends `Authorization: Bearer <token>` on every control-plane request and on the callback WebSocket used by callbacks and breakpoints; a supplier is asked again on each reconnect.
+
+```js
+var client = mockServerClient("localhost", 1080, undefined, false, undefined, { bearerToken: process.env.MOCKSERVER_JWT });
+```
+
+A browser cannot set headers on a WebSocket, and MockServer only accepts the token as an `Authorization` header, so in a browser callbacks and breakpoints need mutual TLS (client certificates) rather than a JWT.
+
 ## Using in tests
 
 The client supports TC39 explicit resource management, so a `using` / `await using`

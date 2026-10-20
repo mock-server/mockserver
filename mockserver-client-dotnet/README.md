@@ -210,6 +210,8 @@ client.ClearBreakpointMatchers();
 
 **Stream frame decisions:** `StreamFrameDecision.Continue`, `.Modify`, `.Drop`, `.Inject`, `.Close`.
 
+When MockServer requires a control-plane JWT, configure it with `WithControlPlaneBearerToken(token)` (or a `Func<string>` supplier). The token is sent as `Authorization: Bearer <token>` on every control-plane request and on the breakpoint/callback WebSocket upgrade.
+
 ## Mocking LLM providers
 
 The `MockServer.Client.Llm` namespace provides fluent builders that mock LLM provider

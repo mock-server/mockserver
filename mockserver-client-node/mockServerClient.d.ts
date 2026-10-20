@@ -27,15 +27,17 @@ export type CaCertPemFilePath = string;
  */
 export interface MockServerClientOptions {
     /**
-     * Static control-plane JWT. When set, every control-plane request carries
-     * an `Authorization: Bearer <bearerToken>` header. Use this when the server
+     * Static control-plane JWT. When set, every control-plane request, and in
+     * Node the callback/breakpoint WebSocket upgrade, carries an
+     * `Authorization: Bearer <bearerToken>` header. Use this when the server
      * is started with `controlPlaneJWTAuthenticationRequired=true`.
      */
     bearerToken?: string;
 
     /**
-     * A supplier evaluated per control-plane request to obtain the bearer token
-     * (so the token can be refreshed). Takes precedence over `bearerToken`.
+     * A supplier evaluated per control-plane request and per WebSocket
+     * (re)connect to obtain the bearer token (so the token can be refreshed).
+     * Takes precedence over `bearerToken`.
      */
     bearerTokenSupplier?: () => string;
 

@@ -109,7 +109,8 @@ impl ClientBuilder {
     }
 
     /// Attach an `Authorization: Bearer <token>` header to **every control-plane
-    /// request** the built client sends.
+    /// request** the built client sends, including the callback WebSocket upgrade
+    /// used by breakpoints and callbacks.
     ///
     /// Use this when the server requires a JWT on the control plane
     /// (`mockserver.controlPlaneJWTAuthenticationRequired=true`). The client does
@@ -201,7 +202,7 @@ impl ClientBuilder {
         // Attach the control-plane bearer token as a default header so it rides
         // on every control-plane request this client issues (this client only
         // ever talks to the `/mockserver/*` control plane).
-        if let Some(token) = self.control_plane_bearer_token {
+        if let Some(token) = &self.control_plane_bearer_token {
             let mut headers = reqwest::header::HeaderMap::new();
             let mut value = reqwest::header::HeaderValue::from_str(&format!("Bearer {token}"))
                 .map_err(|e| Error::InvalidRequest(format!("invalid bearer token: {e}")))?;
@@ -225,6 +226,7 @@ impl ClientBuilder {
         Ok(MockServerClient {
             base_url,
             http: http_client,
+            control_plane_bearer_token: self.control_plane_bearer_token,
             breakpoint_ws: std::sync::Mutex::new(None),
         })
     }
@@ -240,6 +242,7 @@ impl ClientBuilder {
 pub struct MockServerClient {
     pub(crate) base_url: String,
     http: Client,
+    control_plane_bearer_token: Option<String>,
     breakpoint_ws: std::sync::Mutex<Option<BreakpointWebSocketClient>>,
 }
 
@@ -931,7 +934,10 @@ impl MockServerClient {
             if let Some(old) = guard.take() {
                 old.close();
             }
-            let ws = BreakpointWebSocketClient::connect(&self.base_url)?;
+            let ws = BreakpointWebSocketClient::connect(
+                &self.base_url,
+                self.control_plane_bearer_token.as_deref(),
+            )?;
             *guard = Some(ws);
         }
         Ok(guard.as_ref().unwrap().client_id.clone())
@@ -2621,5 +2627,44 @@ impl Scenario<'_> {
     /// Sends `PUT /mockserver/scenario/{name}/trigger` with `{"newState": new_state}`.
     pub fn trigger(&self, new_state: &str) -> Result<()> {
         self.client.scenario_trigger(&self.name, new_state)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::breakpoint::tests::recording_callback_server;
+    use std::time::Duration;
+
+    fn callback_upgrade_authorization(
+        builder: impl FnOnce(ClientBuilder) -> ClientBuilder,
+    ) -> Option<String> {
+        let (port, recorded) = recording_callback_server();
+        let client = builder(ClientBuilder::new("127.0.0.1", port))
+            .build()
+            .expect("build");
+        let client_id = client
+            .ensure_breakpoint_ws()
+            .expect("callback WebSocket connect");
+        assert_eq!(client_id, "recorded-client");
+        if let Some(ws) = client.breakpoint_ws.lock().unwrap().take() {
+            ws.close();
+        }
+        recorded
+            .recv_timeout(Duration::from_secs(3))
+            .expect("no upgrade recorded")
+    }
+
+    #[test]
+    fn callback_websocket_sends_control_plane_bearer_token() {
+        assert_eq!(
+            callback_upgrade_authorization(|b| b.control_plane_bearer_token("client-token")),
+            Some("Bearer client-token".to_string())
+        );
+    }
+
+    #[test]
+    fn callback_websocket_sends_no_authorization_without_a_token() {
+        assert_eq!(callback_upgrade_authorization(|b| b), None);
     }
 }

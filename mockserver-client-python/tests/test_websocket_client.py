@@ -457,3 +457,104 @@ class TestCloseMethod:
         client._listen_task = asyncio.create_task(fake_listen())
         await client.close()
         assert client._listen_task.cancelled() or client._listen_task.done()
+
+
+class TestControlPlaneBearerTokenOnUpgrade:
+    """A real in-process WebSocket server records each upgrade request's headers."""
+
+    @staticmethod
+    async def _upgrade_headers(open_websocket, drop_first=False):
+        from websockets.asyncio.server import serve
+
+        upgrades = []
+
+        async def handler(connection):
+            upgrades.append(connection.request.headers)
+            await connection.send(
+                json.dumps(
+                    {"type": TYPE_CLIENT_ID_DTO, "value": json.dumps({"clientId": "client-one"})}
+                )
+            )
+            if drop_first and len(upgrades) == 1:
+                connection.transport.abort()
+                return
+            await connection.wait_closed()
+
+        async with serve(handler, "127.0.0.1", 0) as server:
+            port = server.sockets[0].getsockname()[1]
+            ws_client = await open_websocket(port)
+            if drop_first:
+                listen_task = asyncio.create_task(ws_client.listen())
+                for _ in range(100):
+                    if len(upgrades) >= 2:
+                        break
+                    await asyncio.sleep(0.05)
+                ws_client._listen_task = listen_task
+            await ws_client.close()
+        return upgrades
+
+    @pytest.mark.asyncio
+    async def test_sends_bearer_token_when_supplier_returns_one(self):
+        async def open_websocket(port):
+            ws_client = MockServerWebSocketClient()
+            await ws_client.connect("127.0.0.1", port, bearer_token_supplier=lambda: "static-token")
+            return ws_client
+
+        upgrades = await self._upgrade_headers(open_websocket)
+        assert upgrades[0]["Authorization"] == "Bearer static-token"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("supplier", [None, lambda: None, lambda: ""])
+    async def test_sends_no_authorization_without_a_token(self, supplier):
+        async def open_websocket(port):
+            ws_client = MockServerWebSocketClient()
+            await ws_client.connect("127.0.0.1", port, bearer_token_supplier=supplier)
+            return ws_client
+
+        upgrades = await self._upgrade_headers(open_websocket)
+        assert "Authorization" not in upgrades[0]
+
+    @pytest.mark.asyncio
+    async def test_asks_supplier_again_on_reconnect(self):
+        issued = []
+
+        def supplier():
+            issued.append(f"token-{len(issued) + 1}")
+            return issued[-1]
+
+        async def open_websocket(port):
+            ws_client = MockServerWebSocketClient()
+            await ws_client.connect("127.0.0.1", port, bearer_token_supplier=supplier)
+            return ws_client
+
+        upgrades = await self._upgrade_headers(open_websocket, drop_first=True)
+        assert len(upgrades) == 2, "did not reconnect"
+        assert upgrades[0]["Authorization"] == "Bearer token-1"
+        assert upgrades[1]["Authorization"] == "Bearer token-2"
+        assert upgrades[1]["X-CLIENT-REGISTRATION-ID"] == "client-one"
+
+    @pytest.mark.asyncio
+    async def test_async_client_sends_its_control_plane_token(self):
+        from mockserver.async_client import AsyncMockServerClient
+
+        async def open_websocket(port):
+            client = AsyncMockServerClient(
+                "127.0.0.1", port, control_plane_bearer_token="client-token"
+            )
+            await client._register_websocket_callback("response", lambda req: None)
+            return client._websocket_clients[0]
+
+        upgrades = await self._upgrade_headers(open_websocket)
+        assert upgrades[0]["Authorization"] == "Bearer client-token"
+
+    @pytest.mark.asyncio
+    async def test_async_client_without_token_sends_no_authorization(self):
+        from mockserver.async_client import AsyncMockServerClient
+
+        async def open_websocket(port):
+            client = AsyncMockServerClient("127.0.0.1", port)
+            await client._register_websocket_callback("response", lambda req: None)
+            return client._websocket_clients[0]
+
+        upgrades = await self._upgrade_headers(open_websocket)
+        assert "Authorization" not in upgrades[0]

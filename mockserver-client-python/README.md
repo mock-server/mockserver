@@ -435,6 +435,15 @@ client = MockServerClient(
 )
 ```
 
+## Control-Plane Authentication
+
+When MockServer requires a control-plane JWT, pass the token (or a supplier for a token that is refreshed). The client sends `Authorization: Bearer <token>` on every control-plane request and on the callback WebSocket used by callbacks and breakpoints; a supplier is called again on each reconnect.
+
+```python
+client = MockServerClient("localhost", 1080, control_plane_bearer_token=jwt)
+client = MockServerClient("localhost", 1080, control_plane_bearer_token_supplier=fetch_jwt)
+```
+
 ## Domain Model
 
 All domain model classes support builder-style chaining:

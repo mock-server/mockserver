@@ -828,3 +828,75 @@ func TestExtractHeader_NoHeaders(t *testing.T) {
 		t.Errorf("expected empty, got %s", v)
 	}
 }
+
+// fakeCallbackWebSocketServer upgrades /_mockserver_callback_websocket, records each
+// upgrade request's headers and registers the socket with a client id.
+func fakeCallbackWebSocketServer(t *testing.T) (*httptest.Server, chan http.Header) {
+	t.Helper()
+	upgrades := make(chan http.Header, 10)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/_mockserver_callback_websocket" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		upgrades <- r.Header.Clone()
+		conn, err := (&websocket.Upgrader{}).Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		_ = conn.WriteMessage(websocket.TextMessage, []byte(`{"type":"org.mockserver.serialization.model.WebSocketClientIdDTO","value":"{\"clientId\":\"client-one\"}"}`))
+		for {
+			if _, _, err := conn.ReadMessage(); err != nil {
+				return
+			}
+		}
+	}))
+	return srv, upgrades
+}
+
+func callbackWebSocketUpgradeHeader(t *testing.T, opts ...Option) http.Header {
+	t.Helper()
+	srv, upgrades := fakeCallbackWebSocketServer(t)
+	defer srv.Close()
+	client := NewFromURL(srv.URL, opts...)
+	if err := client.ensureBreakpointWS(); err != nil {
+		t.Fatalf("callback WebSocket connect failed: %v", err)
+	}
+	defer client.breakpointWS.close()
+	select {
+	case header := <-upgrades:
+		return header
+	case <-time.After(2 * time.Second):
+		t.Fatal("no WebSocket upgrade received")
+		return nil
+	}
+}
+
+func TestCallbackWebSocket_SendsControlPlaneBearerToken(t *testing.T) {
+	header := callbackWebSocketUpgradeHeader(t, WithControlPlaneBearerToken("my-jwt-token"))
+	if got := header.Get("Authorization"); got != "Bearer my-jwt-token" {
+		t.Errorf("expected Authorization 'Bearer my-jwt-token' on the upgrade, got %q", got)
+	}
+}
+
+func TestCallbackWebSocket_UsesBearerTokenSupplier(t *testing.T) {
+	header := callbackWebSocketUpgradeHeader(t, WithControlPlaneBearerTokenSupplier(func() string { return "supplied" }))
+	if got := header.Get("Authorization"); got != "Bearer supplied" {
+		t.Errorf("expected Authorization 'Bearer supplied' on the upgrade, got %q", got)
+	}
+}
+
+func TestCallbackWebSocket_NoAuthorizationWithoutToken(t *testing.T) {
+	for name, opts := range map[string][]Option{
+		"no token":    nil,
+		"empty token": {WithControlPlaneBearerTokenSupplier(func() string { return "" })},
+	} {
+		t.Run(name, func(t *testing.T) {
+			header := callbackWebSocketUpgradeHeader(t, opts...)
+			if _, present := header["Authorization"]; present {
+				t.Errorf("expected no Authorization header on the upgrade, got %q", header.Get("Authorization"))
+			}
+		})
+	}
+}

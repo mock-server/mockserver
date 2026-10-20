@@ -271,6 +271,75 @@ describe('opening a callback WebSocket', {timeout: 60000}, function () {
     });
 });
 
+describe('control-plane bearer token on the callback WebSocket upgrade', {timeout: 60000}, function () {
+    async function upgradeHeadersFor(options, dropOnce) {
+        var connections = [];
+        var server = await startFakeMockServer(function (request) {
+            var connection = request.accept(null, request.origin);
+            connections.push(connection);
+            sendClientId(connection, 'client-one');
+        });
+        try {
+            var handle = await openWebSocket(server.port, options);
+            if (dropOnce) {
+                connections[0].drop();
+                var deadline = Date.now() + 10000;
+                while (server.webSocketRequests.length < 2 && Date.now() < deadline) {
+                    await sleep(100);
+                }
+            }
+            await handle.close();
+            return server.webSocketRequests;
+        } finally {
+            await server.close();
+        }
+    }
+
+    it('sends Authorization: Bearer with the configured bearerToken', async function () {
+        var requests = await upgradeHeadersFor({bearerToken: 'static-token'});
+        assert.equal(requests[0].authorization, 'Bearer static-token');
+    });
+
+    it('sends no Authorization header when no token is configured', async function () {
+        var requests = await upgradeHeadersFor(undefined);
+        assert.equal(requests[0].authorization, undefined);
+        requests = await upgradeHeadersFor({bearerToken: ''});
+        assert.equal(requests[0].authorization, undefined);
+    });
+
+    it('asks bearerTokenSupplier again on reconnect, keeping the client id', async function () {
+        var issued = 0;
+        var requests = await upgradeHeadersFor({
+            bearerToken: 'ignored',
+            bearerTokenSupplier: function () {
+                issued += 1;
+                return 'token-' + issued;
+            }
+        }, true);
+        assert.equal(requests.length, 2, 'did not reconnect');
+        assert.equal(requests[0].authorization, 'Bearer token-1');
+        assert.equal(requests[1].authorization, 'Bearer token-2');
+        assert.equal(requests[1]['x-client-registration-id'], 'client-one');
+    });
+
+    it('retries the reconnect when bearerTokenSupplier throws', async function () {
+        var calls = 0;
+        var requests = await upgradeHeadersFor({
+            bearerTokenSupplier: function () {
+                calls += 1;
+                if (calls === 2) {
+                    throw new Error('token endpoint unavailable');
+                }
+                return 'token-' + calls;
+            }
+        }, true);
+        assert.equal(requests.length, 2, 'did not retry the reconnect');
+        assert.equal(calls, 3);
+        assert.equal(requests[1].authorization, 'Bearer token-3');
+        assert.equal(requests[1]['x-client-registration-id'], 'client-one');
+    });
+});
+
 /*
  * A TLS client with no CA path downloads MockServer's CA certificate into the working directory. Each test
  * sends that download to a local HTTP server, from an empty working directory of its own; `body` handles it.

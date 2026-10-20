@@ -9,7 +9,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tungstenite::{connect, Message};
+use tungstenite::client::{connect_with_config, IntoClientRequest};
+use tungstenite::Message;
 use url::Url;
 
 use crate::error::{Error, Result};
@@ -233,8 +234,9 @@ impl BreakpointWebSocketClient {
         self.dead.load(std::sync::atomic::Ordering::Relaxed)
     }
 
-    /// Connect to the callback WebSocket and obtain a clientId.
-    pub(crate) fn connect(base_url: &str) -> Result<Self> {
+    /// Connect to the callback WebSocket and obtain a clientId. A non-empty
+    /// `bearer_token` is sent as `Authorization: Bearer <token>` on the upgrade.
+    pub(crate) fn connect(base_url: &str, bearer_token: Option<&str>) -> Result<Self> {
         let parsed = Url::parse(base_url)
             .map_err(|e| Error::InvalidRequest(format!("bad base URL: {e}")))?;
 
@@ -249,7 +251,20 @@ impl BreakpointWebSocketClient {
         // `TcpStream::connect_timeout`, then upgrading via `tungstenite::client`,
         // which adds complexity and fragility. Leaving this as a deferred follow-up;
         // the OS-level TCP connect timeout (typically ~60-120s) applies instead.
-        let (mut socket, _response) = connect(&ws_url)
+        let mut request = ws_url
+            .as_str()
+            .into_client_request()
+            .map_err(|e| Error::InvalidRequest(format!("bad WebSocket URL: {e}")))?;
+        if let Some(token) = bearer_token.filter(|t| !t.is_empty()) {
+            let mut value = tungstenite::http::HeaderValue::from_str(&format!("Bearer {token}"))
+                .map_err(|e| Error::InvalidRequest(format!("invalid bearer token: {e}")))?;
+            value.set_sensitive(true);
+            request
+                .headers_mut()
+                .insert(tungstenite::http::header::AUTHORIZATION, value);
+        }
+        // no redirects: following one would send the bearer token to another host
+        let (mut socket, _response) = connect_with_config(request, None, 0)
             .map_err(|e| Error::InvalidRequest(format!("WebSocket connect failed: {e}")))?;
 
         // Read registration reply
@@ -701,7 +716,7 @@ pub fn set_header(obj: &mut Value, name: &str, value: &str) {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use std::net::TcpListener;
     use std::sync::mpsc;
@@ -726,11 +741,111 @@ mod tests {
         (port, server)
     }
 
+    /// A callback WebSocket server that records the upgrade request's
+    /// `Authorization` header (`None` when absent), then registers the client.
+    pub(crate) fn recording_callback_server() -> (u16, mpsc::Receiver<Option<String>>) {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
+        let port = listener.local_addr().expect("local addr").port();
+        let (tx, rx) = mpsc::channel();
+        std::thread::spawn(move || {
+            let (stream, _) = listener.accept().expect("accept");
+            // the error type is fixed by tungstenite's handshake Callback trait
+            #[allow(clippy::result_large_err)]
+            let record = |request: &tungstenite::handshake::server::Request,
+                          response: tungstenite::handshake::server::Response| {
+                let authorization = request
+                    .headers()
+                    .get("authorization")
+                    .map(|v| v.to_str().unwrap_or_default().to_string());
+                let _ = tx.send(authorization);
+                Ok(response)
+            };
+            let mut ws = tungstenite::accept_hdr(stream, record).expect("ws handshake");
+            let registration = serde_json::json!({
+                "type": "org.mockserver.serialization.model.WebSocketClientIdDTO",
+                "value": serde_json::json!({ "clientId": "recorded-client" }).to_string(),
+            });
+            ws.send(Message::Text(registration.to_string()))
+                .expect("send registration");
+            while ws.read().is_ok() {}
+        });
+        (port, rx)
+    }
+
+    fn upgrade_authorization(bearer_token: Option<&str>) -> Option<String> {
+        let (port, recorded) = recording_callback_server();
+        let client =
+            BreakpointWebSocketClient::connect(&format!("http://127.0.0.1:{port}"), bearer_token)
+                .expect("connect");
+        client.close();
+        recorded
+            .recv_timeout(Duration::from_secs(3))
+            .expect("no upgrade recorded")
+    }
+
+    #[test]
+    fn upgrade_carries_bearer_token_when_configured() {
+        assert_eq!(
+            upgrade_authorization(Some("my-jwt-token")),
+            Some("Bearer my-jwt-token".to_string())
+        );
+    }
+
+    #[test]
+    fn upgrade_does_not_follow_a_redirect_with_the_bearer_token() {
+        use std::io::{Read, Write};
+        let elsewhere = TcpListener::bind("127.0.0.1:0").expect("bind");
+        let elsewhere_port = elsewhere.local_addr().expect("local addr").port();
+        elsewhere.set_nonblocking(true).expect("nonblocking");
+        let (contacted_tx, contacted) = mpsc::channel();
+        let target = std::thread::spawn(move || {
+            let deadline = Instant::now() + Duration::from_secs(2);
+            while Instant::now() < deadline {
+                if let Ok((stream, _)) = elsewhere.accept() {
+                    drop(stream);
+                    let _ = contacted_tx.send(());
+                    return;
+                }
+                std::thread::sleep(Duration::from_millis(20));
+            }
+        });
+        let redirecting = TcpListener::bind("127.0.0.1:0").expect("bind");
+        let port = redirecting.local_addr().expect("local addr").port();
+        let server = std::thread::spawn(move || {
+            let (mut stream, _) = redirecting.accept().expect("accept");
+            let mut buffer = [0u8; 4096];
+            let _ = stream.read(&mut buffer);
+            let response = format!(
+                "HTTP/1.1 302 Found\r\nLocation: ws://127.0.0.1:{elsewhere_port}/_mockserver_callback_websocket\r\nContent-Length: 0\r\n\r\n"
+            );
+            let _ = stream.write_all(response.as_bytes());
+        });
+
+        let result = BreakpointWebSocketClient::connect(
+            &format!("http://127.0.0.1:{port}"),
+            Some("my-jwt-token"),
+        );
+        server.join().expect("server thread");
+        target.join().expect("redirect target thread");
+
+        assert!(result.is_err(), "a redirect was followed");
+        assert!(
+            contacted.try_recv().is_err(),
+            "the redirect target was contacted"
+        );
+    }
+
+    #[test]
+    fn upgrade_has_no_authorization_without_a_token() {
+        assert_eq!(upgrade_authorization(None), None);
+        assert_eq!(upgrade_authorization(Some("")), None);
+    }
+
     #[test]
     fn close_returns_promptly_while_read_loop_is_idle() {
         let (port, server) = idle_callback_server();
         let client = Arc::new(
-            BreakpointWebSocketClient::connect(&format!("http://127.0.0.1:{port}"))
+            BreakpointWebSocketClient::connect(&format!("http://127.0.0.1:{port}"), None)
                 .expect("connect"),
         );
         assert_eq!(client.client_id, "idle-client");

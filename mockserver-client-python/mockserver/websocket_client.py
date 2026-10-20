@@ -148,6 +148,7 @@ class MockServerWebSocketClient:
         self._context_path: str = ""
         self._secure: bool = False
         self._ssl_context: Any = None
+        self._bearer_token_supplier: Callable[[], str | None] | None = None
         # Per-breakpoint-id handlers for matcher-driven breakpoints
         self._breakpoint_request_handlers: dict[str, Callable] = {}
         self._breakpoint_response_handlers: dict[str, Callable] = {}
@@ -170,7 +171,14 @@ class MockServerWebSocketClient:
         ca_cert_path: str | None = None,
         client_id: str | None = None,
         tls_verify: bool = True,
+        bearer_token_supplier: Callable[[], str | None] | None = None,
     ) -> str:
+        """Open the callback WebSocket and wait for MockServer's client id.
+
+        ``bearer_token_supplier`` is called on every (re)connect; a non-empty
+        result is sent as ``Authorization: Bearer <token>`` on the upgrade.
+        """
+        self._bearer_token_supplier = bearer_token_supplier
         self._host = host
         self._port = port
         self._context_path = context_path
@@ -196,6 +204,10 @@ class MockServerWebSocketClient:
         uri = f"{scheme}://{self._host}:{self._port}{path}"
 
         registration_headers = {CLIENT_REGISTRATION_ID_HEADER: registration_id}
+        if self._bearer_token_supplier is not None:
+            bearer = self._bearer_token_supplier()
+            if bearer:
+                registration_headers["Authorization"] = f"Bearer {bearer}"
 
         if _ws_connect is None:  # pragma: no cover - depends on environment
             raise MockServerWebSocketError(

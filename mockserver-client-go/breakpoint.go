@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 	"sync"
@@ -163,7 +164,9 @@ func newBreakpointWSClient() *breakpointWSClient {
 }
 
 // connect establishes the WebSocket connection and performs registration.
-func (ws *breakpointWSClient) connect(baseURL string) error {
+// bearerTokenSupplier, when non-nil and returning a non-empty token, adds
+// "Authorization: Bearer <token>" to the upgrade request.
+func (ws *breakpointWSClient) connect(baseURL string, bearerTokenSupplier func() string) error {
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		return fmt.Errorf("mockserver: parse base URL: %w", err)
@@ -179,7 +182,13 @@ func (ws *breakpointWSClient) connect(baseURL string) error {
 	dialer := &websocket.Dialer{
 		HandshakeTimeout: 30 * time.Second,
 	}
-	conn, _, err := dialer.Dial(wsURL, nil)
+	var header http.Header
+	if bearerTokenSupplier != nil {
+		if token := bearerTokenSupplier(); token != "" {
+			header = http.Header{"Authorization": []string{"Bearer " + token}}
+		}
+	}
+	conn, _, err := dialer.Dial(wsURL, header)
 	if err != nil {
 		return fmt.Errorf("mockserver: websocket connect: %w", err)
 	}
@@ -485,7 +494,7 @@ func (c *Client) ensureBreakpointWS() error {
 		c.breakpointWS = nil
 	}
 	ws := newBreakpointWSClient()
-	if err := ws.connect(c.baseURL); err != nil {
+	if err := ws.connect(c.baseURL, c.bearerTokenSupplier); err != nil {
 		return err
 	}
 	c.breakpointWS = ws

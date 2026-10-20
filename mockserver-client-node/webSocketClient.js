@@ -11,6 +11,7 @@
     if (module && require) {
         var WebSocketClient = require('websocket').client;
         var Q = require('q');
+        var resolveBearerToken = require('./sendRequest').resolveBearerToken;
         var fs = require('fs');
 
         var defer = function () {
@@ -297,6 +298,19 @@
 
         var DEFAULT_REGISTRATION_TIMEOUT_MILLIS = 10000;
 
+        // resolved per connection attempt, so a reconnect picks up a refreshed bearer token
+        var upgradeHeaders = function (clientOptions, clientId) {
+            var headers = {};
+            var token = resolveBearerToken(clientOptions);
+            if (token) {
+                headers['Authorization'] = 'Bearer ' + token;
+            }
+            if (clientId) {
+                headers['X-CLIENT-REGISTRATION-ID'] = clientId;
+            }
+            return Object.keys(headers).length ? headers : undefined;
+        };
+
         var registrationTimeoutMillis = function (clientOptions) {
             var millis = clientOptions && clientOptions.callbackWebSocketTimeoutMillis;
             return (typeof millis === 'number' && isFinite(millis) && millis > 0) ? millis : DEFAULT_REGISTRATION_TIMEOUT_MILLIS;
@@ -465,7 +479,12 @@
                         reconnectTimer = setTimeout(function () {
                             reconnectTimer = null;
                             // the same client id, so an expectation MockServer still holds keeps reaching this client
-                            client.connect(webSocketLocation, [], undefined, clientId ? {"X-CLIENT-REGISTRATION-ID": clientId} : undefined);
+                            try {
+                                client.connect(webSocketLocation, [], undefined, upgradeHeaders(clientOptions, clientId));
+                            } catch (e) {
+                                console.error('WebSocket reconnect failed: ' + (e.message || String(e)));
+                                scheduleReconnect();
+                            }
                         }, delayMs);
                     };
 
@@ -556,7 +575,7 @@
                     });
 
                     try {
-                        client.connect(webSocketLocation, []);
+                        client.connect(webSocketLocation, [], undefined, upgradeHeaders(clientOptions));
                     } catch (e) {
                         failRegistration(e.message || String(e));
                     }

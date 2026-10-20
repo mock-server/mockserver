@@ -81,7 +81,11 @@ internal sealed class BreakpointWebSocketClient : IDisposable
         Converters = { new Models.HttpRequestConverter() }
     };
 
-    internal async Task ConnectAsync(string baseUrl)
+    /// <summary>
+    /// Connect and register. A non-empty token from <paramref name="bearerTokenSupplier"/> is
+    /// sent as <c>Authorization: Bearer &lt;token&gt;</c> on the upgrade request.
+    /// </summary>
+    internal async Task ConnectAsync(string baseUrl, Func<string>? bearerTokenSupplier = null)
     {
         var uri = new Uri(baseUrl);
         var scheme = uri.Scheme == "https" ? "wss" : "ws";
@@ -89,6 +93,9 @@ internal sealed class BreakpointWebSocketClient : IDisposable
         var wsUri = new Uri($"{scheme}://{uri.Host}:{uri.Port}{path}/_mockserver_callback_websocket");
 
         _ws = new ClientWebSocket();
+        var token = bearerTokenSupplier?.Invoke();
+        if (!string.IsNullOrEmpty(token))
+            _ws.Options.SetRequestHeader("Authorization", "Bearer " + token);
         _cts = new CancellationTokenSource();
 
         // Apply a 30-second handshake timeout

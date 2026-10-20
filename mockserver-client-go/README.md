@@ -66,6 +66,13 @@ client := mockserver.New("localhost", 1080,
     mockserver.WithContextPath("/myapp"),
     mockserver.WithTimeout(10 * time.Second),
 )
+
+// With control-plane JWT authentication: the token is sent as
+// "Authorization: Bearer <token>" on every control-plane request and on the
+// callback/breakpoint WebSocket upgrade
+client := mockserver.New("localhost", 1080,
+    mockserver.WithControlPlaneBearerToken(jwt),
+)
 ```
 
 ### Creating Expectations

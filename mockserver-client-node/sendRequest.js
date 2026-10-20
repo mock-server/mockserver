@@ -432,7 +432,8 @@
             sendGetRequest: sendGetRequest,
             sendBinaryRequest: sendBinaryRequest,
             sendDeleteRequest: sendDeleteRequest,
-            sendRawRequest: sendRawRequest
+            sendRawRequest: sendRawRequest,
+            resolveBearerToken: resolveBearerToken
         };
     }
 })();

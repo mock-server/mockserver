@@ -1018,7 +1018,7 @@ public sealed class MockServerClient : IDisposable
         _breakpointWs?.ClearHandlers();
     }
 
-    private async Task EnsureBreakpointWsAsync()
+    internal async Task EnsureBreakpointWsAsync()
     {
         if (_breakpointWs != null && !_breakpointWs.IsDead) return;
         await _breakpointWsLock.WaitAsync().ConfigureAwait(false);
@@ -1028,7 +1028,7 @@ public sealed class MockServerClient : IDisposable
             // Dispose old dead connection if present
             _breakpointWs?.Dispose();
             var ws = new BreakpointWebSocketClient();
-            await ws.ConnectAsync(_baseUrl).ConfigureAwait(false);
+            await ws.ConnectAsync(_baseUrl, _controlPlaneBearerTokenSupplier).ConfigureAwait(false);
             _breakpointWs = ws;
         }
         finally
