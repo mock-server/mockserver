@@ -1071,7 +1071,15 @@ The full rationale, the two-project coverage table, the cost/trigger design, and
 
 **Triggers:** push to `master` touching `mockserver/**/pom.xml`, plus `workflow_dispatch`.
 
+**Credentials:** both jobs hold `contents: write` and run `mvnw`, which executes third-party Maven plugins, so checkout uses `persist-credentials: false`. The write token never reaches `.git/config`. The submission action posts the graph through the REST API using its own `token` input (default `github.token`), not git.
+
 **Note:** an earlier `dependency-submission.yml` was removed on the belief that the built-in graph gave equivalent coverage. That belief was wrong for a non-root Maven project and is what let the graph go stale — see the security.md section above.
+
+### Dependabot cooldown
+
+**File:** `.github/dependabot.yml`
+
+Every `updates` entry sets `cooldown: { default-days: 7 }`. The SemVer ecosystems (maven, npm, pip, bundler) also set `semver-major-days: 14`, and their minor and patch updates use the 7-day default. Dependabot does not propose a new release until it has been published for that long. This gives the registry time to yank a hijacked or malicious release before auto-merge can land it. Cooldown applies only to **version** updates. **Security updates are not delayed** ([Dependabot options reference → `cooldown`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#cooldown-)), so CVE fixes still arrive immediately. GitHub Actions, Docker and Terraform do not support the `semver-*-days` keys, so they set only `default-days`. zizmor's `dependabot-cooldown` audit flags any entry without a cooldown.
 
 ### Dependabot auto-merge
 
@@ -1184,6 +1192,7 @@ PRs a real test signal in an environment with **nothing worth stealing**.
 | Trigger | `on: pull_request` (+ `workflow_dispatch`) — **never** `pull_request_target` | `pull_request` runs fork code with a read-only token in the fork's context and **no repo secrets**. `pull_request_target` would run untrusted code in the base-repo context **with** secrets — the classic credential-leak vector. |
 | Secrets | none referenced; no `environment:` | Nothing for a malicious PR to exfiltrate. |
 | Token | workflow `permissions: {}`; job `contents: read` only | Least privilege; the repo default is already `read`. |
+| Checkout | `persist-credentials: false` | The fork's code never finds a token in `.git/config`. No later step needs git auth. |
 | Actions | `actions/checkout`, `actions/setup-java`, `actions/upload-artifact` — GitHub-owned, **SHA-pinned** with version comments | Passes the repo's `allowed_actions: selected` / `github_owned_allowed: true` / `verified_allowed: false` policy. |
 
 **What it runs:** the full Maven reactor `clean install` (Surefire unit tests **and**

@@ -4,6 +4,9 @@ updates:
     directory: "/mockserver"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     open-pull-requests-limit: 20
     labels:
       - "dependencies"
@@ -71,6 +74,9 @@ updates:
     directory: "/examples/java"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
@@ -118,6 +124,9 @@ updates:
     directory: "/mockserver/mockserver-maven-plugin"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
@@ -174,6 +183,9 @@ updates:
     directory: "/mockserver-ui"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
@@ -220,6 +232,9 @@ updates:
       - "/mockserver-node"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
@@ -236,6 +251,9 @@ updates:
     directory: "/mockserver-vscode"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
@@ -262,6 +280,9 @@ updates:
     directory: "/mockserver-client-python"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
@@ -278,6 +299,9 @@ updates:
       - "/jekyll-www.mock-server.com"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
@@ -292,6 +316,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
@@ -320,6 +346,8 @@ updates:
       - "/docker_build/performance"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
@@ -345,6 +373,8 @@ updates:
       - "/terraform/website"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
