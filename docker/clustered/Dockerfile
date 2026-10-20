@@ -113,7 +113,7 @@ RUN GOOS="${TARGETOS:-$(go env GOOS)}" \
 # permanently disabled the Security Manager). No JVM flag restores it; Infinispan 15
 # fixes the call but requires a Java 21+ compile target, which the Java 17 library
 # floor does not allow. 21 is the newest base on which clustering starts.
-FROM gcr.io/distroless/java21:nonroot@sha256:51c242e7ddaba3666d47115a76a19cfa5076b2ad3ed6077b30d7bac689d98fa1
+FROM gcr.io/distroless/java21:nonroot@sha256:f3ac871fb5802c2739bb23b67212e67f341cbe754131528d2e9849072f9efb9a
 
 # maintainer details
 LABEL org.opencontainers.image.authors="James Bloom <jamesdbloom@gmail.com>"
