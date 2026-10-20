@@ -439,6 +439,12 @@ internal sealed class BreakpointWebSocketClient : IDisposable
         headers[name] = new JsonArray(JsonValue.Create(value));
     }
 
+    /// <summary>
+    /// How long <see cref="Dispose"/> waits for in-flight sends and for the peer to answer
+    /// the close handshake before aborting the socket.
+    /// </summary>
+    internal TimeSpan CloseTimeout { get; set; } = TimeSpan.FromSeconds(5);
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -446,22 +452,26 @@ internal sealed class BreakpointWebSocketClient : IDisposable
         _cts?.Cancel();
 
         // Serialize close with any in-flight sends
-        _sendLock.Wait();
+        var locked = _sendLock.Wait(CloseTimeout);
         try
         {
-            if (_ws?.State == WebSocketState.Open)
-                _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None)
-                    .ConfigureAwait(false).GetAwaiter().GetResult();
+            if (locked && _ws?.State == WebSocketState.Open)
+            {
+                using var closeCts = new CancellationTokenSource(CloseTimeout);
+                _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", closeCts.Token).Wait(CloseTimeout);
+            }
         }
         catch { }
         finally
         {
-            _sendLock.Release();
+            if (locked) _sendLock.Release();
         }
 
+        _ws?.Abort();
         _ws?.Dispose();
         _cts?.Dispose();
-        _sendLock.Dispose();
+        // a sender still holding the lock releases it on its way out
+        if (locked) _sendLock.Dispose();
     }
 
     // --- Internal DTOs ---

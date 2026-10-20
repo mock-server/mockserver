@@ -9,7 +9,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tungstenite::client::{connect_with_config, IntoClientRequest};
+use tungstenite::client::IntoClientRequest;
+use tungstenite::Connector;
 use tungstenite::Message;
 use url::Url;
 
@@ -236,21 +237,23 @@ impl BreakpointWebSocketClient {
 
     /// Connect to the callback WebSocket and obtain a clientId. A non-empty
     /// `bearer_token` is sent as `Authorization: Bearer <token>` on the upgrade.
-    pub(crate) fn connect(base_url: &str, bearer_token: Option<&str>) -> Result<Self> {
+    /// An `https` base URL connects over `wss` using `tls`, which carries the
+    /// client's HTTPS trust roots, custom CA and client identity.
+    pub(crate) fn connect(
+        base_url: &str,
+        bearer_token: Option<&str>,
+        tls: Option<&native_tls::TlsConnector>,
+    ) -> Result<Self> {
         let parsed = Url::parse(base_url)
             .map_err(|e| Error::InvalidRequest(format!("bad base URL: {e}")))?;
 
-        let ws_scheme = if parsed.scheme() == "https" { "wss" } else { "ws" };
+        let secure = parsed.scheme() == "https";
+        let ws_scheme = if secure { "wss" } else { "ws" };
         let host = parsed.host_str().unwrap_or("localhost");
-        let port = parsed.port().unwrap_or(if parsed.scheme() == "https" { 443 } else { 80 });
+        let port = parsed.port().unwrap_or(if secure { 443 } else { 80 });
         let path = parsed.path().trim_end_matches('/');
         let ws_url = format!("{ws_scheme}://{host}:{port}{path}/_mockserver_callback_websocket");
 
-        // NOTE: tungstenite's blocking `connect` does not expose a handshake timeout.
-        // A connect timeout would require manually creating a TcpStream with
-        // `TcpStream::connect_timeout`, then upgrading via `tungstenite::client`,
-        // which adds complexity and fragility. Leaving this as a deferred follow-up;
-        // the OS-level TCP connect timeout (typically ~60-120s) applies instead.
         let mut request = ws_url
             .as_str()
             .into_client_request()
@@ -263,9 +266,19 @@ impl BreakpointWebSocketClient {
                 .headers_mut()
                 .insert(tungstenite::http::header::AUTHORIZATION, value);
         }
-        // no redirects: following one would send the bearer token to another host
-        let (mut socket, _response) = connect_with_config(request, None, 0)
+
+        // The OS-level TCP connect timeout applies; tungstenite has no handshake timeout.
+        let addrs = parsed
+            .socket_addrs(|| Some(port))
             .map_err(|e| Error::InvalidRequest(format!("WebSocket connect failed: {e}")))?;
+        let stream = std::net::TcpStream::connect(addrs.as_slice())
+            .map_err(|e| Error::InvalidRequest(format!("WebSocket connect failed: {e}")))?;
+        let shutdown_handle = stream.try_clone().ok();
+        let connector = ws_connector(secure, tls)?;
+        // client_tls_with_config never follows redirects, which would send the bearer token to another host
+        let (mut socket, _response) =
+            tungstenite::client_tls_with_config(request, stream, None, Some(connector))
+                .map_err(|e| Error::InvalidRequest(format!("WebSocket connect failed: {e}")))?;
 
         // Read registration reply
         let reg_msg = socket
@@ -299,10 +312,6 @@ impl BreakpointWebSocketClient {
         let object_response_handler: Arc<Mutex<Option<ObjectResponseHandler>>> =
             Arc::new(Mutex::new(None));
 
-        let shutdown_handle = match socket.get_ref() {
-            tungstenite::stream::MaybeTlsStream::Plain(stream) => stream.try_clone().ok(),
-            _ => None,
-        };
         let socket = Arc::new(Mutex::new(socket));
         let dead = Arc::new(std::sync::atomic::AtomicBool::new(false));
 
@@ -384,6 +393,17 @@ impl BreakpointWebSocketClient {
         if let Some(stream) = &self.shutdown_handle {
             let _ = stream.shutdown(std::net::Shutdown::Both);
         }
+    }
+}
+
+/// `wss` uses the client's configured TLS connector, or native-tls defaults when none is given.
+fn ws_connector(secure: bool, tls: Option<&native_tls::TlsConnector>) -> Result<Connector> {
+    match (secure, tls) {
+        (false, _) => Ok(Connector::Plain),
+        (true, Some(connector)) => Ok(Connector::NativeTls(connector.clone())),
+        (true, None) => native_tls::TlsConnector::new()
+            .map(Connector::NativeTls)
+            .map_err(|e| Error::InvalidRequest(format!("WebSocket TLS setup failed: {e}"))),
     }
 }
 
@@ -744,38 +764,112 @@ pub(crate) mod tests {
     /// A callback WebSocket server that records the upgrade request's
     /// `Authorization` header (`None` when absent), then registers the client.
     pub(crate) fn recording_callback_server() -> (u16, mpsc::Receiver<Option<String>>) {
+        recording_server(None)
+    }
+
+    /// [`recording_callback_server`] over TLS, presenting `identity`.
+    pub(crate) fn recording_tls_callback_server(
+        identity: native_tls::Identity,
+    ) -> (u16, mpsc::Receiver<Option<String>>) {
+        recording_server(Some(native_tls::TlsAcceptor::new(identity).expect("tls acceptor")))
+    }
+
+    fn recording_server(
+        tls: Option<native_tls::TlsAcceptor>,
+    ) -> (u16, mpsc::Receiver<Option<String>>) {
         let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
         let port = listener.local_addr().expect("local addr").port();
         let (tx, rx) = mpsc::channel();
         std::thread::spawn(move || {
             let (stream, _) = listener.accept().expect("accept");
-            // the error type is fixed by tungstenite's handshake Callback trait
-            #[allow(clippy::result_large_err)]
-            let record = |request: &tungstenite::handshake::server::Request,
-                          response: tungstenite::handshake::server::Response| {
-                let authorization = request
-                    .headers()
-                    .get("authorization")
-                    .map(|v| v.to_str().unwrap_or_default().to_string());
-                let _ = tx.send(authorization);
-                Ok(response)
-            };
-            let mut ws = tungstenite::accept_hdr(stream, record).expect("ws handshake");
-            let registration = serde_json::json!({
-                "type": "org.mockserver.serialization.model.WebSocketClientIdDTO",
-                "value": serde_json::json!({ "clientId": "recorded-client" }).to_string(),
-            });
-            ws.send(Message::Text(registration.to_string()))
-                .expect("send registration");
-            while ws.read().is_ok() {}
+            match tls {
+                None => serve_recorded(stream, tx),
+                Some(acceptor) => {
+                    if let Ok(tls_stream) = acceptor.accept(stream) {
+                        serve_recorded(tls_stream, tx);
+                    }
+                }
+            }
         });
         (port, rx)
+    }
+
+    fn serve_recorded<S: std::io::Read + std::io::Write>(
+        stream: S,
+        tx: mpsc::Sender<Option<String>>,
+    ) {
+        // the error type is fixed by tungstenite's handshake Callback trait
+        #[allow(clippy::result_large_err)]
+        let record = |request: &tungstenite::handshake::server::Request,
+                      response: tungstenite::handshake::server::Response| {
+            let authorization = request
+                .headers()
+                .get("authorization")
+                .map(|v| v.to_str().unwrap_or_default().to_string());
+            let _ = tx.send(authorization);
+            Ok(response)
+        };
+        let Ok(mut ws) = tungstenite::accept_hdr(stream, record) else {
+            return;
+        };
+        let registration = serde_json::json!({
+            "type": "org.mockserver.serialization.model.WebSocketClientIdDTO",
+            "value": serde_json::json!({ "clientId": "recorded-client" }).to_string(),
+        });
+        ws.send(Message::Text(registration.to_string()))
+            .expect("send registration");
+        while ws.read().is_ok() {}
+    }
+
+    /// A self-signed certificate for `127.0.0.1` as `(cert PEM, PKCS#8 key PEM)`,
+    /// generated with the `openssl` CLI.
+    pub(crate) fn self_signed_localhost_cert() -> (Vec<u8>, Vec<u8>) {
+        self_signed_cert("127.0.0.1", "IP:127.0.0.1")
+    }
+
+    /// A self-signed certificate with the given common name and subjectAltName.
+    pub(crate) fn self_signed_cert(common_name: &str, subject_alt_name: &str) -> (Vec<u8>, Vec<u8>) {
+        static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+        let dir = std::env::temp_dir().join(format!(
+            "mockserver-rust-wss-{}-{}",
+            std::process::id(),
+            NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ));
+        std::fs::create_dir_all(&dir).expect("create temp dir");
+        let (cert, key) = (dir.join("cert.pem"), dir.join("key.pem"));
+        let output = std::process::Command::new("openssl")
+            .args(["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1"])
+            .arg("-subj")
+            .arg(format!("/CN={common_name}"))
+            .arg("-addext")
+            .arg(format!("subjectAltName={subject_alt_name}"))
+            .args(["-addext", "extendedKeyUsage=serverAuth"])
+            .arg("-keyout")
+            .arg(&key)
+            .arg("-out")
+            .arg(&cert)
+            .output()
+            .expect("the wss tests need the openssl CLI");
+        assert!(output.status.success(), "openssl failed: {output:?}");
+        let pems = (
+            std::fs::read(&cert).expect("read cert"),
+            std::fs::read(&key).expect("read key"),
+        );
+        std::fs::remove_dir_all(&dir).ok();
+        pems
+    }
+
+    fn connector_trusting(cert_pem: &[u8]) -> native_tls::TlsConnector {
+        native_tls::TlsConnector::builder()
+            .add_root_certificate(native_tls::Certificate::from_pem(cert_pem).expect("cert"))
+            .build()
+            .expect("connector")
     }
 
     fn upgrade_authorization(bearer_token: Option<&str>) -> Option<String> {
         let (port, recorded) = recording_callback_server();
         let client =
-            BreakpointWebSocketClient::connect(&format!("http://127.0.0.1:{port}"), bearer_token)
+            BreakpointWebSocketClient::connect(&format!("http://127.0.0.1:{port}"), bearer_token, None)
                 .expect("connect");
         client.close();
         recorded
@@ -824,6 +918,7 @@ pub(crate) mod tests {
         let result = BreakpointWebSocketClient::connect(
             &format!("http://127.0.0.1:{port}"),
             Some("my-jwt-token"),
+            None,
         );
         server.join().expect("server thread");
         target.join().expect("redirect target thread");
@@ -845,7 +940,7 @@ pub(crate) mod tests {
     fn close_returns_promptly_while_read_loop_is_idle() {
         let (port, server) = idle_callback_server();
         let client = Arc::new(
-            BreakpointWebSocketClient::connect(&format!("http://127.0.0.1:{port}"), None)
+            BreakpointWebSocketClient::connect(&format!("http://127.0.0.1:{port}"), None, None)
                 .expect("connect"),
         );
         assert_eq!(client.client_id, "idle-client");
@@ -869,5 +964,52 @@ pub(crate) mod tests {
         }
         assert!(client.is_dead(), "read loop still running after close()");
         server.join().expect("server thread");
+    }
+
+    #[test]
+    fn wss_upgrade_uses_the_configured_tls_connector() {
+        let (cert, key) = self_signed_localhost_cert();
+        let identity = native_tls::Identity::from_pkcs8(&cert, &key).expect("identity");
+        let (port, recorded) = recording_tls_callback_server(identity);
+        let connector = connector_trusting(&cert);
+
+        let client = BreakpointWebSocketClient::connect(
+            &format!("https://127.0.0.1:{port}"),
+            Some("my-jwt-token"),
+            Some(&connector),
+        )
+        .expect("wss connect");
+        assert_eq!(client.client_id, "recorded-client");
+        client.close();
+        assert_eq!(
+            recorded.recv_timeout(Duration::from_secs(3)).expect("no upgrade recorded"),
+            Some("Bearer my-jwt-token".to_string())
+        );
+    }
+
+    #[test]
+    fn wss_upgrade_rejects_a_certificate_the_connector_does_not_trust() {
+        let (cert, key) = self_signed_localhost_cert();
+        let identity = native_tls::Identity::from_pkcs8(&cert, &key).expect("identity");
+        let (port, recorded) = recording_tls_callback_server(identity);
+
+        let result = BreakpointWebSocketClient::connect(
+            &format!("https://127.0.0.1:{port}"),
+            Some("my-jwt-token"),
+            None,
+        );
+        assert!(result.is_err(), "an untrusted certificate was accepted");
+        assert!(
+            recorded.recv_timeout(Duration::from_millis(500)).is_err(),
+            "the upgrade request (and its bearer token) reached an untrusted server"
+        );
+    }
+
+    #[test]
+    fn ws_connector_matches_the_base_url_scheme() {
+        let configured = native_tls::TlsConnector::new().expect("connector");
+        assert!(matches!(ws_connector(false, Some(&configured)), Ok(Connector::Plain)));
+        assert!(matches!(ws_connector(true, Some(&configured)), Ok(Connector::NativeTls(_))));
+        assert!(matches!(ws_connector(true, None), Ok(Connector::NativeTls(_))));
     }
 }

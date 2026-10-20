@@ -211,25 +211,53 @@ impl ClientBuilder {
             builder = builder.default_headers(headers);
         }
 
-        if let Some(ca) = self.ca_cert_pem {
-            let cert = reqwest::Certificate::from_pem(&ca)?;
+        if let Some(ca) = &self.ca_cert_pem {
+            let cert = reqwest::Certificate::from_pem(ca)?;
             builder = builder.add_root_certificate(cert);
         }
 
-        if let Some((cert_pem, key_pem)) = self.client_identity_pem {
-            let identity = reqwest::Identity::from_pkcs8_pem(&cert_pem, &key_pem)?;
+        if let Some((cert_pem, key_pem)) = &self.client_identity_pem {
+            let identity = reqwest::Identity::from_pkcs8_pem(cert_pem, key_pem)?;
             builder = builder.identity(identity);
         }
 
         let http_client = builder.build()?;
+        let ws_tls = if self.secure {
+            Some(ws_tls_connector(
+                self.tls_verify,
+                self.ca_cert_pem.as_deref(),
+                self.client_identity_pem.as_ref(),
+            )?)
+        } else {
+            None
+        };
 
         Ok(MockServerClient {
             base_url,
             http: http_client,
             control_plane_bearer_token: self.control_plane_bearer_token,
+            ws_tls,
             breakpoint_ws: std::sync::Mutex::new(None),
         })
     }
+}
+
+/// The callback WebSocket's TLS connector, configured like the reqwest HTTPS client.
+fn ws_tls_connector(
+    tls_verify: bool,
+    ca_cert_pem: Option<&[u8]>,
+    client_identity_pem: Option<&(Vec<u8>, Vec<u8>)>,
+) -> Result<native_tls::TlsConnector> {
+    let tls_error = |e: native_tls::Error| Error::InvalidRequest(format!("WebSocket TLS setup failed: {e}"));
+    let mut builder = native_tls::TlsConnector::builder();
+    builder.danger_accept_invalid_certs(!tls_verify);
+    if let Some(ca) = ca_cert_pem {
+        builder.add_root_certificate(native_tls::Certificate::from_pem(ca).map_err(tls_error)?);
+    }
+    if let Some((cert_pem, key_pem)) = client_identity_pem {
+        builder.identity(native_tls::Identity::from_pkcs8(cert_pem, key_pem).map_err(tls_error)?);
+    }
+    builder.build().map_err(tls_error)
 }
 
 // ---------------------------------------------------------------------------
@@ -243,6 +271,7 @@ pub struct MockServerClient {
     pub(crate) base_url: String,
     http: Client,
     control_plane_bearer_token: Option<String>,
+    ws_tls: Option<native_tls::TlsConnector>,
     breakpoint_ws: std::sync::Mutex<Option<BreakpointWebSocketClient>>,
 }
 
@@ -937,6 +966,7 @@ impl MockServerClient {
             let ws = BreakpointWebSocketClient::connect(
                 &self.base_url,
                 self.control_plane_bearer_token.as_deref(),
+                self.ws_tls.as_ref(),
             )?;
             *guard = Some(ws);
         }
@@ -2633,7 +2663,10 @@ impl Scenario<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::breakpoint::tests::recording_callback_server;
+    use crate::breakpoint::tests::{
+        recording_callback_server, recording_tls_callback_server, self_signed_cert,
+        self_signed_localhost_cert,
+    };
     use std::time::Duration;
 
     fn callback_upgrade_authorization(
@@ -2666,5 +2699,65 @@ mod tests {
     #[test]
     fn callback_websocket_sends_no_authorization_without_a_token() {
         assert_eq!(callback_upgrade_authorization(|b| b), None);
+    }
+
+    fn wss_callback_upgrade(
+        builder: impl FnOnce(ClientBuilder, &[u8]) -> ClientBuilder,
+    ) -> Result<Option<String>> {
+        wss_callback_upgrade_with(self_signed_localhost_cert(), builder)
+    }
+
+    fn wss_callback_upgrade_with(
+        (cert, key): (Vec<u8>, Vec<u8>),
+        builder: impl FnOnce(ClientBuilder, &[u8]) -> ClientBuilder,
+    ) -> Result<Option<String>> {
+        let identity = native_tls::Identity::from_pkcs8(&cert, &key).expect("identity");
+        let (port, recorded) = recording_tls_callback_server(identity);
+        let client = builder(ClientBuilder::new("127.0.0.1", port).secure(true), &cert)
+            .control_plane_bearer_token("client-token")
+            .build()
+            .expect("build");
+        client.ensure_breakpoint_ws()?;
+        if let Some(ws) = client.breakpoint_ws.lock().unwrap().take() {
+            ws.close();
+        }
+        Ok(recorded
+            .recv_timeout(Duration::from_secs(3))
+            .expect("no upgrade recorded"))
+    }
+
+    #[test]
+    fn secure_client_opens_the_callback_websocket_over_wss_with_its_ca() {
+        assert_eq!(
+            wss_callback_upgrade(|b, cert| b.ca_cert_pem(cert.to_vec())).expect("wss connect"),
+            Some("Bearer client-token".to_string())
+        );
+    }
+
+    #[test]
+    fn secure_client_honours_tls_verify_false_on_the_callback_websocket() {
+        assert_eq!(
+            wss_callback_upgrade(|b, _| b.tls_verify(false)).expect("wss connect"),
+            Some("Bearer client-token".to_string())
+        );
+    }
+
+    #[test]
+    fn secure_client_rejects_an_untrusted_callback_websocket_certificate() {
+        assert!(wss_callback_upgrade(|b, _| b).is_err());
+    }
+
+    #[test]
+    fn secure_client_rejects_a_trusted_callback_websocket_certificate_for_another_host() {
+        let wrong_host = || self_signed_cert("wrong-host.example", "DNS:wrong-host.example");
+        assert!(
+            wss_callback_upgrade_with(wrong_host(), |b, cert| b.ca_cert_pem(cert.to_vec())).is_err(),
+            "a trusted certificate for another hostname was accepted with tls_verify on"
+        );
+        assert_eq!(
+            wss_callback_upgrade_with(wrong_host(), |b, _| b.tls_verify(false))
+                .expect("wss connect with tls_verify(false)"),
+            Some("Bearer client-token".to_string())
+        );
     }
 }

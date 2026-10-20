@@ -170,7 +170,7 @@ surfaces an invalid push-notification webhook URL instead of panicking).
 - **Matching diagnostics** — `explain`, `debug_mismatch` and `explain_unmatched` return typed reports
 - **LLM, MCP, and A2A builders** — fluent `llm` / `mcp` / `a2a` mock builders, wire-identical to the other clients
 - **Blocking (synchronous)** — uses `reqwest` blocking client; no async runtime needed
-- **TLS support** — optional HTTPS with configurable certificate verification
+- **TLS support** — optional HTTPS with configurable certificate verification; the breakpoint/callback WebSocket then connects over `wss` with the same TLS settings
 - **Secured control plane** — `control_plane_bearer_token(..)` (JWT auth, also sent on the breakpoint/callback WebSocket upgrade), `ca_cert_pem_path(..)` / `ca_cert_pem(..)` (trust a server CA), and `client_cert_pem(cert, key)` (mTLS)
 
 ## API Overview
