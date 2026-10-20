@@ -123,7 +123,7 @@
         <!-- grpc-java: TEST SCOPE ONLY (mockserver-netty). Used to drive MockServer with a real
              gRPC client so the gRPC wire contract (protobuf framing + grpc-status trailer) is
              verified end-to-end rather than only at handler level. Never bundled in a release. -->
-        <grpc.version>1.84.3</grpc.version>
+        <grpc.version>1.85.0</grpc.version>
         <!-- Java-WebSocket: TEST SCOPE ONLY (mockserver-netty). An implementation independent of
              Netty, used to drive mocked WebSockets so RFC 6455 control-frame behaviour (PING/PONG
              keepalive, CLOSE echo) is verified against a real client rather than against the same
@@ -876,17 +876,17 @@
             <dependency>
                 <groupId>io.prometheus</groupId>
                 <artifactId>prometheus-metrics-core</artifactId>
-                <version>1.9.0</version>
+                <version>1.10.0</version>
             </dependency>
             <dependency>
                 <groupId>io.prometheus</groupId>
                 <artifactId>prometheus-metrics-exposition-formats</artifactId>
-                <version>1.9.0</version>
+                <version>1.10.0</version>
             </dependency>
             <dependency>
                 <groupId>io.prometheus</groupId>
                 <artifactId>prometheus-metrics-model</artifactId>
-                <version>1.9.0</version>
+                <version>1.10.0</version>
             </dependency>
             <!-- snappy (raw block format) — required by the Prometheus Remote-Write v1 push exporter -->
             <dependency>
