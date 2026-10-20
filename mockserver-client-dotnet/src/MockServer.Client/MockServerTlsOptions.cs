@@ -1,4 +1,6 @@
 using System.Net.Http;
+using System.Net.Security;
+using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
 
 namespace MockServer.Client;
@@ -127,6 +129,35 @@ public sealed class MockServerTlsOptions
 
         return handler;
     }
+
+    /// <summary>
+    /// Apply the same client certificate and CA trust as <see cref="BuildHandler"/> to a
+    /// callback WebSocket, so it passes control-plane mTLS as the client's HTTP requests do.
+    /// </summary>
+    internal void ApplyTo(ClientWebSocketOptions options)
+    {
+        if (_clientCertificate != null)
+            options.ClientCertificates.Add(_clientCertificate);
+
+        if (_caCertificate != null)
+        {
+            var caCertificate = _caCertificate;
+            RemoteCertificateValidationCallback callback = (_, serverCert, chain, errors) =>
+                ValidateServerCertificate(caCertificate, ToCertificate2(serverCert), chain, errors);
+#if NET8_0_OR_GREATER
+            options.RemoteCertificateValidationCallback = callback;
+#else
+            var property = typeof(ClientWebSocketOptions).GetProperty("RemoteCertificateValidationCallback");
+            if (property == null)
+                throw new PlatformNotSupportedException(
+                    "This runtime cannot trust a custom CA certificate on the callback WebSocket; trust the CA in the system store instead.");
+            property.SetValue(options, callback);
+#endif
+        }
+    }
+
+    private static X509Certificate2? ToCertificate2(X509Certificate? certificate) =>
+        certificate == null ? null : certificate as X509Certificate2 ?? new X509Certificate2(certificate);
 
     /// <summary>
     /// Validate that the server certificate chains to the provided CA certificate.

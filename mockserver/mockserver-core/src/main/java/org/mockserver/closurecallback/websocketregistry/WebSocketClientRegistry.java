@@ -62,6 +62,7 @@ public class WebSocketClientRegistry {
     private final WebSocketMessageSerializer webSocketMessageSerializer;
     private final Map<String, Channel> clientRegistry;
     private final Set<String> breakpointReleasedClients = ConcurrentHashMap.newKeySet();
+    private final Map<String, Channel> takingOver = new ConcurrentHashMap<>();
     private final Map<String, WebSocketResponseCallback> responseCallbackRegistry;
     private final Map<String, WebSocketRequestCallback> forwardCallbackRegistry;
     private final Map<String, StreamFrameDecisionCallback> streamFrameCallbackRegistry;
@@ -161,6 +162,28 @@ public class WebSocketClientRegistry {
 
     public int size() {
         return clientRegistry.size();
+    }
+
+    /**
+     * @return the channel the client id is registered to, or null when it is not registered
+     */
+    public Channel registeredChannel(String clientId) {
+        return clientId != null ? clientRegistry.get(clientId) : null;
+    }
+
+    /**
+     * Reserves a client id for a connection that is about to register it, so only one connection at a
+     * time takes an id over. A reservation held by a closed connection is taken over.
+     *
+     * @return false when another open connection holds the reservation
+     */
+    public boolean reserveTakeover(String clientId, Channel channel) {
+        Channel other = takingOver.putIfAbsent(clientId, channel);
+        return other == null || other == channel || (!other.isActive() && takingOver.replace(clientId, other, channel));
+    }
+
+    public void releaseTakeover(String clientId, Channel channel) {
+        takingOver.remove(clientId, channel);
     }
 
     public void registerClient(String clientId, ChannelHandlerContext ctx) {

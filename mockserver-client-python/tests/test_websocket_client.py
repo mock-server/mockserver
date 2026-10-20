@@ -558,3 +558,117 @@ class TestControlPlaneBearerTokenOnUpgrade:
 
         upgrades = await self._upgrade_headers(open_websocket)
         assert "Authorization" not in upgrades[0]
+
+
+class TestMtlsClientCertificateOnUpgrade:
+    """A real in-process TLS WebSocket server records the client certificate on each upgrade."""
+
+    FIXTURES = __import__("pathlib").Path(__file__).parent / "fixtures" / "mtls"
+
+    @classmethod
+    async def _peer_certificates(cls, open_websocket):
+        import ssl
+
+        from websockets.asyncio.server import serve
+
+        server_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        server_context.load_cert_chain(
+            certfile=str(cls.FIXTURES / "leaf-cert.pem"), keyfile=str(cls.FIXTURES / "leaf-key.pem")
+        )
+        server_context.load_verify_locations(str(cls.FIXTURES / "ca.pem"))
+        server_context.verify_mode = ssl.CERT_OPTIONAL
+        peer_certificates = []
+
+        async def handler(connection):
+            peer_certificates.append(connection.transport.get_extra_info("peercert"))
+            await connection.send(
+                json.dumps(
+                    {"type": TYPE_CLIENT_ID_DTO, "value": json.dumps({"clientId": "client-one"})}
+                )
+            )
+            await connection.wait_closed()
+
+        async with serve(handler, "127.0.0.1", 0, ssl=server_context) as server:
+            port = server.sockets[0].getsockname()[1]
+            ws_client = await open_websocket(port)
+            await ws_client.close()
+        return peer_certificates
+
+    @staticmethod
+    def _subject_common_name(peer_certificate):
+        return dict(rdn[0] for rdn in peer_certificate["subject"])["commonName"]
+
+    @pytest.mark.asyncio
+    async def test_async_client_presents_its_client_certificate(self):
+        from mockserver.async_client import AsyncMockServerClient
+
+        async def open_websocket(port):
+            client = AsyncMockServerClient(
+                "127.0.0.1",
+                port,
+                secure=True,
+                ca_cert_path=str(self.FIXTURES / "ca.pem"),
+                client_cert_path=str(self.FIXTURES / "leaf-cert.pem"),
+                client_key_path=str(self.FIXTURES / "leaf-key.pem"),
+            )
+            await client._register_websocket_callback("response", lambda req: None)
+            return client._websocket_clients[0]
+
+        peer_certificates = await self._peer_certificates(open_websocket)
+        assert len(peer_certificates) == 1
+        assert self._subject_common_name(peer_certificates[0]) == "www.mockserver.com"
+
+    @pytest.mark.asyncio
+    async def test_async_client_breakpoint_websocket_presents_its_client_certificate(self):
+        from mockserver.async_client import AsyncMockServerClient
+
+        async def open_websocket(port):
+            client = AsyncMockServerClient(
+                "127.0.0.1",
+                port,
+                secure=True,
+                ca_cert_path=str(self.FIXTURES / "ca.pem"),
+                client_cert_path=str(self.FIXTURES / "leaf-cert.pem"),
+                client_key_path=str(self.FIXTURES / "leaf-key.pem"),
+            )
+            return await client._ensure_breakpoint_websocket()
+
+        peer_certificates = await self._peer_certificates(open_websocket)
+        assert len(peer_certificates) == 1
+        assert self._subject_common_name(peer_certificates[0]) == "www.mockserver.com"
+
+    @pytest.mark.asyncio
+    async def test_async_client_without_client_certificate_presents_none(self):
+        from mockserver.async_client import AsyncMockServerClient
+
+        async def open_websocket(port):
+            client = AsyncMockServerClient(
+                "127.0.0.1", port, secure=True, ca_cert_path=str(self.FIXTURES / "ca.pem")
+            )
+            await client._register_websocket_callback("response", lambda req: None)
+            return client._websocket_clients[0]
+
+        peer_certificates = await self._peer_certificates(open_websocket)
+        assert len(peer_certificates) == 1
+        assert not peer_certificates[0]
+
+    @pytest.mark.asyncio
+    async def test_async_client_rejects_a_server_its_ca_did_not_sign(self):
+        import ssl
+
+        from mockserver.async_client import AsyncMockServerClient
+
+        async def open_websocket(port):
+            client = AsyncMockServerClient(
+                "127.0.0.1",
+                port,
+                secure=True,
+                ca_cert_path=str(self.FIXTURES / "other-ca.pem"),
+                client_cert_path=str(self.FIXTURES / "leaf-cert.pem"),
+                client_key_path=str(self.FIXTURES / "leaf-key.pem"),
+            )
+            await client._register_websocket_callback("response", lambda req: None)
+            return client._websocket_clients[0]
+
+        with pytest.raises(ssl.SSLCertVerificationError):
+            await self._peer_certificates(open_websocket)

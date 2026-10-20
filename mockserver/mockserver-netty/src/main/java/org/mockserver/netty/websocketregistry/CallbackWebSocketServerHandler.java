@@ -37,6 +37,7 @@ import static org.mockserver.exception.ExceptionHandling.DIRECT_MEMORY_LIMIT_REA
 import static org.mockserver.exception.ExceptionHandling.directMemoryLimitReached;
 import static org.mockserver.exception.ExceptionHandling.isSslOrDecoderFault;
 import static org.mockserver.exception.ExceptionHandling.sniDescription;
+import static org.mockserver.formatting.StringFormatter.escapeControlCharactersForLog;
 import static org.mockserver.netty.unification.PortUnificationHandler.isHttp2Enabled;
 import static org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledUpstream;
 
@@ -87,9 +88,11 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                     DefaultFullHttpResponse notImplemented = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_IMPLEMENTED, Unpooled.EMPTY_BUFFER);
                     Http2StreamIds.stampFromNettyRequest(notImplemented, (FullHttpRequest) msg);
                     ctx.channel().writeAndFlush(notImplemented);
-                } else if (ControlPlaneWebSocketUpgradeGate.allowUpgrade(ctx, (FullHttpRequest) msg, httpState, mockServerLogger, isSslEnabledUpstream(ctx.channel()), "callback")) {
-                    upgradeChannel(ctx, (FullHttpRequest) msg);
-                    ctx.channel().attr(CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET).set(true);
+                } else {
+                    ControlPlaneWebSocketUpgradeGate.Admission admission = ControlPlaneWebSocketUpgradeGate.admitUpgrade(ctx, (FullHttpRequest) msg, httpState, mockServerLogger, isSslEnabledUpstream(ctx.channel()), "callback");
+                    if (admission != null) {
+                        upgradeChannel(ctx, (FullHttpRequest) msg, admission);
+                    }
                 }
             } else if (msg instanceof WebSocketFrame && Boolean.TRUE.equals(ctx.channel().attr(CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET).get())) {
                 handleWebSocketFrame(ctx, (WebSocketFrame) msg);
@@ -113,7 +116,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
         ctx.fireChannelReadComplete();
     }
 
-    private void upgradeChannel(final ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
+    private void upgradeChannel(final ChannelHandlerContext ctx, FullHttpRequest httpRequest, ControlPlaneWebSocketUpgradeGate.Admission admission) {
         final WebSocketServerHandshaker handshaker = new WebSocketServerHandshakerFactory(
             (isSslEnabledUpstream(ctx.channel()) ? "wss" : "ws") + "://" + httpRequest.headers().get(HOST) + UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI,
             null,
@@ -122,49 +125,122 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
         ).newHandshaker(httpRequest);
         if (handshaker == null) {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
-        } else {
-            ctx.channel().attr(HANDSHAKER).set(handshaker);
-            final String clientId = httpRequest.headers().contains(CLIENT_REGISTRATION_ID_HEADER) ? httpRequest.headers().get(CLIENT_REGISTRATION_ID_HEADER) : UUIDService.getUUID();
-            if (LocalCallbackRegistry.responseClientExists(clientId)
-                || LocalCallbackRegistry.forwardClientExists(clientId)) {
-                // found locally to indicate to client
-                HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.RESET_CONTENT, ctx.channel().alloc().buffer(0));
-                HttpUtil.setContentLength(res, 0);
-                ctx.channel().writeAndFlush(res, ctx.channel().newPromise());
-            } else {
-                handshaker
-                    .handshake(
-                        ctx.channel(),
-                        httpRequest,
-                        new DefaultHttpHeaders().add(CLIENT_REGISTRATION_ID_HEADER, clientId),
-                        ctx.channel().newPromise()
-                    )
-                    .addListener((ChannelFutureListener) future -> {
-                        ctx.pipeline().remove(DashboardWebSocketHandler.class);
-                        ctx.pipeline().remove(MockServerHttpServerCodec.class);
-                        ctx.pipeline().remove(HttpRequestHandler.class);
-                        if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
-                            mockServerLogger.logEvent(
-                                new LogEntry()
-                                    .setLogLevel(Level.TRACE)
-                                    .setMessageFormat("registering client " + clientId)
-                            );
-                        }
-                        webSocketClientRegistry.registerClient(clientId, ctx, acceptsBreakpointReleased(httpRequest));
-                        final Channel registeredChannel = future.channel();
-                        registeredChannel.closeFuture().addListener((ChannelFutureListener) closeFuture -> {
-                            if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
-                                mockServerLogger.logEvent(
-                                    new LogEntry()
-                                        .setLogLevel(Level.TRACE)
-                                        .setMessageFormat("unregistering callback for client " + clientId)
-                                );
-                            }
-                            webSocketClientRegistry.unregisterClient(clientId, registeredChannel);
-                        });
-                    });
-            }
+            return;
         }
+        final String clientId = httpRequest.headers().contains(CLIENT_REGISTRATION_ID_HEADER) ? httpRequest.headers().get(CLIENT_REGISTRATION_ID_HEADER) : UUIDService.getUUID();
+        if (LocalCallbackRegistry.responseClientExists(clientId)
+            || LocalCallbackRegistry.forwardClientExists(clientId)) {
+            // found locally to indicate to client
+            HttpResponse res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.RESET_CONTENT, ctx.channel().alloc().buffer(0));
+            HttpUtil.setContentLength(res, 0);
+            ctx.channel().writeAndFlush(res, ctx.channel().newPromise());
+            return;
+        }
+        ctx.channel().closeFuture().addListener(future -> webSocketClientRegistry.releaseTakeover(clientId, ctx.channel()));
+        claimClientId(ctx, handshaker, httpRequest, clientId, admission);
+    }
+
+    /**
+     * Upgrades the connection once it may take the client id: at once when the id is free, otherwise
+     * after {@link CallbackClientIdClaim} decides. Only one connection at a time may be taking an id
+     * over, and the registry is read again once that reservation is held, so a connection that
+     * registered meanwhile is decided against rather than silently displaced.
+     */
+    private void claimClientId(ChannelHandlerContext ctx, WebSocketServerHandshaker handshaker, FullHttpRequest httpRequest, String clientId, ControlPlaneWebSocketUpgradeGate.Admission admission) {
+        Channel registered = webSocketClientRegistry.registeredChannel(clientId);
+        if (isFree(registered, ctx.channel())) {
+            takeOver(ctx, handshaker, httpRequest, clientId, admission, registered, null);
+            return;
+        }
+        httpRequest.retain();
+        CallbackClientIdClaim.decide(registered, admission, ctx.executor(), decision -> {
+            try {
+                if (!ctx.channel().isActive()) {
+                    return;
+                }
+                if (decision.allowed()) {
+                    takeOver(ctx, handshaker, httpRequest, clientId, admission, registered, decision.closeRegistered() ? registered : null);
+                } else if (decision == CallbackClientIdClaim.Decision.REFUSE_OTHER_PRINCIPAL) {
+                    refuse(ctx, clientId, HttpResponseStatus.FORBIDDEN, "registered to an open connection, authenticated as another caller, that answered a ping");
+                } else {
+                    refuse(ctx, clientId, HttpResponseStatus.CONFLICT, "registered to an open connection that answered a ping");
+                }
+            } finally {
+                httpRequest.release();
+            }
+        });
+    }
+
+    private static boolean isFree(Channel registered, Channel claimant) {
+        return registered == null || registered == claimant || !registered.isActive();
+    }
+
+    private void takeOver(ChannelHandlerContext ctx, WebSocketServerHandshaker handshaker, FullHttpRequest httpRequest, String clientId, ControlPlaneWebSocketUpgradeGate.Admission admission, Channel decidedAgainst, Channel replaced) {
+        if (!webSocketClientRegistry.reserveTakeover(clientId, ctx.channel())) {
+            refuse(ctx, clientId, HttpResponseStatus.CONFLICT, "being taken over by another connection");
+            return;
+        }
+        Channel registered = webSocketClientRegistry.registeredChannel(clientId);
+        if (registered != decidedAgainst && !isFree(registered, ctx.channel())) {
+            webSocketClientRegistry.releaseTakeover(clientId, ctx.channel());
+            claimClientId(ctx, handshaker, httpRequest, clientId, admission);
+            return;
+        }
+        handshake(ctx, handshaker, httpRequest, clientId, admission, replaced);
+    }
+
+    private void refuse(ChannelHandlerContext ctx, String clientId, HttpResponseStatus status, String reason) {
+        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setLogLevel(Level.INFO)
+                    .setMessageFormat("callback web socket upgrade rejected with status {} - client id {} is {}")
+                    .setArguments(status.code(), escapeControlCharactersForLog(clientId), reason)
+            );
+        }
+        ControlPlaneWebSocketUpgradeGate.reject(ctx, status);
+    }
+
+    private void handshake(ChannelHandlerContext ctx, WebSocketServerHandshaker handshaker, FullHttpRequest httpRequest, String clientId, ControlPlaneWebSocketUpgradeGate.Admission admission, Channel replaced) {
+        ctx.channel().attr(HANDSHAKER).set(handshaker);
+        ctx.channel().attr(CHANNEL_UPGRADED_FOR_CALLBACK_WEB_SOCKET).set(true);
+        ctx.channel().attr(CallbackClientIdClaim.PRINCIPAL_IDENTITY).set(admission.authenticated() ? admission.principalIdentity() : null);
+        final boolean acceptsBreakpointReleased = acceptsBreakpointReleased(httpRequest);
+        handshaker
+            .handshake(
+                ctx.channel(),
+                httpRequest,
+                new DefaultHttpHeaders().add(CLIENT_REGISTRATION_ID_HEADER, clientId),
+                ctx.channel().newPromise()
+            )
+            .addListener((ChannelFutureListener) future -> {
+                ctx.pipeline().remove(DashboardWebSocketHandler.class);
+                ctx.pipeline().remove(MockServerHttpServerCodec.class);
+                ctx.pipeline().remove(HttpRequestHandler.class);
+                if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.TRACE)
+                            .setMessageFormat("registering client " + clientId)
+                    );
+                }
+                webSocketClientRegistry.registerClient(clientId, ctx, acceptsBreakpointReleased);
+                webSocketClientRegistry.releaseTakeover(clientId, ctx.channel());
+                if (replaced != null) {
+                    replaced.close();
+                }
+                final Channel registeredChannel = future.channel();
+                registeredChannel.closeFuture().addListener((ChannelFutureListener) closeFuture -> {
+                    if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.TRACE)
+                                .setMessageFormat("unregistering callback for client " + clientId)
+                        );
+                    }
+                    webSocketClientRegistry.unregisterClient(clientId, registeredChannel);
+                });
+            });
     }
 
     /**
@@ -197,6 +273,8 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
             webSocketClientRegistry.receivedTextWebSocketFrame(((TextWebSocketFrame) frame));
         } else if (frame instanceof PingWebSocketFrame) {
             ctx.write(new PongWebSocketFrame(frame.content().retain()));
+        } else if (frame instanceof PongWebSocketFrame) {
+            CallbackClientIdClaim.pongReceived(ctx.channel());
         } else {
             throw new UnsupportedOperationException(frame.getClass().getName() + " frame types not supported");
         }

@@ -3,9 +3,11 @@ package org.mockserver.authentication.jwt;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.RemoteJWKSet;
+import com.nimbusds.jwt.JWTClaimsSet;
 import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.authentication.BoundedResourceRetriever;
 import org.mockserver.authentication.AuthenticationHandler;
+import org.mockserver.authentication.AuthenticationResult;
 import org.mockserver.file.FilePath;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -15,6 +17,7 @@ import org.slf4j.event.Level;
 
 import java.io.File;
 import java.net.URI;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,8 +66,54 @@ public class JWTAuthenticationHandler implements AuthenticationHandler {
         return this;
     }
 
+    public static final String VERIFIED_ISSUER_CLAIM = "verifiedJwtIssuer";
+    public static final String VERIFIED_SUBJECT_CLAIM = "verifiedJwtSubject";
+
     @Override
     public boolean controlPlaneRequestAuthenticated(HttpRequest request) {
+        return validatedClaims(request) != null;
+    }
+
+    /**
+     * Authenticates as {@link #controlPlaneRequestAuthenticated} does, carrying the validated token's issuer and
+     * subject as {@value #VERIFIED_ISSUER_CLAIM} and {@value #VERIFIED_SUBJECT_CLAIM}. No principal is set, so the
+     * audit record is unchanged.
+     */
+    @Override
+    public AuthenticationResult authenticate(HttpRequest request) {
+        JWTClaimsSet claims = validatedClaims(request);
+        if (claims == null) {
+            return AuthenticationResult.unauthenticated();
+        }
+        Map<String, Object> verified = new LinkedHashMap<>();
+        if (claims.getIssuer() != null) {
+            verified.put(VERIFIED_ISSUER_CLAIM, claims.getIssuer());
+        }
+        if (claims.getSubject() != null) {
+            verified.put(VERIFIED_SUBJECT_CLAIM, claims.getSubject());
+        }
+        return AuthenticationResult.authenticated(null, "none", verified, Set.of());
+    }
+
+    /**
+     * The issuer and subject of the validated bearer token, from {@code result} when this handler produced it,
+     * otherwise from authenticating {@code request} again; null when it does not authenticate or has no subject.
+     */
+    @Override
+    public String principalIdentity(HttpRequest request, AuthenticationResult result) {
+        Map<String, Object> claims = result != null && result.getClaims().containsKey(VERIFIED_SUBJECT_CLAIM) ? result.getClaims() : null;
+        if (claims == null && request != null) {
+            try {
+                claims = authenticate(request).getClaims();
+            } catch (AuthenticationException notAuthenticated) {
+                return null;
+            }
+        }
+        Object subject = claims != null ? claims.get(VERIFIED_SUBJECT_CLAIM) : null;
+        return subject != null ? "jwt:" + claims.get(VERIFIED_ISSUER_CLAIM) + "|" + subject : null;
+    }
+
+    private JWTClaimsSet validatedClaims(HttpRequest request) {
         if (jwtValidator == null) {
             mockServerLogger.logEvent(
                 new LogEntry()
@@ -88,15 +137,14 @@ public class JWTAuthenticationHandler implements AuthenticationHandler {
                     if (isBlank(headerPrefix)) {
                         logAuthorisationFailure(request, "authorization type must be specified for authorization header");
                     } else if ("Bearer".equalsIgnoreCase(headerPrefix)) {
-                        jwtValidator.validate(authorizationHeader.substring(idx + 1));
-                        return true;
+                        return jwtValidator.validate(authorizationHeader.substring(idx + 1));
                     } else {
                         logAuthorisationFailure(request, "only \"Bearer\" supported for authorization header");
                     }
                 }
             }
         }
-        return false;
+        return null;
     }
 
     private void logAuthorisationFailure(HttpRequest request, String failureReason) {

@@ -61,4 +61,20 @@ public class ChainedAuthenticationHandler implements AuthenticationHandler {
         return MTLSAuthenticationHandler.PRINCIPAL_SOURCE.equals(result.getPrincipalSource());
     }
 
+    /**
+     * Every delegate's identity for the caller, joined, so two requests share an identity only when
+     * they match on every mechanism that can name one; null when none can.
+     */
+    @Override
+    public String principalIdentity(HttpRequest request, AuthenticationResult result) {
+        Set<String> identities = new LinkedHashSet<>();
+        for (AuthenticationHandler authenticationHandler : authenticationHandlers) {
+            String identity = authenticationHandler.principalIdentity(request, result);
+            if (identity != null) {
+                identities.add(identity);
+            }
+        }
+        return identities.isEmpty() ? null : String.join(" & ", identities);
+    }
+
 }

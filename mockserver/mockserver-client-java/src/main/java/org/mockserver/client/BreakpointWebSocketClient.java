@@ -561,7 +561,7 @@ class BreakpointWebSocketClient {
                 if (msg instanceof TextWebSocketFrame) {
                     webSocketClient.receivedTextWebSocketFrame((TextWebSocketFrame) msg);
                 } else if (msg instanceof PingWebSocketFrame) {
-                    ctx.write(new PongWebSocketFrame(((WebSocketFrame) msg).content().retain()));
+                    ctx.writeAndFlush(new PongWebSocketFrame(((WebSocketFrame) msg).content().retain()));
                 } else if (msg instanceof CloseWebSocketFrame) {
                     ch.close();
                 }

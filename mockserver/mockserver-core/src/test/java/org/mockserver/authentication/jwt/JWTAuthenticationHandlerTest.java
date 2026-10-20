@@ -262,4 +262,24 @@ public class JWTAuthenticationHandlerTest {
         assertThat(authenticationException.getMessage(), equalTo("only \"Bearer\" supported for authorization header"));
     }
 
+
+    @Test
+    public void shouldNameTheCallerByTheTokensIssuerAndSubject() {
+        AsymmetricKeyPair asymmetricKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
+        String jwkFile = TempFileWriter.write(new JWKGenerator().generateJWK(asymmetricKeyPair));
+        String jwt = new JWTGenerator(asymmetricKeyPair)
+            .signJWT(
+                ImmutableMap.of(
+                    "exp", Clock.systemUTC().instant().plus(Duration.ofHours(1)).getEpochSecond(),
+                    "iss", "some_issuer",
+                    "sub", "some_subject"
+                )
+            );
+        AuthenticationHandler authenticationHandler = new JWTAuthenticationHandler(mockServerLogger, jwkFile);
+        HttpRequest request = request().withHeader(AUTHORIZATION.toString(), "Bearer " + jwt);
+
+        assertThat(authenticationHandler.principalIdentity(request, authenticationHandler.authenticate(request)), equalTo("jwt:some_issuer|some_subject"));
+        assertThat(authenticationHandler.principalIdentity(request(), null), equalTo(null));
+        assertThat(authenticationHandler.principalIdentity(request().withHeader(AUTHORIZATION.toString(), "Bearer not-a-jwt"), null), equalTo(null));
+    }
 }

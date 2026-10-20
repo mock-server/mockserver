@@ -28,6 +28,7 @@ public sealed class MockServerClient : IDisposable
     private readonly string _baseUrl;
     private readonly bool _ownsHttpClient;
     private Func<string>? _controlPlaneBearerTokenSupplier;
+    private readonly MockServerTlsOptions? _tlsOptions;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -74,12 +75,14 @@ public sealed class MockServerClient : IDisposable
     /// client around a pre-built (possibly TLS-configured) HttpClient with a bearer-token supplier.
     /// </summary>
     private MockServerClient(
-        string baseUrl, HttpClient httpClient, bool ownsHttpClient, Func<string>? controlPlaneBearerTokenSupplier)
+        string baseUrl, HttpClient httpClient, bool ownsHttpClient, Func<string>? controlPlaneBearerTokenSupplier,
+        MockServerTlsOptions? tlsOptions)
     {
         _baseUrl = baseUrl.TrimEnd('/');
         _httpClient = httpClient;
         _ownsHttpClient = ownsHttpClient;
         _controlPlaneBearerTokenSupplier = controlPlaneBearerTokenSupplier;
+        _tlsOptions = tlsOptions;
     }
 
     /// <summary>
@@ -92,14 +95,15 @@ public sealed class MockServerClient : IDisposable
 
     internal static MockServerClient CreateConfigured(
         string host, int port, string contextPath, bool secure,
-        HttpClient httpClient, bool ownsHttpClient, Func<string>? controlPlaneBearerTokenSupplier)
+        HttpClient httpClient, bool ownsHttpClient, Func<string>? controlPlaneBearerTokenSupplier,
+        MockServerTlsOptions? tlsOptions = null)
     {
         var scheme = secure ? "https" : "http";
         var ctxPath = string.IsNullOrEmpty(contextPath)
             ? ""
             : (contextPath.StartsWith("/") ? contextPath : "/" + contextPath);
         var baseUrl = $"{scheme}://{host}:{port}{ctxPath}";
-        return new MockServerClient(baseUrl, httpClient, ownsHttpClient, controlPlaneBearerTokenSupplier);
+        return new MockServerClient(baseUrl, httpClient, ownsHttpClient, controlPlaneBearerTokenSupplier, tlsOptions);
     }
 
     // -------------------------------------------------------------------
@@ -1028,7 +1032,7 @@ public sealed class MockServerClient : IDisposable
             // Dispose old dead connection if present
             _breakpointWs?.Dispose();
             var ws = new BreakpointWebSocketClient();
-            await ws.ConnectAsync(_baseUrl, _controlPlaneBearerTokenSupplier).ConfigureAwait(false);
+            await ws.ConnectAsync(_baseUrl, _controlPlaneBearerTokenSupplier, _tlsOptions).ConfigureAwait(false);
             _breakpointWs = ws;
         }
         finally

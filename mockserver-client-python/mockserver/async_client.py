@@ -1638,6 +1638,7 @@ class AsyncMockServerClient:
                 self._ca_cert_path,
                 tls_verify=self._tls_verify,
                 bearer_token_supplier=self._control_plane_bearer,
+                ssl_context=self._ssl_context,
             )
             ws_client._is_breakpoint_ws = True  # type: ignore[attr-defined]
             ws_client._listen_task = asyncio.create_task(ws_client.listen())
@@ -1799,6 +1800,7 @@ class AsyncMockServerClient:
             self._ca_cert_path,
             tls_verify=self._tls_verify,
             bearer_token_supplier=self._control_plane_bearer,
+            ssl_context=self._ssl_context,
         )
 
         if callback_type == "response":

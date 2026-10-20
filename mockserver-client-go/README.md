@@ -73,6 +73,15 @@ client := mockserver.New("localhost", 1080,
 client := mockserver.New("localhost", 1080,
     mockserver.WithControlPlaneBearerToken(jwt),
 )
+
+// With control-plane mutual TLS: the client certificate is presented, and the
+// CA trusted, on every control-plane request and on the callback/breakpoint
+// WebSocket (an http.Client passed with WithHTTPClient supplies its own TLS settings)
+client := mockserver.New("localhost", 1080,
+    mockserver.WithTLS(),
+    mockserver.WithCACertPEMPath("ca.pem"),
+    mockserver.WithClientCertPEM("client-cert.pem", "client-key.pem"),
+)
 ```
 
 ### Creating Expectations

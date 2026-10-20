@@ -42,4 +42,15 @@ public interface AuthenticationHandler {
             ? AuthenticationResult.authenticated(null, "none", Map.of(), Set.of())
             : AuthenticationResult.unauthenticated();
     }
+
+    /**
+     * A stable name for the caller of a request this handler has just authenticated, used to tell
+     * whether two requests come from the same caller (for example, before a callback WebSocket may
+     * take over a client id). Only called after {@link #authenticate} accepted {@code request}.
+     *
+     * @return the caller's identity, or null when this handler cannot name one
+     */
+    default String principalIdentity(HttpRequest request, AuthenticationResult result) {
+        return result != null && result.getPrincipal() != null ? result.getPrincipalSource() + ":" + result.getPrincipal() : null;
+    }
 }

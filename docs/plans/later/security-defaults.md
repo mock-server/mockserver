@@ -114,9 +114,16 @@ For the proxied-browser path and the rebinding caveats, today's mitigations are 
 
 ---
 
-## Under consideration: DEF-10 — Bind a callback client id to its connection
+## Resolved: DEF-10 — Bind a callback client id to its connection
 
-**Low severity; not yet scheduled.** A callback WebSocket that registers with an `X-CLIENT-REGISTRATION-ID` already in use replaces the existing connection, so it receives that client's object callbacks and breakpoints. Replacement is deliberate: refusing a duplicate id locked clients out after a half-open drop (no ping or idle timeout on callback channels), and was reverted. Exploiting it needs a leaked 122-bit client id, and since the callback upgrade now requires control-plane authentication when it is on, only an authenticated principal can do it; with authentication off, the whole control plane is already open. Options: bind the id to the authenticated principal that registered it, or ping the existing connection and refuse only if it answers.
+**Resolved (unreleased, 2026-10).** A callback WebSocket that registers with an `X-CLIENT-REGISTRATION-ID` already in use no longer silently replaces the registered connection. Refusing every duplicate was rejected because it locks a client out after a half-open drop (callback channels have no ping or idle timeout), so the takeover rule is:
+
+- **Control-plane authentication on, and both connections' handlers name the caller** (`AuthenticationHandler.principalIdentity`: JWT issuer and subject, OIDC principal, the SHA-256 fingerprint of the verified mTLS client certificate): the same caller takes over at once. Another caller goes through the liveness check below, and is refused with `403` (not `409`) when the registered connection answers, so a renewed certificate or a new token subject can still replace its own dead connection.
+- **Otherwise**: MockServer pings the registered connection. If it answers within 2 seconds the new connection is refused with `409`; if it does not answer, the ping fails or it closes, the new connection takes over and the unresponsive one is closed.
+
+Only one connection at a time can take an id over (a second gets `409`), and a delayed decision re-reads the registry, so a connection that registered meanwhile is not displaced. A client answers the ping only while it reads its WebSocket, so a live client busy in a callback or breakpoint handler for longer than 2 seconds is treated as gone and can be taken over by another claimant (any authenticated caller, whatever its identity, when authentication is on). This residual is accepted; a longer window or two missed pings for a different-identity claim would narrow it.
+
+Reconnect after a dropped connection keeps working: a closed connection is replaced at once, a half-open one after the ping times out. A client that does not answer pings (an old Java client, which did not flush its pong) is treated as gone, which is the previous behaviour. See [tls-and-security.md → Callback WebSocket authentication](../../code/tls-and-security.md#browser-origins-cors-and-websocket-upgrades).
 
 ---
 

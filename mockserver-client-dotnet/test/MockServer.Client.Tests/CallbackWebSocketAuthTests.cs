@@ -1,6 +1,8 @@
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using FluentAssertions;
 using Xunit;
@@ -19,10 +21,12 @@ public class CallbackWebSocketAuthTests
         private readonly TcpListener _listener = new(IPAddress.Loopback, 0);
         private readonly TaskCompletionSource<Dictionary<string, string>> _upgradeHeaders =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly X509Certificate2? _serverCertificate;
         private TcpClient? _connection;
 
-        public RecordingCallbackServer()
+        public RecordingCallbackServer(X509Certificate2? serverCertificate = null)
         {
+            _serverCertificate = serverCertificate;
             _listener.Start();
             _ = Task.Run(AcceptAsync);
         }
@@ -31,12 +35,27 @@ public class CallbackWebSocketAuthTests
 
         public Task<Dictionary<string, string>> UpgradeHeaders => _upgradeHeaders.Task;
 
+        /// <summary>The client certificate the TLS handshake presented, or null; set once the upgrade arrives.</summary>
+        public X509Certificate? PresentedClientCertificate { get; private set; }
+
         private async Task AcceptAsync()
         {
             try
             {
                 _connection = await _listener.AcceptTcpClientAsync().ConfigureAwait(false);
-                var stream = _connection.GetStream();
+                Stream stream = _connection.GetStream();
+                if (_serverCertificate != null)
+                {
+                    var tls = new SslStream(stream, false);
+                    await tls.AuthenticateAsServerAsync(new SslServerAuthenticationOptions
+                    {
+                        ServerCertificate = _serverCertificate,
+                        ClientCertificateRequired = true,
+                        RemoteCertificateValidationCallback = (_, _, _, _) => true
+                    }).ConfigureAwait(false);
+                    PresentedClientCertificate = tls.RemoteCertificate;
+                    stream = tls;
+                }
                 var request = new StringBuilder();
                 var buffer = new byte[1];
                 while (!request.ToString().EndsWith("\r\n\r\n", StringComparison.Ordinal))
@@ -125,5 +144,73 @@ public class CallbackWebSocketAuthTests
         var headers = await server.UpgradeHeaders.WaitAsync(TimeSpan.FromSeconds(5));
         server.Dispose();
         headers.Should().NotContainKey("Authorization");
+    }
+
+    private static X509Certificate2 SelfSignedCertificate(string commonName, bool server)
+    {
+        using var key = RSA.Create(2048);
+        var request = new CertificateRequest($"CN={commonName}", key, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        request.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(
+            new OidCollection { new Oid(server ? "1.3.6.1.5.5.7.3.1" : "1.3.6.1.5.5.7.3.2") }, false));
+        if (server)
+        {
+            var subjectAlternativeNames = new SubjectAlternativeNameBuilder();
+            subjectAlternativeNames.AddIpAddress(IPAddress.Loopback);
+            request.CertificateExtensions.Add(subjectAlternativeNames.Build());
+        }
+        using var certificate = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow.AddHours(1));
+        return X509CertificateLoader.LoadPkcs12(certificate.Export(X509ContentType.Pfx), null);
+    }
+
+    [Fact]
+    public async Task Client_Presents_Its_Client_Certificate_And_Trusts_Its_CA_On_The_Callback_WebSocket()
+    {
+        using var serverCertificate = SelfSignedCertificate("127.0.0.1", server: true);
+        using var clientCertificate = SelfSignedCertificate("callback-client", server: false);
+        using var server = new RecordingCallbackServer(serverCertificate);
+        using var client = MockServerClient.Builder("127.0.0.1", server.Port)
+            .WithTls(tls => tls
+                .WithCaCertificate(X509CertificateLoader.LoadCertificate(serverCertificate.Export(X509ContentType.Cert)))
+                .WithClientCertificate(clientCertificate))
+            .Build();
+
+        await client.EnsureBreakpointWsAsync();
+        await server.UpgradeHeaders.WaitAsync(TimeSpan.FromSeconds(5));
+        server.Dispose();
+
+        server.PresentedClientCertificate.Should().NotBeNull();
+        server.PresentedClientCertificate!.Subject.Should().Be("CN=callback-client");
+    }
+
+    [Fact]
+    public async Task Client_Without_A_Client_Certificate_Presents_None_On_The_Callback_WebSocket()
+    {
+        using var serverCertificate = SelfSignedCertificate("127.0.0.1", server: true);
+        using var server = new RecordingCallbackServer(serverCertificate);
+        using var client = MockServerClient.Builder("127.0.0.1", server.Port)
+            .WithTls(tls => tls.WithCaCertificate(X509CertificateLoader.LoadCertificate(serverCertificate.Export(X509ContentType.Cert))))
+            .Build();
+
+        await client.EnsureBreakpointWsAsync();
+        await server.UpgradeHeaders.WaitAsync(TimeSpan.FromSeconds(5));
+        server.Dispose();
+
+        server.PresentedClientCertificate.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Client_Refuses_A_Server_Its_CA_Did_Not_Sign_On_The_Callback_WebSocket()
+    {
+        using var serverCertificate = SelfSignedCertificate("127.0.0.1", server: true);
+        using var otherCertificate = SelfSignedCertificate("127.0.0.1", server: true);
+        using var server = new RecordingCallbackServer(serverCertificate);
+        using var client = MockServerClient.Builder("127.0.0.1", server.Port)
+            .WithTls(tls => tls.WithCaCertificate(X509CertificateLoader.LoadCertificate(otherCertificate.Export(X509ContentType.Cert))))
+            .Build();
+
+        var connect = async () => await client.EnsureBreakpointWsAsync();
+
+        await connect.Should().ThrowAsync<Exception>();
+        server.UpgradeHeaders.IsCompletedSuccessfully.Should().BeFalse();
     }
 }

@@ -444,6 +444,13 @@ client = MockServerClient("localhost", 1080, control_plane_bearer_token=jwt)
 client = MockServerClient("localhost", 1080, control_plane_bearer_token_supplier=fetch_jwt)
 ```
 
+When MockServer requires mutual TLS for the control plane, pass `client_cert_path` and `client_key_path` (with `secure=True` and, for a private CA, `ca_cert_path`). The client presents that certificate, and trusts that CA, on every control-plane request and on the callback WebSocket.
+
+```python
+client = MockServerClient("localhost", 1080, secure=True, ca_cert_path="ca.pem",
+                          client_cert_path="client-cert.pem", client_key_path="client-key.pem")
+```
+
 ## Domain Model
 
 All domain model classes support builder-style chaining:

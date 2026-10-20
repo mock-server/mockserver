@@ -260,4 +260,26 @@ public class ChainedAuthenticationHandlerTest {
         assertThat(authenticationException.getMessage(), equalTo("control plane request failed authentication no client certificates can be validated by control plane CA"));
     }
 
+
+    private static AuthenticationHandler named(String identity) {
+        return new AuthenticationHandler() {
+            @Override
+            public boolean controlPlaneRequestAuthenticated(HttpRequest request) {
+                return true;
+            }
+
+            @Override
+            public String principalIdentity(HttpRequest request, AuthenticationResult result) {
+                return identity;
+            }
+        };
+    }
+
+    @Test
+    public void principalIdentityJoinsEveryDelegateThatCanNameTheCaller() {
+        AuthenticationResult result = AuthenticationResult.authenticated(null, "none", java.util.Map.of(), java.util.Set.of());
+
+        assertThat(new ChainedAuthenticationHandler(named("mtls:a"), named(null), named("jwt:b")).principalIdentity(request(), result), equalTo("mtls:a & jwt:b"));
+        assertThat(new ChainedAuthenticationHandler(named(null), named(null)).principalIdentity(request(), result), equalTo(null));
+    }
 }

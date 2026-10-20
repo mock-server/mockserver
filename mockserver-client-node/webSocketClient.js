@@ -12,6 +12,7 @@
         var WebSocketClient = require('websocket').client;
         var Q = require('q');
         var resolveBearerToken = require('./sendRequest').resolveBearerToken;
+        var clientCertificateOptions = require('./sendRequest').clientCertificateOptions;
         var fs = require('fs');
 
         var defer = function () {
@@ -458,14 +459,18 @@
                         return;
                     }
 
+                    var tlsOptions;
+                    try {
+                        tlsOptions = Object.assign({ca: ca, port: port}, clientCertificateOptions(clientOptions));
+                    } catch (e) {
+                        failRegistration("Can't read the mTLS client certificate or key: " + (e.message || String(e)));
+                        return;
+                    }
                     client = new WebSocketClient({
                         maxReceivedFrameSize: 64 * 1024 * 1024,   // 64MiB
                         maxReceivedMessageSize: 64 * 1024 * 1024, // 64MiB
                         fragmentOutgoingMessages: false,
-                        tlsOptions: {
-                            ca: ca,
-                            port: port
-                        }
+                        tlsOptions: tlsOptions
                     });
 
                     var scheduleReconnect = function () {

@@ -83,9 +83,10 @@ internal sealed class BreakpointWebSocketClient : IDisposable
 
     /// <summary>
     /// Connect and register. A non-empty token from <paramref name="bearerTokenSupplier"/> is
-    /// sent as <c>Authorization: Bearer &lt;token&gt;</c> on the upgrade request.
+    /// sent as <c>Authorization: Bearer &lt;token&gt;</c> on the upgrade request, and
+    /// <paramref name="tlsOptions"/> supplies the client certificate and CA trust for a wss connection.
     /// </summary>
-    internal async Task ConnectAsync(string baseUrl, Func<string>? bearerTokenSupplier = null)
+    internal async Task ConnectAsync(string baseUrl, Func<string>? bearerTokenSupplier = null, MockServerTlsOptions? tlsOptions = null)
     {
         var uri = new Uri(baseUrl);
         var scheme = uri.Scheme == "https" ? "wss" : "ws";
@@ -93,6 +94,7 @@ internal sealed class BreakpointWebSocketClient : IDisposable
         var wsUri = new Uri($"{scheme}://{uri.Host}:{uri.Port}{path}/_mockserver_callback_websocket");
 
         _ws = new ClientWebSocket();
+        tlsOptions?.ApplyTo(_ws.Options);
         var token = bearerTokenSupplier?.Invoke();
         if (!string.IsNullOrEmpty(token))
             _ws.Options.SetRequestHeader("Authorization", "Bearer " + token);

@@ -43,7 +43,8 @@ export interface MockServerClientOptions {
 
     /**
      * Path to a PEM client certificate presented for mutual TLS, for when the
-     * server requires `controlPlaneTLSMutualAuthenticationRequired=true`.
+     * server requires `controlPlaneTLSMutualAuthenticationRequired=true`, on
+     * control-plane requests and the callback WebSocket.
      */
     clientCertPemFilePath?: string;
 

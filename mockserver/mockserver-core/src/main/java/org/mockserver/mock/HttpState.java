@@ -6845,10 +6845,31 @@ public class HttpState {
         private static final ControlPlaneAuthDecision FORBIDDEN = new ControlPlaneAuthDecision(ControlPlaneAuthOutcome.FORBIDDEN, null);
         private final ControlPlaneAuthOutcome outcome;
         private final String clientSafeMessage;
+        private final java.util.function.Supplier<String> principalIdentity;
 
         private ControlPlaneAuthDecision(ControlPlaneAuthOutcome outcome, String clientSafeMessage) {
+            this(outcome, clientSafeMessage, null);
+        }
+
+        private ControlPlaneAuthDecision(ControlPlaneAuthOutcome outcome, String clientSafeMessage, java.util.function.Supplier<String> principalIdentity) {
             this.outcome = outcome;
             this.clientSafeMessage = clientSafeMessage;
+            this.principalIdentity = principalIdentity;
+        }
+
+        /**
+         * @return whether an allowed request was authenticated by a control-plane authentication handler
+         */
+        public boolean authenticated() {
+            return principalIdentity != null;
+        }
+
+        /**
+         * @return the authenticated caller's identity (see {@link org.mockserver.authentication.AuthenticationHandler#principalIdentity}),
+         * or null when the request was not authenticated or its handler cannot name the caller
+         */
+        public String principalIdentity() {
+            return principalIdentity != null ? principalIdentity.get() : null;
         }
 
         public ControlPlaneAuthOutcome outcome() {
@@ -6894,7 +6915,10 @@ public class HttpState {
                     return ControlPlaneAuthDecision.FORBIDDEN;
                 }
                 recordAudit(request, authenticationResult, "AUTHORIZED");
-                return ControlPlaneAuthDecision.ALLOWED;
+                if (resolvedControlPlaneAuthenticationHandler == null) {
+                    return ControlPlaneAuthDecision.ALLOWED;
+                }
+                return new ControlPlaneAuthDecision(ControlPlaneAuthOutcome.ALLOWED, null, () -> resolvedControlPlaneAuthenticationHandler.principalIdentity(request, authenticationResult));
             }
         } catch (AuthenticationException authenticationException) {
             if (authenticationException.isClientSafeMessage()) {

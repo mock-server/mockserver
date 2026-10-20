@@ -54,6 +54,21 @@
             return String(token);
         };
 
+        // The mTLS client cert/key TLS options ({cert, key}) for every connection
+        // to MockServer, its HTTP requests and its callback WebSocket alike.
+        var clientCertificateOptions = function (clientOptions) {
+            var options = {};
+            if (clientOptions) {
+                if (clientOptions.clientCertPemFilePath) {
+                    options.cert = fs.readFileSync(clientOptions.clientCertPemFilePath, {encoding: 'utf-8'});
+                }
+                if (clientOptions.clientKeyPemFilePath) {
+                    options.key = fs.readFileSync(clientOptions.clientKeyPemFilePath, {encoding: 'utf-8'});
+                }
+            }
+            return options;
+        };
+
         // Attach the control-plane Authorization header and mTLS client cert/key
         // to a Node http(s) request options object. Mutates and returns options.
         var applyControlPlaneAuth = function (options, clientOptions) {
@@ -64,15 +79,7 @@
                 }
                 options.headers['Authorization'] = 'Bearer ' + token;
             }
-            if (clientOptions) {
-                if (clientOptions.clientCertPemFilePath) {
-                    options.cert = fs.readFileSync(clientOptions.clientCertPemFilePath, {encoding: 'utf-8'});
-                }
-                if (clientOptions.clientKeyPemFilePath) {
-                    options.key = fs.readFileSync(clientOptions.clientKeyPemFilePath, {encoding: 'utf-8'});
-                }
-            }
-            return options;
+            return Object.assign(options, clientCertificateOptions(clientOptions));
         };
 
         var downloadCACert = function (tls, caCertPath, callback) {
@@ -433,7 +440,8 @@
             sendBinaryRequest: sendBinaryRequest,
             sendDeleteRequest: sendDeleteRequest,
             sendRawRequest: sendRawRequest,
-            resolveBearerToken: resolveBearerToken
+            resolveBearerToken: resolveBearerToken,
+            clientCertificateOptions: clientCertificateOptions
         };
     }
 })();

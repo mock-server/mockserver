@@ -25,6 +25,8 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
@@ -467,6 +469,37 @@ public class MTLSAuthenticationHandlerTest {
 
         AuthenticationException authenticationException = assertThrows(AuthenticationException.class, () -> handler(trustedCa.certificate).authenticate(request));
         assertThat(authenticationException.getMessage(), equalTo("control plane request failed authentication no client certificates found"));
+    }
+
+    @Test
+    public void shouldNameTheCallerByTheVerifiedCertificatesFingerprint() throws Exception {
+        TestCertificates.Issued trustedCa = TestCertificates.certificateAuthority("Trusted CA");
+        TestCertificates.Issued leaf = TestCertificates.clientCertificate("client", trustedCa);
+        MTLSAuthenticationHandler handler = handler(trustedCa.certificate);
+        HttpRequest request = requestWithChain(leaf.certificate);
+        String expected = "mtls:sha256:" + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(leaf.certificate.getEncoded()));
+
+        assertThat(handler.principalIdentity(request, handler.authenticate(request)), is(expected));
+        assertThat("verified again when the result came from another handler", handler.principalIdentity(request, AuthenticationResult.authenticated("alice", "verified-oidc", java.util.Map.of(), java.util.Set.of())), is(expected));
+    }
+
+    @Test
+    public void shouldGiveTwoCertificatesWithTheSameSubjectDifferentIdentities() throws Exception {
+        TestCertificates.Issued trustedCa = TestCertificates.certificateAuthority("Trusted CA");
+        TestCertificates.Issued first = TestCertificates.clientCertificate("client", trustedCa);
+        TestCertificates.Issued second = TestCertificates.clientCertificate("client", trustedCa);
+        MTLSAuthenticationHandler handler = handler(trustedCa.certificate);
+
+        assertThat(handler.principalIdentity(requestWithChain(first.certificate), null), not(handler.principalIdentity(requestWithChain(second.certificate), null)));
+    }
+
+    @Test
+    public void shouldNameNoCallerForAChainThatDoesNotAuthenticate() throws Exception {
+        TestCertificates.Issued trustedCa = TestCertificates.certificateAuthority("Trusted CA");
+        TestCertificates.Issued victim = TestCertificates.clientCertificate("victim", trustedCa);
+        TestCertificates.Issued attackerLeaf = TestCertificates.selfSignedClientCertificate("victim");
+
+        assertThat(handler(trustedCa.certificate).principalIdentity(requestWithChain(attackerLeaf.certificate, victim.certificate), null), is(nullValue()));
     }
 
     private static MTLSAuthenticationHandler handler(X509Certificate... trusted) {

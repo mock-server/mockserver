@@ -172,11 +172,16 @@ class MockServerWebSocketClient:
         client_id: str | None = None,
         tls_verify: bool = True,
         bearer_token_supplier: Callable[[], str | None] | None = None,
+        ssl_context: Any = None,
     ) -> str:
         """Open the callback WebSocket and wait for MockServer's client id.
 
         ``bearer_token_supplier`` is called on every (re)connect; a non-empty
         result is sent as ``Authorization: Bearer <token>`` on the upgrade.
+        ``ssl_context``, when given, is used for a secure connection in place of
+        one built from ``ca_cert_path`` and ``tls_verify``, so the WebSocket
+        trusts the same certificates and presents the same mTLS client
+        certificate as the client's HTTP requests.
         """
         self._bearer_token_supplier = bearer_token_supplier
         self._host = host
@@ -184,7 +189,9 @@ class MockServerWebSocketClient:
         self._context_path = context_path
         self._secure = secure
 
-        if secure:
+        if secure and ssl_context is not None:
+            self._ssl_context = ssl_context
+        elif secure:
             import ssl
             self._ssl_context = ssl.create_default_context()
             if ca_cert_path:

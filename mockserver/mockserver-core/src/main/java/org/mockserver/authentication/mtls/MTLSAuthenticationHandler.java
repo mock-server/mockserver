@@ -133,6 +133,27 @@ public class MTLSAuthenticationHandler implements AuthenticationHandler {
         }
     }
 
+    /**
+     * The SHA-256 fingerprint of the verified client certificate, from {@code result} when this handler
+     * produced it, otherwise from authenticating {@code request} again; null when it does not authenticate.
+     */
+    @Override
+    public String principalIdentity(HttpRequest request, AuthenticationResult result) {
+        AuthenticationResult verified = result != null && PRINCIPAL_SOURCE.equals(result.getPrincipalSource()) && result.getClaims().containsKey(SHA256_FINGERPRINT_CLAIM)
+            ? result
+            : authenticateQuietly(request);
+        Object fingerprint = verified != null ? verified.getClaims().get(SHA256_FINGERPRINT_CLAIM) : null;
+        return fingerprint != null ? "mtls:sha256:" + fingerprint : null;
+    }
+
+    private AuthenticationResult authenticateQuietly(HttpRequest request) {
+        try {
+            return request != null ? authenticate(request) : null;
+        } catch (AuthenticationException notAuthenticated) {
+            return null;
+        }
+    }
+
     private void validateClientCertificate(X509Certificate leaf, List<X509Certificate> intermediates) throws GeneralSecurityException {
         if (leaf.getBasicConstraints() != -1) {
             throw new CertPathValidatorException("client certificate is a certificate authority (basicConstraints CA=true)");

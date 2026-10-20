@@ -1,8 +1,12 @@
 package org.mockserver.closurecallback.websocketclient;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
+import io.netty.util.ReferenceCountUtil;
 import org.junit.Test;
 import org.mockserver.logging.MockServerLogger;
 
@@ -46,5 +50,22 @@ public class WebSocketClientHandlerHandshakeTest {
         assertThat(handshakeLines("Bearer some.jwt.value"), hasItem("authorization: Bearer some.jwt.value"));
         assertThat(handshakeLines(null).stream().anyMatch(line -> line.toLowerCase().startsWith("authorization:")), is(false));
         assertThat(handshakeLines(" ").stream().anyMatch(line -> line.toLowerCase().startsWith("authorization:")), is(false));
+    }
+
+    @Test
+    public void shouldAnswerAPingAtOnceSoMockServerSeesTheConnectionIsAlive() throws Exception {
+        EmbeddedChannel channel = new EmbeddedChannel(new WebSocketClientHandler(new MockServerLogger(), "test-client-id", new InetSocketAddress("localhost", 1080), "", mock(WebSocketClient.class), false, null));
+        Object handshake;
+        while ((handshake = channel.readOutbound()) != null) {
+            ReferenceCountUtil.release(handshake);
+        }
+
+        channel.writeInbound(new PingWebSocketFrame(Unpooled.copiedBuffer("liveness", StandardCharsets.UTF_8)));
+
+        Object pong = channel.readOutbound();
+        assertThat(pong instanceof PongWebSocketFrame, is(true));
+        assertThat(((PongWebSocketFrame) pong).content().toString(StandardCharsets.UTF_8), is("liveness"));
+        ReferenceCountUtil.release(pong);
+        channel.finishAndReleaseAll();
     }
 }

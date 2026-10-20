@@ -28,11 +28,12 @@ var SETTLE_DEADLINE_MILLIS = 5000;
  * A fake MockServer on 127.0.0.1: `onWebSocket(request)` handles each callback WebSocket request,
  * and an expectation PUT is answered 201 with an expectation id.
  */
-function startFakeMockServer(onWebSocket) {
+function startFakeMockServer(onWebSocket, tlsServerOptions) {
     var sockets = new Set();
     var webSocketRequests = [];
+    var webSocketPeerCertificates = [];
     var expectationBodies = [];
-    var httpServer = http.createServer(function (req, res) {
+    var handler = function (req, res) {
         var body = '';
         req.on('data', function (chunk) {
             body += chunk;
@@ -47,8 +48,9 @@ function startFakeMockServer(onWebSocket) {
                 res.end();
             }
         });
-    });
-    httpServer.on('connection', function (socket) {
+    };
+    var httpServer = tlsServerOptions ? https.createServer(tlsServerOptions, handler) : http.createServer(handler);
+    httpServer.on(tlsServerOptions ? 'secureConnection' : 'connection', function (socket) {
         sockets.add(socket);
         socket.on('close', function () {
             sockets.delete(socket);
@@ -57,6 +59,9 @@ function startFakeMockServer(onWebSocket) {
     var wsServer = new WebSocketServer({httpServer: httpServer, autoAcceptConnections: false});
     wsServer.on('request', function (request) {
         webSocketRequests.push(request.httpRequest.headers);
+        if (tlsServerOptions) {
+            webSocketPeerCertificates.push(request.httpRequest.socket.getPeerCertificate());
+        }
         onWebSocket(request);
     });
     return new Promise(function (resolve) {
@@ -64,6 +69,7 @@ function startFakeMockServer(onWebSocket) {
             resolve({
                 port: httpServer.address().port,
                 webSocketRequests: webSocketRequests,
+                webSocketPeerCertificates: webSocketPeerCertificates,
                 expectationBodies: expectationBodies,
                 close: function () {
                     wsServer.shutDown();
@@ -337,6 +343,99 @@ describe('control-plane bearer token on the callback WebSocket upgrade', {timeou
         assert.equal(calls, 3);
         assert.equal(requests[1].authorization, 'Bearer token-3');
         assert.equal(requests[1]['x-client-registration-id'], 'client-one');
+    });
+});
+
+describe('mTLS client certificate on the callback WebSocket', {timeout: 60000}, function () {
+    var MTLS_FIXTURES = path.join(__dirname, '..', 'fixtures', 'mtls');
+    var CA_PATH = path.join(MTLS_FIXTURES, 'ca.pem');
+    var CLIENT_CERTIFICATE_OPTIONS = {
+        clientCertPemFilePath: path.join(MTLS_FIXTURES, 'leaf-cert.pem'),
+        clientKeyPemFilePath: path.join(MTLS_FIXTURES, 'leaf-key.pem')
+    };
+    var TLS_SERVER_OPTIONS = {
+        cert: fs.readFileSync(path.join(MTLS_FIXTURES, 'leaf-cert.pem')),
+        key: fs.readFileSync(path.join(MTLS_FIXTURES, 'leaf-key.pem')),
+        ca: fs.readFileSync(CA_PATH),
+        requestCert: true,
+        rejectUnauthorized: false
+    };
+
+    async function peerCertificatesFor(open) {
+        var server = await startFakeMockServer(function (request) {
+            sendClientId(request.accept(null, request.origin), 'client-one');
+        }, TLS_SERVER_OPTIONS);
+        try {
+            var handle = await open(server.port);
+            await handle.close();
+            return server.webSocketPeerCertificates;
+        } finally {
+            await server.close();
+        }
+    }
+
+    it('presents the configured client certificate, trusting the configured CA', async function () {
+        var certificates = await peerCertificatesFor(function (port) {
+            return webSocketClient(true, CA_PATH, CLIENT_CERTIFICATE_OPTIONS)('127.0.0.1', port, '');
+        });
+        assert.equal(certificates.length, 1);
+        assert.equal(certificates[0].subject.CN, 'www.mockserver.com');
+    });
+
+    it('presents no client certificate when none is configured', async function () {
+        var certificates = await peerCertificatesFor(function (port) {
+            return webSocketClient(true, CA_PATH, undefined)('127.0.0.1', port, '');
+        });
+        assert.equal(certificates.length, 1);
+        assert.deepEqual(certificates[0], {});
+    });
+
+    it('rejects a server whose certificate the configured CA did not sign', async function () {
+        var server = await startFakeMockServer(function (request) {
+            sendClientId(request.accept(null, request.origin), 'client-one');
+        }, TLS_SERVER_OPTIONS);
+        try {
+            var outcome = await settledWithin(webSocketClient(true, path.join(MTLS_FIXTURES, 'other-ca.pem'), CLIENT_CERTIFICATE_OPTIONS)('127.0.0.1', server.port, ''), SETTLE_DEADLINE_MILLIS);
+            assert.ok(outcome.rejected, JSON.stringify(outcome));
+            assert.equal(server.webSocketRequests.length, 0);
+        } finally {
+            await server.close();
+        }
+    });
+
+    it('rejects when the client certificate cannot be read', async function () {
+        var server = await startFakeMockServer(function (request) {
+            sendClientId(request.accept(null, request.origin), 'client-one');
+        }, TLS_SERVER_OPTIONS);
+        try {
+            var outcome = await settledWithin(webSocketClient(true, CA_PATH, {
+                clientCertPemFilePath: path.join(MTLS_FIXTURES, 'missing-cert.pem'),
+                clientKeyPemFilePath: CLIENT_CERTIFICATE_OPTIONS.clientKeyPemFilePath
+            })('127.0.0.1', server.port, ''), SETTLE_DEADLINE_MILLIS);
+            assert.ok(outcome.rejected, JSON.stringify(outcome));
+            assert.match(String(outcome.rejected), /mTLS client certificate or key/);
+            assert.equal(server.webSocketRequests.length, 0);
+        } finally {
+            await server.close();
+        }
+    });
+
+    it('mockWithCallback presents the client certificate its HTTP requests use', async function () {
+        var server = await startFakeMockServer(function (request) {
+            sendClientId(request.accept(null, request.origin), 'client-one');
+        }, TLS_SERVER_OPTIONS);
+        var client = mockServerClient('127.0.0.1', server.port, undefined, true, CA_PATH, CLIENT_CERTIFICATE_OPTIONS);
+        try {
+            var outcome = await settledWithin(client.mockWithCallback({path: '/some'}, function () {
+                return {statusCode: 200};
+            }), SETTLE_DEADLINE_MILLIS);
+            assert.ok(outcome.resolved, JSON.stringify(outcome));
+            assert.equal(server.webSocketPeerCertificates.length, 1);
+            assert.equal(server.webSocketPeerCertificates[0].subject.CN, 'www.mockserver.com');
+        } finally {
+            await client.close();
+            await server.close();
+        }
     });
 });
 

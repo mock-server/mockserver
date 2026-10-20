@@ -526,7 +526,7 @@ sitemap:
 # or, in Docker
 -e MOCKSERVER_CONTROL_PLANE_CORS_ALLOW_ORIGIN=https://app.example.com</code></pre>
 
-<p>The same release makes the callback WebSocket require control-plane authentication when it is turned on, as the dashboard's WebSocket already did. The Java, Node, Python, Go, Rust and .NET clients of this release send their bearer token on it, so upgrade them with the server; a browser cannot, so the Node client's browser build and the dashboard need mTLS for callbacks and breakpoints when JWT or OIDC authentication is on. See <a href="/mock_server/CORS_support.html#browser_origins">CORS</a>.</p>
+<p>The same release makes the callback WebSocket require control-plane authentication when it is turned on, as the dashboard's WebSocket already did. The Java, Node, Python, Go, Rust and .NET clients of this release send their bearer token on it, and with mTLS authentication the Java, Node, Python, Go, Rust and .NET clients present their client certificate on it, so upgrade them with the server; a browser cannot send a token, so the Node client's browser build and the dashboard need mTLS for callbacks and breakpoints when JWT or OIDC authentication is on. A second connection that registers with a client id already in use takes over at once from the same authenticated caller, and otherwise only from a connection that no longer answers a ping within 2 seconds; while the old connection answers, it is refused with <span class="inline_code">403</span> (a different authenticated caller) or <span class="inline_code">409</span>. See <a href="/mock_server/CORS_support.html#browser_origins">CORS</a>.</p>
 
 <a id="see_also" class="anchor" href="#see_also">&nbsp;</a>
 

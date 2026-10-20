@@ -139,6 +139,7 @@ public sealed class MockServerClientBuilder
         httpClient.Timeout = _timeout;
 
         return MockServerClient.CreateConfigured(
-            _host, _port, _contextPath, _secure, httpClient, ownsHttpClient: true, _bearerTokenSupplier);
+            _host, _port, _contextPath, _secure, httpClient, ownsHttpClient: true, _bearerTokenSupplier,
+            _tlsOptions.HasTlsConfiguration ? _tlsOptions : null);
     }
 }

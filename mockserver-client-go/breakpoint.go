@@ -1,6 +1,7 @@
 package mockserver
 
 import (
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -165,8 +166,9 @@ func newBreakpointWSClient() *breakpointWSClient {
 
 // connect establishes the WebSocket connection and performs registration.
 // bearerTokenSupplier, when non-nil and returning a non-empty token, adds
-// "Authorization: Bearer <token>" to the upgrade request.
-func (ws *breakpointWSClient) connect(baseURL string, bearerTokenSupplier func() string) error {
+// "Authorization: Bearer <token>" to the upgrade request. tlsConfig, when
+// non-nil, is used for a wss connection.
+func (ws *breakpointWSClient) connect(baseURL string, bearerTokenSupplier func() string, tlsConfig *tls.Config) error {
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		return fmt.Errorf("mockserver: parse base URL: %w", err)
@@ -181,6 +183,7 @@ func (ws *breakpointWSClient) connect(baseURL string, bearerTokenSupplier func()
 
 	dialer := &websocket.Dialer{
 		HandshakeTimeout: 30 * time.Second,
+		TLSClientConfig:  tlsConfig,
 	}
 	var header http.Header
 	if bearerTokenSupplier != nil {
@@ -493,8 +496,11 @@ func (c *Client) ensureBreakpointWS() error {
 		c.breakpointWS.close()
 		c.breakpointWS = nil
 	}
+	if c.tlsConfigErr != nil {
+		return c.tlsConfigErr
+	}
 	ws := newBreakpointWSClient()
-	if err := ws.connect(c.baseURL, c.bearerTokenSupplier); err != nil {
+	if err := ws.connect(c.baseURL, c.bearerTokenSupplier, c.webSocketTLSConfig()); err != nil {
 		return err
 	}
 	c.breakpointWS = ws

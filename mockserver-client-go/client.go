@@ -226,6 +226,23 @@ func (c *Client) applyTLSConfig() {
 	transport.TLSClientConfig = c.tlsConfig
 }
 
+// webSocketTLSConfig is the TLS configuration for the callback WebSocket: the
+// one the client's HTTP requests use, so both trust the same certificates and
+// present the same client certificate, without ALPN because a WebSocket upgrade
+// is HTTP/1.1. Nil when no TLS configuration is set.
+func (c *Client) webSocketTLSConfig() *tls.Config {
+	cfg := c.tlsConfig
+	if transport, ok := c.httpClient.Transport.(*http.Transport); ok && transport != nil && transport.TLSClientConfig != nil {
+		cfg = transport.TLSClientConfig
+	}
+	if cfg == nil {
+		return nil
+	}
+	cfg = cfg.Clone()
+	cfg.NextProtos = nil
+	return cfg
+}
+
 // ForwardChainExpectation allows chaining a When() call with Respond/Forward/Error.
 type ForwardChainExpectation struct {
 	client      *Client

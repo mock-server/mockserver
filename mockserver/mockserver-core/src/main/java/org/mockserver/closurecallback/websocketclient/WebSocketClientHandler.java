@@ -147,7 +147,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             if (frame instanceof TextWebSocketFrame) {
                 webSocketClient.receivedTextWebSocketFrame((TextWebSocketFrame) frame);
             } else if (frame instanceof PingWebSocketFrame) {
-                ctx.write(new PongWebSocketFrame(frame.content().retain()));
+                ctx.writeAndFlush(new PongWebSocketFrame(frame.content().retain()));
             } else if (frame instanceof CloseWebSocketFrame) {
                 if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(TRACE)) {
                     mockServerLogger.logEvent(

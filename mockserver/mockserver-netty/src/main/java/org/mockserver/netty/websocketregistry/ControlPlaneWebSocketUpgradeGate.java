@@ -41,8 +41,41 @@ public final class ControlPlaneWebSocketUpgradeGate {
      * @return true when the upgrade may proceed; false once the rejection has been written
      */
     public static boolean allowUpgrade(ChannelHandlerContext ctx, FullHttpRequest httpRequest, HttpState httpState, MockServerLogger mockServerLogger, boolean sslEnabledUpstream, String description) {
-        return originAllowed(ctx, httpRequest, httpState, mockServerLogger, description)
-            && authenticated(ctx, httpRequest, httpState, mockServerLogger, sslEnabledUpstream, description);
+        return admitUpgrade(ctx, httpRequest, httpState, mockServerLogger, sslEnabledUpstream, description) != null;
+    }
+
+    /**
+     * @param description names the socket in the rejection log, e.g. "dashboard UI"
+     * @return the admitted caller when the upgrade may proceed; null once the rejection has been written
+     */
+    public static Admission admitUpgrade(ChannelHandlerContext ctx, FullHttpRequest httpRequest, HttpState httpState, MockServerLogger mockServerLogger, boolean sslEnabledUpstream, String description) {
+        if (!originAllowed(ctx, httpRequest, httpState, mockServerLogger, description)) {
+            return null;
+        }
+        return authenticated(ctx, httpRequest, httpState, mockServerLogger, sslEnabledUpstream, description);
+    }
+
+    /**
+     * The caller of an admitted upgrade: whether control-plane authentication admitted it and, when
+     * its authentication handler can name one, the caller's identity.
+     */
+    public static final class Admission {
+        private static final Admission UNAUTHENTICATED = new Admission(false, null);
+        private final boolean authenticated;
+        private final String principalIdentity;
+
+        Admission(boolean authenticated, String principalIdentity) {
+            this.authenticated = authenticated;
+            this.principalIdentity = principalIdentity;
+        }
+
+        public boolean authenticated() {
+            return authenticated;
+        }
+
+        public String principalIdentity() {
+            return principalIdentity;
+        }
     }
 
     private static boolean originAllowed(ChannelHandlerContext ctx, FullHttpRequest httpRequest, HttpState httpState, MockServerLogger mockServerLogger, String description) {
@@ -63,9 +96,9 @@ public final class ControlPlaneWebSocketUpgradeGate {
         return false;
     }
 
-    private static boolean authenticated(ChannelHandlerContext ctx, FullHttpRequest httpRequest, HttpState httpState, MockServerLogger mockServerLogger, boolean sslEnabledUpstream, String description) {
+    private static Admission authenticated(ChannelHandlerContext ctx, FullHttpRequest httpRequest, HttpState httpState, MockServerLogger mockServerLogger, boolean sslEnabledUpstream, String description) {
         if (httpState.getControlPlaneAuthenticationHandler() == null) {
-            return true;
+            return Admission.UNAUTHENTICATED;
         }
         HttpRequest mockServerRequest = new FullHttpRequestToMockServerHttpRequest(
             httpState.getConfiguration(),
@@ -84,7 +117,7 @@ public final class ControlPlaneWebSocketUpgradeGate {
         );
         HttpState.ControlPlaneAuthDecision decision = httpState.evaluateControlPlaneAuthentication(mockServerRequest);
         if (decision.isAllowed()) {
-            return true;
+            return decision.authenticated() ? new Admission(true, decision.principalIdentity()) : Admission.UNAUTHENTICATED;
         }
         HttpResponseStatus status = decision.outcome() == HttpState.ControlPlaneAuthOutcome.FORBIDDEN
             ? HttpResponseStatus.FORBIDDEN
@@ -99,10 +132,10 @@ public final class ControlPlaneWebSocketUpgradeGate {
             );
         }
         reject(ctx, status);
-        return false;
+        return null;
     }
 
-    private static void reject(ChannelHandlerContext ctx, HttpResponseStatus status) {
+    static void reject(ChannelHandlerContext ctx, HttpResponseStatus status) {
         DefaultFullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.EMPTY_BUFFER);
         response.headers().set(CONTENT_LENGTH, 0);
         ctx.channel().writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);

@@ -845,6 +845,24 @@ public class BreakpointWebSocketClientTest {
         assertThat(handshakeLines(" ").stream().anyMatch(line -> line.toLowerCase().startsWith("authorization:")), is(false));
     }
 
+    @Test
+    public void answersAPingAtOnceSoMockServerSeesTheConnectionIsAlive() throws Exception {
+        EmbeddedChannel ch = new EmbeddedChannel(new BreakpointWebSocketClient.BreakpointWebSocketClientHandler(
+            LOGGER, "test-client-id", new java.net.InetSocketAddress("localhost", 1080), "", null, false));
+        Object handshake;
+        while ((handshake = ch.readOutbound()) != null) {
+            io.netty.util.ReferenceCountUtil.release(handshake);
+        }
+
+        ch.writeInbound(new io.netty.handler.codec.http.websocketx.PingWebSocketFrame(io.netty.buffer.Unpooled.copiedBuffer("liveness", java.nio.charset.StandardCharsets.UTF_8)));
+
+        Object pong = ch.readOutbound();
+        assertThat(pong, instanceOf(io.netty.handler.codec.http.websocketx.PongWebSocketFrame.class));
+        assertThat(((io.netty.handler.codec.http.websocketx.PongWebSocketFrame) pong).content().toString(java.nio.charset.StandardCharsets.UTF_8), is("liveness"));
+        io.netty.util.ReferenceCountUtil.release(pong);
+        ch.finishAndReleaseAll();
+    }
+
     private static java.util.List<String> handshakeLines(String authorization) throws Exception {
         EmbeddedChannel ch = new EmbeddedChannel(new io.netty.handler.codec.http.HttpClientCodec());
         ch.pipeline().addLast(new BreakpointWebSocketClient.BreakpointWebSocketClientHandler(
