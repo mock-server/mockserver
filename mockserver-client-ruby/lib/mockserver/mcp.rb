@@ -55,12 +55,13 @@ module MockServer
       end
     end
 
-    # Escape single quotes for safe inclusion inside a JSONPath string literal.
+    # Escape backslashes, then single quotes, for safe inclusion inside a
+    # single-quoted JSONPath string literal.
     # @api private
     def self.escape_json_path(value)
       return '' if value.nil?
 
-      value.to_s.gsub("'", "\\\\'")
+      value.to_s.gsub('\\') { '\\\\' }.gsub("'") { "\\'" }
     end
 
     # Parse + re-serialize JSON (compact) to validate it. Raises on invalid JSON.

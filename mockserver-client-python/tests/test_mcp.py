@@ -4,7 +4,7 @@ These assert the exact serialized expectation JSON so the Python client produces
 the same wire format as the Java client.
 """
 
-from mockserver.mcp import mcp_mock
+from mockserver.mcp import _escape_json_path, mcp_mock
 from mockserver.models import JsonPathBody
 
 
@@ -234,6 +234,24 @@ def test_single_quotes_escaped_in_json_path():
     body = expectations[4]["httpRequest"]["body"]
     assert body["type"] == "JSON_PATH"
     assert "tool\\'name" in body["jsonPath"]
+
+
+def test_backslashes_escaped_before_quotes_in_json_path():
+    assert _escape_json_path("x\\") == "x\\\\"
+    assert _escape_json_path("a\\b") == "a\\\\b"
+    assert _escape_json_path("a\\'b") == "a\\\\\\'b"
+    assert _escape_json_path("o'brien") == "o\\'brien"
+
+
+def test_trailing_backslash_escaped_in_json_path():
+    expectations = _dicts(
+        mcp_mock()
+        .with_tool("tool\\")
+        .responding_with("result")
+        .and_()
+    )
+    body = expectations[4]["httpRequest"]["body"]
+    assert body["jsonPath"] == "$[?(@.method == 'tools/call' && @.params.name == 'tool\\\\')]"
 
 
 def test_invalid_input_schema_rejected():

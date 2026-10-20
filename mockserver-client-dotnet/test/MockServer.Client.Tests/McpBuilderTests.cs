@@ -200,6 +200,29 @@ public class McpBuilderTests
         MockServer.Client.A2a.A2aMockBuilder.EscapeVelocity(input).Should().Be(expected);
     }
 
+    [Theory]
+    [InlineData("plain", "plain")]
+    [InlineData("o'brien", @"o\'brien")]
+    [InlineData(@"x\", @"x\\")]
+    [InlineData(@"a\b", @"a\\b")]
+    [InlineData(@"a\'b", @"a\\\'b")]
+    public void EscapeJsonPath_EscapesBackslashesBeforeQuotes(string input, string expected)
+    {
+        McpMockBuilder.EscapeJsonPath(input).Should().Be(expected);
+    }
+
+    [Fact]
+    public void Mcp_EscapesTrailingBackslashInJsonPath()
+    {
+        var expectations = McpMockBuilder.McpMock()
+            .WithTool(@"tool\").RespondingWith("x").And()
+            .Build();
+
+        var jsonPath = FindByJsonPathContaining(expectations, "tools/call")
+            .GetProperty("httpRequest").GetProperty("body").GetProperty("jsonPath").GetString();
+        jsonPath.Should().Be(@"$[?(@.method == 'tools/call' && @.params.name == 'tool\\')]");
+    }
+
     [Fact]
     public void Mcp_EscapesBackslashBeforeVelocityMetacharacter()
     {

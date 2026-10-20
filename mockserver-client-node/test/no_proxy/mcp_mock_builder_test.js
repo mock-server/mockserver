@@ -333,6 +333,20 @@ describe('mcpMock escaping', function () {
         assert.ok(call.httpRequest.body.jsonPath.indexOf("it\\'s") !== -1);
     });
 
+    it('escapes backslashes before single quotes inside the JSONPath matcher', function () {
+        var expectations = mcpMock('/mcp')
+            .withTool('tool\\').respondingWith('x').and()
+            .withResource('file:///c:\\dir\\').withContent('d').and()
+            .withPrompt("p\\'q").respondingWith('user', 'hi').and()
+            .build();
+        assert.strictEqual(findByJsonPath(expectations, "'tools/call'")[0].httpRequest.body.jsonPath,
+            "$[?(@.method == 'tools/call' && @.params.name == 'tool\\\\')]");
+        assert.strictEqual(findByJsonPath(expectations, "'resources/read'")[0].httpRequest.body.jsonPath,
+            "$[?(@.method == 'resources/read' && @.params.uri == 'file:///c:\\\\dir\\\\')]");
+        assert.strictEqual(findByJsonPath(expectations, "'prompts/get'")[0].httpRequest.body.jsonPath,
+            "$[?(@.method == 'prompts/get' && @.params.name == 'p\\\\\\'q')]");
+    });
+
     it('rejects an invalid inputSchema JSON string', function () {
         assert.throws(function () {
             mcpMock('/mcp').withTool('t').withInputSchema('{not json').respondingWith('x').and().build();

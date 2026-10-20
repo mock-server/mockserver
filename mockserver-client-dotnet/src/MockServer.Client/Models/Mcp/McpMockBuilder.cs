@@ -372,12 +372,12 @@ public sealed class McpMockBuilder
         return sb.ToString();
     }
 
-    /// <summary>Escape single quotes for safe inclusion inside a JSONPath string literal.</summary>
+    /// <summary>Escape backslashes, then single quotes, for safe inclusion inside a single-quoted JSONPath string literal.</summary>
     internal static string EscapeJsonPath(string? value)
     {
         if (value == null)
             return "";
-        return value.Replace("'", "\\'");
+        return value.Replace("\\", "\\\\").Replace("'", "\\'");
     }
 
     /// <summary>

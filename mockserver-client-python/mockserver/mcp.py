@@ -79,7 +79,7 @@ def _escape_velocity(value: str | None) -> str | None:
 def _escape_json_path(value: str | None) -> str:
     if value is None:
         return ""
-    return value.replace("'", "\\'")
+    return value.replace("\\", "\\\\").replace("'", "\\'")
 
 
 def _validate_and_serialize_json(raw: str) -> str:

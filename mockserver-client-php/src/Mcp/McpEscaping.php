@@ -75,14 +75,15 @@ final class McpEscaping
     }
 
     /**
-     * Escape single quotes for safe inclusion inside a JSONPath string literal.
+     * Escape backslashes, then single quotes, for safe inclusion inside a
+     * single-quoted JSONPath string literal.
      */
     public static function escapeJsonPath(?string $value): string
     {
         if ($value === null) {
             return '';
         }
-        return str_replace("'", "\\'", $value);
+        return str_replace("'", "\\'", str_replace('\\', '\\\\', $value));
     }
 
     /**

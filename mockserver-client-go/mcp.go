@@ -79,10 +79,11 @@ func escapeVelocity(value string) string {
 	return sb.String()
 }
 
-// escapeJsonPath escapes single quotes for safe inclusion inside a JSONPath
-// string literal.
+// escapeJsonPath escapes backslashes and single quotes for safe inclusion
+// inside a single-quoted JSONPath string literal. Backslashes must be escaped
+// first so the backslash added before a quote is not itself doubled.
 func escapeJsonPath(value string) string {
-	return strings.ReplaceAll(value, "'", "\\'")
+	return strings.ReplaceAll(strings.ReplaceAll(value, "\\", "\\\\"), "'", "\\'")
 }
 
 // validateAndSerializeJson parses + re-serializes JSON (compact) to validate

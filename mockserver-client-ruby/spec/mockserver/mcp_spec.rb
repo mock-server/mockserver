@@ -135,6 +135,19 @@ RSpec.describe MockServer::MCP do
       expect(template).to include('cost is ${esc.d}5 ${esc.h}1')
     end
 
+    it 'escapes backslashes before single quotes in the JSON-path matcher' do
+      expect(described_class.escape_json_path('x\\')).to eq('x\\\\')
+      expect(described_class.escape_json_path("a\\'b")).to eq("a\\\\\\'b")
+      expect(described_class.escape_json_path("o'brien")).to eq("o\\'brien")
+
+      expectations = described_class.mcp_mock.with_tool('tool\\').responding_with('x').and_then.build
+      call = expectations.find do |e|
+        e['httpRequest']['body'] && e['httpRequest']['body']['type'] == 'JSON_PATH'
+      end
+      expect(call['httpRequest']['body']['jsonPath'])
+        .to eq("$[?(@.method == 'tools/call' && @.params.name == 'tool\\\\')]")
+    end
+
     it 'Velocity-escapes trailing, mixed and very long backslash runs' do
       expect(MockServer::MCP.escape_velocity('end\\\\')).to eq('end${esc.b}${esc.b}')
       expect(MockServer::MCP.escape_velocity('a\\b\\$c#')).to eq('a\\b${esc.b}${esc.d}c${esc.h}')

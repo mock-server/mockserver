@@ -34,13 +34,40 @@ def num(v):
         return None
 
 
+def within(base, path):
+    return path == base or path.startswith(base + os.sep)
+
+
+def vetted_members(t, dest):
+    """The archive's members, or exit if any is not a plain file or dir, repeats a name, or lands outside dest."""
+    base = os.path.realpath(dest)
+    seen = set()
+    for m in t.getmembers():
+        name = m.name
+        if os.path.isabs(name) or '..' in name.replace('\\', '/').split('/'):
+            sys.exit('unsafe path in bundle archive: %r' % name)
+        target = os.path.realpath(os.path.join(base, name))
+        if not within(base, target):
+            sys.exit('unsafe path in bundle archive: %r' % name)
+        if not (m.isfile() or m.isdir()):
+            sys.exit('not a plain file or directory in bundle archive: %r' % name)
+        if target in seen:
+            sys.exit('duplicate name in bundle archive: %r' % name)
+        seen.add(target)
+    return t.getmembers()
+
+
 def find_bundle(path, tmp):
     if os.path.isfile(path):
         with tarfile.open(path) as t:
-            try:
-                t.extractall(tmp, filter='data')
-            except TypeError:  # Python before 3.12 (and older 3.8-3.11 patch releases) has no filter
-                t.extractall(tmp)
+            members = vetted_members(t, tmp)
+            if hasattr(tarfile, 'data_filter'):
+                try:
+                    t.extractall(tmp, members=members, filter='data')
+                except tarfile.FilterError as e:
+                    sys.exit('unsafe member in bundle archive: %s' % e)
+            else:
+                t.extractall(tmp, members=members)
         path = tmp
     for root, _, files in os.walk(path):
         if 'main-meta.json' in files:

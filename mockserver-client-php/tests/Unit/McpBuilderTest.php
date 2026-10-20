@@ -214,6 +214,28 @@ class McpBuilderTest extends TestCase
         $this->assertStringContainsString('a${esc.b}${esc.b}${esc.d}b', $template);
     }
 
+    public function testJsonPathEscapesBackslashesBeforeQuotes(): void
+    {
+        $cases = [
+            'plain' => 'plain',
+            "o'brien" => "o\\'brien",
+            'x\\' => 'x\\\\',
+            'a\\b' => 'a\\\\b',
+            "a\\'b" => "a\\\\\\'b",
+        ];
+        foreach ($cases as $input => $expected) {
+            $this->assertSame($expected, McpEscaping::escapeJsonPath((string) $input), 'input: ' . $input);
+        }
+
+        $expectations = McpMockBuilder::mcpMock('/mcp')
+            ->withTool('tool\\')->respondingWith('ok')->and()
+            ->build();
+        $this->assertSame(
+            "$[?(@.method == 'tools/call' && @.params.name == 'tool\\\\')]",
+            $expectations[4]->toArray()['httpRequest']['body']['jsonPath']
+        );
+    }
+
     public function testInvalidInputSchemaThrows(): void
     {
         $this->expectException(\InvalidArgumentException::class);

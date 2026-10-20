@@ -209,6 +209,51 @@ func TestMcpMock_EscapingVelocityAndJsonPath(t *testing.T) {
 	}
 }
 
+func TestEscapeJsonPath_EscapesBackslashBeforeQuote(t *testing.T) {
+	cases := map[string]string{
+		`plain`:   `plain`,
+		`o'brien`: `o\'brien`,
+		`x\`:      `x\\`,
+		`a\b`:     `a\\b`,
+		`a\'b`:    `a\\\'b`,
+		`\\`:      `\\\\`,
+	}
+	for in, want := range cases {
+		if got := escapeJsonPath(in); got != want {
+			t.Errorf("escapeJsonPath(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestMcpMock_JsonPathEscapesTrailingBackslash(t *testing.T) {
+	exps := McpMock("/mcp").
+		WithTool(`tool\`, func(tb *McpToolBuilder) { tb.RespondingWith("ok", false) }).
+		WithResource(`file:///c:\dir\`, func(rb *McpResourceBuilder) { rb.WithContent("data") }).
+		WithPrompt(`p\'q`, func(pb *McpPromptBuilder) { pb.RespondingWith("user", "hi") }).
+		Build()
+
+	want := map[string]string{
+		"tools/call":     `@.params.name == 'tool\\')]`,
+		"resources/read": `@.params.uri == 'file:///c:\\dir\\')]`,
+		"prompts/get":    `@.params.name == 'p\\\'q')]`,
+	}
+	for method, suffix := range want {
+		found := false
+		for i := range exps {
+			jp, ok := exps[i].HttpRequest.Body.(jsonPathBody)
+			if ok && strings.Contains(jp.JSONPath, "'"+method+"'") {
+				found = true
+				if !strings.HasSuffix(jp.JSONPath, suffix) {
+					t.Errorf("%s jsonPath = %q, want suffix %q", method, jp.JSONPath, suffix)
+				}
+			}
+		}
+		if !found {
+			t.Errorf("%s expectation not found", method)
+		}
+	}
+}
+
 func TestMcpMock_InvalidInputSchemaPanics(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {

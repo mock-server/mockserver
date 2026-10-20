@@ -2323,9 +2323,9 @@ function conversationMessageList(parsed: ParsedTraffic): unknown[] | null {
 function messageSignature(message: unknown): string {
   try {
     const json = JSON.stringify(message);
-    return json === undefined ? ` ${String(message)}` : json;
+    return json === undefined ? `\0${String(message)}` : json;
   } catch {
-    return ` ${String(message)}`;
+    return `\0${String(message)}`;
   }
 }
 

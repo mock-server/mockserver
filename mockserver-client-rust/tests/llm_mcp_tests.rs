@@ -403,6 +403,9 @@ fn mcp_velocity_and_json_escaping() {
     assert_eq!(escape_velocity("$x #y"), "${esc.d}x ${esc.h}y");
     // escapeJsonPath escapes single quotes
     assert_eq!(escape_json_path("o'brien"), "o\\'brien");
+    // backslashes are escaped before quotes, so a trailing backslash cannot escape the closing quote
+    assert_eq!(escape_json_path("x\\"), "x\\\\");
+    assert_eq!(escape_json_path("a\\'b"), "a\\\\\\'b");
     // validate+serialize compacts
     assert_eq!(
         validate_and_serialize_json(r#"{ "a" :  1 }"#).unwrap(),

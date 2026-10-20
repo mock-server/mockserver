@@ -357,6 +357,45 @@ else
   check "--min-rate drops lower rungs" "yes" "$(has '^spikes 0 over rungs >= 200000' "$(python3 "$HELPER" "$B" --min-rate 200000)")"
   tar czf "$T/bundle.tgz" -C "$T/bundle" serving-rw-multik6-work
   check "a .tgz bundle gives the same spikes" "$(grep -c '@+' <<<"$OUT")" "$(python3 "$HELPER" "$T/bundle.tgz" | grep -c '@+')"
+  # Malicious archives: each must be rejected before anything lands outside the extraction dir,
+  # both with tarfile's data filter and on the unfiltered pre-3.12 fallback (forced on any Python).
+  mkdir -p "$T/evil" "$T/work"
+  python3 - "$T" <<'PY'
+import io, sys, tarfile
+T = sys.argv[1]
+def tar(name, *members):
+    with tarfile.open('%s/evil/%s.tgz' % (T, name), 'w:gz') as t:
+        t.addfile(tarfile.TarInfo('ok/main-meta.json'), io.BytesIO(b''))
+        for kind, path, extra in members:
+            i = tarfile.TarInfo(path); i.type = kind
+            if kind in (tarfile.SYMTYPE, tarfile.LNKTYPE): i.linkname = extra
+            data = b'x' if kind == tarfile.REGTYPE else b''; i.size = len(data)
+            t.addfile(i, io.BytesIO(data))
+tar('absolute', (tarfile.REGTYPE, T + '/escaped-abs', None))
+tar('dotdot', (tarfile.REGTYPE, '../../escaped-dotdot', None))
+tar('symlink-out', (tarfile.SYMTYPE, 's', '../..'), (tarfile.REGTYPE, 's/escaped-sym', None))
+tar('symlink-abs', (tarfile.SYMTYPE, 's', T))
+tar('hardlink-out', (tarfile.LNKTYPE, 'h', '../../escaped-hard'))
+tar('through-link', (tarfile.SYMTYPE, 'd', 'ok'), (tarfile.REGTYPE, 'd/x', None))
+tar('device', (tarfile.CHRTYPE, 'dev', None))
+tar('chain-dup', (tarfile.DIRTYPE, 'q', None), (tarfile.SYMTYPE, 'b', '.'),
+    (tarfile.SYMTYPE, 'a', 'b/q/../../escaped-chain'), (tarfile.REGTYPE, 'a', None))
+tar('duplicate', (tarfile.REGTYPE, 'ok/x', None), (tarfile.REGTYPE, 'ok/x', None))
+PY
+  for f in "$T"/evil/*.tgz; do
+    for mode in filter fallback; do
+      RC=0
+      if [ "$mode" = filter ]; then
+        EOUT="$(TMPDIR="$T/work" python3 "$HELPER" "$f" 2>&1)" || RC=$?
+      else
+        EOUT="$(TMPDIR="$T/work" python3 -c 'import runpy, sys, tarfile; vars(tarfile).pop("data_filter", None)
+if hasattr(tarfile, "fully_trusted_filter"): tarfile.TarFile.extraction_filter = staticmethod(tarfile.fully_trusted_filter)
+sys.argv = sys.argv[1:]; runpy.run_path(sys.argv[0], run_name="__main__")' "$HELPER" "$f" 2>&1)" || RC=$?
+      fi
+      check "malicious $(basename "$f") ($mode): rejected, nothing written outside" "1|yes|" \
+        "$RC|$(has 'in bundle archive' "$EOUT")|$(compgen -G "$T/escaped*" || compgen -G "$T/work/escaped*" || true)"
+    done
+  done
   rm "$B/host-kernel-cpu.csv" "$B/host-kernel-tcp.csv"
   jq -n '{running:false, reason:"no kernel counter source is readable on this host", sources:{}}' > "$B/host-kernel-status.json"
   OUT2="$(python3 "$HELPER" "$B" 2>&1)" || bad "helper exited non-zero without host counters: $OUT2"

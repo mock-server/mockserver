@@ -369,7 +369,7 @@ public class AgentRunDiff {
         }
 
         String key() {
-            return role + " " + text;
+            return role + "\u0000" + text;
         }
     }
 }

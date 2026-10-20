@@ -90,10 +90,10 @@ pub fn escape_velocity(value: &str) -> String {
     out
 }
 
-/// Escape single quotes for safe inclusion inside a JSONPath string literal.
-/// Mirrors Java's `escapeJsonPath`.
+/// Escape backslashes, then single quotes, for safe inclusion inside a
+/// single-quoted JSONPath string literal.
 pub fn escape_json_path(value: &str) -> String {
-    value.replace('\'', "\\'")
+    value.replace('\\', "\\\\").replace('\'', "\\'")
 }
 
 /// Validate that the supplied string is valid JSON and return it re-serialised
