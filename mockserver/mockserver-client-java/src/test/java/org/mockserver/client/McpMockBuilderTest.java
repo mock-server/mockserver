@@ -1,5 +1,8 @@
 package org.mockserver.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.jayway.jsonpath.JsonPath;
 import org.junit.Test;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.*;
@@ -325,6 +328,65 @@ public class McpMockBuilderTest {
         HttpRequest request = (HttpRequest) promptGetExp.getHttpRequest();
         String body = request.getBody().toString();
         assertThat(body, containsString("user\\\\'s_prompt"));
+    }
+
+    @Test
+    public void shouldEscapeBackslashesBeforeSingleQuotesForJsonPath() {
+        String[][] cases = {
+            {"plain", "plain"},
+            {"o'brien", "o\\'brien"},
+            {"x\\", "x\\\\"},
+            {"a\\b", "a\\\\b"},
+            {"a\\'b", "a\\\\\\'b"},
+            {"\\\\", "\\\\\\\\"},
+        };
+        for (String[] testCase : cases) {
+            assertThat("input: " + testCase[0], McpMockBuilder.escapeJsonPath(testCase[0]), is(testCase[1]));
+        }
+    }
+
+    @Test
+    public void shouldEscapeBackslashesInToolResourceAndPromptNamesForJsonPath() {
+        Expectation[] expectations = mcpMock()
+            .withTool("tool\\")
+                .respondingWith("ok")
+                .and()
+            .withResource("file:///c:\\dir\\")
+                .withContent("data")
+                .and()
+            .withPrompt("p\\'q")
+                .respondingWith("user", "hi")
+                .and()
+            .build();
+
+        assertThat(jsonPathFor(expectations, "tools/call"), endsWith("@.params.name == 'tool\\\\')]"));
+        assertThat(jsonPathFor(expectations, "resources/read"), endsWith("@.params.uri == 'file:///c:\\\\dir\\\\')]"));
+        assertThat(jsonPathFor(expectations, "prompts/get"), endsWith("@.params.name == 'p\\\\\\'q')]"));
+    }
+
+    @Test
+    public void shouldBuildJsonPathThatMatchesNamesWithBackslashesAndQuotes() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        for (String name : new String[]{"a\\b", "o'brien", "a\\'b", "x\\"}) {
+            String jsonPath = jsonPathFor(mcpMock().withTool(name).respondingWith("ok").and().build(), "tools/call");
+            ObjectNode requestBody = objectMapper.createObjectNode().put("jsonrpc", "2.0").put("id", 1).put("method", "tools/call");
+            requestBody.putObject("params").put("name", name);
+            List<?> matching = JsonPath.compile(jsonPath).read(objectMapper.writeValueAsString(requestBody));
+            assertThat("name: " + name, matching, is(not(empty())));
+            requestBody.putObject("params").put("name", name + "x");
+            List<?> notMatching = JsonPath.compile(jsonPath).read(objectMapper.writeValueAsString(requestBody));
+            assertThat("name: " + name + "x", notMatching, is(empty()));
+        }
+    }
+
+    private static String jsonPathFor(Expectation[] expectations, String method) {
+        return Arrays.stream(expectations)
+            .map(expectation -> ((HttpRequest) expectation.getHttpRequest()).getBody())
+            .filter(body -> body instanceof JsonPathBody)
+            .map(body -> ((JsonPathBody) body).getValue())
+            .filter(jsonPath -> jsonPath.contains("'" + method + "'"))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError(method + " expectation not found"));
     }
 
     @Test(expected = IllegalArgumentException.class)

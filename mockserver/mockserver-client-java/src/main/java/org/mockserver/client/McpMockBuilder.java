@@ -400,11 +400,11 @@ public class McpMockBuilder {
         }
     }
 
-    private static String escapeJsonPath(String value) {
+    static String escapeJsonPath(String value) {
         if (value == null) {
             return "";
         }
-        return value.replace("'", "\\'");
+        return value.replace("\\", "\\\\").replace("'", "\\'");
     }
 
     static class McpToolDefinition {
