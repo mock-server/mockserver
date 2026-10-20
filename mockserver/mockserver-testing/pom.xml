@@ -43,6 +43,18 @@
             <artifactId>netty-buffer</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- BouncyCastle, provided: used only by TestCertificates; every consuming module that
+             uses it already has BouncyCastle through mockserver-core. -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>

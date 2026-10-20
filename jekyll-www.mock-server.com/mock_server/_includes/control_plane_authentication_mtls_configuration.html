@@ -1,7 +1,7 @@
 <button id="button_configuration_control_plane_mtls_authentication_required" class="accordion title"><strong>Enabled Control Plane mTLS Authentication</strong></button>
 <div class="panel title">
     <p>Enable mTLS authentication for control plane interactions (i.e. create expectations, clear, reset, verify, retrieve, stop, etc)</p>
-    <p>If enabled then all control plane requests need to be received over a mTLS connection where the client's X509 certificates will be validated using the <a href="#button_configuration_control_plane_mtls_authentication_ca_chain">controlPlaneTLSMutualAuthenticationCAChain</a>
+    <p>If enabled then all control plane requests need to be received over a mTLS connection where the client's X509 certificate will be validated using the <a href="#button_configuration_control_plane_mtls_authentication_ca_chain">controlPlaneTLSMutualAuthenticationCAChain</a>
     </p>
     <p>It is possible to enable both <a href="#button_configuration_control_plane_jwt_authentication_required">controlPlaneJWTAuthenticationRequired</a> and <a href="#button_configuration_control_plane_mtls_authentication_required">controlPlaneTLSMutualAuthenticationRequired</a>
         but the mTLS will be checked first.</p>
@@ -23,6 +23,7 @@
     <p>File system path or classpath location of the CA (i.e. trust) chain to use to validate client X509 certificates if <a href="#button_configuration_control_plane_mtls_authentication_required">controlPlaneTLSMutualAuthenticationRequired</a> is enabled</p>
     <p>MockServer accepts only client certificates signed by a CA in this chain; earlier versions also accepted those signed by MockServer's own CA certificate. If it is not set, MockServer accepts client certificates signed by its own CA certificate, unless that is the bundled default CA: then MockServer refuses to start (and refuses a configuration update that would lead there) until you set this chain or give MockServer its own CA with certificateAuthorityCertificate and certificateAuthorityPrivateKey.</p>
     <p>In the JVM running MockServerClient the same property holds the only CAs the client trusts for MockServer's own certificate, so the client's value must include the CA that signed MockServer's certificate (MockServer's CA certificate unless MockServer is given its own certificate). Earlier versions also trusted MockServer's CA certificate automatically.</p>
+    <p>MockServer refuses to start if this chain contains the CA bundled with MockServer, whose private key is published, because anyone could then create an accepted client certificate. If MockServerClient and MockServer share this property in one JVM, give MockServer its own CA with <code>mockserver.certificateAuthorityCertificate</code> and <code>mockserver.certificateAuthorityPrivateKey</code> and put that CA in the chain.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain(String controlPlaneTLSMutualAuthenticationCAChain)</code></pre>
@@ -44,7 +45,8 @@
             href="#button_configuration_control_plane_mtls_authentication_certificate_path">controlPlaneX509CertificatePath</a> must:</p>
     <ul>
         <li>be a valid key pair</li>
-        <li>be signed by one of the certificates in the CA chain <a href="#button_configuration_control_plane_mtls_authentication_ca_chain">controlPlaneTLSMutualAuthenticationCAChain</a> for control plane requests to be authorised</li>
+        <li>be signed by one of the certificates in the CA chain <a href="#button_configuration_control_plane_mtls_authentication_ca_chain">controlPlaneTLSMutualAuthenticationCAChain</a>, directly or through intermediate CA certificates placed after it in <a href="#button_configuration_control_plane_mtls_authentication_certificate_path">controlPlaneX509CertificatePath</a>, for control plane requests to be authorised</li>
+        <li>not be a CA certificate or a self-signed certificate</li>
     </ul>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
@@ -67,7 +69,8 @@
             href="#button_configuration_control_plane_mtls_authentication_certificate_path">controlPlaneX509CertificatePath</a> must:</p>
     <ul>
         <li>be a valid key pair</li>
-        <li>be signed by one of the certificates in the CA chain <a href="#button_configuration_control_plane_mtls_authentication_ca_chain">controlPlaneTLSMutualAuthenticationCAChain</a> for control plane requests to be authorised</li>
+        <li>be signed by one of the certificates in the CA chain <a href="#button_configuration_control_plane_mtls_authentication_ca_chain">controlPlaneTLSMutualAuthenticationCAChain</a>, directly or through intermediate CA certificates placed after it in <a href="#button_configuration_control_plane_mtls_authentication_certificate_path">controlPlaneX509CertificatePath</a>, for control plane requests to be authorised</li>
+        <li>not be a CA certificate or a self-signed certificate</li>
     </ul>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>

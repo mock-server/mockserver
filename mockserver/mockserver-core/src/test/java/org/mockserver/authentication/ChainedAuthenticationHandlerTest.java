@@ -60,6 +60,28 @@ public class ChainedAuthenticationHandlerTest {
     }
 
     @Test
+    public void authenticatePrefersTokenPrincipalOverEarlierClientCertificatePrincipal() {
+        AuthenticationHandler mtls = stub(AuthenticationResult.authenticated("CN=client", MTLSAuthenticationHandler.PRINCIPAL_SOURCE, java.util.Map.of(), java.util.Set.of()));
+        AuthenticationHandler oidc = stub(AuthenticationResult.authenticated("alice", "verified-oidc", java.util.Map.of("sub", "alice"), java.util.Set.of("read")));
+
+        AuthenticationResult result = new ChainedAuthenticationHandler(mtls, oidc).authenticate(request());
+
+        assertThat(result.getPrincipal(), equalTo("alice"));
+        assertThat(result.getPrincipalSource(), equalTo("verified-oidc"));
+    }
+
+    @Test
+    public void authenticateFallsBackToClientCertificatePrincipalWithoutTokenPrincipal() {
+        AuthenticationHandler mtls = stub(AuthenticationResult.authenticated("CN=client", MTLSAuthenticationHandler.PRINCIPAL_SOURCE, java.util.Map.of(), java.util.Set.of()));
+        AuthenticationHandler jwt = stub(AuthenticationResult.authenticated(null, "none", java.util.Map.of(), java.util.Set.of("y")));
+
+        AuthenticationResult result = new ChainedAuthenticationHandler(mtls, jwt).authenticate(request());
+
+        assertThat(result.getPrincipal(), equalTo("CN=client"));
+        assertThat(result.getPrincipalSource(), equalTo(MTLSAuthenticationHandler.PRINCIPAL_SOURCE));
+    }
+
+    @Test
     public void authenticateFailsWhenAnyDelegateUnauthenticated() {
         AuthenticationHandler ok = stub(AuthenticationResult.authenticated("alice", "verified-oidc", java.util.Map.of(), java.util.Set.of("read")));
         AuthenticationHandler no = stub(AuthenticationResult.unauthenticated());

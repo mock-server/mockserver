@@ -2,18 +2,10 @@ package org.mockserver.netty.integration.authenticatedcontrolplane;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.rules.TemporaryFolder;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.testing.integration.mock.AbstractBasicMockingSameJVMIntegrationTest;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-
 import static org.mockserver.configuration.ConfigurationProperties.*;
-import static org.mockserver.file.FileReader.readFileFromClassPathOrPath;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
@@ -25,25 +17,25 @@ public class AuthenticatedControlPlaneUsingMTLSClientMockingIntegrationTest exte
     private static String originalControlPlanePrivateKeyPath;
     private static String originalControlPlaneX509CertificatePath;
     private static boolean originalControlPlaneTLSMutualAuthenticationRequired;
-
-    @ClassRule
-    public static final TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private static String originalCertificateAuthorityCertificate;
+    private static String originalCertificateAuthorityPrivateKey;
 
     @BeforeClass
-    public static void startServer() throws IOException {
+    public static void startServer() {
         // save original value
         originalControlPlaneTLSMutualAuthenticationCAChain = controlPlaneTLSMutualAuthenticationCAChain();
         originalControlPlanePrivateKeyPath = controlPlanePrivateKeyPath();
         originalControlPlaneX509CertificatePath = controlPlaneX509CertificatePath();
         originalControlPlaneTLSMutualAuthenticationRequired = controlPlaneTLSMutualAuthenticationRequired();
 
-        // set new certificate authority values
-        // one chain for both sides: the server checks the client's leaf against ca.pem, and the client checks
-        // the server's certificate, which MockServer's CA signed, against MockServer's CA
-        File chain = temporaryFolder.newFile("ca-plus-mockserver-ca.pem");
-        Files.write(chain.toPath(), (readFileFromClassPathOrPath("org/mockserver/netty/integration/tls/ca.pem") + "\n"
-            + readFileFromClassPathOrPath(certificateAuthorityCertificate())).getBytes(StandardCharsets.UTF_8));
-        controlPlaneTLSMutualAuthenticationCAChain(chain.getAbsolutePath());
+        originalCertificateAuthorityCertificate = certificateAuthorityCertificate();
+        originalCertificateAuthorityPrivateKey = certificateAuthorityPrivateKey();
+
+        // one CA for both sides: it signs MockServer's certificate and the client's leaf, so the control-plane
+        // chain never has to include the bundled CA, which control-plane mTLS refuses to trust
+        certificateAuthorityCertificate("org/mockserver/netty/integration/tls/ca.pem");
+        certificateAuthorityPrivateKey("org/mockserver/netty/integration/tls/ca-key-pkcs8.pem");
+        controlPlaneTLSMutualAuthenticationCAChain("org/mockserver/netty/integration/tls/ca.pem");
         controlPlanePrivateKeyPath("org/mockserver/netty/integration/tls/leaf-key-pkcs8.pem");
         controlPlaneX509CertificatePath("org/mockserver/netty/integration/tls/leaf-cert.pem");
         controlPlaneTLSMutualAuthenticationRequired(true);
@@ -60,6 +52,8 @@ public class AuthenticatedControlPlaneUsingMTLSClientMockingIntegrationTest exte
         controlPlanePrivateKeyPath(originalControlPlanePrivateKeyPath);
         controlPlaneX509CertificatePath(originalControlPlaneX509CertificatePath);
         controlPlaneTLSMutualAuthenticationRequired(originalControlPlaneTLSMutualAuthenticationRequired);
+        certificateAuthorityCertificate(originalCertificateAuthorityCertificate);
+        certificateAuthorityPrivateKey(originalCertificateAuthorityPrivateKey);
     }
 
     @Override

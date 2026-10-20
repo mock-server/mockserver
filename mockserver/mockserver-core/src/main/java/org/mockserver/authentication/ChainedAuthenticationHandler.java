@@ -1,5 +1,6 @@
 package org.mockserver.authentication;
 
+import org.mockserver.authentication.mtls.MTLSAuthenticationHandler;
 import org.mockserver.model.HttpRequest;
 
 import java.util.LinkedHashSet;
@@ -27,8 +28,9 @@ public class ChainedAuthenticationHandler implements AuthenticationHandler {
      * Runs every delegate's {@link AuthenticationHandler#authenticate} (preserving the
      * AND semantics: any unauthenticated delegate fails the whole chain). When all
      * delegates authenticate, returns a combined result that takes the FIRST verified
-     * principal (so an OIDC/JWT delegate's principal wins over an mTLS-only delegate
-     * that has a null principal) and unions every delegate's scopes.
+     * principal that is not an mTLS client-certificate principal (today only OIDC supplies
+     * one; the JWT handler supplies none), falling back to the verified mTLS principal, and
+     * unions every delegate's scopes.
      */
     @Override
     public AuthenticationResult authenticate(HttpRequest request) {
@@ -40,7 +42,7 @@ public class ChainedAuthenticationHandler implements AuthenticationHandler {
                 return AuthenticationResult.unauthenticated();
             }
             unionedScopes.addAll(result.getScopes());
-            if (principalResult == null && result.getPrincipal() != null) {
+            if (result.getPrincipal() != null && (principalResult == null || (isClientCertificatePrincipal(principalResult) && !isClientCertificatePrincipal(result)))) {
                 principalResult = result;
             }
         }
@@ -53,6 +55,10 @@ public class ChainedAuthenticationHandler implements AuthenticationHandler {
             );
         }
         return AuthenticationResult.authenticated(null, "none", java.util.Map.of(), unionedScopes);
+    }
+
+    private static boolean isClientCertificatePrincipal(AuthenticationResult result) {
+        return MTLSAuthenticationHandler.PRINCIPAL_SOURCE.equals(result.getPrincipalSource());
     }
 
 }

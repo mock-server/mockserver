@@ -136,6 +136,15 @@ public class JDKCertificateToMockServerX509CertificateMemoTest {
         assertThat(logger.decodeFailures.get(1).getHttpRequest(), is(sameInstance(secondRequest)));
     }
 
+    @Test
+    public void shouldStopAtTheFirstUndecodableCertificateSoNoCertificateMovesIntoItsPosition() throws Exception {
+        Certificate[] jdk = jdkChain();
+        JDKCertificateToMockServerX509Certificate converter = new JDKCertificateToMockServerX509Certificate(new InfoCapturingLogger());
+
+        assertThat(converter.setClientCertificates(request(), new Certificate[]{new UndecodableCertificate(), jdk[0], jdk[1]}).getClientCertificateChain(), is(nullValue()));
+        assertThat(converter.setClientCertificates(request(), new Certificate[]{jdk[0], new UndecodableCertificate(), jdk[1]}).getClientCertificateChain(), is(reParsed(new Certificate[]{jdk[0]})));
+    }
+
     private static void assertSameAsReParse(Certificate[] chain) throws Exception {
         JDKCertificateToMockServerX509Certificate converter = new JDKCertificateToMockServerX509Certificate(new MockServerLogger());
         List<X509Certificate> expected = reParsed(chain);

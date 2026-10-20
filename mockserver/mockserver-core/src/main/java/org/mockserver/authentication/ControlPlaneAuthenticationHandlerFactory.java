@@ -1,5 +1,9 @@
 package org.mockserver.authentication;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.pkcs.RSAPublicKey;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.mockserver.authentication.jwt.JWTAuthenticationHandler;
 import org.mockserver.authentication.mtls.MTLSAuthenticationHandler;
 import org.mockserver.authentication.oidc.OidcAuthenticationHandler;
@@ -14,7 +18,10 @@ import org.mockserver.socket.tls.NettySslContextFactory;
 import org.mockserver.socket.tls.PEMToFile;
 import org.slf4j.event.Level;
 
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.ECPublicKey;
+import java.security.spec.ECParameterSpec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -128,34 +135,32 @@ public class ControlPlaneAuthenticationHandlerFactory {
     /**
      * The certificate authorities a control-plane client certificate must chain to. With a
      * {@code controlPlaneTLSMutualAuthenticationCAChain}, only the certificates in it: MockServer's CA is not
-     * added. Without one, MockServer's CA certificate, unless that is the bundled CA, whose private key is
-     * published in the jar; then construction fails, so every control-plane request is denied.
+     * added. Without one, MockServer's own CA certificate (one configured with {@code certificateAuthorityCertificate}
+     * or dynamically created). The CA bundled with MockServer, whose private key is published in the jar, is never
+     * trusted: if it would be, construction fails, so every control-plane request is denied.
      */
     static X509Certificate[] controlPlaneClientCertificateTrust(String controlPlaneTLSMutualAuthenticationCAChain, Configuration configuration, MockServerLogger mockServerLogger) {
         if (isNotBlank(controlPlaneTLSMutualAuthenticationCAChain)) {
             X509Certificate[] trusted = NettySslContextFactory.controlPlaneTrustCertificates(controlPlaneTLSMutualAuthenticationCAChain);
-            if (mockServerLogger != null && Arrays.asList(trusted).contains(bundledCertificateAuthority())) {
-                mockServerLogger.logEvent(
-                    new LogEntry()
-                        .setLogLevel(Level.WARN)
-                        .setMessageFormat("controlPlaneTLSMutualAuthenticationCAChain includes the bundled default Certificate Authority, whose private key is published in the MockServer jar, so anyone can create a client certificate the control plane accepts; remove it from the chain:{}")
-                        .setArguments(controlPlaneTLSMutualAuthenticationCAChain)
-                );
+            if (containsBundledCertificateAuthority(trusted)) {
+                throw ControlPlaneMutualTlsConfigurationException.bundledCertificateAuthorityInChain();
             }
             return trusted;
         }
         X509Certificate[] mockServerCertificateAuthority = new NettySslContextFactory(configuration, mockServerLogger, true).trustCertificateChain(null);
-        if (Arrays.asList(mockServerCertificateAuthority).contains(bundledCertificateAuthority())) {
+        if (containsBundledCertificateAuthority(mockServerCertificateAuthority)) {
             throw new ControlPlaneMutualTlsConfigurationException();
         }
         return mockServerCertificateAuthority;
     }
 
     /**
-     * Refuses a configuration that requires control-plane mTLS with no {@code controlPlaneTLSMutualAuthenticationCAChain}
-     * while MockServer's CA certificate is the bundled CA. Every start path calls this before binding a port.
+     * Refuses a configuration that requires control-plane mTLS and would trust the CA bundled with MockServer: no
+     * {@code controlPlaneTLSMutualAuthenticationCAChain} while MockServer's CA certificate is the bundled CA, or a
+     * {@code controlPlaneTLSMutualAuthenticationCAChain} that contains the bundled CA. Every start path calls this
+     * before binding a port.
      *
-     * @throws ControlPlaneMutualTlsConfigurationException naming both fixes
+     * @throws ControlPlaneMutualTlsConfigurationException naming the fix
      */
     public static void requireUsableControlPlaneMutualTls(Configuration configuration) {
         ControlPlaneAuthenticationSettings controlPlane = ControlPlaneAuthenticationSettings.of(configuration);
@@ -172,7 +177,7 @@ public class ControlPlaneAuthenticationHandlerFactory {
      * The same check for the configuration {@code update} would leave, so {@code PUT /mockserver/configuration} can
      * refuse it before applying any of it.
      *
-     * @throws ControlPlaneMutualTlsConfigurationException naming both fixes
+     * @throws ControlPlaneMutualTlsConfigurationException naming the fix
      */
     public static void requireUsableControlPlaneMutualTls(ConfigurationDTO update, Configuration configuration) {
         ControlPlaneAuthenticationSettings controlPlane = ControlPlaneAuthenticationSettings.of(configuration);
@@ -186,11 +191,24 @@ public class ControlPlaneAuthenticationHandlerFactory {
     }
 
     private static void requireUsableControlPlaneMutualTls(Boolean mutualTlsRequired, String controlPlaneTLSMutualAuthenticationCAChain, Boolean dynamicallyCreateCertificateAuthorityCertificate, String certificateAuthorityCertificate) {
-        if (Boolean.TRUE.equals(mutualTlsRequired)
-            && !isNotBlank(controlPlaneTLSMutualAuthenticationCAChain)
-            && !Boolean.TRUE.equals(dynamicallyCreateCertificateAuthorityCertificate)
-            && isBundledCertificateAuthority(certificateAuthorityCertificate)) {
+        if (!Boolean.TRUE.equals(mutualTlsRequired)) {
+            return;
+        }
+        if (isNotBlank(controlPlaneTLSMutualAuthenticationCAChain)) {
+            if (chainContainsBundledCertificateAuthority(controlPlaneTLSMutualAuthenticationCAChain)) {
+                throw ControlPlaneMutualTlsConfigurationException.bundledCertificateAuthorityInChain();
+            }
+        } else if (!Boolean.TRUE.equals(dynamicallyCreateCertificateAuthorityCertificate) && isBundledCertificateAuthority(certificateAuthorityCertificate)) {
             throw new ControlPlaneMutualTlsConfigurationException();
+        }
+    }
+
+    private static boolean chainContainsBundledCertificateAuthority(String controlPlaneTLSMutualAuthenticationCAChain) {
+        try {
+            return containsBundledCertificateAuthority(NettySslContextFactory.controlPlaneTrustCertificates(controlPlaneTLSMutualAuthenticationCAChain));
+        } catch (RuntimeException unreadable) {
+            // an unreadable chain fails handler construction, which denies every control-plane request
+            return false;
         }
     }
 
@@ -199,11 +217,64 @@ public class ControlPlaneAuthenticationHandlerFactory {
             return true;
         }
         try {
-            return bundledCertificateAuthority().equals(PEMToFile.x509FromPEMFile(certificateAuthorityCertificate));
+            return containsBundledCertificateAuthority(new X509Certificate[]{PEMToFile.x509FromPEMFile(certificateAuthorityCertificate)});
         } catch (RuntimeException unreadable) {
             // an unreadable CA certificate fails the server's own TLS set-up with its own message
             return false;
         }
+    }
+
+    /**
+     * Compares key material, not certificates or key encodings: RSA by modulus and public exponent whatever the
+     * algorithm identifier (rsaEncryption or RSASSA-PSS), EC by curve and point. So a certificate re-issued or
+     * re-encoded for the bundled CA's key is caught too.
+     */
+    static boolean containsBundledCertificateAuthority(X509Certificate[] certificates) {
+        PublicKey bundledPublicKey = bundledCertificateAuthority().getPublicKey();
+        for (X509Certificate certificate : certificates) {
+            if (certificate != null && sameKeyMaterial(bundledPublicKey, certificate.getPublicKey())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static boolean sameKeyMaterial(PublicKey first, PublicKey second) {
+        if (first == null || second == null) {
+            return false;
+        }
+        if (first.equals(second)) {
+            return true;
+        }
+        try {
+            SubjectPublicKeyInfo firstInfo = SubjectPublicKeyInfo.getInstance(first.getEncoded());
+            SubjectPublicKeyInfo secondInfo = SubjectPublicKeyInfo.getInstance(second.getEncoded());
+            if (isRsa(firstInfo) && isRsa(secondInfo)) {
+                RSAPublicKey firstRsa = RSAPublicKey.getInstance(firstInfo.parsePublicKey());
+                RSAPublicKey secondRsa = RSAPublicKey.getInstance(secondInfo.parsePublicKey());
+                return firstRsa.getModulus().equals(secondRsa.getModulus()) && firstRsa.getPublicExponent().equals(secondRsa.getPublicExponent());
+            }
+            if (first instanceof ECPublicKey && second instanceof ECPublicKey) {
+                ECPublicKey firstEc = (ECPublicKey) first;
+                ECPublicKey secondEc = (ECPublicKey) second;
+                return firstEc.getW().equals(secondEc.getW()) && sameCurve(firstEc.getParams(), secondEc.getParams());
+            }
+            return Arrays.equals(firstInfo.getPublicKeyData().getBytes(), secondInfo.getPublicKeyData().getBytes());
+        } catch (Exception unparseable) {
+            return false;
+        }
+    }
+
+    private static boolean isRsa(SubjectPublicKeyInfo info) {
+        ASN1ObjectIdentifier algorithm = info.getAlgorithm().getAlgorithm();
+        return PKCSObjectIdentifiers.rsaEncryption.equals(algorithm) || PKCSObjectIdentifiers.id_RSASSA_PSS.equals(algorithm);
+    }
+
+    private static boolean sameCurve(ECParameterSpec first, ECParameterSpec second) {
+        return first.getCurve().equals(second.getCurve())
+            && first.getGenerator().equals(second.getGenerator())
+            && first.getOrder().equals(second.getOrder())
+            && first.getCofactor() == second.getCofactor();
     }
 
     private static X509Certificate bundledCertificateAuthority() {

@@ -55,6 +55,8 @@ public class JDKCertificateToMockServerX509Certificate {
                                 .setThrowable(throwable)
                         );
                     }
+                    // the chain's position is its meaning (index 0 is the certificate the handshake proved), so stop
+                    break;
                 }
             }
             if (!x509Certificates.isEmpty()) {
