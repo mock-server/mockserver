@@ -477,6 +477,25 @@ class ResponseBuildersTest extends TestCase
         ], $arr);
     }
 
+    public function testHttpTemplateParametersAreEmittedAsAJsonObject(): void
+    {
+        $tmpl = HttpTemplate::template(HttpTemplate::MUSTACHE, '{{ parameters.greeting }}')
+            ->withParameter('greeting', 'hello')
+            ->withParameters(['names' => ['ann', 'bob'], 'limits' => ['max' => 5, 'none' => null], 'empty' => '']);
+
+        $this->assertSame([
+            'greeting' => 'hello',
+            'names' => ['ann', 'bob'],
+            'limits' => ['max' => 5, 'none' => null],
+            'empty' => '',
+        ], $tmpl->toArray()['parameters']);
+        $this->assertSame(
+            '{"templateType":"MUSTACHE","template":"{{ parameters.greeting }}","parameters":{"greeting":"hello","names":["ann","bob"],"limits":{"max":5,"none":null},"empty":""}}',
+            json_encode($tmpl, JSON_UNESCAPED_SLASHES)
+        );
+        $this->assertArrayNotHasKey('parameters', HttpTemplate::template(HttpTemplate::VELOCITY, 'x')->toArray());
+    }
+
     public function testHttpTemplateFileFactoryAndFalsyPrimary(): void
     {
         $arr = HttpTemplate::templateFile(HttpTemplate::VELOCITY, '/tmpl/response.vm')

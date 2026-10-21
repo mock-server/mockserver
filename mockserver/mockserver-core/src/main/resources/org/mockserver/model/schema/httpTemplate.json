@@ -19,6 +19,9 @@
     "templateFile": {
       "type": "string"
     },
+    "parameters": {
+      "type": "object"
+    },
     "primary": {
       "type": "boolean"
     },

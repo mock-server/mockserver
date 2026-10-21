@@ -4466,3 +4466,22 @@ class TestActionFieldsTheServerAccepts:
             },
         }
         assert Expectation.from_dict(data).to_dict() == data
+
+
+class TestHttpTemplateParameters:
+    """Tests for the parameters field on HttpTemplate."""
+
+    def test_parameters_round_trip_keeping_nulls_and_empty_values(self):
+        parameters = {"greeting": "hello", "names": ["ann", "bob"], "limits": {"max": 5, "none": None}, "empty": ""}
+        t = HttpTemplate(template_type="MUSTACHE", template="{{ parameters.greeting }}", parameters=parameters)
+        result = t.to_dict()
+        assert result["parameters"] == parameters
+        assert HttpTemplate.from_dict(result).to_dict() == result
+
+    def test_with_parameter_adds_values(self):
+        t = HttpTemplate(template_type="VELOCITY", template="$parameters.a").with_parameter("a", 1).with_parameter("b", [True])
+        assert t.to_dict()["parameters"] == {"a": 1, "b": [True]}
+
+    def test_parameters_not_emitted_when_unset_or_empty(self):
+        assert "parameters" not in HttpTemplate(template_type="VELOCITY", template="x").to_dict()
+        assert "parameters" not in HttpTemplate(template_type="VELOCITY", template="x", parameters={}).to_dict()

@@ -12,6 +12,9 @@ type HttpTemplate struct {
 	ResponseOverride *HttpResponse `json:"responseOverride,omitempty"`
 	// ResponseModifier rewrites headers/cookies of the rendered response.
 	ResponseModifier *ResponseModifier `json:"responseModifier,omitempty"`
+	// Parameters are values the template reads as parameters, such as $parameters.greeting (Velocity),
+	// {{ parameters.greeting }} (Mustache) or parameters.greeting (JavaScript). Each value is any JSON value.
+	Parameters map[string]interface{} `json:"parameters,omitempty"`
 }
 
 // TemplateBuilder provides a fluent API for building HttpTemplate actions.
@@ -52,6 +55,23 @@ func (b *TemplateBuilder) WithDelay(timeUnit string, value int) *TemplateBuilder
 // Primary marks this template as the primary action when multiple are present.
 func (b *TemplateBuilder) Primary(primary bool) *TemplateBuilder {
 	b.template.Primary = &primary
+	return b
+}
+
+// Parameter adds a value the template reads as parameters.<name>: a string, number, bool, slice, map or nil.
+func (b *TemplateBuilder) Parameter(name string, value interface{}) *TemplateBuilder {
+	if b.template.Parameters == nil {
+		b.template.Parameters = map[string]interface{}{}
+	}
+	b.template.Parameters[name] = value
+	return b
+}
+
+// Parameters adds each entry as a parameter; see Parameter.
+func (b *TemplateBuilder) Parameters(parameters map[string]interface{}) *TemplateBuilder {
+	for name, value := range parameters {
+		b.Parameter(name, value)
+	}
 	return b
 }
 

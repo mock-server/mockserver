@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace MockServer.Client.Models;
@@ -20,6 +21,15 @@ public sealed class HttpTemplate
     [JsonPropertyName("templateFile")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? TemplateFile { get; set; }
+
+    /// <summary>
+    /// Values the template reads as <c>parameters</c>, such as <c>$parameters.greeting</c> (Velocity),
+    /// <c>{{ parameters.greeting }}</c> (Mustache) or <c>parameters.greeting</c> (JavaScript). Each value is any JSON
+    /// value. Omitted when null.
+    /// </summary>
+    [JsonPropertyName("parameters")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<string, JsonElement>? Parameters { get; set; }
 
     /// <summary>Optional delay applied before the templated action runs.</summary>
     [JsonPropertyName("delay")]

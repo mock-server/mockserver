@@ -152,7 +152,9 @@ callback). The action is auto-detected from the object shape: a plain object wit
 string `template`/`templateType` becomes a template action, one with a `callbackClass`
 becomes a server-side class-callback, otherwise it is the natural response/forward
 action. Each terminal method returns the same promise as the procedural builders, so
-it can be awaited or used with `.then(...)`.
+it can be awaited or used with `.then(...)`. A template can carry `parameters`, a JSON
+object it reads as `parameters.*`, so one template can be reused with different values:
+`respond({ templateType: 'MUSTACHE', template: '{"statusCode": 200, "body": "{{ parameters.greeting }}"}', parameters: { greeting: 'hello' } })`.
 
 ### Advanced Response Builders
 

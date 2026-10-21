@@ -49,7 +49,7 @@ public class HttpResponseTemplateActionHandler {
         if (templateEngine != null) {
             TemplateEngine engine = templateEngine;
             HttpResponse templatedResponse = TemplateFailureException.render(httpTemplate, "response", "response", Boolean.TRUE.equals(configuration.templateFailureAsServerError()),
-                () -> engine.executeTemplate(httpTemplate.getTemplateContent(), httpRequest, HttpResponseDTO.class));
+                () -> engine.executeTemplate(httpTemplate.getTemplateContent(), httpTemplate.getParameters(), httpRequest, null, HttpResponseDTO.class));
             if (templatedResponse != null) {
                 return templatedResponse;
             }

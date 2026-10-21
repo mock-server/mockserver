@@ -155,6 +155,7 @@ classDiagram
     class HttpTemplate {
         +template: String
         +templateType: TemplateType
+        +parameters: Map
         +actionType: Type
     }
     class HttpClassCallback {

@@ -220,6 +220,8 @@ export interface HttpTemplate {
   templateType?: "VELOCITY" | "JAVASCRIPT" | "MUSTACHE";
   template?: string;
   templateFile?: string;
+  /** values the template reads as parameters, such as parameters.greeting, so one template can be reused with different values */
+  parameters?: Record<string, any>;
 }
 
 export interface HttpForward {

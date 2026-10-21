@@ -21,6 +21,9 @@ import org.mockserver.templates.engine.model.HttpResponseTemplateObject;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 import org.slf4j.event.Level;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -116,7 +119,17 @@ final class PolyglotRunner {
      * {@link #ENGINE} serve its cached parse: the engine's code cache is keyed by {@code Source}, so handing
      * it the same instance guarantees the hit and also avoids re-hashing the script text on every call.
      */
-    private static final ConcurrentHashMap<String, Source> SOURCE_CACHE = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, CachedScript> SOURCE_CACHE = new ConcurrentHashMap<>();
+
+    // plain mapper so a parameter with an empty or null value is kept
+    private static final ObjectMapper PARAMETERS_MAPPER = new ObjectMapper();
+
+    /**
+     * A parsed script and the {@link TemplateFunctions#ON_DEMAND_HELPERS} its template names, found once per script
+     * so a template binds only the helpers it names, and one that names none binds nothing extra.
+     */
+    private record CachedScript(Source source, List<String> namedOnDemandHelpers) {
+    }
 
     private PolyglotRunner() {
     }
@@ -126,17 +139,27 @@ final class PolyglotRunner {
      * shared {@link #ENGINE} can serve its cached parse. Bounded by {@link #MAX_CACHED_SOURCES}: once the cap
      * is reached a fresh (uncached) {@code Source} is returned, so the map can never grow without limit.
      */
-    private static Source sourceFor(String fullScript) {
-        Source cached = SOURCE_CACHE.get(fullScript);
+    private static CachedScript sourceFor(String script, String fullScript) {
+        CachedScript cached = SOURCE_CACHE.get(fullScript);
         if (cached != null) {
             return cached;
         }
-        Source created = Source.create("js", fullScript);
+        CachedScript created = uncachedScript(script, fullScript);
         if (SOURCE_CACHE.size() < MAX_CACHED_SOURCES) {
-            Source existing = SOURCE_CACHE.putIfAbsent(fullScript, created);
+            CachedScript existing = SOURCE_CACHE.putIfAbsent(fullScript, created);
             return existing != null ? existing : created;
         }
         return created;
+    }
+
+    private static CachedScript uncachedScript(String script, String fullScript) {
+        List<String> named = new ArrayList<>(0);
+        for (String name : TemplateFunctions.ON_DEMAND_HELPERS.keySet()) {
+            if (script.contains(name)) {
+                named.add(name);
+            }
+        }
+        return new CachedScript(Source.create("js", fullScript), named.isEmpty() ? List.of() : List.copyOf(named));
     }
 
     static boolean sourceCacheContains(String scriptFragment) {
@@ -214,6 +237,8 @@ final class PolyglotRunner {
         long executionTimeoutMillis,
         boolean rawText,
         Object fakerOverride,
+        Object listsOverride,
+        Map<String, Object> parameters,
         boolean cacheSource
     ) {
         // rawText (streaming payload templating): coerce the handle(request) return value to text — a
@@ -319,7 +344,7 @@ final class PolyglotRunner {
             try {
                 return evaluate(
                     script, fullScript, includeResponse, request, response, iteration,
-                    objectMapper, mockServerLogger, httpTemplateOutputDeserializer, dtoClass, context, rawText, fakerOverride, cacheSource
+                    objectMapper, mockServerLogger, httpTemplateOutputDeserializer, dtoClass, context, rawText, fakerOverride, listsOverride, parameters, cacheSource
                 );
             } catch (PolyglotException polyglotException) {
                 if (watchdogFired.get() && (polyglotException.isCancelled() || polyglotException.isInterrupted())) {
@@ -362,6 +387,8 @@ final class PolyglotRunner {
         Context context,
         boolean rawText,
         Object fakerOverride,
+        Object listsOverride,
+        Map<String, Object> parameters,
         boolean cacheSource
     ) {
         {
@@ -384,6 +411,22 @@ final class PolyglotRunner {
             if (fakerOverride != null) {
                 jsBindings.putMember("faker", fakerOverride);
             }
+            // Reuse the cached, already-parsed Source so the shared ENGINE serves its code cache instead of
+            // re-parsing this script (the expensive, interpreter-only step) on every request.
+            CachedScript cachedScript = cacheSource ? sourceFor(script, fullScript) : uncachedScript(script, fullScript);
+            List<String> namedOnDemandHelpers = cachedScript.namedOnDemandHelpers();
+            for (int i = 0; i < namedOnDemandHelpers.size(); i++) {
+                String name = namedOnDemandHelpers.get(i);
+                Object helper = "lists".equals(name) && listsOverride != null ? listsOverride : TemplateFunctions.ON_DEMAND_HELPERS.get(name);
+                jsBindings.putMember(name, helper instanceof TemplateFunctions function ? function.get() : helper);
+            }
+            if (parameters != null && !parameters.isEmpty()) {
+                try {
+                    jsBindings.putMember("parameters", jsBindings.getMember("JSON").invokeMember("parse", PARAMETERS_MAPPER.writeValueAsString(parameters)));
+                } catch (com.fasterxml.jackson.core.JsonProcessingException notJson) {
+                    throw new IllegalArgumentException("template parameters could not be written as JSON: " + notJson.getMessage(), notJson);
+                }
+            }
 
             // Expose jsonPath('$.field') and xPath('//field') request-body extraction functions to the
             // script scope, sharing the same extraction logic / error handling as the Mustache and
@@ -402,10 +445,7 @@ final class PolyglotRunner {
                 jsBindings.putMember("iteration", iteration);
             }
 
-            // Reuse the cached, already-parsed Source so the shared ENGINE serves its code cache instead of
-            // re-parsing this script (the expensive, interpreter-only step) on every request.
-            Source source = cacheSource ? sourceFor(fullScript) : Source.create("js", fullScript);
-            context.eval(source);
+            context.eval(cachedScript.source());
 
             Value serialiseFunc = jsBindings.getMember("serialise");
             Value stringifiedResult;

@@ -157,6 +157,42 @@ export interface StandardTemplateState {
   /** Optional path to a file holding the template (classpath or filesystem). When set and the
    *  inline template is empty, the template is loaded from this file. Inline template wins. */
   templateFile?: string;
+  /** Optional JSON object the template reads as `parameters` (see {@link parseTemplateParameters}). */
+  parameters?: string;
+}
+
+/**
+ * The template `parameters` typed in the composer: a JSON object, or undefined when the text is blank,
+ * not valid JSON, not an object, or an empty object (see {@link templateParametersError}).
+ */
+export function parseTemplateParameters(text: string | undefined): Record<string, unknown> | undefined {
+  if (!text || !text.trim()) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(text);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) && Object.keys(parsed).length > 0
+      ? (parsed as Record<string, unknown>)
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Why the composer's template `parameters` text cannot be saved, or null when it can (blank is fine). */
+export function templateParametersError(text: string | undefined): string | null {
+  if (!text || !text.trim()) return null;
+  try {
+    const parsed: unknown = JSON.parse(text);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? null : 'Template parameters must be a JSON object, such as {"greeting": "hello"}';
+  } catch {
+    return 'Template parameters must be valid JSON, such as {"greeting": "hello"}';
+  }
+}
+
+/** The JSON text the composer shows for a loaded template's `parameters`, or '' when it has none. */
+export function templateParametersText(parameters: unknown): string {
+  return parameters && typeof parameters === 'object' && !Array.isArray(parameters) && Object.keys(parameters).length > 0
+    ? JSON.stringify(parameters, null, 2)
+    : '';
 }
 
 export interface StandardErrorState {
@@ -336,6 +372,8 @@ export interface StandardForwardTemplateState {
   /** Optional path to a file holding the template (classpath or filesystem). When set and the
    *  inline template is empty, the template is loaded from this file. Inline template wins. */
   templateFile?: string;
+  /** Optional JSON object the template reads as `parameters` (see {@link parseTemplateParameters}). */
+  parameters?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -956,6 +994,8 @@ interface JavaWireAction {
 
 /** Fields of the saved action the Java builder renders from the wire (see {@link JavaWireAction}). */
 const JAVA_WIRE_RENDERED_FIELDS: Partial<Record<StandardActionType, readonly string[]>> = {
+  template: ['parameters'],
+  forward_template: ['parameters'],
   websocket: ['messages', 'matchers'],
   sse: ['events'],
   grpc_stream: ['messages'],
@@ -1409,6 +1449,8 @@ export function buildExpectationJson(
         } else {
           tpl['template'] = action.template.template;
         }
+        const tplParameters = parseTemplateParameters(action.template.parameters);
+        if (tplParameters) tpl['parameters'] = tplParameters;
         out['httpResponseTemplate'] = tpl;
       }
       break;
@@ -1526,6 +1568,8 @@ export function buildExpectationJson(
         } else {
           ftpl['template'] = action.forwardTemplate.template;
         }
+        const ftplParameters = parseTemplateParameters(action.forwardTemplate.parameters);
+        if (ftplParameters) ftpl['parameters'] = ftplParameters;
         out['httpForwardTemplate'] = ftpl;
       }
       break;
@@ -2647,6 +2691,40 @@ function matcherToJava(matcher: StandardMatcher): string {
   return lines.join('\n');
 }
 
+/**
+ * A JSON value as a Java expression, as HttpTemplateToJavaSerializer writes a template parameter: maps as
+ * `Map.of` / `Map.ofEntries`, or a `LinkedHashMap` filled in place when a value is null, and lists as
+ * `Arrays.<Object>asList` with a null element cast so it is not read as the varargs array.
+ */
+export function javaJsonValue(v: unknown): string {
+  if (v === null || v === undefined) return 'null';
+  if (typeof v === 'string') return `"${escapeJava(v)}"`;
+  if (typeof v === 'boolean') return String(v);
+  if (typeof v === 'number') {
+    if (!Number.isFinite(v)) return 'null';
+    if (Number.isInteger(v)) return Math.abs(v) <= 2147483647 ? String(v) : `${v}L`;
+    return String(v);
+  }
+  if (Array.isArray(v)) {
+    return `java.util.Arrays.<Object>asList(${v.map((e) => (e === null ? '(Object) null' : javaJsonValue(e))).join(', ')})`;
+  }
+  const entries = Object.entries(v as Record<string, unknown>);
+  if (entries.some(([, e]) => e === null)) {
+    return `new java.util.LinkedHashMap<String, Object>() {{ ${entries.map(([k, e]) => `put("${escapeJava(k)}", ${javaJsonValue(e)});`).join(' ')} }}`;
+  }
+  if (entries.length > 10) {
+    return `java.util.Map.ofEntries(${entries.map(([k, e]) => `java.util.Map.entry("${escapeJava(k)}", ${javaJsonValue(e)})`).join(', ')})`;
+  }
+  return `java.util.Map.of(${entries.map(([k, e]) => `"${escapeJava(k)}", ${javaJsonValue(e)}`).join(', ')})`;
+}
+
+/** `.withParameter(...)` calls for a saved template's `parameters`. */
+function javaTemplateParameterCalls(w: JavaWireAction): string[] {
+  const parameters = w.wire['parameters'];
+  if (!parameters || typeof parameters !== 'object' || Array.isArray(parameters)) return [];
+  return Object.entries(parameters as Record<string, unknown>).map(([k, v]) => `.withParameter("${escapeJava(k)}", ${javaJsonValue(v)})`);
+}
+
 /** Builds the Java `template(...)` expression, appending `.withTemplateFile(...)` when a file is set.
  *  When only a file is set the no-template builder `template(TemplateType.X)` is used. */
 function templateJavaExpr(templateType: string, template: string, templateFile?: string): string {
@@ -2800,6 +2878,7 @@ function actionToJava(action: StandardActionPayload, w: JavaWireAction): string 
       return withInherited([
         '.respond(',
         '    ' + templateJavaExpr(t.templateType, t.template, t.templateFile),
+        ...javaTemplateParameterCalls(w).map((c) => `        ${c}`),
         ')',
       ].join('\n'));
     }
@@ -2925,6 +3004,7 @@ function actionToJava(action: StandardActionPayload, w: JavaWireAction): string 
       return withInherited([
         '.forward(',
         '    ' + templateJavaExpr(ft.templateType, ft.template, ft.templateFile),
+        ...javaTemplateParameterCalls(w).map((c) => `        ${c}`),
         ')',
       ].join('\n'));
     }

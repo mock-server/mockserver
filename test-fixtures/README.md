@@ -48,7 +48,7 @@ diff (i.e. the model was fixed) — forcing the stale entry to be removed.
 - Actions: static response (delay+connectionOptions+cookies+trailers+reasonPhrase), FILE response body
   (+templateType+templatedFilePath), forward, override (+primary),
   forward with fallback, forward validate, forward template (+delay+primary), forward class/object callback,
-  response template (JS; MUSTACHE+delay+primary), response class/object callback, error, websocket, sse, binary (+upstream), dns, grpc stream, grpc bidi, llm
+  response template (JS; MUSTACHE+delay+primary+parameters), response class/object callback, error, websocket, sse, binary (+upstream), dns, grpc stream, grpc bidi, llm
   (completion+conversationPredicates+normalization+streamingPhysics; embedding+rerank+moderation+contentFilter+chaos).
 - Response sequences: httpResponses with responseMode SEQUENTIAL / WEIGHTED(+responseWeights) / SWITCH(+switchAfter) / RANDOM.
 - Top-level: chaos, rateLimit, percentage, beforeActions, afterActions, capture, namespace, steps, scenario

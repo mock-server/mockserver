@@ -4,6 +4,8 @@ import org.mockserver.serialization.model.DTO;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
+import java.util.Map;
+
 /**
  * @author jamesdbloom
  */
@@ -12,6 +14,16 @@ public interface TemplateEngine {
     <T> T executeTemplate(String template, HttpRequest httpRequest, Class<? extends DTO<T>> dtoClass);
 
     <T> T executeTemplate(String template, HttpRequest httpRequest, HttpResponse httpResponse, Class<? extends DTO<T>> dtoClass);
+
+    /**
+     * As {@link #executeTemplate(String, HttpRequest, Class)}, or with {@code httpResponse} as
+     * {@link #executeTemplate(String, HttpRequest, HttpResponse, Class)}, also giving the template an
+     * {@link org.mockserver.model.HttpTemplate}'s {@code parameters} as {@code parameters}. Null or empty
+     * parameters bind nothing, so the render is the same as without them.
+     */
+    default <T> T executeTemplate(String template, Map<String, Object> parameters, HttpRequest httpRequest, HttpResponse httpResponse, Class<? extends DTO<T>> dtoClass) {
+        return httpResponse == null ? executeTemplate(template, httpRequest, dtoClass) : executeTemplate(template, httpRequest, httpResponse, dtoClass);
+    }
 
     /**
      * Renders a template against the request and returns the raw rendered text, without attempting to

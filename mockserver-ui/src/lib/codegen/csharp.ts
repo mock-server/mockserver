@@ -377,8 +377,10 @@ function renderError(err: Record<string, unknown>, indent: number, ctx: Ctx): st
 }
 
 function renderTemplate(tpl: Record<string, unknown>, indent: number, ctx: Ctx): string {
-  const known = new Set(['templateType', 'template', 'templateFile', 'delay', 'primary']);
-  if (Object.keys(tpl).some((k) => !known.has(k)) || typeof tpl['templateType'] !== 'string') {
+  const known = new Set(['templateType', 'template', 'templateFile', 'delay', 'primary', 'parameters']);
+  const parameters = tpl['parameters'];
+  if (Object.keys(tpl).some((k) => !known.has(k)) || typeof tpl['templateType'] !== 'string'
+    || (parameters !== undefined && !isObject(parameters))) {
     return rawTyped('HttpTemplate', tpl, ctx);
   }
   const calls: string[] = [];
@@ -386,8 +388,23 @@ function renderTemplate(tpl: Record<string, unknown>, indent: number, ctx: Ctx):
   if (typeof tpl['templateFile'] === 'string') calls.push(`.WithTemplateFile(${csStr(tpl['templateFile'] as string)})`);
   if (isObject(tpl['delay'])) calls.push(delayCall(tpl['delay'] as Record<string, unknown>));
   if (typeof tpl['primary'] === 'boolean') calls.push(`.WithPrimary(${tpl['primary']})`);
+  if (isObject(parameters)) {
+    for (const [name, value] of Object.entries(parameters as Record<string, unknown>)) {
+      calls.push(`.WithParameter(${csStr(name)}, ${csParameterValue(value, ctx)})`);
+    }
+  }
   calls.push('.Build()');
   return csFluent(`HttpTemplate.OfType(TemplateType.${tpl['templateType']})`, calls, indent);
+}
+
+/** A template parameter value: a C# literal for text, numbers, booleans and null, otherwise a parsed JsonElement. */
+function csParameterValue(value: unknown, ctx: Ctx): string {
+  if (value === null || value === undefined) return 'null';
+  if (typeof value === 'string') return csStr(value);
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  if (typeof value === 'number' && Number.isFinite(value)) return Number.isInteger(value) && Math.abs(value) > 2147483647 ? `${value}L` : String(value);
+  ctx.usings.add('System.Text.Json');
+  return `JsonSerializer.Deserialize<JsonElement>(${csVerbatim(stableJson(value))})`;
 }
 
 function renderClassCallback(cb: Record<string, unknown>, indent: number, ctx: Ctx): string {

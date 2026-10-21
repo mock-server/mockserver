@@ -92,7 +92,11 @@ export const responseTemplateJsLiteral: Expectation = {
 
 export const responseTemplateMustacheLiteral: Expectation = {
     httpRequest: { path: '/tmplm' },
-    httpResponseTemplate: { templateType: 'MUSTACHE', template: '{"statusCode": 200, "body": "{{request.path}}"}' }
+    httpResponseTemplate: {
+        templateType: 'MUSTACHE',
+        template: '{"statusCode": 200, "body": "{{request.path}}"}',
+        parameters: { greeting: 'hello', names: ['ann', 'bob'], limits: { max: 5 } }
+    }
 };
 
 export const responseClassCallbackLiteral: Expectation = {

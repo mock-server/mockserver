@@ -168,6 +168,7 @@ const STRUCTS: Record<string, FieldSpec[]> = {
     ['primary', 'Primary', 'boolPtr'],
     ['responseOverride', 'ResponseOverride', 'struct:HttpResponse'],
     ['responseModifier', 'ResponseModifier', 'struct:ResponseModifier'],
+    ['parameters', 'Parameters', 'raw'],
   ],
   HttpError: [
     ['dropConnection', 'DropConnection', 'boolPtr'],

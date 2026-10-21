@@ -242,7 +242,8 @@ curl_close($ch);</code></pre>
     <li><a href="#template_dry_run"><strong>Template Dry Run</strong></a> &mdash; render a template against a sample request on a running MockServer with <code>PUT /mockserver/template/test</code>, and find where a template fails</li>
     <li><a href="#request_model_variables"><strong>Request Model Variables</strong></a> &mdash; access request fields (method, path, headers, body, etc.) in templates</li>
     <li><a href="#request_multi_value_maps"><strong>Multi-Value And Single Value Maps</strong></a> &mdash; access headers, parameters, and cookies by key, entry set, values, or key set</li>
-    <li><a href="#dynamic_model_variables"><strong>Dynamic Model Variables</strong></a> &mdash; timestamps, UUIDs, random integers, and random bytes</li>
+    <li><a href="#dynamic_model_variables"><strong>Dynamic Model Variables</strong></a> &mdash; timestamps, UUIDs, random integers, random bytes, and the server's host name</li>
+    <li><a href="#template_parameters"><strong>Template Parameters</strong></a> &mdash; reuse one template with different values passed as <code>parameters</code></li>
     <li><strong>Template Helper Objects</strong> &mdash; rich helper objects available in all template formats:
         <ul>
             <li><a href="#jwt_helper">JWT Helper</a> &mdash; generate signed JWTs and JWKS for testing OAuth2/OIDC flows</li>
@@ -255,8 +256,9 @@ curl_close($ch);</code></pre>
             <li><a href="#regex_helper">Regex Helper</a> &mdash; test patterns, capture groups, and replace substrings using Java regex</li>
             <li><a href="#html_helper">HTML Helper</a> &mdash; escape and unescape HTML entities</li>
             <li><a href="#csv_helper">CSV Helper</a> &mdash; parse CSV text into rows and format a row back to CSV</li>
-            <li><a href="#xpath_helper">XPath Helper</a> &mdash; evaluate an XPath expression against an XML document (XXE-safe)</li>
+            <li><a href="#xpath_helper">XPath Helper</a> &mdash; evaluate an XPath expression against an XML document and pretty-print XML (XXE-safe)</li>
             <li><a href="#yaml_helper">YAML Helper</a> &mdash; convert YAML to JSON and read a field from a YAML document</li>
+            <li><a href="#lists_helper">Lists Helper</a> &mdash; pick a random value, build and join lists, and count through a range</li>
         </ul>
     </li>
     <li><a href="#response_template_failures"><strong>When a Template Fails or Runs Too Long</strong></a> &mdash; time limits for JavaScript and Velocity, and what the client receives when a template fails</li>
@@ -400,13 +402,23 @@ curl_close($ch);</code></pre>
         </tr>
         <tr>
             <td><code>xpath</code></td>
-            <td>Evaluate an XPath expression against an XML document (XXE-safe)</td>
+            <td>Evaluate an XPath expression against an XML document, and pretty-print XML (XXE-safe)</td>
             <td><a href="#xpath_helper">XPath Helper</a></td>
         </tr>
         <tr>
             <td><code>yaml</code></td>
             <td>Convert YAML to JSON and read a top-level field from a YAML document</td>
             <td><a href="#yaml_helper">YAML Helper</a></td>
+        </tr>
+        <tr>
+            <td><code>lists</code></td>
+            <td>Pick a random value, build and join lists, and count through a range</td>
+            <td><a href="#lists_helper">Lists Helper</a></td>
+        </tr>
+        <tr>
+            <td><code>parameters</code></td>
+            <td>Values set on the template with <code>parameters</code>, so one template can be reused</td>
+            <td><a href="#template_parameters">Template Parameters</a></td>
         </tr>
         <tr>
             <td colspan="3"><strong>Security</strong></td>
@@ -1937,7 +1949,661 @@ curl_close($ch);</code></pre>
             </tr>
         </table>
     </li>
+    <li><strong>the host name of the machine MockServer runs on: the <code>HOSTNAME</code> environment variable when it is set, as it is in a container or Kubernetes pod, otherwise the machine's name, looked up in the background when templates are first used (<code>localhost</code> until that finishes). This is the server's internal name, such as the pod or container name, and any client that calls an expectation using it sees it, so do not use it where that name should stay private</strong>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; hostname &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!hostname</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">hostname</code></td>
+            </tr>
+        </table>
+    </li>
 </ul>
+
+<a id="template_parameters" class="anchor" href="#template_parameters">&nbsp;</a>
+
+<h2>Template Parameters</h2>
+
+<p>A template can carry its own <code>parameters</code>: a JSON object of values the template reads as <code>parameters</code>. This lets one template be reused with different values, such as a greeting, a list of names or a limit, without editing the template text. A value can be text, a number, a boolean, a list or an object. This is the equivalent of WireMock's <code>transformerParameters</code>.</p>
+
+<ul>
+    <li><strong>Mustache:</strong> <code class="inline code">&lbrace;&lbrace; parameters.greeting &rbrace;&rbrace;</code>, and a list in a section, as in <code class="inline code">&lbrace;&lbrace;#parameters.names&rbrace;&rbrace;&lbrace;&lbrace;.&rbrace;&rbrace;&lbrace;&lbrace;/parameters.names&rbrace;&rbrace;</code></li>
+    <li><strong>Velocity:</strong> <code class="inline code">$parameters.greeting</code> or <code class="inline code">$parameters.names[0]</code></li>
+    <li><strong>JavaScript:</strong> <code class="inline code">parameters.greeting</code> or <code class="inline code">parameters.names.length</code>; <code>parameters</code> is a plain JavaScript object</li>
+</ul>
+
+<p>Parameters work in response templates, forward templates, the response template of an overridden forward, and webhook templates. A template cannot change its parameters. A template without parameters has no <code>parameters</code> variable, so in Velocity write <code class="inline code">$!parameters.greeting</code> where a missing value should render nothing. In Java, set them with <code class="inline code">.withParameter("greeting", "hello")</code> or <code class="inline code">.withParameters(map)</code>; the other clients have the same field or setter: .NET <code class="inline code">WithParameter</code>, Go <code class="inline code">Parameter</code>, Node <code class="inline code">parameters</code>, Python and Ruby <code class="inline code">parameters</code> or <code class="inline code">with_parameter</code>, PHP <code class="inline code">withParameter</code>, and Rust <code class="inline code">Expectation::respond_template_with_parameters</code>. The examples below send the expectation as JSON, which every client accepts.</p>
+
+<p>The examples below return a body such as <code>hello bob, pages 1,2,3</code>, where the name is picked at random from the <code>names</code> parameter, and an <code>X-Served-By</code> header with the host name of the MockServer machine (which shows callers the server's internal name, see <a href="#dynamic_model_variables"><code>hostname</code></a>):</p>
+
+<button id="button_template_parameters_mustache" class="accordion">Mustache: a reusable greeting template with parameters</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">{% raw %}new ClientAndServer(1080)
+    .when(request().withPath("/greeting"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.MUSTACHE,
+            "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '{{ hostname }}' ] }, 'body': '{{ parameters.greeting }} {{#lists.pickRandom}}{{#parameters.names}}{{.}}|{{/parameters.names}}{{/lists.pickRandom}}, pages {{#lists.range.1.3}}{{.}}{{^-last}},{{/-last}}{{/lists.range.1.3}}' }"
+        )
+            .withParameter("greeting", "hello")
+            .withParameter("names", Arrays.asList("ann", "bob"))
+    );{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">{% raw %}var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '{{ hostname }}' ] }, 'body': '{{ parameters.greeting }} {{#lists.pickRandom}}{{#parameters.names}}{{.}}|{{/parameters.names}}{{/lists.pickRandom}}, pages {{#lists.range.1.3}}{{.}}{{^-last}},{{/-last}}{{/lists.range.1.3}}' }",
+        "templateType": "MUSTACHE",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);{% endraw %}</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">{% raw %}import requests
+
+requests.put("http://localhost:1080/mockserver/expectation", json={
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '{{ hostname }}' ] }, 'body': '{{ parameters.greeting }} {{#lists.pickRandom}}{{#parameters.names}}{{.}}|{{/parameters.names}}{{/lists.pickRandom}}, pages {{#lists.range.1.3}}{{.}}{{^-last}},{{/-last}}{{/lists.range.1.3}}' }",
+        "templateType": "MUSTACHE",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}){% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">{% raw %}require 'net/http'
+
+uri = URI('http://localhost:1080/mockserver/expectation')
+Net::HTTP.start(uri.host, uri.port) do |http|
+  http.send_request('PUT', uri.path, &lt;&lt;~'JSON', 'Content-Type' =&gt; 'application/json')
+    {
+        "httpRequest": {
+            "path": "/greeting"
+        },
+        "httpResponseTemplate": {
+            "template": "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '{{ hostname }}' ] }, 'body': '{{ parameters.greeting }} {{#lists.pickRandom}}{{#parameters.names}}{{.}}|{{/parameters.names}}{{/lists.pickRandom}}, pages {{#lists.range.1.3}}{{.}}{{^-last}},{{/-last}}{{/lists.range.1.3}}' }",
+            "templateType": "MUSTACHE",
+            "parameters": {
+                "greeting": "hello",
+                "names": [ "ann", "bob" ]
+            }
+        }
+    }
+  JSON
+end{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">{% raw %}package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`{
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '{{ hostname }}' ] }, 'body': '{{ parameters.greeting }} {{#lists.pickRandom}}{{#parameters.names}}{{.}}|{{/parameters.names}}{{/lists.pickRandom}}, pages {{#lists.range.1.3}}{{.}}{{^-last}},{{/-last}}{{/lists.range.1.3}}' }",
+        "templateType": "MUSTACHE",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">{% raw %}using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"{
+    ""httpRequest"": {
+        ""path"": ""/greeting""
+    },
+    ""httpResponseTemplate"": {
+        ""template"": ""{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '{{ hostname }}' ] }, 'body': '{{ parameters.greeting }} {{#lists.pickRandom}}{{#parameters.names}}{{.}}|{{/parameters.names}}{{/lists.pickRandom}}, pages {{#lists.range.1.3}}{{.}}{{^-last}},{{/-last}}{{/lists.range.1.3}}' }"",
+        ""templateType"": ""MUSTACHE"",
+        ""parameters"": {
+            ""greeting"": ""hello"",
+            ""names"": [ ""ann"", ""bob"" ]
+        }
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">{% raw %}use reqwest::blocking::Client;
+
+let client = Client::new();
+let body = r#"{
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '{{ hostname }}' ] }, 'body': '{{ parameters.greeting }} {{#lists.pickRandom}}{{#parameters.names}}{{.}}|{{/parameters.names}}{{/lists.pickRandom}}, pages {{#lists.range.1.3}}{{.}}{{^-last}},{{/-last}}{{/lists.range.1.3}}' }",
+        "templateType": "MUSTACHE",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">{% raw %}$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '{{ hostname }}' ] }, 'body': '{{ parameters.greeting }} {{#lists.pickRandom}}{{#parameters.names}}{{.}}|{{/parameters.names}}{{/lists.pickRandom}}, pages {{#lists.range.1.3}}{{.}}{{^-last}},{{/-last}}{{/lists.range.1.3}}' }",
+        "templateType": "MUSTACHE",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}
+JSON;
+
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">{% raw %}curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "{ '\''statusCode'\'': 200, '\''headers'\'': { '\''X-Served-By'\'': [ '\''{{ hostname }}'\'' ] }, '\''body'\'': '\''{{ parameters.greeting }} {{#lists.pickRandom}}{{#parameters.names}}{{.}}|{{/parameters.names}}{{/lists.pickRandom}}, pages {{#lists.range.1.3}}{{.}}{{^-last}},{{/-last}}{{/lists.range.1.3}}'\'' }",
+        "templateType": "MUSTACHE",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}'{% endraw %}</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+
+<button id="button_template_parameters_velocity" class="accordion">Velocity: a reusable greeting template with parameters</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">{% raw %}new ClientAndServer(1080)
+    .when(request().withPath("/greeting"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.VELOCITY,
+            "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '$hostname' ] }, 'body': '$parameters.greeting $lists.pickRandom($parameters.names), pages $lists.arrayJoin(',', $lists.range(1, 3))' }"
+        )
+            .withParameter("greeting", "hello")
+            .withParameter("names", Arrays.asList("ann", "bob"))
+    );{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">{% raw %}var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '$hostname' ] }, 'body': '$parameters.greeting $lists.pickRandom($parameters.names), pages $lists.arrayJoin(',', $lists.range(1, 3))' }",
+        "templateType": "VELOCITY",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);{% endraw %}</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">{% raw %}import requests
+
+requests.put("http://localhost:1080/mockserver/expectation", json={
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '$hostname' ] }, 'body': '$parameters.greeting $lists.pickRandom($parameters.names), pages $lists.arrayJoin(',', $lists.range(1, 3))' }",
+        "templateType": "VELOCITY",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}){% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">{% raw %}require 'net/http'
+
+uri = URI('http://localhost:1080/mockserver/expectation')
+Net::HTTP.start(uri.host, uri.port) do |http|
+  http.send_request('PUT', uri.path, &lt;&lt;~'JSON', 'Content-Type' =&gt; 'application/json')
+    {
+        "httpRequest": {
+            "path": "/greeting"
+        },
+        "httpResponseTemplate": {
+            "template": "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '$hostname' ] }, 'body': '$parameters.greeting $lists.pickRandom($parameters.names), pages $lists.arrayJoin(',', $lists.range(1, 3))' }",
+            "templateType": "VELOCITY",
+            "parameters": {
+                "greeting": "hello",
+                "names": [ "ann", "bob" ]
+            }
+        }
+    }
+  JSON
+end{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">{% raw %}package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`{
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '$hostname' ] }, 'body': '$parameters.greeting $lists.pickRandom($parameters.names), pages $lists.arrayJoin(',', $lists.range(1, 3))' }",
+        "templateType": "VELOCITY",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">{% raw %}using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"{
+    ""httpRequest"": {
+        ""path"": ""/greeting""
+    },
+    ""httpResponseTemplate"": {
+        ""template"": ""{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '$hostname' ] }, 'body': '$parameters.greeting $lists.pickRandom($parameters.names), pages $lists.arrayJoin(',', $lists.range(1, 3))' }"",
+        ""templateType"": ""VELOCITY"",
+        ""parameters"": {
+            ""greeting"": ""hello"",
+            ""names"": [ ""ann"", ""bob"" ]
+        }
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">{% raw %}use reqwest::blocking::Client;
+
+let client = Client::new();
+let body = r#"{
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '$hostname' ] }, 'body': '$parameters.greeting $lists.pickRandom($parameters.names), pages $lists.arrayJoin(',', $lists.range(1, 3))' }",
+        "templateType": "VELOCITY",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">{% raw %}$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Served-By': [ '$hostname' ] }, 'body': '$parameters.greeting $lists.pickRandom($parameters.names), pages $lists.arrayJoin(',', $lists.range(1, 3))' }",
+        "templateType": "VELOCITY",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}
+JSON;
+
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">{% raw %}curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "{ '\''statusCode'\'': 200, '\''headers'\'': { '\''X-Served-By'\'': [ '\''$hostname'\'' ] }, '\''body'\'': '\''$parameters.greeting $lists.pickRandom($parameters.names), pages $lists.arrayJoin('\'','\'', $lists.range(1, 3))'\'' }",
+        "templateType": "VELOCITY",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}'{% endraw %}</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+
+<button id="button_template_parameters_javascript" class="accordion">JavaScript: a reusable greeting template with parameters</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">{% raw %}new ClientAndServer(1080)
+    .when(request().withPath("/greeting"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.JAVASCRIPT,
+            "return { 'statusCode': 200, 'headers': { 'X-Served-By': [ hostname ] }, 'body': parameters.greeting + ' ' + lists.pickRandom(parameters.names) + ', pages ' + lists.arrayJoin(',', lists.range(1, 3)) };"
+        )
+            .withParameter("greeting", "hello")
+            .withParameter("names", Arrays.asList("ann", "bob"))
+    );{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">{% raw %}var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'X-Served-By': [ hostname ] }, 'body': parameters.greeting + ' ' + lists.pickRandom(parameters.names) + ', pages ' + lists.arrayJoin(',', lists.range(1, 3)) };",
+        "templateType": "JAVASCRIPT",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);{% endraw %}</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">{% raw %}import requests
+
+requests.put("http://localhost:1080/mockserver/expectation", json={
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'X-Served-By': [ hostname ] }, 'body': parameters.greeting + ' ' + lists.pickRandom(parameters.names) + ', pages ' + lists.arrayJoin(',', lists.range(1, 3)) };",
+        "templateType": "JAVASCRIPT",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}){% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">{% raw %}require 'net/http'
+
+uri = URI('http://localhost:1080/mockserver/expectation')
+Net::HTTP.start(uri.host, uri.port) do |http|
+  http.send_request('PUT', uri.path, &lt;&lt;~'JSON', 'Content-Type' =&gt; 'application/json')
+    {
+        "httpRequest": {
+            "path": "/greeting"
+        },
+        "httpResponseTemplate": {
+            "template": "return { 'statusCode': 200, 'headers': { 'X-Served-By': [ hostname ] }, 'body': parameters.greeting + ' ' + lists.pickRandom(parameters.names) + ', pages ' + lists.arrayJoin(',', lists.range(1, 3)) };",
+            "templateType": "JAVASCRIPT",
+            "parameters": {
+                "greeting": "hello",
+                "names": [ "ann", "bob" ]
+            }
+        }
+    }
+  JSON
+end{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">{% raw %}package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`{
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'X-Served-By': [ hostname ] }, 'body': parameters.greeting + ' ' + lists.pickRandom(parameters.names) + ', pages ' + lists.arrayJoin(',', lists.range(1, 3)) };",
+        "templateType": "JAVASCRIPT",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">{% raw %}using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"{
+    ""httpRequest"": {
+        ""path"": ""/greeting""
+    },
+    ""httpResponseTemplate"": {
+        ""template"": ""return { 'statusCode': 200, 'headers': { 'X-Served-By': [ hostname ] }, 'body': parameters.greeting + ' ' + lists.pickRandom(parameters.names) + ', pages ' + lists.arrayJoin(',', lists.range(1, 3)) };"",
+        ""templateType"": ""JAVASCRIPT"",
+        ""parameters"": {
+            ""greeting"": ""hello"",
+            ""names"": [ ""ann"", ""bob"" ]
+        }
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">{% raw %}use reqwest::blocking::Client;
+
+let client = Client::new();
+let body = r#"{
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'X-Served-By': [ hostname ] }, 'body': parameters.greeting + ' ' + lists.pickRandom(parameters.names) + ', pages ' + lists.arrayJoin(',', lists.range(1, 3)) };",
+        "templateType": "JAVASCRIPT",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">{% raw %}$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'X-Served-By': [ hostname ] }, 'body': parameters.greeting + ' ' + lists.pickRandom(parameters.names) + ', pages ' + lists.arrayJoin(',', lists.range(1, 3)) };",
+        "templateType": "JAVASCRIPT",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}
+JSON;
+
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">{% raw %}curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/greeting"
+    },
+    "httpResponseTemplate": {
+        "template": "return { '\''statusCode'\'': 200, '\''headers'\'': { '\''X-Served-By'\'': [ hostname ] }, '\''body'\'': parameters.greeting + '\'' '\'' + lists.pickRandom(parameters.names) + '\'', pages '\'' + lists.arrayJoin('\'','\'', lists.range(1, 3)) };",
+        "templateType": "JAVASCRIPT",
+        "parameters": {
+            "greeting": "hello",
+            "names": [ "ann", "bob" ]
+        }
+    }
+}'{% endraw %}</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 
 <a id="template_helper_objects" class="anchor" href="#template_helper_objects">&nbsp;</a>
 
@@ -2681,6 +3347,17 @@ curl_close($ch);</code></pre>
 
 <p>The full list of available providers (name, address, internet, company, finance, medical, etc.) is documented in the <a target="_blank" href="https://www.datafaker.net/documentation/providers/" rel="noopener noreferrer">DataFaker providers reference</a>.</p>
 
+<p>Data is in English by default. For data from another country or language, such as German names or French cities, use a locale. A locale can be a language, such as <code>de</code>, or a language and country, such as <code>de-DE</code>, <code>fr_CA</code> or <code>pt-BR</code>; anything after the country, such as a script or extension, is ignored. Only the locales DataFaker has data for are used: a country it has no data for uses the language (<code>de-BE</code> gives <code>de</code>), and a language it has no data for gives English data and logs a warning. So a locale taken from the request, such as the <code>Accept-Language</code> header, is safe to use. When <code>templateFakerSeed</code> is set, each locale gives the same values on every run.</p>
+
+<table class="table">
+    <thead><tr><th>Engine</th><th>Example</th></tr></thead>
+    <tbody>
+        <tr><td>Velocity</td><td><code class="inline code">$faker.locale('de-DE').name().fullName()</code>, or <code class="inline code">#set($german = $faker.locale('de'))</code> once and then <code class="inline code">$german.address().city()</code></td></tr>
+        <tr><td>JavaScript</td><td><code class="inline code">faker.locale('fr').address().city()</code></td></tr>
+        <tr><td>Mustache</td><td><code class="inline code">&lbrace;&lbrace; faker.locale.de-DE.name.fullName &rbrace;&rbrace;</code>, or for several values <code class="inline code">&lbrace;&lbrace;#faker.locale.fr&rbrace;&rbrace;&lbrace;&lbrace; name.fullName &rbrace;&rbrace;, &lbrace;&lbrace; address.city &rbrace;&rbrace;&lbrace;&lbrace;/faker.locale.fr&rbrace;&rbrace;</code></td></tr>
+    </tbody>
+</table>
+
 <a id="crypto_helper" class="anchor" href="#crypto_helper">&nbsp;</a>
 
 <h3>Crypto Helper (<code>crypto</code>)</h3>
@@ -2777,13 +3454,15 @@ curl_close($ch);</code></pre>
     <thead><tr><th>Method</th><th>Description</th><th>Example</th></tr></thead>
     <tbody>
         <tr><td><code>xpath.evaluate(xml, expression)</code></td><td>Returns the string result of the XPath expression against the XML</td><td><code>xpath.evaluate("&lt;o&gt;&lt;id&gt;42&lt;/id&gt;&lt;/o&gt;", "/o/id")</code> &rarr; <code>"42"</code></td></tr>
+        <tr><td><code>xpath.formatXml(xml)</code></td><td>Pretty-prints XML with two spaces per level, keeping any XML declaration, comments and CDATA. Text that is not well-formed XML, XML with a DOCTYPE, XML nested more than 256 elements deep, or a result over four times the size of the input (and over 64 KiB) makes the template fail</td><td><code>xpath.formatXml("&lt;o&gt;&lt;id&gt;42&lt;/id&gt;&lt;/o&gt;")</code> &rarr; <code>"&lt;o&gt;\n  &lt;id&gt;42&lt;/id&gt;\n&lt;/o&gt;"</code></td></tr>
     </tbody>
 </table>
 
 <p>Usage examples:</p>
 <ul>
-    <li><strong>Velocity:</strong> <code class="inline code">$xpath.evaluate($!request.body, "/order/id")</code> (extract an element from an XML request body)</li>
-    <li><strong>JavaScript:</strong> <code class="inline code">xpath.evaluate(request.body, "/order/@status")</code> (read an attribute value)</li>
+    <li><strong>Velocity:</strong> <code class="inline code">$xpath.evaluate($!request.body, "/order/id")</code> (extract an element from an XML request body), <code class="inline code">$xpath.formatXml($!request.body)</code> (return the request body pretty-printed)</li>
+    <li><strong>JavaScript:</strong> <code class="inline code">xpath.evaluate(request.body, "/order/@status")</code> (read an attribute value), <code class="inline code">xpath.formatXml(request.body)</code></li>
+    <li><strong>Mustache:</strong> <code class="inline code">&lbrace;&lbrace;#xpath.formatXml&rbrace;&rbrace;&lbrace;&lbrace;&lbrace; request.body &rbrace;&rbrace;&rbrace;&lbrace;&lbrace;/xpath.formatXml&rbrace;&rbrace;</code>. Use triple braces so the body is not HTML-escaped before it is formatted</li>
 </ul>
 
 <a id="yaml_helper" class="anchor" href="#yaml_helper">&nbsp;</a>
@@ -2804,6 +3483,41 @@ curl_close($ch);</code></pre>
 <ul>
     <li><strong>Velocity:</strong> <code class="inline code">$yaml.toJson($!request.body)</code> (turn a YAML request body into a JSON response)</li>
     <li><strong>JavaScript:</strong> <code class="inline code">yaml.parse(request.body, "version")</code></li>
+</ul>
+
+<a id="lists_helper" class="anchor" href="#lists_helper">&nbsp;</a>
+
+<h3>Lists Helper (<code>lists</code>)</h3>
+
+<p>Picks a random value, builds and joins lists, and counts through a range of numbers. These match WireMock's <code>pickRandom</code>, <code>array</code>, <code>arrayJoin</code> and <code>range</code> helpers. When <a href="/mock_server/configuration_properties.html"><code>templateFakerSeed</code></a> is set, <code>pickRandom</code> picks the same sequence on every run, as <code>faker</code> does. A list built by this helper, including a range, has at most 10,000 values, so a number taken from a request cannot make a template build a huge list.</p>
+
+<table class="table">
+    <thead><tr><th>Method</th><th>Description</th><th>Example</th></tr></thead>
+    <tbody>
+        <tr><td><code>lists.pickRandom(value, ...)</code></td><td>One of the values, chosen at random. Pass a single list to pick from it</td><td><code>lists.pickRandom("red", "green")</code> &rarr; <code>"green"</code></td></tr>
+        <tr><td><code>lists.array(value, ...)</code></td><td>The values as a list</td><td><code>lists.array("a", "b")</code> &rarr; <code>["a", "b"]</code></td></tr>
+        <tr><td><code>lists.arrayJoin(separator, value, ...)</code></td><td>The values joined by the separator. Pass a single list to join its values. The result can be at most 64 KiB or four times the length of the values, whichever is more</td><td><code>lists.arrayJoin(", ", lists.array("a", "b"))</code> &rarr; <code>"a, b"</code></td></tr>
+        <tr><td><code>lists.range(from, to)</code></td><td>The whole numbers from <code>from</code> to <code>to</code>, both included; it counts down when <code>to</code> is smaller. A bound can be a number or text, such as a query parameter</td><td><code>lists.range(1, 3)</code> &rarr; <code>[1, 2, 3]</code></td></tr>
+    </tbody>
+</table>
+
+<p>Mustache cannot pass arguments to a method, so it writes the values in a section, separated by <code>|</code>. Spaces around each value are removed, and empty values are left out. A value rendered into the section from the request must not contain <code>|</code>, or it becomes two values:</p>
+
+<table class="table">
+    <thead><tr><th>Mustache</th><th>Description</th><th>Example Output</th></tr></thead>
+    <tbody>
+        <tr><td><code>&lbrace;&lbrace;#lists.pickRandom&rbrace;&rbrace;red|green|blue&lbrace;&lbrace;/lists.pickRandom&rbrace;&rbrace;</code></td><td>One value, chosen at random</td><td><code>green</code></td></tr>
+        <tr><td><code>&lbrace;&lbrace;#lists.pickRandom&rbrace;&rbrace;&lbrace;&lbrace;#request.queryStringParameters.colour&rbrace;&rbrace;&lbrace;&lbrace;.&rbrace;&rbrace;|&lbrace;&lbrace;/request.queryStringParameters.colour&rbrace;&rbrace;&lbrace;&lbrace;/lists.pickRandom&rbrace;&rbrace;</code></td><td>One value of a list, chosen at random</td><td><code>teal</code></td></tr>
+        <tr><td><code>&lbrace;&lbrace;#lists.arrayJoin&rbrace;&rbrace;, |a|b|c&lbrace;&lbrace;/lists.arrayJoin&rbrace;&rbrace;</code></td><td>The values joined by the separator, which is written first and kept exactly as written</td><td><code>a, b, c</code></td></tr>
+        <tr><td><code>&lbrace;&lbrace;#lists.range.1.5&rbrace;&rbrace;&lbrace;&lbrace;.&rbrace;&rbrace;&lbrace;&lbrace;^-last&rbrace;&rbrace;,&lbrace;&lbrace;/-last&rbrace;&rbrace;&lbrace;&lbrace;/lists.range.1.5&rbrace;&rbrace;</code></td><td>Repeats the section for each number from the first bound to the second, which are part of the name</td><td><code>1,2,3,4,5</code></td></tr>
+    </tbody>
+</table>
+
+<p>Usage examples:</p>
+<ul>
+    <li><strong>Velocity:</strong> <code class="inline code">#foreach($page in $lists.range(1, $!request.queryStringParameters['pages'][0]))...#end</code>, <code class="inline code">$lists.pickRandom('red', 'green', 'blue')</code></li>
+    <li><strong>JavaScript:</strong> <code class="inline code">lists.pickRandom(['red', 'green', 'blue'])</code>, <code class="inline code">lists.arrayJoin(',', lists.range(1, 5))</code></li>
+    <li><strong>Mustache:</strong> <code class="inline code">&lbrace;&lbrace;#lists.pickRandom&rbrace;&rbrace;red|green|blue&lbrace;&lbrace;/lists.pickRandom&rbrace;&rbrace;</code></li>
 </ul>
 
 <a id="mustache_templates" class="anchor" href="#mustache_templates">&nbsp;</a>

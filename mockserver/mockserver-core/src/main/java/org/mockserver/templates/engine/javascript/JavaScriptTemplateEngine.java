@@ -14,6 +14,7 @@ import org.mockserver.templates.engine.TemplateEvaluationException;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 import org.slf4j.event.Level;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -72,6 +73,8 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
     // Per-engine seeded faker when templateFakerSeed is non-zero, else null (the shared unseeded faker
     // from BUILT_IN_HELPERS is used). Resolved once so the seeded sequence is deterministic across renders.
     private final Object seededFaker;
+    // as seededFaker, for the lists helper's pickRandom
+    private final Object seededLists;
 
     public JavaScriptTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
         this(mockServerLogger, configuration, POLYGLOT_AVAILABLE);
@@ -103,6 +106,9 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
         };
         this.seededFaker = this.configuration.templateFakerSeed() != 0L
             ? org.mockserver.templates.engine.TemplateFunctions.resolveFaker(this.configuration.templateFakerSeed())
+            : null;
+        this.seededLists = this.configuration.templateFakerSeed() != 0L
+            ? org.mockserver.templates.engine.TemplateFunctions.resolveLists(this.configuration.templateFakerSeed())
             : null;
         if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(Level.WARN)) {
             if (isUnrestricted(this.configuration.javascriptAllowedClasses())) {
@@ -249,12 +255,17 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
 
     @Override
     public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass) {
-        return executeTemplateInternal(template, request, null, null, dtoClass, false);
+        return executeTemplateInternal(template, null, request, null, null, dtoClass, false);
     }
 
     @Override
     public <T> T executeTemplate(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
-        return executeTemplateInternal(template, request, response, null, dtoClass, true);
+        return executeTemplateInternal(template, null, request, response, null, dtoClass, true);
+    }
+
+    @Override
+    public <T> T executeTemplate(String template, Map<String, Object> parameters, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
+        return executeTemplateInternal(template, parameters, request, response, null, dtoClass, response != null);
     }
 
     /**
@@ -264,7 +275,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
      * {@link #executeTemplate(String, HttpRequest, Class)} when {@code iteration} is null.
      */
     public <T> T executeTemplate(String template, HttpRequest request, org.mockserver.load.IterationContext iteration, Class<? extends DTO<T>> dtoClass) {
-        return executeTemplateInternal(template, request, null, iteration, dtoClass, false);
+        return executeTemplateInternal(template, null, request, null, iteration, dtoClass, false);
     }
 
     @Override
@@ -299,6 +310,8 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 executionTimeoutMillis(),
                 true,
                 seededFaker,
+                seededLists,
+                null,
                 cacheParsedSources
             );
         } catch (JavaScriptTemplateTimeoutException e) {
@@ -330,7 +343,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
         }
     }
 
-    private <T> T executeTemplateInternal(String template, HttpRequest request, HttpResponse response, org.mockserver.load.IterationContext iteration, Class<? extends DTO<T>> dtoClass, boolean includeResponse) {
+    private <T> T executeTemplateInternal(String template, Map<String, Object> parameters, HttpRequest request, HttpResponse response, org.mockserver.load.IterationContext iteration, Class<? extends DTO<T>> dtoClass, boolean includeResponse) {
         assertPolyglotAvailable(request);
         String script = includeResponse ? wrapTemplateWithResponse(template) : wrapTemplate(template);
         try {
@@ -353,6 +366,8 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 executionTimeoutMillis(),
                 false,
                 seededFaker,
+                seededLists,
+                parameters,
                 cacheParsedSources
             );
         } catch (JavaScriptTemplateTimeoutException e) {

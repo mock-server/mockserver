@@ -185,14 +185,16 @@ public class VelocityTemplateEngine implements TemplateEngine {
         // by every render via context chaining and is never mutated after construction, so it is safe for
         // concurrent reads. unmodifiableMap makes that read-only contract explicit and fail-fast.
         Map<String, Object> functionsAndHelpers = new LinkedHashMap<>(
-            TemplateFunctions.BUILT_IN_FUNCTIONS.size() + TemplateFunctions.BUILT_IN_HELPERS.size());
+            TemplateFunctions.BUILT_IN_FUNCTIONS.size() + TemplateFunctions.BUILT_IN_HELPERS.size() + TemplateFunctions.ON_DEMAND_HELPERS.size());
         functionsAndHelpers.putAll(TemplateFunctions.BUILT_IN_FUNCTIONS);
         functionsAndHelpers.putAll(TemplateFunctions.BUILT_IN_HELPERS);
+        functionsAndHelpers.putAll(TemplateFunctions.ON_DEMAND_HELPERS);
         // When a non-zero templateFakerSeed is configured, replace the shared unseeded $faker with a
         // per-engine seeded faker so faker-driven templates generate reproducible fixtures. Seed 0
         // (the default) keeps the shared unseeded faker, so behaviour is unchanged.
         if (configuration.templateFakerSeed() != 0L) {
             functionsAndHelpers.put("faker", TemplateFunctions.resolveFaker(configuration.templateFakerSeed()));
+            functionsAndHelpers.put("lists", TemplateFunctions.resolveLists(configuration.templateFakerSeed()));
         }
         this.sharedFunctionsAndHelpers = Collections.unmodifiableMap(functionsAndHelpers);
     }
@@ -495,12 +497,17 @@ public class VelocityTemplateEngine implements TemplateEngine {
 
     @Override
     public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass) {
-        return executeTemplateInternal(template, request, null, dtoClass, null);
+        return executeTemplateInternal(template, null, request, null, dtoClass, null);
     }
 
     @Override
     public <T> T executeTemplate(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
-        return executeTemplateInternal(template, request, response, dtoClass, null);
+        return executeTemplateInternal(template, null, request, response, dtoClass, null);
+    }
+
+    @Override
+    public <T> T executeTemplate(String template, Map<String, Object> parameters, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
+        return executeTemplateInternal(template, parameters, request, response, dtoClass, null);
     }
 
     /**
@@ -508,7 +515,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
      * resolve (and so was rendered as written) to {@code unresolvedReferences}. Used by the template dry run.
      */
     public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass, Consumer<TemplateWarning> unresolvedReferences) {
-        return executeTemplateInternal(template, request, null, dtoClass, unresolvedReferences);
+        return executeTemplateInternal(template, null, request, null, dtoClass, unresolvedReferences);
     }
 
     @Override
@@ -538,7 +545,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
         }
     }
 
-    private <T> T executeTemplateInternal(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass, Consumer<TemplateWarning> unresolvedReferences) {
+    private <T> T executeTemplateInternal(String template, Map<String, Object> parameters, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass, Consumer<TemplateWarning> unresolvedReferences) {
         T result;
         try {
             validateTemplate(template);
@@ -549,6 +556,9 @@ public class VelocityTemplateEngine implements TemplateEngine {
             VelocityContext context = newRenderContext(holder, request);
             if (response != null) {
                 context.put("response", new HttpResponseTemplateObject(response));
+            }
+            if (parameters != null && !parameters.isEmpty()) {
+                context.put("parameters", parameters);
             }
             if (unresolvedReferences != null) {
                 reportUnresolvedReferences(unresolvedReferences).attachToContext(context);

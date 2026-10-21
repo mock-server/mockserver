@@ -1894,7 +1894,7 @@ public class HttpActionHandler {
                 throw new IllegalArgumentException("templateType is required");
             }
             TemplateEngine engine = getHttpForwardTemplateActionHandler().resolveTemplateEngine(template);
-            return engine.executeTemplate(template.getTemplateContent(), request, HttpRequestDTO.class);
+            return engine.executeTemplate(template.getTemplateContent(), template.getParameters(), request, null, HttpRequestDTO.class);
         });
     }
 

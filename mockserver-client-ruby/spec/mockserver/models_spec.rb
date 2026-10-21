@@ -1137,6 +1137,26 @@ RSpec.describe 'MockServer models' do
       expect(roundtrip.to_h).to eq(original.to_h)
     end
 
+    describe 'parameters field' do
+      it 'round-trips parameters, keeping nested nils and empty values' do
+        parameters = { 'greeting' => 'hello', 'names' => %w[ann bob], 'limits' => { 'max' => 5, 'none' => nil }, 'empty' => '' }
+        tpl = MockServer::HttpTemplate.new(template_type: 'MUSTACHE', template: '{{ parameters.greeting }}', parameters: parameters)
+        h = tpl.to_h
+        expect(h['parameters']).to eq(parameters)
+        expect(MockServer::HttpTemplate.from_hash(h).to_h).to eq(h)
+      end
+
+      it 'adds parameters with with_parameter' do
+        tpl = MockServer::HttpTemplate.template('VELOCITY', '$parameters.a').with_parameter(:a, 1).with_parameter('b', [true])
+        expect(tpl.to_h['parameters']).to eq('a' => 1, 'b' => [true])
+      end
+
+      it 'omits parameters when unset or empty' do
+        expect(MockServer::HttpTemplate.new(template_type: 'VELOCITY', template: 'x').to_h).not_to have_key('parameters')
+        expect(MockServer::HttpTemplate.new(template_type: 'VELOCITY', template: 'x', parameters: {}).to_h).not_to have_key('parameters')
+      end
+    end
+
     describe 'template_file field' do
       it 'defaults template_file to nil' do
         tpl = MockServer::HttpTemplate.new

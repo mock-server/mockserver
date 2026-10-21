@@ -568,3 +568,53 @@ func TestClient_When_ForwardTemplate_Fluent(t *testing.T) {
 		t.Error("httpForward should not be present")
 	}
 }
+
+func TestHttpTemplate_Parameters_RoundTrip(t *testing.T) {
+	tmpl := ResponseTemplate("MUSTACHE").
+		Template("{{ parameters.greeting }}").
+		Parameter("greeting", "hello").
+		Parameters(map[string]interface{}{"names": []interface{}{"ann", "bob"}, "limits": map[string]interface{}{"max": 5, "none": nil}, "empty": ""}).
+		Build()
+
+	data, err := json.Marshal(tmpl)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		t.Fatalf("unmarshal raw: %v", err)
+	}
+	parameters, ok := raw["parameters"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected parameters object, got %s", data)
+	}
+	if parameters["greeting"] != "hello" || parameters["empty"] != "" {
+		t.Errorf("unexpected parameters: %s", data)
+	}
+	limits := parameters["limits"].(map[string]interface{})
+	if none, present := limits["none"]; !present || none != nil {
+		t.Errorf("expected a null limits.none to be kept, got %s", data)
+	}
+
+	var decoded HttpTemplate
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	again, err := json.Marshal(decoded)
+	if err != nil {
+		t.Fatalf("re-marshal: %v", err)
+	}
+	if string(again) != string(data) {
+		t.Errorf("round trip changed the template:\n%s\n%s", data, again)
+	}
+}
+
+func TestHttpTemplate_WithoutParameters_OmitsField(t *testing.T) {
+	data, err := json.Marshal(ResponseTemplate("VELOCITY").Template("x").Build())
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if strings.Contains(string(data), "parameters") {
+		t.Errorf("expected no parameters field, got %s", data)
+	}
+}

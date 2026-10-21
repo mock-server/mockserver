@@ -3,6 +3,12 @@ package org.mockserver.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mockserver.file.TemplateFileContentCache;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -18,6 +24,7 @@ public class HttpTemplate extends Action<HttpTemplate> {
     private Type actionType;
     private HttpResponse responseOverride;
     private HttpResponseModifier responseModifier;
+    private Map<String, Object> parameters;
 
     public HttpTemplate(TemplateType type) {
         this.templateType = type;
@@ -106,6 +113,57 @@ public class HttpTemplate extends Action<HttpTemplate> {
         return this;
     }
 
+    /**
+     * Values the template reads as {@code parameters}, such as {@code $parameters.greeting} in Velocity,
+     * {@code {{ parameters.greeting }}} in Mustache or {@code parameters.greeting} in JavaScript, so one template
+     * can be reused with different values. A value can be text, a number, a boolean, a list or a map. The
+     * values are copied, and templates cannot change them.
+     *
+     * @param parameters the parameters, replacing any set before
+     */
+    @SuppressWarnings("unchecked")
+    public HttpTemplate withParameters(Map<String, Object> parameters) {
+        this.parameters = parameters == null || parameters.isEmpty() ? null : (Map<String, Object>) readOnlyCopy(parameters);
+        this.hashCode = 0;
+        return this;
+    }
+
+    /**
+     * Adds one parameter the template reads as {@code parameters.<name>}; see {@link #withParameters(Map)}.
+     */
+    public HttpTemplate withParameter(String name, Object value) {
+        Map<String, Object> updated = parameters == null ? new LinkedHashMap<>() : new LinkedHashMap<>(parameters);
+        updated.put(name, value);
+        return withParameters(updated);
+    }
+
+    public Map<String, Object> getParameters() {
+        return parameters;
+    }
+
+    /**
+     * A read-only copy at every depth, with arrays as lists, so a template can neither change an expectation's
+     * parameters nor see them change while it renders.
+     */
+    private static Object readOnlyCopy(Object value) {
+        if (value instanceof Map<?, ?> map) {
+            Map<String, Object> copy = new LinkedHashMap<>();
+            map.forEach((key, entry) -> copy.put(String.valueOf(key), readOnlyCopy(entry)));
+            return Collections.unmodifiableMap(copy);
+        }
+        if (value instanceof Object[] array) {
+            return readOnlyCopy(java.util.Arrays.asList(array));
+        }
+        if (value instanceof Collection<?> collection) {
+            List<Object> copy = new ArrayList<>(collection.size());
+            for (Object element : collection) {
+                copy.add(readOnlyCopy(element));
+            }
+            return Collections.unmodifiableList(copy);
+        }
+        return value;
+    }
+
     public void withActionType(Type actionType) {
         this.actionType = actionType;
         this.hashCode = 0;
@@ -143,13 +201,14 @@ public class HttpTemplate extends Action<HttpTemplate> {
             Objects.equals(templateFile, that.templateFile) &&
             actionType == that.actionType &&
             Objects.equals(responseOverride, that.responseOverride) &&
-            Objects.equals(responseModifier, that.responseModifier);
+            Objects.equals(responseModifier, that.responseModifier) &&
+            Objects.equals(parameters, that.parameters);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), templateType, template, templateFile, actionType, responseOverride, responseModifier);
+            hashCode = Objects.hash(super.hashCode(), templateType, template, templateFile, actionType, responseOverride, responseModifier, parameters);
         }
         return hashCode;
     }

@@ -233,6 +233,36 @@ public class ExpectationSerializationTests
     }
 
     [Fact]
+    public void HttpTemplate_Parameters_RoundTrip_ThroughJson()
+    {
+        var original = HttpTemplate.OfType(TemplateType.MUSTACHE)
+            .WithTemplate("{{ parameters.greeting }}")
+            .WithParameter("greeting", "hello")
+            .WithParameter("names", new[] { "ann", "bob" })
+            .WithParameters(new Dictionary<string, object?> { ["limits"] = new Dictionary<string, object?> { ["max"] = 5, ["none"] = null }, ["empty"] = "" })
+            .Build();
+
+        var json = JsonSerializer.Serialize(original, JsonOptions);
+        var doc = JsonDocument.Parse(json);
+        var parameters = doc.RootElement.GetProperty("parameters");
+        parameters.GetProperty("greeting").GetString().Should().Be("hello");
+        parameters.GetProperty("names")[1].GetString().Should().Be("bob");
+        parameters.GetProperty("limits").GetProperty("max").GetInt32().Should().Be(5);
+        parameters.GetProperty("limits").GetProperty("none").ValueKind.Should().Be(JsonValueKind.Null);
+        parameters.GetProperty("empty").GetString().Should().Be("");
+
+        var deserialized = JsonSerializer.Deserialize<HttpTemplate>(json, JsonOptions)!;
+        JsonSerializer.Serialize(deserialized, JsonOptions).Should().Be(json);
+    }
+
+    [Fact]
+    public void HttpTemplate_WithoutParameters_OmitsTheField()
+    {
+        var json = JsonSerializer.Serialize(HttpTemplate.OfType(TemplateType.VELOCITY).WithTemplate("x").Build(), JsonOptions);
+        JsonDocument.Parse(json).RootElement.TryGetProperty("parameters", out _).Should().BeFalse();
+    }
+
+    [Fact]
     public void FileBody_WithTemplateType_SerializesCorrectly()
     {
         var expectation = new Expectation

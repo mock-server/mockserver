@@ -510,9 +510,12 @@ function forwardExpr(f: Record<string, unknown>, indent: number): string {
   return withExtra('HttpForward', base, f, ['host', 'port', 'scheme', 'delay', 'primary'], indent);
 }
 
-/** The HttpTemplate model has no `extra` map, so this names what it lacks with {@link gapNote}. */
-function templateExpr(t: Record<string, unknown>, ctx: Ctx, indent: number): Rendered {
-  const note = gapNote('HttpTemplate', t, TEMPLATE_FIELDS);
+/**
+ * The HttpTemplate model has no `extra` map, so this names what it lacks with {@link gapNote}. `parameters`
+ * is not on it either: pass `parametersHandled` where the caller sets them through the Expectation instead.
+ */
+function templateExpr(t: Record<string, unknown>, ctx: Ctx, indent: number, parametersHandled = false): Rendered {
+  const note = gapNote('HttpTemplate', t, parametersHandled ? [...TEMPLATE_FIELDS, 'parameters'] : TEMPLATE_FIELDS);
   const type = rustStr(String(t['templateType'] ?? ''));
   const file = t['templateFile'];
   const calls: string[] = [];
@@ -1073,8 +1076,17 @@ function renderPrimaryAction(key: string, value: unknown, ctx: Ctx, indent: numb
       return inline(`.forward(${forwardExpr(obj, indent + 4)})`);
     case 'httpResponseTemplate':
     case 'httpForwardTemplate': {
+      const method = key === 'httpResponseTemplate' ? 'respond_template' : 'forward_template';
+      const parameters = obj['parameters'];
+      if (parameters && typeof parameters === 'object' && !Array.isArray(parameters) && Object.keys(parameters).length > 0) {
+        // the Rust HttpTemplate has no parameters field; the Expectation carries them instead
+        const r = templateExpr(obj, ctx, indent + 8, true);
+        const arg = ' '.repeat(indent + 8);
+        const map = `${jsonMacro(parameters, indent + 8)}\n${arg}.as_object()\n${arg}.cloned()\n${arg}.unwrap_or_default()`;
+        return { setup: r.setup, expr: `.${method}_with_parameters(\n${arg}${r.expr},\n${arg}${map},\n${' '.repeat(indent + 4)})` };
+      }
       const r = templateExpr(obj, ctx, indent + 4);
-      return { setup: r.setup, expr: `.${key === 'httpResponseTemplate' ? 'respond_template' : 'forward_template'}(${r.expr})` };
+      return { setup: r.setup, expr: `.${method}(${r.expr})` };
     }
     case 'httpError':
       return inline(`.error(${errorExpr(obj, indent + 4)})`);

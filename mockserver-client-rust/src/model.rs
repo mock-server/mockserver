@@ -2193,6 +2193,90 @@ impl HttpTemplate {
     }
 }
 
+/// [`HttpTemplate`] has no `parameters` field (adding one would break code that
+/// builds it as a struct literal), so a template's `parameters` are held in the
+/// `extra` map of the struct that owns the template, under `"<wire key>.parameters"`
+/// (for example `"httpResponseTemplate.parameters"`). No real field has a `.` in its
+/// name. Serializing folds them back into the template object and deserializing lifts
+/// them out again, so they survive a deserialize-then-serialize round trip.
+fn template_parameters_key(wire_key: &str) -> String {
+    format!("{wire_key}.parameters")
+}
+
+/// Move each stashed `"<key>.parameters"` from `value`'s top level into `value[<key>]`.
+fn fold_template_parameters(value: &mut serde_json::Value, wire_keys: &[&str]) {
+    if let Some(object) = value.as_object_mut() {
+        for wire_key in wire_keys {
+            if let Some(parameters) = object.remove(&template_parameters_key(wire_key)) {
+                if let Some(template) = object
+                    .get_mut(*wire_key)
+                    .and_then(serde_json::Value::as_object_mut)
+                {
+                    template.insert("parameters".into(), parameters);
+                }
+            }
+        }
+    }
+}
+
+/// Take `parameters` out of each `value[<key>]`, returning them with their stash key.
+fn lift_template_parameters(
+    value: &mut serde_json::Value,
+    wire_keys: &[&str],
+) -> Vec<(String, serde_json::Value)> {
+    let mut lifted = Vec::new();
+    if let Some(object) = value.as_object_mut() {
+        for wire_key in wire_keys {
+            if let Some(parameters) = object
+                .get_mut(*wire_key)
+                .and_then(serde_json::Value::as_object_mut)
+                .and_then(|template| template.remove("parameters"))
+            {
+                lifted.push((template_parameters_key(wire_key), parameters));
+            }
+        }
+    }
+    lifted
+}
+
+fn has_template_parameters(extra: &Extra, wire_keys: &[&str]) -> bool {
+    wire_keys
+        .iter()
+        .any(|wire_key| extra.contains_key(&template_parameters_key(wire_key)))
+}
+
+/// Serialize/Deserialize for a struct whose derived impls are generated as inherent
+/// functions (`#[serde(remote = "Self")]`), adding the template-parameter fold and lift.
+/// A struct with no stashed parameters serializes exactly as the derived impl would.
+macro_rules! serde_with_template_parameters {
+    ($ty:ty, [$($wire_key:literal),+]) => {
+        impl Serialize for $ty {
+            fn serialize<S: serde::Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
+                const WIRE_KEYS: &[&str] = &[$($wire_key),+];
+                if !has_template_parameters(&self.extra, WIRE_KEYS) {
+                    return <$ty>::serialize(self, serializer);
+                }
+                let mut value = <$ty>::serialize(self, serde_json::value::Serializer).map_err(serde::ser::Error::custom)?;
+                fold_template_parameters(&mut value, WIRE_KEYS);
+                value.serialize(serializer)
+            }
+        }
+
+        impl<'de> Deserialize<'de> for $ty {
+            fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> std::result::Result<Self, D::Error> {
+                const WIRE_KEYS: &[&str] = &[$($wire_key),+];
+                let mut value = serde_json::Value::deserialize(deserializer)?;
+                let lifted = lift_template_parameters(&mut value, WIRE_KEYS);
+                let mut result = <$ty>::deserialize(value).map_err(serde::de::Error::custom)?;
+                for (key, parameters) in lifted {
+                    result.extra.insert(key, parameters);
+                }
+                Ok(result)
+            }
+        }
+    };
+}
+
 // ---------------------------------------------------------------------------
 // HttpForward
 // ---------------------------------------------------------------------------
@@ -4045,8 +4129,18 @@ impl HttpForwardValidateAction {
 /// and `responseModifier` sub-objects are kept as free-form JSON
 /// ([`serde_json::Value`]) — they round-trip exactly, and the `extra` catch-all
 /// preserves any other field.
+///
+/// # Serialization
+///
+/// Use `serde_json::to_*` / `from_*` (or any serde format, through the
+/// `Serialize` / `Deserialize` traits). Because this type derives with
+/// `#[serde(remote = "Self")]` to carry template `parameters`, it also has
+/// associated functions named `serialize` and `deserialize`; a path call such as
+/// `HttpOverrideForwardedRequest::deserialize(value)` resolves to those raw derived functions, which drop
+/// template `parameters` on read and write them at the top level on write. Call
+/// `<HttpOverrideForwardedRequest as Deserialize>::deserialize(value)` (or `serde_json::from_value`) instead.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", remote = "Self")]
 pub struct HttpOverrideForwardedRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub delay: Option<Delay>,
@@ -4063,6 +4157,10 @@ pub struct HttpOverrideForwardedRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub response_modifier: Option<serde_json::Value>,
 
+    /// The template's `parameters` are held in `extra` under `"responseTemplate.parameters"`,
+    /// not in the [`HttpTemplate`]. Assigning this field directly keeps them, so a
+    /// new template would get the old parameters: replace a template with
+    /// [`HttpOverrideForwardedRequest::response_template_with_parameters`], which sets or clears them with it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub response_template: Option<HttpTemplate>,
 
@@ -4081,10 +4179,40 @@ pub struct HttpOverrideForwardedRequest {
     pub extra: Extra,
 }
 
+serde_with_template_parameters!(HttpOverrideForwardedRequest, ["responseTemplate"]);
+
 impl HttpOverrideForwardedRequest {
     /// Create a new empty override action.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Set the template that renders the forwarded response, with the `parameters` it
+    /// reads (held in `extra` under `"responseTemplate.parameters"`, as for
+    /// [`Expectation::respond_template_with_parameters`]). An empty map sets none.
+    pub fn response_template_with_parameters(
+        mut self,
+        template: HttpTemplate,
+        parameters: serde_json::Map<String, serde_json::Value>,
+    ) -> Self {
+        self.response_template = Some(template);
+        let key = template_parameters_key("responseTemplate");
+        if parameters.is_empty() {
+            self.extra.remove(&key);
+        } else {
+            self.extra
+                .insert(key, serde_json::Value::Object(parameters));
+        }
+        self
+    }
+
+    /// The `parameters` of the response template, or `None` when it has none.
+    pub fn response_template_parameters(
+        &self,
+    ) -> Option<&serde_json::Map<String, serde_json::Value>> {
+        self.extra
+            .get(&template_parameters_key("responseTemplate"))
+            .and_then(serde_json::Value::as_object)
     }
 
     /// Set the request override.
@@ -4572,8 +4700,18 @@ impl HttpLlmResponse {
 // ---------------------------------------------------------------------------
 
 /// A full expectation combining a request matcher with an action.
+///
+/// # Serialization
+///
+/// Use `serde_json::to_*` / `from_*` (or any serde format, through the
+/// `Serialize` / `Deserialize` traits). Because this type derives with
+/// `#[serde(remote = "Self")]` to carry template `parameters`, it also has
+/// associated functions named `serialize` and `deserialize`; a path call such as
+/// `Expectation::deserialize(value)` resolves to those raw derived functions, which drop
+/// template `parameters` on read and write them at the top level on write. Call
+/// `<Expectation as Deserialize>::deserialize(value)` (or `serde_json::from_value`) instead.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", remote = "Self")]
 pub struct Expectation {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -4605,9 +4743,17 @@ pub struct Expectation {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub http_forward: Option<HttpForward>,
 
+    /// The template's `parameters` are held in `extra` under `"httpResponseTemplate.parameters"`,
+    /// not in the [`HttpTemplate`]. Assigning this field directly keeps them, so a
+    /// new template would get the old parameters: replace a template with
+    /// [`Expectation::respond_template`], which sets or clears them with it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub http_response_template: Option<HttpTemplate>,
 
+    /// The template's `parameters` are held in `extra` under `"httpForwardTemplate.parameters"`,
+    /// not in the [`HttpTemplate`]. Assigning this field directly keeps them, so a
+    /// new template would get the old parameters: replace a template with
+    /// [`Expectation::forward_template`], which sets or clears them with it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub http_forward_template: Option<HttpTemplate>,
 
@@ -4749,6 +4895,8 @@ pub struct Expectation {
     pub extra: Extra,
 }
 
+serde_with_template_parameters!(Expectation, ["httpResponseTemplate", "httpForwardTemplate"]);
+
 impl Expectation {
     /// Create a new expectation with the given request matcher.
     pub fn new(request: HttpRequest) -> Self {
@@ -4782,16 +4930,79 @@ impl Expectation {
         self
     }
 
-    /// Set a response template action.
+    /// Set a response template action, replacing any template and its parameters.
     pub fn respond_template(mut self, template: HttpTemplate) -> Self {
         self.http_response_template = Some(template);
+        self.extra
+            .remove(&template_parameters_key("httpResponseTemplate"));
         self
     }
 
-    /// Set a forward template action.
+    /// Set a forward template action, replacing any template and its parameters.
     pub fn forward_template(mut self, template: HttpTemplate) -> Self {
         self.http_forward_template = Some(template);
+        self.extra
+            .remove(&template_parameters_key("httpForwardTemplate"));
         self
+    }
+
+    /// Set a response template action whose template reads `parameters` (such as
+    /// `parameters.greeting`), so one template can be reused with different values.
+    /// An empty map sets no parameters.
+    ///
+    /// [`HttpTemplate`] has no `parameters` field, so they are held in this
+    /// expectation's `extra` under `"httpResponseTemplate.parameters"` and written
+    /// into the template on the wire. A retrieved expectation keeps them the same way,
+    /// so it can be upserted again without losing them; read them with
+    /// [`Expectation::response_template_parameters`].
+    pub fn respond_template_with_parameters(
+        self,
+        template: HttpTemplate,
+        parameters: serde_json::Map<String, serde_json::Value>,
+    ) -> Self {
+        let mut expectation = self.respond_template(template);
+        if !parameters.is_empty() {
+            expectation.extra.insert(
+                template_parameters_key("httpResponseTemplate"),
+                serde_json::Value::Object(parameters),
+            );
+        }
+        expectation
+    }
+
+    /// As [`Expectation::respond_template_with_parameters`], for a forward template
+    /// (`httpForwardTemplate`).
+    pub fn forward_template_with_parameters(
+        self,
+        template: HttpTemplate,
+        parameters: serde_json::Map<String, serde_json::Value>,
+    ) -> Self {
+        let mut expectation = self.forward_template(template);
+        if !parameters.is_empty() {
+            expectation.extra.insert(
+                template_parameters_key("httpForwardTemplate"),
+                serde_json::Value::Object(parameters),
+            );
+        }
+        expectation
+    }
+
+    /// The `parameters` of the response template, or `None` when it has none.
+    pub fn response_template_parameters(
+        &self,
+    ) -> Option<&serde_json::Map<String, serde_json::Value>> {
+        self.extra
+            .get(&template_parameters_key("httpResponseTemplate"))
+            .and_then(serde_json::Value::as_object)
+    }
+
+    /// The `parameters` of the forward template, or `None` when it has none.
+    pub fn forward_template_parameters(
+        &self,
+    ) -> Option<&serde_json::Map<String, serde_json::Value>> {
+        self.extra
+            .get(&template_parameters_key("httpForwardTemplate"))
+            .and_then(serde_json::Value::as_object)
     }
 
     /// Set an error action.

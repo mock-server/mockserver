@@ -431,12 +431,13 @@ class PyBuilder {
   private template(v: unknown, indent: number, at: string): string {
     this.use('HttpTemplate');
     const o = v as Json;
-    this.known(at, o, ['templateType', 'template', 'templateFile', 'delay', 'primary', 'responseOverride', 'responseModifier']);
+    this.known(at, o, ['templateType', 'template', 'templateFile', 'delay', 'primary', 'responseOverride', 'responseModifier', 'parameters']);
     const kw: Kw[] = [['template_type', pyStr(o['templateType'])]];
     if (o['template'] != null) kw.push(['template', pyStr(o['template'])]);
     if (o['templateFile'] != null) kw.push(['template_file', pyStr(o['templateFile'])]);
     if (o['responseOverride'] != null) kw.push(['response_override', this.response(o['responseOverride'], indent + 4, `${at}.responseOverride`)]);
     if (o['responseModifier'] != null) kw.push(['response_modifier', toPythonLiteral(o['responseModifier'], indent + 4)]);
+    if (o['parameters'] != null) kw.push(['parameters', toPythonLiteral(o['parameters'], indent + 4)]);
     return renderCall('HttpTemplate', this.inherited(o, kw, at), indent);
   }
 

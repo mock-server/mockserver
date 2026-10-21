@@ -1272,6 +1272,129 @@ fn test_expectation_with_response_template() {
 }
 
 #[test]
+fn test_expectation_with_response_template_parameters() {
+    let mut parameters = serde_json::Map::new();
+    parameters.insert("greeting".into(), serde_json::json!("hello"));
+    parameters.insert("names".into(), serde_json::json!(["ann", "bob"]));
+    parameters.insert("limits".into(), serde_json::json!({"max": 5, "none": null}));
+    let expectation = Expectation::new(HttpRequest::new().path("/templated"))
+        .respond_template_with_parameters(
+            HttpTemplate::new("MUSTACHE", "{{ parameters.greeting }}").primary(true),
+            parameters.clone(),
+        );
+
+    let json = serde_json::to_value(&expectation).unwrap();
+    assert_eq!(json["httpResponseTemplate"]["templateType"], "MUSTACHE");
+    assert_eq!(json["httpResponseTemplate"]["primary"], true);
+    assert_eq!(
+        json["httpResponseTemplate"]["parameters"],
+        serde_json::Value::Object(parameters.clone())
+    );
+    assert!(json.get("httpResponseTemplate.parameters").is_none());
+    assert_eq!(
+        expectation
+            .http_response_template
+            .as_ref()
+            .unwrap()
+            .template_type
+            .as_deref(),
+        Some("MUSTACHE")
+    );
+    assert_eq!(
+        expectation.response_template_parameters(),
+        Some(&parameters)
+    );
+
+    // replacing the template drops its parameters
+    let replaced = expectation
+        .clone()
+        .respond_template(HttpTemplate::new("VELOCITY", "x"));
+    assert!(replaced.response_template_parameters().is_none());
+    assert!(
+        serde_json::to_value(&replaced).unwrap()["httpResponseTemplate"]
+            .get("parameters")
+            .is_none()
+    );
+
+    let forward = Expectation::new(HttpRequest::new().path("/f")).forward_template_with_parameters(
+        HttpTemplate::new("VELOCITY", "x"),
+        serde_json::Map::new(),
+    );
+    let forward_json = serde_json::to_value(&forward).unwrap();
+    assert_eq!(forward_json["httpForwardTemplate"]["template"], "x");
+    assert!(forward_json["httpForwardTemplate"]
+        .get("parameters")
+        .is_none());
+}
+
+#[test]
+fn test_template_parameters_survive_deserialize_then_serialize() {
+    let wire = serde_json::json!({
+        "httpRequest": { "path": "/greet" },
+        "httpResponseTemplate": {
+            "templateType": "MUSTACHE",
+            "template": "{{ parameters.greeting }}",
+            "parameters": { "greeting": "hello", "names": ["ann", null], "limits": { "max": 5 } }
+        },
+        "httpForwardTemplate": {
+            "templateType": "VELOCITY",
+            "template": "x",
+            "parameters": { "target": "upstream" }
+        }
+    });
+    let expectation: Expectation = serde_json::from_value(wire.clone()).unwrap();
+    assert_eq!(
+        expectation
+            .http_response_template
+            .as_ref()
+            .unwrap()
+            .template
+            .as_deref(),
+        Some("{{ parameters.greeting }}")
+    );
+    assert_eq!(
+        expectation.response_template_parameters().unwrap()["greeting"],
+        "hello"
+    );
+    assert_eq!(
+        expectation.forward_template_parameters().unwrap()["target"],
+        "upstream"
+    );
+    assert_eq!(serde_json::to_value(&expectation).unwrap(), wire);
+    let text = serde_json::to_string(&expectation).unwrap();
+    let again: Expectation = serde_json::from_str(&text).unwrap();
+    assert_eq!(again, expectation);
+
+    // a list of expectations, as retrieve returns, and an override's response template
+    let override_wire = serde_json::json!([{
+        "httpRequest": { "path": "/o" },
+        "httpOverrideForwardedRequest": {
+            "responseTemplate": { "templateType": "VELOCITY", "template": "y", "parameters": { "a": 1 } }
+        }
+    }]);
+    let list: Vec<Expectation> = serde_json::from_value(override_wire.clone()).unwrap();
+    assert_eq!(
+        list[0]
+            .http_override_forwarded_request
+            .as_ref()
+            .unwrap()
+            .response_template_parameters()
+            .unwrap()["a"],
+        1
+    );
+    assert_eq!(serde_json::to_value(&list).unwrap(), override_wire);
+
+    // without parameters the wire form is unchanged
+    let plain = serde_json::json!({
+        "httpRequest": { "path": "/p" },
+        "httpResponseTemplate": { "templateType": "VELOCITY", "template": "z" }
+    });
+    let plain_expectation: Expectation = serde_json::from_value(plain.clone()).unwrap();
+    assert!(plain_expectation.extra.is_empty());
+    assert_eq!(serde_json::to_value(&plain_expectation).unwrap(), plain);
+}
+
+#[test]
 fn test_expectation_with_forward_template() {
     let expectation = Expectation::new(HttpRequest::new().path("/proxy")).forward_template(
         HttpTemplate::from_file("MUSTACHE", "/templates/forward.mustache"),

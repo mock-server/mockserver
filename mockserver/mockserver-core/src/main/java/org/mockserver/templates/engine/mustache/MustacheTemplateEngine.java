@@ -53,6 +53,8 @@ public class MustacheTemplateEngine implements TemplateEngine {
 
     private static final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
     private static final MustacheDateTemplateHelper MUSTACHE_DATES = new MustacheDateTemplateHelper();
+    private static final MustacheXPathTemplateHelper MUSTACHE_XPATH = new MustacheXPathTemplateHelper();
+    private static final MustacheListTemplateHelper MUSTACHE_LISTS = new MustacheListTemplateHelper();
     private final MockServerLogger mockServerLogger;
     private final Configuration configuration;
     private final Mustache.Compiler compiler;
@@ -126,10 +128,13 @@ public class MustacheTemplateEngine implements TemplateEngine {
         this.seededFaker = configuration.templateFakerSeed() != 0L
             ? TemplateFunctions.resolveFaker(configuration.templateFakerSeed())
             : null;
-        Map<String, Object> base = new HashMap<>(TemplateFunctions.BUILT_IN_FUNCTIONS.size() + TemplateFunctions.BUILT_IN_HELPERS.size() + 2);
+        Map<String, Object> base = new HashMap<>(TemplateFunctions.BUILT_IN_FUNCTIONS.size() + TemplateFunctions.BUILT_IN_HELPERS.size() + TemplateFunctions.ON_DEMAND_HELPERS.size() + 2);
         base.putAll(TemplateFunctions.BUILT_IN_FUNCTIONS);
         base.putAll(TemplateFunctions.BUILT_IN_HELPERS);
+        base.putAll(TemplateFunctions.ON_DEMAND_HELPERS);
         base.put("dates", MUSTACHE_DATES);
+        base.put("xpath", MUSTACHE_XPATH);
+        base.put("lists", configuration.templateFakerSeed() != 0L ? new MustacheListTemplateHelper(new java.util.Random(configuration.templateFakerSeed())) : MUSTACHE_LISTS);
         if (seededFaker != null) {
             base.put("faker", seededFaker);
         }
@@ -159,12 +164,17 @@ public class MustacheTemplateEngine implements TemplateEngine {
 
     @Override
     public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass) {
-        return executeTemplateInternal(template, request, null, dtoClass);
+        return executeTemplateInternal(template, null, request, null, dtoClass);
     }
 
     @Override
     public <T> T executeTemplate(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
-        return executeTemplateInternal(template, request, response, dtoClass);
+        return executeTemplateInternal(template, null, request, response, dtoClass);
+    }
+
+    @Override
+    public <T> T executeTemplate(String template, Map<String, Object> parameters, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
+        return executeTemplateInternal(template, parameters, request, response, dtoClass);
     }
 
     /**
@@ -174,7 +184,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
      * {@link #MAX_UNRESOLVED_VARIABLE_PASSES} more times, and the result is the normal render's.
      */
     public <T> T executeTemplate(String template, HttpRequest request, Class<? extends DTO<T>> dtoClass, Consumer<TemplateWarning> unresolvedVariables) {
-        T result = executeTemplateInternal(template, request, null, dtoClass);
+        T result = executeTemplateInternal(template, null, request, null, dtoClass);
         reportUnresolvedVariables(template, request, unresolvedVariables);
         return result;
     }
@@ -192,7 +202,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
             Template strictTemplate = unresolvedVariableCompiler.compile(template);
             Set<String> boundToEmpty = new HashSet<>();
             for (int pass = 0; pass < MAX_UNRESOLVED_VARIABLE_PASSES; pass++) {
-                Map<String, Object> data = renderData(request, null, null);
+                Map<String, Object> data = renderData(request, null, null, null);
                 boundToEmpty.forEach(name -> data.put(name, ""));
                 try {
                     strictTemplate.execute(data, Writer.nullWriter());
@@ -226,7 +236,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
             validateTemplate(template);
             Writer writer = new StringWriter();
             Template compiledTemplate = compiledTemplate(template);
-            Map<String, Object> data = renderData(request, null, iteration);
+            Map<String, Object> data = renderData(request, null, iteration, null);
             compiledTemplate.execute(data, writer);
             return writer.toString();
         } catch (Exception e) {
@@ -234,13 +244,13 @@ public class MustacheTemplateEngine implements TemplateEngine {
         }
     }
 
-    private <T> T executeTemplateInternal(String template, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
+    private <T> T executeTemplateInternal(String template, Map<String, Object> parameters, HttpRequest request, HttpResponse response, Class<? extends DTO<T>> dtoClass) {
         T result;
         try {
             validateTemplate(template);
             Writer writer = new StringWriter();
             Template compiledTemplate = compiledTemplate(template);
-            Map<String, Object> data = renderData(request, response, null);
+            Map<String, Object> data = renderData(request, response, null, parameters);
             compiledTemplate.execute(data, writer);
             JsonNode generatedObject = null;
             try {
@@ -321,7 +331,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
         out.write(new RequestBodyExtractionHelper(request, mockServerLogger).xPath(xPath));
     }
 
-    private Map<String, Object> renderData(HttpRequest request, HttpResponse response, org.mockserver.load.IterationContext iteration) {
+    private Map<String, Object> renderData(HttpRequest request, HttpResponse response, org.mockserver.load.IterationContext iteration, Map<String, Object> parameters) {
         Map<String, Object> data = new RenderContextMap(baseBindings);
         data.put("request", new HttpRequestTemplateObject(request, mockServerLogger));
         if (response != null) {
@@ -329,6 +339,9 @@ public class MustacheTemplateEngine implements TemplateEngine {
         }
         if (iteration != null) {
             data.put("iteration", iteration);
+        }
+        if (parameters != null && !parameters.isEmpty()) {
+            data.put("parameters", parameters);
         }
         data.put("xPath", (Mustache.Lambda) (frag, out) -> evaluatedXPath(frag.execute(), request, out));
         data.put("jsonPath", (Mustache.Lambda) (frag, out) -> evaluateJsonPath(data, frag.execute(), request, out));

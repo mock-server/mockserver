@@ -61,6 +61,7 @@ export const FULL_ACTIONS: Record<string, Wire> = {
     primary: true,
     responseOverride: { statusCode: 297 },
     responseModifier: { headers: { remove: ['x-template-gone'] } },
+    parameters: { greeting: 'hello', names: ['ann', 'bob'], limits: { max: 5, none: null } },
   },
   httpError: { dropConnection: false, responseBytes: 'AQID', streamError: 8, delay: DELAY, primary: true },
   httpForwardWithFallback: {
@@ -111,6 +112,7 @@ export const FULL_ACTIONS: Record<string, Wire> = {
     templateFile: 'templates/full.mustache',
     delay: TEMPLATED_DELAY,
     primary: true,
+    parameters: { target: 'upstream' },
   },
   httpForwardClassCallback: { callbackClass: 'com.example.FullForward', delay: TEMPLATED_DELAY, primary: true },
   grpcStreamResponse: {

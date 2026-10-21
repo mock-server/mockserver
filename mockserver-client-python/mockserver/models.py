@@ -1784,6 +1784,13 @@ class HttpTemplate:
     response_override: HttpResponse | None = None
     # The server's responseModifier object (headers / cookies add, replace, remove; condition; patches).
     response_modifier: dict | None = None
+    # Values the template reads as parameters (parameters.greeting); any JSON values, kept exactly, nulls included.
+    parameters: dict | None = None
+
+    def with_parameter(self, name: str, value: Any) -> HttpTemplate:
+        """Adds a value the template reads as ``parameters.<name>``."""
+        self.parameters = {**(self.parameters or {}), name: value}
+        return self
 
     def to_dict(self) -> dict:
         return _strip_none({
@@ -1794,6 +1801,7 @@ class HttpTemplate:
             "primary": self.primary,
             "responseOverride": self.response_override.to_dict() if self.response_override else None,
             "responseModifier": self.response_modifier,
+            "parameters": self.parameters or None,
         })
 
     @classmethod
@@ -1808,6 +1816,7 @@ class HttpTemplate:
             primary=data.get("primary"),
             response_override=HttpResponse.from_dict(data.get("responseOverride")),
             response_modifier=data.get("responseModifier"),
+            parameters=data.get("parameters"),
         )
 
 

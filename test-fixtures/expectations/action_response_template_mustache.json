@@ -9,6 +9,13 @@
       "timeUnit": "SECONDS",
       "value": 1
     },
-    "primary": false
+    "primary": false,
+    "parameters": {
+      "greeting": "hello",
+      "names": ["ann", "bob"],
+      "limits": {
+        "max": 5
+      }
+    }
   }
 }

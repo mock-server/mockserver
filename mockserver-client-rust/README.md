@@ -316,6 +316,20 @@ typed JSON body so the content type stays out of the payload.
 request; the part of the path after its fixed directory must stay inside that
 directory. Such a body is held as a `Body::Object` with `"type": "FILE"`.
 
+### Template parameters
+
+`Expectation::respond_template_with_parameters(template, parameters)` (and
+`forward_template_with_parameters`, and
+`HttpOverrideForwardedRequest::response_template_with_parameters`) sets a
+template with the `parameters` it reads as `parameters.*`. `HttpTemplate` has no
+field for them, so they are held in the owning struct's `extra` map under
+`"httpResponseTemplate.parameters"` (and so on) and written into the template on
+the wire; a retrieved expectation keeps them, and `response_template_parameters()`
+reads them. Replace a template with `respond_template` / `forward_template`, not by
+assigning the field, so its parameters are replaced too. Deserialize with
+`serde_json::from_*` or `<Expectation as Deserialize>::deserialize`: the
+associated function `Expectation::deserialize(value)` drops `parameters`.
+
 ### Conditional (if/then/else) request matchers and load-step checks
 
 `HttpRequest::conditional(if, then, else)` builds an `httpRequest` holding

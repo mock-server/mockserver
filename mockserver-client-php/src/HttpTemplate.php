@@ -16,7 +16,7 @@ namespace MockServer;
  * {@see ForwardChainExpectation::forwardWithTemplate()}.
  *
  * Wire keys: delay, templateType, template, templateFile, primary,
- * responseOverride.
+ * responseOverride, parameters.
  *
  * NOTE — deferred field: {@code responseModifier} (a nested
  * headers/cookies add-replace-remove structure with recursively-nested
@@ -43,6 +43,8 @@ class HttpTemplate implements \JsonSerializable
     private ?string $templateFile = null;
     private ?bool $primary = null;
     private ?HttpResponse $responseOverride = null;
+    /** @var array<string, mixed> */
+    private array $parameters = [];
 
     /**
      * Static factory. The template body is rendered by the {@code templateType}
@@ -117,6 +119,31 @@ class HttpTemplate implements \JsonSerializable
     }
 
     /**
+     * Add a value the template reads as {@code parameters.<name>}, such as
+     * {@code $parameters.greeting} (Velocity), {@code {{ parameters.greeting }}}
+     * (Mustache) or {@code parameters.greeting} (JavaScript). A value is any JSON
+     * value; pass an empty object as {@code new \stdClass()} so it is not written as [].
+     */
+    public function withParameter(string $name, mixed $value): self
+    {
+        $this->parameters[$name] = $value;
+        return $this;
+    }
+
+    /**
+     * Add each entry as a parameter; see {@see withParameter()}.
+     *
+     * @param array<string, mixed> $parameters
+     */
+    public function withParameters(array $parameters): self
+    {
+        foreach ($parameters as $name => $value) {
+            $this->parameters[(string) $name] = $value;
+        }
+        return $this;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function jsonSerialize(): array
@@ -147,6 +174,9 @@ class HttpTemplate implements \JsonSerializable
         }
         if ($this->responseOverride !== null) {
             $data['responseOverride'] = $this->responseOverride->toArray();
+        }
+        if ($this->parameters !== []) {
+            $data['parameters'] = $this->parameters;
         }
         return $data;
     }

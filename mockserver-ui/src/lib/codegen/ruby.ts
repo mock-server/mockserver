@@ -363,7 +363,7 @@ function httpForward(w: Obj, indent: number, at: string): string {
 }
 
 function httpTemplate(w: Obj, indent: number, at: string): string {
-  known(at, w, ['templateType', 'template', 'templateFile', 'delay', 'primary', 'responseOverride', 'responseModifier']);
+  known(at, w, ['templateType', 'template', 'templateFile', 'delay', 'primary', 'responseOverride', 'responseModifier', 'parameters']);
   const args: Arg[] = [];
   if ('templateType' in w) args.push({ name: 'template_type', value: rb(String(w['templateType'])) });
   if ('template' in w) args.push({ name: 'template', value: rb(String(w['template'])) });
@@ -372,6 +372,7 @@ function httpTemplate(w: Obj, indent: number, at: string): string {
     args.push({ name: 'response_override', value: httpResponse('HttpResponse', w['responseOverride'] as Obj, indent + 2, `${at}.responseOverride`) });
   }
   if ('responseModifier' in w) args.push({ name: 'response_modifier', value: rbValue(w['responseModifier'], indent + 2) });
+  if ('parameters' in w) args.push({ name: 'parameters', value: rbValue(w['parameters'], indent + 2) });
   return ctor('HttpTemplate', inherited(w, args, indent, at), indent);
 }
 

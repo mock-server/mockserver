@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.mockserver.model.HttpTemplate;
 import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 
+import java.util.Map;
+
 /**
  * @author jamesdbloom
  */
@@ -15,6 +17,9 @@ public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString 
     private DelayDTO delay;
     private HttpResponseDTO responseOverride;
     private HttpResponseModifierDTO responseModifier;
+    // a parameter whose value is empty or null is kept, unlike the mapper's default
+    @JsonInclude(value = JsonInclude.Include.NON_EMPTY, content = JsonInclude.Include.ALWAYS)
+    private Map<String, Object> parameters;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private boolean primary;
 
@@ -30,6 +35,7 @@ public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString 
             if (httpTemplate.getResponseModifier() != null) {
                 responseModifier = new HttpResponseModifierDTO(httpTemplate.getResponseModifier());
             }
+            parameters = httpTemplate.getParameters();
             primary = httpTemplate.isPrimary();
         }
     }
@@ -49,6 +55,7 @@ public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString 
         if (responseModifier != null) {
             result.withResponseModifier(responseModifier.buildObject());
         }
+        result.withParameters(parameters);
         return result;
     }
 
@@ -103,6 +110,15 @@ public class HttpTemplateDTO extends ObjectWithReflectiveEqualsHashCodeToString 
 
     public HttpTemplateDTO setResponseModifier(HttpResponseModifierDTO responseModifier) {
         this.responseModifier = responseModifier;
+        return this;
+    }
+
+    public Map<String, Object> getParameters() {
+        return parameters;
+    }
+
+    public HttpTemplateDTO setParameters(Map<String, Object> parameters) {
+        this.parameters = parameters;
         return this;
     }
 

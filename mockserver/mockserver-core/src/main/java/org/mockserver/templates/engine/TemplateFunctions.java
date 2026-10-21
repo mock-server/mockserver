@@ -9,15 +9,18 @@ import org.mockserver.templates.engine.helpers.DateTemplateHelper;
 import org.mockserver.templates.engine.helpers.HtmlTemplateHelper;
 import org.mockserver.templates.engine.helpers.JsonTemplateHelper;
 import org.mockserver.templates.engine.helpers.JwtTemplateHelper;
+import org.mockserver.templates.engine.helpers.ListTemplateHelper;
 import org.mockserver.templates.engine.helpers.MathTemplateHelper;
 import org.mockserver.templates.engine.helpers.RegexTemplateHelper;
 import org.mockserver.templates.engine.helpers.ScenarioTemplateHelper;
 import org.mockserver.templates.engine.helpers.StringTemplateHelper;
+import org.mockserver.templates.engine.helpers.TemplateFaker;
 import org.mockserver.templates.engine.helpers.XmlXPathTemplateHelper;
 import org.mockserver.templates.engine.helpers.YamlTemplateHelper;
 import org.mockserver.time.TimeService;
 import org.mockserver.uuid.UUIDService;
 
+import java.net.InetAddress;
 import java.security.SecureRandom;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -27,7 +30,8 @@ import java.util.function.Supplier;
 public class TemplateFunctions implements Supplier<Object> {
     private static final SecureRandom random = new SecureRandom();
     private static final Base64Converter base64Converter = new Base64Converter();
-    private static final Faker FAKER = new Faker();
+    private static final Faker FAKER = new TemplateFaker();
+    private static final HostnameResolver HOSTNAME = hostnameResolver();
 
     public static final Map<String, Supplier<Object>> BUILT_IN_FUNCTIONS = ImmutableMap.<String, Supplier<Object>>builder()
         .put("now", new TemplateFunctions(() -> DateTimeFormatter.ISO_INSTANT.format(TimeService.now())))
@@ -61,6 +65,16 @@ public class TemplateFunctions implements Supplier<Object> {
         .put("yaml", new YamlTemplateHelper())
         .build();
 
+    /**
+     * Helpers added after the JavaScript engine started binding every helper on every render. Velocity and
+     * Mustache hold them in their shared bindings like the others; JavaScript binds them only for a template
+     * that names them, so other JavaScript templates do no extra work.
+     */
+    public static final Map<String, Object> ON_DEMAND_HELPERS = ImmutableMap.<String, Object>builder()
+        .put("lists", new ListTemplateHelper())
+        .put("hostname", new TemplateFunctions(TemplateFunctions::hostname))
+        .build();
+
     private final Supplier<String> supplier;
 
     public TemplateFunctions(Supplier<String> supplier) {
@@ -82,7 +96,62 @@ public class TemplateFunctions implements Supplier<Object> {
      * @return the shared unseeded faker when the seed is 0, otherwise a freshly seeded faker
      */
     public static Faker resolveFaker(long templateFakerSeed) {
-        return templateFakerSeed == 0L ? FAKER : new Faker(new Random(templateFakerSeed));
+        return templateFakerSeed == 0L ? FAKER : new TemplateFaker(templateFakerSeed);
+    }
+
+    /**
+     * The {@code lists} helper for an engine: the shared one when {@code templateFakerSeed} is 0, otherwise one
+     * that picks with a {@link Random} seeded with it, so {@code pickRandom} repeats across runs.
+     */
+    public static ListTemplateHelper resolveLists(long templateFakerSeed) {
+        return templateFakerSeed == 0L ? (ListTemplateHelper) ON_DEMAND_HELPERS.get("lists") : new ListTemplateHelper(new Random(templateFakerSeed));
+    }
+
+    /**
+     * The server's host name: the {@code HOSTNAME} environment variable when it is set (as in a container or
+     * Kubernetes pod), otherwise the machine's name, looked up once on a background thread started when templates
+     * are first used. It never blocks: until that lookup finishes it is {@code localhost}.
+     */
+    public static String hostname() {
+        return HOSTNAME.get();
+    }
+
+    private static HostnameResolver hostnameResolver() {
+        String fromEnvironment = System.getenv("HOSTNAME");
+        if (fromEnvironment != null && !fromEnvironment.isBlank()) {
+            return new HostnameResolver(fromEnvironment.trim(), null);
+        }
+        return new HostnameResolver("localhost", () -> InetAddress.getLocalHost().getHostName());
+    }
+
+    /**
+     * A host name that is read without blocking: the fallback until {@code lookup}, run once on a daemon thread,
+     * returns a name.
+     */
+    static final class HostnameResolver {
+        private volatile String name;
+
+        HostnameResolver(String fallback, java.util.concurrent.Callable<String> lookup) {
+            this.name = fallback;
+            if (lookup != null) {
+                Thread lookupThread = new Thread(() -> {
+                    try {
+                        String resolved = lookup.call();
+                        if (resolved != null && !resolved.isBlank()) {
+                            name = resolved;
+                        }
+                    } catch (Exception lookupFailure) {
+                        // keep the fallback
+                    }
+                }, "MockServer-HostnameLookup");
+                lookupThread.setDaemon(true);
+                lookupThread.start();
+            }
+        }
+
+        String get() {
+            return name;
+        }
     }
 
     public static String randomInteger(int max) {

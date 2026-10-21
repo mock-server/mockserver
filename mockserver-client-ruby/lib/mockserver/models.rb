@@ -1336,11 +1336,12 @@ module MockServer
   class HttpTemplate
     # response_override (an {HttpResponse}) is applied over the rendered output;
     # response_modifier is the server's responseModifier object, as a Hash.
+    # parameters is a Hash of values the template reads as parameters (parameters.greeting), kept exactly.
     attr_accessor :template_type, :template, :template_file, :delay, :primary,
-                  :response_override, :response_modifier
+                  :response_override, :response_modifier, :parameters
 
     def initialize(template_type: 'JAVASCRIPT', template: nil, template_file: nil, delay: nil, primary: nil,
-                   response_override: nil, response_modifier: nil)
+                   response_override: nil, response_modifier: nil, parameters: nil)
       @template_type = template_type
       @template = template
       @template_file = template_file
@@ -1348,6 +1349,7 @@ module MockServer
       @primary = primary
       @response_override = response_override
       @response_modifier = response_modifier
+      @parameters = parameters
     end
 
     def to_h
@@ -1358,7 +1360,8 @@ module MockServer
         'delay'            => @delay&.to_h,
         'primary'          => @primary,
         'responseOverride' => @response_override&.to_h,
-        'responseModifier' => @response_modifier
+        'responseModifier' => @response_modifier,
+        'parameters'       => (@parameters.nil? || @parameters.empty? ? nil : @parameters)
       })
     end
 
@@ -1372,7 +1375,8 @@ module MockServer
         delay:         Delay.from_hash(data['delay']),
         primary:       data['primary'],
         response_override: HttpResponse.from_hash(data['responseOverride']),
-        response_modifier: data['responseModifier']
+        response_modifier: data['responseModifier'],
+        parameters: data['parameters']
       )
     end
 
@@ -1392,6 +1396,12 @@ module MockServer
 
     def with_response_modifier(response_modifier)
       @response_modifier = response_modifier
+      self
+    end
+
+    # Adds a value the template reads as parameters.<name>.
+    def with_parameter(name, value)
+      @parameters = (@parameters || {}).merge(name.to_s => value)
       self
     end
   end

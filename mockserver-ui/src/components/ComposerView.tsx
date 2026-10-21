@@ -111,6 +111,8 @@ import {
   type AllOfSubBodyType,
   type StandardJwtMatcher,
   ignoredKeyValueLines,
+  templateParametersError,
+  templateParametersText,
 } from '../lib/standardCodegen';
 import McpToolsPanel from './McpToolsPanel';
 import ScenarioPanel from './ScenarioPanel';
@@ -1547,6 +1549,7 @@ function actionFromExpectation(item: JsonListItem): ActionPrefill | null {
         templateType: tt === 'JAVASCRIPT' || tt === 'MUSTACHE' ? tt : 'VELOCITY',
         template: typeof t['template'] === 'string' ? (t['template'] as string) : '',
         templateFile: typeof t['templateFile'] === 'string' ? (t['templateFile'] as string) : '',
+        parameters: templateParametersText(t['parameters']),
       },
     };
   }
@@ -1690,6 +1693,7 @@ function actionFromExpectation(item: JsonListItem): ActionPrefill | null {
         templateType: tt === 'JAVASCRIPT' || tt === 'MUSTACHE' ? tt : 'VELOCITY',
         template: typeof ft['template'] === 'string' ? (ft['template'] as string) : '',
         templateFile: typeof ft['templateFile'] === 'string' ? (ft['templateFile'] as string) : '',
+        parameters: templateParametersText(ft['parameters']),
       },
     };
   }
@@ -2233,6 +2237,28 @@ interface TemplateState {
   template: string;
   /** Optional path to a file holding the template; used when the inline template is empty. */
   templateFile: string;
+  /** Optional JSON object the template reads as `parameters`. */
+  parameters?: string;
+}
+
+/** The JSON-object field shared by the response and forward template panels. */
+function TemplateParametersField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const error = templateParametersError(value);
+  return (
+    <TextField
+      label="Parameters (optional JSON object)"
+      size="small"
+      multiline
+      minRows={2}
+      maxRows={10}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder='{ "greeting": "hello", "names": ["ann", "bob"] }'
+      error={error != null}
+      helperText={error ?? 'Values the template reads as parameters, such as parameters.greeting, so one template can be reused with different values.'}
+      slotProps={{ input: { sx: { fontFamily: monospaceFontFamily, fontSize: '0.78rem' } } }}
+    />
+  );
 }
 
 const TEMPLATE_PLACEHOLDERS: Record<TemplateType, string> = {
@@ -2311,6 +2337,7 @@ function TemplatePanel({
         helperText="Classpath or filesystem path. Used when the inline template above is empty; the inline template wins when both are set."
         slotProps={{ input: { sx: { fontFamily: monospaceFontFamily, fontSize: '0.78rem' } } }}
       />
+      <TemplateParametersField value={state.parameters ?? ''} onChange={(parameters) => setState({ ...state, parameters })} />
     </Box>
   );
 }
@@ -3268,6 +3295,7 @@ function ForwardTemplatePanel({
         helperText="Classpath or filesystem path. Used when the inline template above is empty; the inline template wins when both are set."
         slotProps={{ input: { sx: { fontFamily: monospaceFontFamily, fontSize: '0.78rem' } } }}
       />
+      <TemplateParametersField value={state.parameters ?? ''} onChange={(parameters) => setState({ ...state, parameters })} />
     </Box>
   );
 }
@@ -5770,7 +5798,7 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
                       ? responseStatusCodeError(forwardFallbackState.fallbackStatusCode) ?? null
                       : 'Enter a fallback host and port';
                   case 'callback': return callbackState.callbackClass.trim().length > 0 ? null : 'Enter the callback class name';
-                  case 'template': return (templateState.template.trim().length > 0 || (templateState.templateFile ?? '').trim().length > 0) ? null : 'Enter a response template or a template file path';
+                  case 'template': return (templateState.template.trim().length > 0 || (templateState.templateFile ?? '').trim().length > 0) ? templateParametersError(templateState.parameters) : 'Enter a response template or a template file path';
                   case 'error':
                     if (errorState.responseBytesB64.trim().length > 0 && !isValidBase64(errorState.responseBytesB64)) return 'Response bytes are not valid base64';
                     return (errorState.dropConnection || errorState.responseBytesB64.trim().length > 0) ? null : 'Enable drop-connection or enter response bytes';
@@ -5795,7 +5823,7 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
                     }
                     return null;
                   }
-                  case 'forward_template': return (forwardTemplateState.template.trim().length > 0 || (forwardTemplateState.templateFile ?? '').trim().length > 0) ? null : 'Enter a forward template or a template file path';
+                  case 'forward_template': return (forwardTemplateState.template.trim().length > 0 || (forwardTemplateState.templateFile ?? '').trim().length > 0) ? templateParametersError(forwardTemplateState.parameters) : 'Enter a forward template or a template file path';
                   case 'forward_class_callback': return forwardClassCallbackState.callbackClass.trim().length > 0 ? null : 'Enter the forward callback class name';
                   case 'grpc_stream': return null;
                 }
