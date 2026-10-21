@@ -66,9 +66,9 @@ echo "--- a SHA-pinned action's version comment is never MockServer's"
 mkdir -p "$WORK/pinned/.github/workflows"
 printf '      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v41.0.0\n' > "$WORK/pinned/.github/workflows/label.yml"
 cp "$WORK/pinned/.github/workflows/label.yml" "$WORK/pinned-want.yml"
+check_exit 0 "check accepts a pinned action comment that equals the release" "$WORK/pinned" --version 41.0.0
 python3 "$TOOL" rewrite "$WORK/pinned" --old 41.0.0 --new 42.0.0 > /dev/null 2>&1
 same "$WORK/pinned-want.yml" "$WORK/pinned/.github/workflows/label.yml" "a pinned action comment is left as written"
-check_exit 0 "check accepts a pinned action comment that equals the release" "$WORK/pinned" --version 41.0.0
 printf 'env:\n  MOCKSERVER_VERSION: 41.0.0\n' > "$WORK/pinned/.github/workflows/label.yml"
 check_exit 1 "check fails on a workflow line the release would bump" "$WORK/pinned" --version 41.0.0
 if grep -q '^.github/workflows/label.yml:2: workflow:' "$WORK/check.out"; then
@@ -77,6 +77,8 @@ else
   fail "no workflow report:"
   cat "$WORK/check.out" >&2
 fi
+printf 'env:\n  MOCKSERVER_API: 41.0.x\n' > "$WORK/pinned/.github/workflows/label.yml"
+check_exit 1 "check fails on a workflow X.Y.x line the release would bump" "$WORK/pinned" --version 41.0.0 --api-version 41.0.x
 printf 'env:\n  MOCKSERVER_VERSION: 41.0.0  # version-ref:keep\n' > "$WORK/pinned/.github/workflows/label.yml"
 check_exit 0 "a keep marker settles a workflow line" "$WORK/pinned" --version 41.0.0
 

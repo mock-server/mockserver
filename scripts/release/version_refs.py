@@ -12,6 +12,7 @@ Every bounded occurrence of the old version (8.0.0 never matches inside 18.0.0 o
   - the line sits between `version-ref:keep-begin` and `version-ref:keep-end`
   - the file is in KEEP_FILES (wholly historical)
   - it sits inside a KEEP_LINES fragment (for a file that cannot carry a marker)
+  - the line is a SHA-pinned `uses:` (its `# vX.Y.Z` names that action's release)
 
 Nothing else keeps a version: no phrase, no guess. HISTORICAL_PATTERNS only drive
 `check`, which fails when a phrase that reads as history ("in 8.0.0", "8.0.0 and
@@ -19,7 +20,8 @@ earlier") covers an unmarked occurrence of the current release, or of a later on
 up to the next major (written now, history once that release ships), so a person
 decides each case: add `version-ref:keep`, or accept the bump with
 `version-ref:bump`. `check` also fails on an unterminated keep block and on a
-KEEP_LINES fragment that is not on exactly one line of its file.
+KEEP_LINES fragment that is not on exactly one line of its file, and on a
+bump under .github/workflows/, which the release token cannot push.
 See docs/operations/release-process.md (Version references).
 """
 import argparse
@@ -276,7 +278,7 @@ def cmd_check(args):
                 bad += 1
                 if not args.list:
                     print(f'{rel}:{n}: {verdict}: {describe(lines, n, start, verdict)}')
-            elif verdict == 'bump' and rel.startswith(WORKFLOWS) and v == version:
+            elif verdict == 'bump' and rel.startswith(WORKFLOWS) and v in (version, api):
                 bad += 1
                 if not args.list:
                     print(f'{rel}:{n}: workflow: the release cannot push a bump here (its token has no '

@@ -433,11 +433,11 @@ The release pipeline writes every version-bearing file in the repo, so contribut
 
 ## Version references
 
-**The release bumps every reference to the previous version, except lines explicitly marked as history.** `scripts/release/version_refs.py` rewrites each bounded occurrence of the old version (and the old `X.Y.x` line) in the files above. No phrase or pattern ever keeps one. A version stays as written only when a person has marked it, so "in X.Y.Z it ran on every read" survives only if it carries a marker. `scripts/release/preflight.sh` and `scripts/release/test-version-refs.sh` fail when an unmarked line reads as history.
+**The release bumps every reference to the previous version, except lines explicitly marked as history.** `scripts/release/version_refs.py` rewrites each bounded occurrence of the old version (and the old `X.Y.x` line) in the files above. No phrase ever keeps one. A version stays as written only when a person has marked it, or when it sits on a SHA-pinned `uses:` line, so "in X.Y.Z it ran on every read" survives only if it carries a marker. `scripts/release/preflight.sh` and `scripts/release/test-version-refs.sh` fail when an unmarked line reads as history.
 
 ```mermaid
 flowchart TD
-    A["occurrence of the old version"] --> B{"version-ref:keep, keep block,\nKEEP_FILES or KEEP_LINES?"}
+    A["occurrence of the old version"] --> B{"version-ref:keep, keep block,\nKEEP_FILES, KEEP_LINES\nor a SHA-pinned uses: line?"}
     B -- yes --> K["kept as written"]
     B -- no --> U["bumped"]
     U --> C{"check: covered by a historical\nphrase, and no version-ref:bump?"}
@@ -451,9 +451,10 @@ flowchart TD
 | `version-ref:keep-begin` ... `version-ref:keep-end` | every line between them | a code block or a table that records a past result. A begin with no end fails the check |
 | `KEEP_FILES` in `version_refs.py` | the whole file | a file that is wholly a historical pin, such as `scripts/perf/startup-variants.json` |
 | `KEEP_LINES` in `version_refs.py` | the occurrences inside the fragment; others on that line are still bumped | a file that cannot carry a marker (JSON, `llms-full.txt`), plan docs, and CI or agent control files whose edits need separate approval. The check fails unless each fragment is on exactly one line of its file (a deleted file is ignored) |
+| `uses: owner/action@<40-hex SHA>` on the line | every version on that line | nothing to add: the `# vX.Y.Z` after a SHA pin names that action's release, which must match the SHA, never MockServer's |
 | `version-ref:bump` | nothing | silences the check on a line that reads as history but should follow each release |
 
-**The check.** It lists an occurrence that a phrase in `HISTORICAL_PATTERNS` covers, when the line has no marker. It looks at the current release (`mockserver_version` in `_config.yml`) and at every later version up to the next major. Text about the coming release ("default `true` since X.Y.Z") is history once that release ships, and the release after it would otherwise bump it, so it is marked when it is written. The phrases are: `in`, `since`, `until`, `before`, `fixed/added/changed/removed ... in`, `from`, `than`, `after`, `require(s)`, `X.Y.Z and earlier`, `X.Y.Z's`, `pre-X.Y.Z`, `the X.Y.Z release` (or `changelog`, `behaviour`, `dashboard`, `default`), and a past-tense verb after the version. `version_refs.py` is the source of truth. A phrase on another version on the same line does not trigger it. These phrases only decide what the check reports; they never keep a version. Settle each report with `version-ref:keep` or `version-ref:bump`.
+**The check.** It lists an occurrence that a phrase in `HISTORICAL_PATTERNS` covers, when the line has no marker. It looks at the current release (`mockserver_version` in `_config.yml`) and at every later version up to the next major. Text about the coming release ("default `true` since X.Y.Z") is history once that release ships, and the release after it would otherwise bump it, so it is marked when it is written. The phrases are: `in`, `since`, `until`, `before`, `fixed/added/changed/removed ... in`, `from`, `than`, `after`, `require(s)`, `X.Y.Z and earlier`, `X.Y.Z's`, `pre-X.Y.Z`, `the X.Y.Z release` (or `changelog`, `behaviour`, `dashboard`, `default`), and a past-tense verb after the version. `version_refs.py` is the source of truth. A phrase on another version on the same line does not trigger it. These phrases only decide what the check reports; they never keep a version. Settle each report with `version-ref:keep` or `version-ref:bump`. The check also fails on any reference to the current release or its `X.Y.x` line under `.github/workflows/` that the release would bump: GitHub refuses a workflow change from the release token, which has no `workflow` scope. Settle it with `version-ref:keep` or remove the version.
 
 ```bash
 python3 scripts/release/version_refs.py check .          # unmarked history, open blocks, stale lists: exit 1
