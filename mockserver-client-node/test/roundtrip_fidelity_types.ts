@@ -42,7 +42,7 @@
  * This file is compiled (not executed) — it is listed in tsconfig.json `include`.
  */
 
-import { Expectation } from '../mockServer';
+import { DateTimeMatcher, Expectation } from '../mockServer';
 
 /* ================================================================== *
  * SECTION 1 — POSITIVE COVERAGE (must compile clean)
@@ -451,6 +451,64 @@ export const bodyXpathLiteral: Expectation = {
     httpRequest: { path: '/xpath', body: { type: 'XPATH', xpath: '/bookstore/book[price>30]/price' } },
     httpResponse: { body: 'ok' }
 };
+
+/* Date-time matcher values (matcher_request_date_time.json). The header, query and
+ * cookie maps are permissive, so the DateTimeMatcher constants carry the type check. */
+export const issuedAfter: DateTimeMatcher = { after: 'now -1 hours' };
+export const modifiedBefore: DateTimeMatcher = { before: '2026-10-21T00:00:00Z', actualFormat: 'rfc1123' };
+export const fromAfter: DateTimeMatcher = { after: '2026-01-01', actualFormat: 'dd/MM/yyyy', zone: 'Europe/London' };
+export const seenNotEqual: DateTimeMatcher = {
+    not: true,
+    equalToDateTime: 'now +1 days',
+    truncateExpected: 'first day of month',
+    truncateActual: 'startOfDay',
+    applyTruncationLast: true
+};
+
+export const matcherRequestDateTimeLiteral: Expectation = {
+    httpRequest: {
+        method: 'GET',
+        path: '/date-time',
+        headers: {
+            'X-Issued-At': [{ after: 'now -1 hours' }],
+            'If-Modified-Since': [{ before: '2026-10-21T00:00:00Z', actualFormat: 'rfc1123' }],
+            'X-Plain': ['before:2026-01-01']
+        },
+        queryStringParameters: {
+            from: [{ after: '2026-01-01', actualFormat: 'dd/MM/yyyy', zone: 'Europe/London' }]
+        },
+        cookies: {
+            seen: {
+                not: true,
+                equalToDateTime: 'now +1 days',
+                truncateExpected: 'first day of month',
+                truncateActual: 'startOfDay',
+                applyTruncationLast: true
+            }
+        }
+    },
+    httpResponse: { statusCode: 200, body: 'dated' }
+};
+
+export const matcherRequestDateTimeTypedLiteral: Expectation = {
+    httpRequest: {
+        path: '/date-time/{day}',
+        pathParameters: { day: [seenNotEqual] },
+        headers: { 'X-Issued-At': [issuedAfter], 'If-Modified-Since': [modifiedBefore] },
+        queryStringParameters: { from: [fromAfter] },
+        cookies: { seen: seenNotEqual }
+    },
+    httpResponse: { body: 'ok' }
+};
+
+// @ts-expect-error a date-time matcher needs exactly one of before, after or equalToDateTime
+export const dateTimeTwoOperators: DateTimeMatcher = { before: 'now', after: 'now -1 days' };
+// @ts-expect-error a date-time matcher needs exactly one of before, after or equalToDateTime
+export const dateTimeNoOperator: DateTimeMatcher = { zone: 'UTC' };
+// @ts-expect-error the server rejects a date-time matcher combined with value
+export const dateTimeWithValue: DateTimeMatcher = { after: 'now', value: 'x' };
+// @ts-expect-error applyTruncationLast is a boolean
+export const dateTimeStringFlag: DateTimeMatcher = { after: 'now', applyTruncationLast: 'true' };
 
 /* ================================================================== *
  * SECTION 2 — KNOWN-GAP REGISTER

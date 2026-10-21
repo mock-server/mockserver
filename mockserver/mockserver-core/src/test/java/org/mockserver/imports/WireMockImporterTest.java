@@ -26,6 +26,7 @@ import org.mockserver.model.HttpForward;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
+import org.mockserver.model.NottableDateTimeString;
 import org.mockserver.model.XPathBody;
 import org.mockserver.model.XmlBody;
 import org.mockserver.openapi.OpenApiRuntimeExpressionResolver;
@@ -54,6 +55,11 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause.API;
 import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.NottableDateTimeString.after;
+import static org.mockserver.model.NottableDateTimeString.before;
+import static org.mockserver.model.NottableDateTimeString.equalToDateTime;
+import static org.mockserver.model.NottableString.string;
+import static org.hamcrest.Matchers.instanceOf;
 
 public class WireMockImporterTest {
 
@@ -801,5 +807,43 @@ public class WireMockImporterTest {
 
     private HttpResponse render(HttpTemplate template, HttpRequest request) {
         return new MustacheTemplateEngine(new MockServerLogger(), configuration).executeTemplate(template.getTemplate(), request, HttpResponseDTO.class);
+    }
+
+    @Test
+    public void mapsDateTimePredicatesOntoDateTimeMatchers() {
+        String stub = """
+            { "request": { "method": "GET", "urlPath": "/events",
+                "headers": {
+                  "X-Since": { "after": "now", "expectedOffset": -3, "expectedOffsetUnit": "days" },
+                  "X-Until": { "before": "2026-12-31T00:00:00Z", "actualFormat": "dd/MM/yyyy" },
+                  "X-Month": { "equalToDateTime": "now +15 days", "truncateExpected": "first day of month",
+                               "truncateActual": "first day of month", "applyTruncationLast": true }
+                },
+                "queryParameters": { "from": { "after": "2026-01-01T00:00:00Z" } } },
+              "response": { "status": 200 } }
+            """;
+        ImportResult result = importer.importExpectations(stub);
+        HttpRequest request = (HttpRequest) result.getExpectations().get(0).getHttpRequest();
+
+        assertThat(request.getHeaders().getValues(string("X-Since")).iterator().next(), is(after("now -3 days")));
+        assertThat(request.getHeaders().getValues(string("X-Until")).iterator().next(), is(before("2026-12-31T00:00:00Z").withActualFormat("dd/MM/yyyy")));
+        assertThat(request.getHeaders().getValues(string("X-Month")).iterator().next(), is(equalToDateTime("now +15 days").withTruncateExpected("first day of month").withTruncateActual("first day of month").withApplyTruncationLast(true)));
+        assertThat(request.getQueryStringParameters().getValues(string("from")).iterator().next(), is(after("2026-01-01T00:00:00Z")));
+        assertThat(request.getHeaders().getValues(string("X-Since")).iterator().next(), instanceOf(NottableDateTimeString.class));
+        assertThat(result.getWarnings(), is(empty()));
+    }
+
+    @Test
+    public void warnsAndOmitsAnUnmappableDateTimePredicate() {
+        String stub = """
+            { "request": { "urlPath": "/events",
+                "headers": { "X-Since": { "after": "now", "truncateActual": "first day of week" } } },
+              "response": { "status": 200 } }
+            """;
+        ImportResult result = importer.importExpectations(stub);
+        HttpRequest request = (HttpRequest) result.getExpectations().get(0).getHttpRequest();
+
+        assertThat(request.getFirstHeader("X-Since"), is(""));
+        assertThat(result.getWarnings().stream().anyMatch(w -> w.getDetail().contains("'after' predicate could not be mapped")), is(true));
     }
 }

@@ -4,7 +4,7 @@ import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.HttpRequestPropertiesMatcher;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.NottableOptionalString;
-import org.mockserver.model.NottableSchemaString;
+import org.mockserver.model.NottableMatcherString;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.Parameters;
 import org.mockserver.model.RequestDefinition;
@@ -631,8 +631,8 @@ class CandidateIndex {
         if (nottableString == null) {
             return null;
         }
-        // Schema (OpenAPI) and optional matchers are never plain literal equality.
-        if (nottableString instanceof NottableSchemaString || nottableString instanceof NottableOptionalString) {
+        // Schema / date-time and optional matchers are never plain literal equality.
+        if (nottableString instanceof NottableMatcherString || nottableString instanceof NottableOptionalString) {
             return null;
         }
         if (nottableString.isOptional() || nottableString.isNot()) {

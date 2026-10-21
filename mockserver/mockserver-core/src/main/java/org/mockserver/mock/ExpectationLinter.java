@@ -20,7 +20,7 @@ import org.mockserver.model.KeyAndValue;
 import org.mockserver.model.KeyToMultiValue;
 import org.mockserver.model.KeysAndValues;
 import org.mockserver.model.KeysToMultiValues;
-import org.mockserver.model.NottableSchemaString;
+import org.mockserver.model.NottableMatcherString;
 import org.mockserver.model.NottableString;
 import org.mockserver.serialization.ExpectationSerializer;
 import org.slf4j.event.Level;
@@ -844,7 +844,7 @@ public final class ExpectationLinter {
     }
 
     private static boolean isPlain(NottableString value) {
-        return value != null && value.getValue() != null && !(value instanceof NottableSchemaString) && !value.isNot() && !value.isOptional();
+        return value != null && value.getValue() != null && !(value instanceof NottableMatcherString) && !value.isNot() && !value.isOptional();
     }
 
     private static boolean looksLikeRegex(String value) {

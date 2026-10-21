@@ -99,6 +99,10 @@ export function toNottable(raw: unknown): Nottable | null | typeof UNSUPPORTED_M
     if ('schema' in obj && obj['schema'] != null) {
       return UNSUPPORTED_MATCHER;
     }
+    // Date-time form `{ "after": "now -1 hours", ... }`: a date comparison, not a string match.
+    if ('before' in obj || 'after' in obj || 'equalToDateTime' in obj) {
+      return UNSUPPORTED_MATCHER;
+    }
     const value = obj['value'];
     if (typeof value === 'string') {
       return { value, not: obj['not'] === true };
@@ -199,7 +203,7 @@ function collectValueMatchers(
   for (const v of values) {
     const m = toNottable(v);
     if (m === UNSUPPORTED_MATCHER) {
-      return { unsupported: 'value uses a JSON schema, which the client preview cannot evaluate' };
+      return { unsupported: 'value uses a JSON schema or date-time matcher, which the client preview cannot evaluate' };
     }
     if (m) matchers.push(m);
   }

@@ -40,6 +40,8 @@ export {
   ExplainUnmatchedResult,
   ExplanationNarration,
   CrossProtocolScenario,
+  DateTimeMatcher,
+  DateTimeMatcherOptions,
   Expectation,
   ExpectationId,
   ExpectationStep,

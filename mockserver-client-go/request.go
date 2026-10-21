@@ -25,7 +25,8 @@ type HttpRequest struct {
 	// the server and is stripped when read, so `Headers["X"] = []string{"!foo"}`
 	// asks for "X is anything but foo", not "X is !foo". A MatcherValue keeps
 	// the text and the flags apart and escapes to the object form only when the
-	// plain form would be misread -- see MatcherValue.
+	// plain form would be misread -- see MatcherValue. They also carry date-time
+	// matchers (Before, After, EqualToDateTime), which have no plain form.
 	//
 	// When one of these is non-nil it REPLACES the corresponding plain map on
 	// the wire. They are additive so existing code using the plain maps keeps

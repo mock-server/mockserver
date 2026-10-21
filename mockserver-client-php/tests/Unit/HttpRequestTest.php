@@ -451,7 +451,6 @@ class HttpRequestTest extends TestCase
         $wire = [
             'method' => ['not' => true, 'value' => 'GET'],
             'path' => '/pets/{id}',
-            'pathParameters' => ['id' => ['[0-9]+']],
             'protocol' => 'HTTP_2',
             'if' => ['dnsName' => 'example.com', 'dnsType' => 'A'],
         ];

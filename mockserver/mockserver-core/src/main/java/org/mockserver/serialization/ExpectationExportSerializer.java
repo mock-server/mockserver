@@ -15,7 +15,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.LogEventRequestAndResponse;
 import org.mockserver.model.MediaType;
-import org.mockserver.model.NottableSchemaString;
+import org.mockserver.model.NottableMatcherString;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.Parameter;
 import org.mockserver.model.RequestDefinition;
@@ -143,7 +143,7 @@ public class ExpectationExportSerializer {
 
         // Defect 2: never export the POSITIVE form of a negated path/method
         // matcher — that would invert the meaning. Schema matchers
-        // (NottableSchemaString) likewise carry no literal path/method string.
+        // and date-time matchers (NottableMatcherString) likewise carry no literal path/method string.
         if (isNegatedOrSchema(req.getPath()) || isNegatedOrSchema(req.getMethod())) {
             if (mockServerLogger.isEnabledForInstance(org.slf4j.event.Level.INFO)) {
                 mockServerLogger.logEvent(new org.mockserver.log.model.LogEntry()
@@ -433,15 +433,15 @@ public class ExpectationExportSerializer {
 
     /**
      * True when the matcher is negated ({@code NottableString.isNot()}) or is a
-     * schema matcher ({@link NottableSchemaString}) whose value is a JSON schema
-     * rather than a literal string. Either case means the raw value must NOT be
+     * schema or date-time matcher ({@link NottableMatcherString}) whose value is not
+     * a literal string. Either case means the raw value must NOT be
      * emitted as a positive literal in the exported OpenAPI document.
      */
     private boolean isNegatedOrSchema(NottableString s) {
         if (s == null) {
             return false;
         }
-        return Boolean.TRUE.equals(s.isNot()) || s instanceof NottableSchemaString;
+        return Boolean.TRUE.equals(s.isNot()) || s instanceof NottableMatcherString;
     }
 
     // -----------------------------------------------------------------------

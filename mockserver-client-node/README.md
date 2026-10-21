@@ -97,6 +97,23 @@ mockServerClient("localhost", 1080)
     );
 ```
 
+A header, query-string parameter, path parameter or cookie value can be a plain string, a `{ not, value }` or `{ schema }` object, or a date-time matcher. A date-time matcher has exactly one of `before`, `after` or `equalToDateTime`, which takes `now`, `now` with an offset such as `now -1 days`, or a date-time. Optional fields are `actualFormat`, `truncateExpected`, `truncateActual`, `applyTruncationLast`, `zone` and `not`. TypeScript users can type it as `DateTimeMatcher`:
+
+```js
+mockServerClient("localhost", 1080)
+    .when({
+        path: '/somePath',
+        headers: {
+            'X-Issued-At': [{ after: 'now -1 hours' }],
+            'If-Modified-Since': [{ before: 'now', actualFormat: 'rfc1123' }]
+        },
+        cookies: { seen: { equalToDateTime: 'now', truncateActual: 'startOfDay', truncateExpected: 'startOfDay' } }
+    })
+    .respond({ statusCode: 200 });
+```
+
+A plain string such as `'before:2026-01-01'` is matched literally, not as a date-time.
+
 For the full documentation see [MockServer - Creating Expectations](https://mock-server.com/mock_server/creating_expectations.html).
 
 ### Fluent `when().respond()` API

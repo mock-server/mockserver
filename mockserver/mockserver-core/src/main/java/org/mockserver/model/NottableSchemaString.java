@@ -27,7 +27,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 /**
  * @author jamesdbloom
  */
-public class NottableSchemaString extends NottableString {
+public class NottableSchemaString extends NottableMatcherString {
 
     private final static MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(NottableSchemaString.class);
     private final static ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
@@ -169,6 +169,7 @@ public class NottableSchemaString extends NottableString {
         return matches(null, null, json);
     }
 
+    @Override
     public boolean matches(MockServerLogger mockServerLogger, MatchDifference context, String json) {
         if (schemaJsonNode != null) {
             try {

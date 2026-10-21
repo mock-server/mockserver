@@ -2,6 +2,7 @@ package org.mockserver.serialization.java;
 
 import com.google.common.base.Strings;
 import org.mockserver.model.Cookie;
+import org.mockserver.model.NottableDateTimeString;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +17,7 @@ public class CookieToJavaSerializer implements MultiValueToJavaSerializer<Cookie
     @Override
     public String serialize(int numberOfSpacesToIndent, Cookie cookie) {
         return NEW_LINE + Strings.padStart("", numberOfSpacesToIndent * INDENT_SIZE, ' ') + "new Cookie(" +
-            NottableStringToJavaSerializer.serialize(cookie.getName(), false) + ", " +
+            NottableStringToJavaSerializer.serialize(cookie.getName(), cookie.getValue() instanceof NottableDateTimeString) + ", " +
             NottableStringToJavaSerializer.serialize(cookie.getValue(), false) + ")";
     }
 

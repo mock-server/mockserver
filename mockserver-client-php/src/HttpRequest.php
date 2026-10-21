@@ -17,18 +17,26 @@ namespace MockServer;
  *       ->path('/hello')
  *       ->queryStringParameter('q', 'value')
  *       ->header('Accept', 'application/json')
+ *       ->headerMatcher('X-Issued-At', DateTimeMatcher::after('now -1 hours'))
  *       ->body('request body');
+ *
+ * Header, query string parameter, path parameter and cookie values are plain
+ * strings or {@see DateTimeMatcher}s. A value read by {@see fromArray()} may
+ * also be a decoded JSON object (for example a {@code {not, value}} or
+ * {@code {schema}} matcher), kept as read.
  */
 class HttpRequest implements \JsonSerializable
 {
     private ?string $method = null;
     private ?string $path = null;
-    /** @var array<string, list<string>> */
+    /** @var array<string, list<string|DateTimeMatcher|array<string, mixed>>> */
     private array $queryStringParameters = [];
-    /** @var array<string, list<string>> */
+    /** @var array<string, list<string|DateTimeMatcher|array<string, mixed>>> */
     private array $headers = [];
-    /** @var array<string, list<string>> */
+    /** @var array<string, string|DateTimeMatcher|array<array-key, mixed>> */
     private array $cookies = [];
+    /** @var array<string, list<string|DateTimeMatcher|array<string, mixed>>> */
+    private array $pathParameters = [];
     private string|array|null $body = null;
     private ?bool $keepAlive = null;
     private ?bool $secure = null;
@@ -149,6 +157,63 @@ class HttpRequest implements \JsonSerializable
             $this->cookies[$name] = [];
         }
         $this->cookies[$name][] = $value;
+        return $this;
+    }
+
+    /**
+     * Add query string parameter values that are {@see DateTimeMatcher}s
+     * (multi-value supported).
+     */
+    public function queryStringParameterMatcher(string $name, DateTimeMatcher ...$values): self
+    {
+        if (!isset($this->queryStringParameters[$name])) {
+            $this->queryStringParameters[$name] = [];
+        }
+        foreach ($values as $value) {
+            $this->queryStringParameters[$name][] = $value;
+        }
+        return $this;
+    }
+
+    /**
+     * Add header values that are {@see DateTimeMatcher}s (multi-value supported).
+     */
+    public function headerMatcher(string $name, DateTimeMatcher ...$values): self
+    {
+        if (!isset($this->headers[$name])) {
+            $this->headers[$name] = [];
+        }
+        foreach ($values as $value) {
+            $this->headers[$name][] = $value;
+        }
+        return $this;
+    }
+
+    /**
+     * Add a cookie whose value is a {@see DateTimeMatcher}.
+     */
+    public function cookieMatcher(string $name, DateTimeMatcher $value): self
+    {
+        if (!isset($this->cookies[$name])) {
+            $this->cookies[$name] = [];
+        }
+        $this->cookies[$name][] = $value;
+        return $this;
+    }
+
+    /**
+     * Add a path parameter (multi-value supported), matched against the
+     * {@code {name}} placeholder of the path. Each value is a plain string or a
+     * {@see DateTimeMatcher}.
+     */
+    public function pathParameter(string $name, string|DateTimeMatcher ...$values): self
+    {
+        if (!isset($this->pathParameters[$name])) {
+            $this->pathParameters[$name] = [];
+        }
+        foreach ($values as $value) {
+            $this->pathParameters[$name][] = $value;
+        }
         return $this;
     }
 
@@ -362,7 +427,7 @@ class HttpRequest implements \JsonSerializable
     }
 
     /**
-     * @return array<string, list<string>>
+     * @return array<string, list<string|DateTimeMatcher|array<string, mixed>>>
      */
     public function getQueryStringParameters(): array
     {
@@ -370,7 +435,7 @@ class HttpRequest implements \JsonSerializable
     }
 
     /**
-     * @return array<string, list<string>>
+     * @return array<string, list<string|DateTimeMatcher|array<string, mixed>>>
      */
     public function getHeaders(): array
     {
@@ -378,11 +443,22 @@ class HttpRequest implements \JsonSerializable
     }
 
     /**
-     * @return array<string, list<string>>
+     * Cookies added by {@see cookie()} hold a list of values; cookies read by
+     * {@see fromArray()} keep the shape they were read in (usually one value).
+     *
+     * @return array<string, string|DateTimeMatcher|array<array-key, mixed>>
      */
     public function getCookies(): array
     {
         return $this->cookies;
+    }
+
+    /**
+     * @return array<string, list<string|DateTimeMatcher|array<string, mixed>>>
+     */
+    public function getPathParameters(): array
+    {
+        return $this->pathParameters;
     }
 
     public function getBody(): string|array|null
@@ -507,11 +583,12 @@ class HttpRequest implements \JsonSerializable
             case 'queryStringParameters':
             case 'headers':
             case 'cookies':
+            case 'pathParameters':
                 // toArray() omits these when empty, so keep an empty one raw.
                 if (!is_array($value) || $value === []) {
                     return false;
                 }
-                $this->{$key} = $value;
+                $this->{$key} = self::readMatcherValues($value);
                 return true;
             case 'socketAddress':
             case 'jwt':
@@ -541,6 +618,55 @@ class HttpRequest implements \JsonSerializable
     }
 
     /**
+     * Read each date-time matcher value of a header, query string parameter,
+     * path parameter or cookie collection as a {@see DateTimeMatcher}; every
+     * other value, and the collection's shape (a name-keyed map or a list of
+     * {@code {name, values}} entries), is kept as read.
+     *
+     * @param array<array-key, mixed> $collection
+     * @return array<array-key, mixed>
+     */
+    private static function readMatcherValues(array $collection): array
+    {
+        $isList = array_is_list($collection);
+        foreach ($collection as $key => $entry) {
+            if ($isList && is_array($entry) && array_key_exists('name', $entry)) {
+                foreach (['values', 'value'] as $field) {
+                    if (array_key_exists($field, $entry)) {
+                        $entry[$field] = self::readMatcherValue($entry[$field]);
+                    }
+                }
+                $collection[$key] = $entry;
+            } else {
+                $collection[$key] = self::readMatcherValue($entry);
+            }
+        }
+        return $collection;
+    }
+
+    private static function readMatcherValue(mixed $value): mixed
+    {
+        if (is_array($value) && array_is_list($value)) {
+            return array_map(static fn (mixed $v): mixed => DateTimeMatcher::fromArray($v) ?? $v, $value);
+        }
+        return DateTimeMatcher::fromArray($value) ?? $value;
+    }
+
+    /**
+     * Write every {@see DateTimeMatcher} in a value collection as its JSON object.
+     */
+    private static function writeMatcherValues(mixed $value): mixed
+    {
+        if ($value instanceof DateTimeMatcher) {
+            return $value->toArray();
+        }
+        if (is_array($value)) {
+            return array_map(static fn (mixed $v): mixed => self::writeMatcherValues($v), $value);
+        }
+        return $value;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function jsonSerialize(): array
@@ -561,14 +687,17 @@ class HttpRequest implements \JsonSerializable
         if ($this->path !== null) {
             $data['path'] = $this->path;
         }
+        if (!empty($this->pathParameters)) {
+            $data['pathParameters'] = self::writeMatcherValues($this->pathParameters);
+        }
         if (!empty($this->queryStringParameters)) {
-            $data['queryStringParameters'] = $this->queryStringParameters;
+            $data['queryStringParameters'] = self::writeMatcherValues($this->queryStringParameters);
         }
         if (!empty($this->headers)) {
-            $data['headers'] = $this->headers;
+            $data['headers'] = self::writeMatcherValues($this->headers);
         }
         if (!empty($this->cookies)) {
-            $data['cookies'] = $this->cookies;
+            $data['cookies'] = self::writeMatcherValues($this->cookies);
         }
         if ($this->body !== null) {
             $data['body'] = $this->body;

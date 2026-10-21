@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import org.mockserver.matchers.DateTimeComparisonMatcher.Operator;
+import org.mockserver.model.NottableDateTimeString;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.ParameterStyle;
 import org.mockserver.serialization.ObjectMapperFactory;
@@ -39,6 +41,13 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
             JsonNode schema = null;
             ParameterStyle parameterStyle = null;
             String schemaType = null;
+            Operator dateTimeOperator = null;
+            String expected = null;
+            String actualFormat = null;
+            String truncateExpected = null;
+            String truncateActual = null;
+            Boolean applyTruncationLast = null;
+            String zone = null;
 
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                 String fieldName = jsonParser.currentName();
@@ -60,11 +69,40 @@ public class NottableStringDeserializer extends StdDeserializer<NottableString> 
                 } else if ("schemaType".equals(fieldName)) {
                     jsonParser.nextToken();
                     schemaType = ctxt.readValue(jsonParser, String.class);
+                } else if (Operator.forFieldName(fieldName) != null) {
+                    if (dateTimeOperator != null) {
+                        throw new IllegalArgumentException("a date-time matcher has only one of before, after or equalToDateTime");
+                    }
+                    dateTimeOperator = Operator.forFieldName(fieldName);
+                    jsonParser.nextToken();
+                    expected = ctxt.readValue(jsonParser, String.class);
+                } else if ("actualFormat".equals(fieldName)) {
+                    jsonParser.nextToken();
+                    actualFormat = ctxt.readValue(jsonParser, String.class);
+                } else if ("truncateExpected".equals(fieldName)) {
+                    jsonParser.nextToken();
+                    truncateExpected = ctxt.readValue(jsonParser, String.class);
+                } else if ("truncateActual".equals(fieldName)) {
+                    jsonParser.nextToken();
+                    truncateActual = ctxt.readValue(jsonParser, String.class);
+                } else if ("applyTruncationLast".equals(fieldName)) {
+                    jsonParser.nextToken();
+                    applyTruncationLast = jsonParser.getBooleanValue();
+                } else if ("zone".equals(fieldName)) {
+                    jsonParser.nextToken();
+                    zone = ctxt.readValue(jsonParser, String.class);
                 }
             }
 
             NottableString result = null;
-            if (schema != null) {
+            if (dateTimeOperator != null) {
+                if (schema != null || value != null || Boolean.TRUE.equals(optional)) {
+                    throw new IllegalArgumentException("a date-time matcher cannot also have value, schema or optional");
+                }
+                result = NottableDateTimeString.dateTime(dateTimeOperator, expected, actualFormat, truncateExpected, truncateActual, applyTruncationLast, zone, not);
+            } else if (actualFormat != null || truncateExpected != null || truncateActual != null || applyTruncationLast != null || zone != null) {
+                throw new IllegalArgumentException("actualFormat, truncateExpected, truncateActual, applyTruncationLast and zone need one of before, after or equalToDateTime");
+            } else if (schema != null) {
                 result = schemaString(schema.toPrettyString(), not);
             } else if (Boolean.TRUE.equals(optional)) {
                 result = optional(value, not);

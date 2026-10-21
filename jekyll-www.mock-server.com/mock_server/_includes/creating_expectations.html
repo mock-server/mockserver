@@ -329,6 +329,13 @@ $client-&gt;when(
             <li>for syntax see <a target="_blank" href="https://json-schema.org" rel="noopener noreferrer">JSON Schema documentation</a></li>
         </ul>
     </li>
+    <li><strong>date-time comparison</strong> (<code>before</code>, <code>after</code> or <code>equalToDateTime</code>)
+        <ul>
+            <li><strong>use for:</strong> path parameters values, query parameters values, header values, cookie values and form field values</li>
+            <li><strong>not supported for:</strong> path parameter keys, query parameter keys, header keys or cookie keys</li>
+            <li><strong>examples:</strong> <a href="#date_time_matching">date-time matching</a></li>
+        </ul>
+    </li>
     <li><strong>optional value</strong>
         <ul>
             <li><strong>use for:</strong> method, path, path parameters values, query parameter keys, query parameters values, header keys, header values, cookie keys, cookie values or bodies</li>
@@ -2940,6 +2947,285 @@ curl_close($ch);</code></pre>
 <p>This expectation matches requests whose <code>Accept</code> header finds <code>application/json</code> acceptable — for example <code>Accept: application/json</code>, <code>Accept: */*</code>, or <code>Accept: application/json;q=0.9, text/html;q=0.5</code>. A request sending <code>Accept: text/html</code> or <code>Accept: application/json;q=0</code> would not match.</p>
 
 <p>Existing exact/regex header matching is unchanged when the <code>accept:</code> prefix is absent.</p>
+
+<a id="date_time_matching" class="anchor" href="#date_time_matching">&nbsp;</a>
+
+<h4>Date-Time Matching</h4>
+
+<p>A header, cookie, query-string parameter, path parameter or form field value can be compared as a date-time, for example to match only requests whose timestamp is in the last hour, or whose expiry is in the future. Instead of a string, give the value as an object with one of these fields, as WireMock does:</p>
+
+<ul>
+    <li><code>"before"</code> &mdash; matches a date-time earlier than the expected value</li>
+    <li><code>"after"</code> &mdash; matches a date-time later than the expected value</li>
+    <li><code>"equalToDateTime"</code> &mdash; matches the same instant as the expected value</li>
+</ul>
+
+<p>The expected value is <code>now</code>, <code>now</code> with an offset (<code>now -1 hours</code>, <code>now +3 days</code>, <code>now +1 months 2 days</code> or an ISO-8601 period such as <code>now PT30M</code>), or a date-time: ISO-8601 (<code>2026-10-21T15:00:00Z</code>, <code>2026-10-21T16:00:00+01:00</code>, <code>2026-10-21</code>), RFC-1123 (<code>Wed, 21 Oct 2026 15:00:00 GMT</code>) or epoch seconds or milliseconds. <code>now</code> is read every time a request is matched, from MockServer's clock, so it follows the <a href="/mock_server/clock_control.html">controllable clock</a> when that is frozen or advanced with <code>PUT /mockserver/clock</code>.</p>
+
+<p>By default the request value may be written in any of those forms. These optional fields change how the comparison is made:</p>
+
+<table class="table table-bordered table-condensed">
+    <tr><th>Field</th><th>What it does</th><th>Example</th></tr>
+    <tr><td><code>actualFormat</code></td><td>How the request value is written: a Java <code>DateTimeFormatter</code> pattern, or <code>iso</code>, <code>rfc1123</code>, <code>epochSeconds</code> or <code>epochMillis</code>. Impossible dates such as 30 February never match.</td><td><code>"actualFormat": "dd/MM/yyyy"</code></td></tr>
+    <tr><td><code>truncateExpected</code></td><td>Truncates the expected value: <code>startOfMinute</code>, <code>startOfHour</code>, <code>startOfDay</code>, <code>first day of month</code>, <code>last day of month</code>, <code>first day of next month</code>, <code>first day of year</code>, <code>last day of year</code> or <code>first day of next year</code>.</td><td><code>"truncateExpected": "first day of month"</code></td></tr>
+    <tr><td><code>truncateActual</code></td><td>Truncates the request value, with the same names.</td><td><code>"truncateActual": "startOfDay"</code></td></tr>
+    <tr><td><code>applyTruncationLast</code></td><td><code>true</code> truncates <code>now</code> after adding the offset instead of before.</td><td><code>"applyTruncationLast": true</code></td></tr>
+    <tr><td><code>zone</code></td><td>The time zone used for values with no zone or offset, for truncation and for day, month and year offsets (so <code>now +1 days</code> follows daylight saving changes). The default is UTC.</td><td><code>"zone": "Europe/London"</code></td></tr>
+    <tr><td><code>not</code></td><td><code>true</code> negates the comparison.</td><td><code>"not": true</code></td></tr>
+</table>
+
+<p>A request value that cannot be read as a date-time never matches, even when <code>"not": true</code> is set. An invalid expected value, format, truncation or zone is rejected when the expectation is created, with a message saying what is wrong. A plain string value is never treated as a date-time matcher, so an existing expectation whose value happens to read <code>before:2026-01-01</code> still matches that exact text.</p>
+
+<p>This expectation matches requests whose <code>X-Request-Time</code> header is in the last hour and whose <code>from</code> query parameter, written as <code>dd/MM/yyyy</code>, is after 1 January 2026:</p>
+
+<button id="button_match_request_by_date_time" class="accordion">match request by date-time comparison</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">// import static org.mockserver.model.NottableDateTimeString.after;
+// import static org.mockserver.model.NottableString.string;
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("GET")
+            .withPath("/api/orders")
+            .withHeader(string("X-Request-Time"), after("now -1 hours"))
+            .withQueryStringParameter(string("from"), after("2026-01-01").withActualFormat("dd/MM/yyyy"))
+    )
+    .respond(
+        response()
+            .withStatusCode(200)
+            .withBody("recent orders")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+// the date-time matcher is the object form of a header or parameter value
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "GET",
+        "path": "/api/orders",
+        "headers": {
+            "X-Request-Time": [{ "after": "now -1 hours" }]
+        },
+        "queryStringParameters": {
+            "from": [{ "after": "2026-01-01", "actualFormat": "dd/MM/yyyy" }]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent orders"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">import requests
+
+# the date-time matcher is the object form of a header or parameter value
+requests.put(
+    "http://localhost:1080/mockserver/expectation",
+    headers={"Content-Type": "application/json"},
+    data=r'''{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/api/orders",
+        "headers": {
+            "X-Request-Time": [{ "after": "now -1 hours" }]
+        },
+        "queryStringParameters": {
+            "from": [{ "after": "2026-01-01", "actualFormat": "dd/MM/yyyy" }]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent orders"
+    }
+}'''
+)</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'net/http'
+
+uri = URI('http://localhost:1080/mockserver/expectation')
+http = Net::HTTP.new(uri.host, uri.port)
+# the date-time matcher is the object form of a header or parameter value
+request = Net::HTTP::Put.new(uri, 'Content-Type' =&gt; 'application/json')
+request.body = &lt;&lt;~'JSON'
+{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/api/orders",
+        "headers": {
+            "X-Request-Time": [{ "after": "now -1 hours" }]
+        },
+        "queryStringParameters": {
+            "from": [{ "after": "2026-01-01", "actualFormat": "dd/MM/yyyy" }]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent orders"
+    }
+}
+JSON
+http.request(request)</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    // the date-time matcher is the object form of a header or parameter value
+    body := []byte(`{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/api/orders",
+        "headers": {
+            "X-Request-Time": [{ "after": "now -1 hours" }]
+        },
+        "queryStringParameters": {
+            "from": [{ "after": "2026-01-01", "actualFormat": "dd/MM/yyyy" }]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent orders"
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+// the date-time matcher is the object form of a header or parameter value
+var json = @"{
+    ""httpRequest"": {
+        ""method"": ""GET"",
+        ""path"": ""/api/orders"",
+        ""headers"": {
+            ""X-Request-Time"": [{ ""after"": ""now -1 hours"" }]
+        },
+        ""queryStringParameters"": {
+            ""from"": [{ ""after"": ""2026-01-01"", ""actualFormat"": ""dd/MM/yyyy"" }]
+        }
+    },
+    ""httpResponse"": {
+        ""statusCode"": 200,
+        ""body"": ""recent orders""
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+
+let client = Client::new();
+// the date-time matcher is the object form of a header or parameter value
+let body = r#"{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/api/orders",
+        "headers": {
+            "X-Request-Time": [{ "after": "now -1 hours" }]
+        },
+        "queryStringParameters": {
+            "from": [{ "after": "2026-01-01", "actualFormat": "dd/MM/yyyy" }]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent orders"
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/api/orders",
+        "headers": {
+            "X-Request-Time": [{ "after": "now -1 hours" }]
+        },
+        "queryStringParameters": {
+            "from": [{ "after": "2026-01-01", "actualFormat": "dd/MM/yyyy" }]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent orders"
+    }
+}
+JSON;
+
+// the date-time matcher is the object form of a header or parameter value
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "GET",
+        "path": "/api/orders",
+        "headers": {
+            "X-Request-Time": [{ "after": "now -1 hours" }]
+        },
+        "queryStringParameters": {
+            "from": [{ "after": "2026-01-01", "actualFormat": "dd/MM/yyyy" }]
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent orders"
+    }
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+
+<p>A date-time matcher can be used anywhere a value can be a <a href="#button_match_request_by_header_value_json_schema">JSON schema</a> matcher, which includes header, cookie, query-string, path-parameter and form-field values, and the headers checked when verifying responses. It does not yet apply to values inside a JSON or XML body.</p>
 
 <button id="button_request" class="accordion title"><strong>Request Properties Matcher Code Examples</strong></button>
 <div class="panel title">

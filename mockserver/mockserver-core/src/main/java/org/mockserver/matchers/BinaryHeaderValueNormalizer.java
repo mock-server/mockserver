@@ -2,7 +2,7 @@ package org.mockserver.matchers;
 
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.NottableOptionalString;
-import org.mockserver.model.NottableSchemaString;
+import org.mockserver.model.NottableMatcherString;
 import org.mockserver.model.NottableString;
 
 /**
@@ -86,7 +86,7 @@ public class BinaryHeaderValueNormalizer {
      * keys; that is the reason this is decided at the comparison site.)
      */
     public static boolean shouldNormalize(NottableString matcherKey, NottableString matchedKey, NottableString matcherValue, NottableString matchedValue) {
-        if (matcherValue instanceof NottableSchemaString || matchedValue instanceof NottableSchemaString) {
+        if (matcherValue instanceof NottableMatcherString || matchedValue instanceof NottableMatcherString) {
             return false;
         }
         return isBinaryHeaderName(matcherKey) || isBinaryHeaderName(matchedKey);
@@ -119,7 +119,7 @@ public class BinaryHeaderValueNormalizer {
      * {@code !AQIDBA==} normalises to {@code !AQIDBA} and keeps asserting inequality.
      */
     public static NottableString normalize(NottableString value) {
-        if (value == null || value instanceof NottableSchemaString) {
+        if (value == null || value instanceof NottableMatcherString) {
             return value;
         }
         String raw = value.getValue();

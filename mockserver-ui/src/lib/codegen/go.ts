@@ -25,6 +25,7 @@
  */
 import { buildExpectationJson, type StandardMatcher, type StandardActionPayload } from '../standardCodegen.ts';
 import { clientHostPort } from './shared.ts';
+import { dateTimeBuilderExpr, dateTimeMatcherOf, nottableObjectOf, parsePlainMatcher } from '../matcherValue.ts';
 
 // ---------------------------------------------------------------------------
 // Struct field registry — maps each Go struct type to its [wireKey, goField,
@@ -554,6 +555,62 @@ function renderCookies(obj: Record<string, unknown>, d: number): string {
   return `map[string]string{\n${lines.join('\n')}\n${tab(d)}}`;
 }
 
+// ---------------------------------------------------------------------------
+// Matcher values — a header / query / cookie / path-parameter value that is not a
+// plain string goes through the client's MatcherValue (HeaderMatcher & co).
+// ---------------------------------------------------------------------------
+
+const isPlainValue = (v: unknown): boolean => v === null || typeof v !== 'object';
+
+function goLiteral(value: string, not: boolean, optional: boolean): string {
+  if (not && optional) return `mockserver.MatcherValue{Value: ${goStr(value)}, Not: true, Optional: true}`;
+  if (not) return `mockserver.NotLiteral(${goStr(value)})`;
+  if (optional) return `mockserver.OptionalLiteral(${goStr(value)})`;
+  return `mockserver.Literal(${goStr(value)})`;
+}
+
+/** A `mockserver.MatcherValue` expression; undefined for a form MatcherValue cannot hold (a schema). */
+function goMatcherValue(v: unknown): string | undefined {
+  if (isPlainValue(v)) {
+    // a plain string keeps its server meaning: "!foo" is NotLiteral("foo")
+    const p = parsePlainMatcher(String(v));
+    return goLiteral(p.value, p.not, p.optional);
+  }
+  const dt = dateTimeMatcherOf(v);
+  if (dt) return dateTimeBuilderExpr(dt, { head: 'mockserver.', naming: 'pascal', str: goStr, bool: String });
+  const n = nottableObjectOf(v);
+  return n ? goLiteral(n.value, n.not, n.optional) : undefined;
+}
+
+/** HttpRequest matcher-map fields that replace the plain maps when a value is not a plain string. */
+const GO_MATCHER_FIELDS: Record<string, { field: string; single: boolean }> = {
+  headers: { field: 'HeaderMatchers', single: false },
+  queryStringParameters: { field: 'QueryStringParameterMatchers', single: false },
+  cookies: { field: 'CookieMatchers', single: true },
+  pathParameters: { field: 'PathParameterMatchers', single: false },
+};
+
+const hasObjectValue = (m: unknown): boolean =>
+  isObj(m) && Object.values(m).some((v) => (Array.isArray(v) ? v : [v]).some((x) => !isPlainValue(x)));
+
+/** A HttpRequest matcher map literal (`map[string][]mockserver.MatcherValue{...}`); unholdable values get a NOTE. */
+function renderMatcherMap(wireKey: string, obj: Record<string, unknown>, single: boolean, d: number): string {
+  const lines: string[] = [];
+  for (const [k, v] of Object.entries(obj)) {
+    const vals = Array.isArray(v) ? v : [v];
+    const exprs: string[] = [];
+    for (const x of single ? vals.slice(0, 1) : vals) {
+      const e = goMatcherValue(x);
+      if (e === undefined) lines.push(`${tab(d + 1)}// NOTE: httpRequest.${wireKey}.${k} has a value MatcherValue cannot hold — omitted, see the JSON tab`);
+      else exprs.push(e);
+    }
+    if (exprs.length === 0) continue;
+    lines.push(single ? `${tab(d + 1)}${goStr(k)}: ${exprs[0]},` : `${tab(d + 1)}${goStr(k)}: {${exprs.join(', ')}},`);
+  }
+  const type = single ? 'map[string]mockserver.MatcherValue' : 'map[string][]mockserver.MatcherValue';
+  return lines.length === 0 ? `${type}{}` : `${type}{\n${lines.join('\n')}\n${tab(d)}}`;
+}
+
 function renderStringSlice(arr: unknown[]): string {
   return `[]string{${arr.map((x) => goStr(String(x))).join(', ')}}`;
 }
@@ -701,6 +758,11 @@ function renderStructBody(
     if (!(wireKey in obj)) continue;
     const val = obj[wireKey];
     if (val === null || val === undefined) continue;
+    const matcherField = typeName === 'HttpRequest' ? GO_MATCHER_FIELDS[wireKey] : undefined;
+    if (matcherField && hasObjectValue(val)) {
+      lines.push(`${tab(d + 1)}${matcherField.field}: ${renderMatcherMap(wireKey, val as Record<string, unknown>, matcherField.single, d + 1)},`);
+      continue;
+    }
     lines.push(`${tab(d + 1)}${goField}: ${renderValue(kind, val, ctx, d + 1)},`);
   }
   for (const key of Object.keys(obj)) {
@@ -727,7 +789,7 @@ function renderStructSlice(typeName: string, arr: unknown[], ctx: Ctx, d: number
 
 function pathParametersSimple(pp: unknown): boolean {
   if (!isObj(pp)) return false;
-  return Object.values(pp).every((v) => Array.isArray(v) && v.every((x) => typeof x === 'string'));
+  return Object.values(pp).every((v) => Array.isArray(v) && v.every((x) => typeof x === 'string' || goMatcherValue(x) !== undefined));
 }
 
 function renderJwtBuilder(jwt: Record<string, unknown>): string {
@@ -745,32 +807,38 @@ function renderJwtBuilder(jwt: Record<string, unknown>): string {
 }
 
 /** The fluent-builder method calls (without leading dot) for a request. Body is
- *  included only when it is a plain string (a typed body must be post-assigned). */
-function requestBuilderCalls(req: Record<string, unknown>, includePlainBody: boolean): string[] {
+ *  included only when it is a plain string (a typed body must be post-assigned).
+ *  A matcher value the builder cannot express is named in `omitted`. */
+function requestBuilderCalls(req: Record<string, unknown>, includePlainBody: boolean, omitted: string[] = []): string[] {
   const calls: string[] = [];
   if (typeof req['method'] === 'string' && req['method']) calls.push(`Method(${goStr(req['method'])})`);
   if (typeof req['path'] === 'string' && req['path']) calls.push(`Path(${goStr(req['path'])})`);
-  if (isObj(req['headers'])) {
-    for (const [k, v] of Object.entries(req['headers'])) {
-      const vals = Array.isArray(v) ? v : [v];
-      calls.push(`Header(${[goStr(k), ...vals.map((x) => goStr(String(x)))].join(', ')})`);
+  // A key holding a non-string value uses the *Matcher method, which carries the plain entries
+  // over when first called, so every plain call is emitted before any *Matcher call.
+  const matcherCalls: string[] = [];
+  const family = (wire: string, plain: string, matcher: string, single: boolean) => {
+    const map = req[wire];
+    if (!isObj(map)) return;
+    for (const [k, v] of Object.entries(map)) {
+      const vals = single ? [v] : Array.isArray(v) ? v : [v];
+      if (vals.every(isPlainValue)) {
+        calls.push(`${plain}(${[goStr(k), ...vals.map((x) => goStr(String(x)))].join(', ')})`);
+        continue;
+      }
+      const exprs: string[] = [];
+      for (const x of vals) {
+        const e = goMatcherValue(x);
+        if (e === undefined) omitted.push(`httpRequest.${wire}.${k}`);
+        else exprs.push(e);
+      }
+      if (exprs.length > 0) matcherCalls.push(`${matcher}(${[goStr(k), ...exprs].join(', ')})`);
     }
-  }
-  if (isObj(req['queryStringParameters'])) {
-    for (const [k, v] of Object.entries(req['queryStringParameters'])) {
-      const vals = Array.isArray(v) ? v : [v];
-      calls.push(`QueryStringParameter(${[goStr(k), ...vals.map((x) => goStr(String(x)))].join(', ')})`);
-    }
-  }
-  if (isObj(req['cookies'])) {
-    for (const [k, v] of Object.entries(req['cookies'])) calls.push(`Cookie(${goStr(k)}, ${goStr(String(v))})`);
-  }
-  if (isObj(req['pathParameters']) && pathParametersSimple(req['pathParameters'])) {
-    for (const [k, v] of Object.entries(req['pathParameters'])) {
-      const vals = v as string[];
-      calls.push(`PathParameter(${[goStr(k), ...vals.map((x) => goStr(String(x)))].join(', ')})`);
-    }
-  }
+  };
+  family('headers', 'Header', 'HeaderMatcher', false);
+  family('queryStringParameters', 'QueryStringParameter', 'QueryStringParameterMatcher', false);
+  family('cookies', 'Cookie', 'CookieMatcher', true);
+  if (pathParametersSimple(req['pathParameters'])) family('pathParameters', 'PathParameter', 'PathParameterMatcher', false);
+  calls.push(...matcherCalls);
   if (isObj(req['jwt'])) calls.push(`Jwt(${renderJwtBuilder(req['jwt'])})`);
   // typeof, not === true: secure:false is an HTTP-only matcher, not an absent field
   if (typeof req['secure'] === 'boolean') calls.push(`Secure(${req['secure']})`);
@@ -825,13 +893,17 @@ function renderExpectation(json: Record<string, unknown>, ctx: Ctx): RenderedExp
   // the typed body constructor (JSONMatchBody / XPathBody / AllOf / …) is used.
   if (requestBuilderable(req)) {
     const bodyIsObject = isObj(req['body']);
+    const omitted: string[] = [];
     if (bodyIsObject) {
-      const calls = requestBuilderCalls(req, false);
+      const calls = requestBuilderCalls(req, false, omitted);
       preamble.push(`\treq := ${formatBuilderChain(calls, 1)}`);
       preamble.push(`\treq.Body = ${renderBody(req['body'], ctx, 1)}`);
       fields.push(`${tab(2)}HttpRequest: req,`);
     } else {
-      fields.push(`${tab(2)}HttpRequest: ${formatBuilderChain(requestBuilderCalls(req, true), 2)},`);
+      fields.push(`${tab(2)}HttpRequest: ${formatBuilderChain(requestBuilderCalls(req, true, omitted), 2)},`);
+    }
+    if (omitted.length > 0) {
+      fields.push(`${tab(2)}// NOTE: matcher value(s) MatcherValue cannot hold are omitted: ${omitted.join(', ')} -- see the JSON tab`);
     }
   } else {
     // DNS request or edit-overlay passthrough the builder cannot express.

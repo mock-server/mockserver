@@ -124,6 +124,32 @@ client.When(
 );
 ```
 
+### Header, Query, Cookie and Path Parameter Matchers
+
+`WithHeaderMatcher`, `WithQueryStringParameterMatcher`, `WithCookieMatcher` and
+`WithPathParameterMatcher` take a `MatcherValue`. `MatcherValue.Literal("!foo")` matches the exact
+text `!foo`, and `MatcherValue.NotLiteral("foo")` matches anything except `foo`.
+
+A value can also be compared as a date-time. Use `MatcherValue.Before`, `After` or `EqualToDateTime`
+with `now`, `now <offset>` or a date-time, and refine it with `WithActualFormat`, `WithZone`,
+`WithTruncateExpected`, `WithTruncateActual`, `WithApplyTruncationLast` or `WithNot`:
+
+```csharp
+client.When(
+    HttpRequest.Request()
+        .WithPath("/report")
+        .WithHeaderMatcher("X-Issued-At", MatcherValue.After("now -1 hours"))
+        .WithHeaderMatcher("If-Modified-Since",
+            MatcherValue.Before("2026-10-21T00:00:00Z").WithActualFormat("rfc1123"))
+        .WithQueryStringParameterMatcher("from",
+            MatcherValue.After("2026-01-01").WithActualFormat("dd/MM/yyyy").WithZone("Europe/London"))
+).Respond(
+    HttpResponse.Response().WithStatusCode(200)
+);
+```
+
+A plain string such as `"before:2026-01-01"` is always matched as literal text, never as a date-time.
+
 ### ALL_OF Body Matcher
 
 Require the request body to satisfy every sub-matcher. Combine any typed body matchers

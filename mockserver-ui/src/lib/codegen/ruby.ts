@@ -28,6 +28,7 @@
  */
 import { buildExpectationJson, type StandardMatcher, type StandardActionPayload } from '../standardCodegen.ts';
 import { clientHostPort, OmittedFields } from './shared.ts';
+import { dateTimeBuilderExpr, dateTimeMatcherOf } from '../matcherValue.ts';
 
 type Json = unknown;
 type Obj = Record<string, Json>;
@@ -118,11 +119,27 @@ function arrayOf(items: string[], indent: number): string {
 // keyToMultiValue / cookie collections
 // ---------------------------------------------------------------------------
 
+/** A JSON value as a single-line Ruby literal. */
+function rbInline(v: Json): string {
+  if (v === null || v === undefined || typeof v !== 'object') return scalar(v);
+  if (Array.isArray(v)) return '[' + v.map(rbInline).join(', ') + ']';
+  return '{ ' + Object.entries(v as Obj).map(([k, val]) => `${rb(k)} => ${rbInline(val)}`).join(', ') + ' }';
+}
+
+/** One matcher value: a string literal, a `MockServer::DateTimeMatcher`, or any other object form
+ *  (nottable / schema) as the Hash the gem sends verbatim. */
+function matcherValue(v: Json): string {
+  if (v === null || typeof v !== 'object') return rb(String(v));
+  const dt = dateTimeMatcherOf(v);
+  if (!dt) return rbInline(v);
+  return dateTimeBuilderExpr(dt, { head: 'MockServer::DateTimeMatcher.', naming: 'snake', str: rb, bool: (b) => String(b) });
+}
+
 /** Object-form wire map ({name: [values]}) → `[MockServer::KeyToMultiValue.new(...)]`. */
 function kmv(map: Obj, indent: number): string {
   const items = Object.entries(map).map(([name, values]) => {
     const vals = Array.isArray(values) ? values : [values];
-    const valExpr = '[' + vals.map((v) => rb(String(v))).join(', ') + ']';
+    const valExpr = '[' + vals.map(matcherValue).join(', ') + ']';
     return `MockServer::KeyToMultiValue.new(name: ${rb(name)}, values: ${valExpr})`;
   });
   return arrayOf(items, indent);
@@ -131,7 +148,7 @@ function kmv(map: Obj, indent: number): string {
 /** Single-value cookie wire map ({name: value}) → `[MockServer::KeyToMultiValue.new(...)]`. */
 function cookies(map: Obj, indent: number): string {
   const items = Object.entries(map).map(
-    ([name, value]) => `MockServer::KeyToMultiValue.new(name: ${rb(name)}, values: [${rb(String(value))}])`,
+    ([name, value]) => `MockServer::KeyToMultiValue.new(name: ${rb(name)}, values: [${matcherValue(value)}])`,
   );
   return arrayOf(items, indent);
 }

@@ -6,7 +6,7 @@ import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.log.model.SensitiveLogValue;
 import org.mockserver.logging.MockServerLogger;
-import org.mockserver.model.NottableSchemaString;
+import org.mockserver.model.NottableMatcherString;
 import org.mockserver.model.NottableString;
 
 import java.util.regex.PatternSyntaxException;
@@ -75,12 +75,14 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
     }
 
     public boolean matches(MockServerLogger mockServerLogger, MatchDifference context, NottableString matcher, NottableString matched) {
-        if (matcher instanceof NottableSchemaString && matched instanceof NottableSchemaString) {
+        // NottableMatcherString (JSON schema or date-time) is only ever built from the explicit object form
+        // of a value, so a plain value takes exactly the same branches as it did before date-time matchers
+        if (matcher instanceof NottableMatcherString && matched instanceof NottableMatcherString) {
             return controlPlaneMatcher && matchesByNottedStrings(mockServerLogger, context, matcher, matched);
-        } else if (matcher instanceof NottableSchemaString) {
-            return matchesBySchemas(mockServerLogger, context, (NottableSchemaString) matcher, matched);
-        } else if (matched instanceof NottableSchemaString) {
-            return controlPlaneMatcher && matchesBySchemas(mockServerLogger, context, (NottableSchemaString) matched, matcher);
+        } else if (matcher instanceof NottableMatcherString) {
+            return matchesBySchemas(mockServerLogger, context, (NottableMatcherString) matcher, matched);
+        } else if (matched instanceof NottableMatcherString) {
+            return controlPlaneMatcher && matchesBySchemas(mockServerLogger, context, (NottableMatcherString) matched, matcher);
         } else {
             return matchesByNottedStrings(mockServerLogger, context, matcher, matched);
         }
@@ -96,7 +98,7 @@ public class RegexStringMatcher extends BodyMatcher<NottableString> {
         }
     }
 
-    private boolean matchesBySchemas(MockServerLogger mockServerLogger, MatchDifference context, NottableSchemaString schema, NottableString string) {
+    private boolean matchesBySchemas(MockServerLogger mockServerLogger, MatchDifference context, NottableMatcherString schema, NottableString string) {
         return string.isNot() != schema.matches(mockServerLogger, context, string.getValue());
     }
 

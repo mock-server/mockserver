@@ -32,6 +32,7 @@
  */
 import { buildExpectationJson, type StandardMatcher, type StandardActionPayload } from '../standardCodegen.ts';
 import { clientHostPort } from './shared.ts';
+import { dateTimeBuilderExpr, dateTimeMatcherOf, nottableObjectOf } from '../matcherValue.ts';
 
 // ---------------------------------------------------------------------------
 // Small literal / formatting helpers
@@ -128,10 +129,39 @@ function renderPathParameters(obj: Record<string, unknown>, indent: number, ctx:
   ctx.usings.add('System.Text.Json');
   const entries = Object.entries(obj).map(([k, v]) => {
     const arr = Array.isArray(v) ? v : [v];
-    const els = arr.map((x) => `JsonSerializer.SerializeToElement(${csStr(String(x))})`).join(', ');
+    const els = arr.map((x) => (isObject(x)
+      ? `JsonSerializer.Deserialize<JsonElement>(${csVerbatim(stableJson(x))})`
+      : `JsonSerializer.SerializeToElement(${csStr(String(x))})`)).join(', ');
     return `[${csStr(k)}] = new() { ${els} }`;
   });
   return csDict('Dictionary<string, List<JsonElement>>', entries, indent);
+}
+
+/** A `MatcherValue` expression; undefined for a form MatcherValue cannot hold (a schema). A plain
+ *  string relies on the implicit conversion, which parses it as the server would ("!foo" is not foo). */
+function csMatcherValue(v: unknown): string | undefined {
+  if (!isObject(v)) return csStr(String(v));
+  const dt = dateTimeMatcherOf(v);
+  if (dt) return dateTimeBuilderExpr(dt, { head: 'MatcherValue.', naming: 'pascal', str: csStr, bool: (b) => (b ? 'true' : 'false') });
+  const n = nottableObjectOf(v);
+  if (!n) return undefined;
+  return `new MatcherValue(${csStr(n.value)}${n.not ? ', not: true' : ''}${n.optional ? ', optional: true' : ''})`;
+}
+
+function hasObjectValue(obj: Record<string, unknown>): boolean {
+  return Object.values(obj).some((v) => (Array.isArray(v) ? v : [v]).some(isObject));
+}
+
+/** The `*Matchers` dictionary for a header / query / cookie / path-parameter map; undefined when a value
+ *  is a form MatcherValue cannot hold. */
+function renderMatcherMap(obj: Record<string, unknown>, single: boolean, indent: number): string | undefined {
+  const entries: string[] = [];
+  for (const [k, v] of Object.entries(obj)) {
+    const exprs = (single ? [v] : Array.isArray(v) ? v : [v]).map(csMatcherValue);
+    if (exprs.some((e) => e === undefined)) return undefined;
+    entries.push(single ? `[${csStr(k)}] = ${exprs[0]}` : `[${csStr(k)}] = new() { ${exprs.join(', ')} }`);
+  }
+  return csDict(single ? 'Dictionary<string, MatcherValue>' : 'Dictionary<string, List<MatcherValue>>', entries, indent);
 }
 
 /** A `new Delay { TimeUnit = TimeUnit.X, Value = n }` (single line). */
@@ -287,12 +317,27 @@ function renderRequest(req: Record<string, unknown>, indent: number, ctx: Ctx): 
   const props: string[] = [];
   if (typeof req['method'] === 'string') props.push(`Method = ${csStr(req['method'] as string)}`);
   if (typeof req['path'] === 'string') props.push(`Path = ${csStr(req['path'] as string)}`);
-  if (isObject(req['headers'])) props.push(`Headers = ${renderMultiMap(req['headers'] as Record<string, unknown>, indent + 4)}`);
-  if (isObject(req['queryStringParameters'])) {
-    props.push(`QueryStringParameters = ${renderMultiMap(req['queryStringParameters'] as Record<string, unknown>, indent + 4)}`);
+  // A map holding an object value (date-time / nottable matcher) goes through the *Matchers property,
+  // which replaces the plain map on the wire.
+  const matcherMaps: [string, string, string, boolean, (o: Record<string, unknown>) => string][] = [
+    ['headers', 'Headers', 'HeaderMatchers', false, (o) => renderMultiMap(o, indent + 4)],
+    ['queryStringParameters', 'QueryStringParameters', 'QueryStringParameterMatchers', false, (o) => renderMultiMap(o, indent + 4)],
+    ['cookies', 'Cookies', 'CookieMatchers', true, (o) => renderSingleMap(o, indent + 4)],
+    ['pathParameters', 'PathParameters', 'PathParameterMatchers', false, (o) => renderPathParameters(o, indent + 4, ctx)],
+  ];
+  for (const [wire, prop, matcherProp, single, plain] of matcherMaps) {
+    const map = req[wire];
+    if (!isObject(map)) continue;
+    const matchers = hasObjectValue(map) ? renderMatcherMap(map, single, indent + 4) : undefined;
+    if (matchers !== undefined) {
+      props.push(`${matcherProp} = ${matchers}`);
+    } else if (hasObjectValue(map) && wire !== 'pathParameters') {
+      // a schema value: only the typed deserializer can carry it
+      return rawTyped('HttpRequest', req, ctx);
+    } else {
+      props.push(`${prop} = ${plain(map)}`);
+    }
   }
-  if (isObject(req['cookies'])) props.push(`Cookies = ${renderSingleMap(req['cookies'] as Record<string, unknown>, indent + 4)}`);
-  if (isObject(req['pathParameters'])) props.push(`PathParameters = ${renderPathParameters(req['pathParameters'] as Record<string, unknown>, indent + 4, ctx)}`);
   if (typeof req['dnsName'] === 'string') props.push(`DnsName = ${csStr(req['dnsName'] as string)}`);
   if (typeof req['dnsType'] === 'string') props.push(`DnsType = ${csStr(req['dnsType'] as string)}`);
   if (typeof req['dnsClass'] === 'string') props.push(`DnsClass = ${csStr(req['dnsClass'] as string)}`);

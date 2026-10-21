@@ -63,6 +63,21 @@ function baseMatcher(overrides?: Partial<StandardMatcher>): StandardMatcher {
  */
 const extraTypeCases: { name: string; matcher: StandardMatcher; action: StandardActionPayload; baseUrl: string }[] = [
   {
+    // mirrors test-fixtures/expectations/matcher_request_date_time.json
+    name: 'date-time-matchers',
+    matcher: baseMatcher({
+      headers: 'X-Issued-At: {"after":"now -1 hours"}\nIf-Modified-Since: {"before":"2026-10-21T00:00:00Z","actualFormat":"rfc1123"}\nX-Plain: before:2026-01-01',
+      queryString: 'from={"after":"2026-01-01","actualFormat":"dd/MM/yyyy","zone":"Europe/London"}',
+      cookies: 'seen={"not":true,"equalToDateTime":"now +1 days","truncateExpected":"first day of month","truncateActual":"startOfDay","applyTruncationLast":true}',
+      pathParams: 'id={"before":"now"}',
+    }),
+    action: {
+      type: 'static',
+      static: { statusCode: 200, body: 'dated', contentType: '', bodyFromFile: false, filePath: '', fileTemplateType: '' },
+    },
+    baseUrl: 'http://localhost:1080',
+  },
+  {
     name: 'chaos-profile',
     matcher: baseMatcher(),
     action: {

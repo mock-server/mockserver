@@ -21,12 +21,14 @@ import org.mockserver.model.HttpTemplate;
 import org.mockserver.model.JsonBody;
 import org.mockserver.model.JsonPathBody;
 import org.mockserver.model.MediaType;
+import org.mockserver.model.NottableDateTimeString;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.Parameter;
 import org.mockserver.model.RegexBody;
 import org.mockserver.model.StringBody;
 import org.mockserver.model.XPathBody;
 import org.mockserver.model.XmlBody;
+import org.mockserver.matchers.DateTimeComparisonMatcher;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.HttpResponseDTO;
@@ -73,7 +75,8 @@ import static org.mockserver.model.HttpResponse.response;
  *   <tr><td>{@code urlPathPattern} / {@code urlPattern}</td><td>regex path</td></tr>
  *   <tr><td>{@code url}</td><td>exact path + query parameters</td></tr>
  *   <tr><td>{@code queryParameters}, {@code headers}</td><td>parameter / header matchers
- *       ({@code equalTo} exact, {@code matches} regex, {@code contains} regex, {@code absent})</td></tr>
+ *       ({@code equalTo} exact, {@code matches} regex, {@code contains} regex, {@code absent},
+ *       {@code before} / {@code after} / {@code equalToDateTime} date-time matchers)</td></tr>
  *   <tr><td>{@code bodyPatterns}</td><td>body matcher ({@code equalToJson}, {@code matchesJsonPath},
  *       {@code contains}, {@code matches}/{@code equalTo})</td></tr>
  * </table>
@@ -97,6 +100,7 @@ import static org.mockserver.model.HttpResponse.response;
 public class WireMockImporter {
 
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
+    private static final String[] DATE_TIME_PREDICATES = {"before", "after", "equalToDateTime"};
     // WireMock's lognormal is parameterised by sigma; MockServer's by its 99th percentile
     private static final double Z_SCORE_P99 = 2.326347874;
     // the bytes WireMock writes for MALFORMED_RESPONSE_CHUNK and RANDOM_DATA_THEN_CLOSE
@@ -380,6 +384,11 @@ public class WireMockImporter {
         if (predicate.has("doesNotMatch")) {
             return NottableString.not(predicate.path("doesNotMatch").asText());
         }
+        for (String operator : DATE_TIME_PREDICATES) {
+            if (predicate.has(operator)) {
+                return dateTimePredicate(operator, predicate, locator, field, warnings);
+            }
+        }
         if (predicate.path("absent").asBoolean(false)) {
             warnings.add(new ImportWarning(locator, field,
                 "'absent' predicate has no direct MockServer analogue on a named key — omitted (a request lacking the key already matches)"));
@@ -388,6 +397,37 @@ public class WireMockImporter {
         warnings.add(new ImportWarning(locator, field,
             "unsupported match predicate " + fieldNames(predicate) + " — omitted"));
         return null;
+    }
+
+    /**
+     * Maps WireMock's {@code before} / {@code after} / {@code equalToDateTime} onto a MockServer date-time
+     * matcher; {@code expectedOffset} with {@code expectedOffsetUnit} folds into a {@code now} offset.
+     */
+    private NottableString dateTimePredicate(String operator, JsonNode predicate, String locator, String field, List<ImportWarning> warnings) {
+        String expected = predicate.path(operator).asText().trim();
+        if (predicate.has("expectedOffset")) {
+            String offset = predicate.path("expectedOffset").asText() + " " + predicate.path("expectedOffsetUnit").asText("days").toLowerCase(Locale.ROOT);
+            if (expected.regionMatches(true, 0, "now", 0, 3)) {
+                expected = expected + " " + (offset.startsWith("-") ? offset : "+" + offset);
+            } else {
+                warnings.add(new ImportWarning(locator, field, "expectedOffset on a literal date-time is not mapped — the literal is used as given"));
+            }
+        }
+        try {
+            return NottableDateTimeString.dateTime(
+                DateTimeComparisonMatcher.Operator.forFieldName(operator),
+                expected,
+                predicate.hasNonNull("actualFormat") ? predicate.path("actualFormat").asText() : null,
+                predicate.hasNonNull("truncateExpected") ? predicate.path("truncateExpected").asText() : null,
+                predicate.hasNonNull("truncateActual") ? predicate.path("truncateActual").asText() : null,
+                predicate.has("applyTruncationLast") ? predicate.path("applyTruncationLast").asBoolean(false) : null,
+                null,
+                false
+            );
+        } catch (IllegalArgumentException e) {
+            warnings.add(new ImportWarning(locator, field, "'" + operator + "' predicate could not be mapped (" + e.getMessage() + ") — omitted"));
+            return null;
+        }
     }
 
     private void applyBodyPattern(HttpRequest httpRequest, JsonNode bodyPatterns, String locator, ImportRedaction.Options redactionOptions, List<ImportWarning> warnings) {

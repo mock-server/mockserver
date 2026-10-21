@@ -131,6 +131,33 @@ $client->when(
 );
 ```
 
+### Date-Time Value Matchers
+
+A header, query string parameter, path parameter or cookie value can be a
+`DateTimeMatcher` instead of a plain string, added with `headerMatcher()`,
+`queryStringParameterMatcher()`, `cookieMatcher()` or `pathParameter()`
+(which takes strings or matchers). The request value must be a
+date-time before, after or equal to the expected one. The expected value is
+`now`, `now <offset>` (for example `now -1 hours`) or an ISO-8601, RFC-1123 or
+epoch date-time. Options are `withActualFormat()`, `withTruncateExpected()`,
+`withTruncateActual()`, `withApplyTruncationLast()`, `withZone()` and
+`withNot()`; each returns a new matcher. A plain string such as
+`'before:2026-01-01'` is still matched literally.
+
+```php
+use MockServer\DateTimeMatcher;
+
+$client->when(
+    HttpRequest::request()->method('GET')->path('/reports')
+        ->headerMatcher('X-Issued-At', DateTimeMatcher::after('now -1 hours'))
+        ->headerMatcher('If-Modified-Since', DateTimeMatcher::before('2026-10-21T00:00:00Z')->withActualFormat('rfc1123'))
+        ->queryStringParameterMatcher('from', DateTimeMatcher::after('2026-01-01')->withActualFormat('dd/MM/yyyy'))
+        ->cookieMatcher('seen', DateTimeMatcher::equalToDateTime('now')->withTruncateExpected('startOfDay')->withTruncateActual('startOfDay'))
+)->respond(
+    HttpResponse::response()->statusCode(200)
+);
+```
+
 ### Conditional and OpenAPI Request Matchers
 
 `HttpRequest::conditional($if, $then, $else)` builds an if/then/else matcher,

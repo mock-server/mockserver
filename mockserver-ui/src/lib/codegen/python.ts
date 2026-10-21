@@ -31,6 +31,7 @@
  */
 import { buildExpectationJson, type StandardMatcher, type StandardActionPayload } from '../standardCodegen.ts';
 import { clientHostPort, OmittedFields, toPythonLiteral } from './shared.ts';
+import { dateTimeBuilderExpr, dateTimeMatcherOf } from '../matcherValue.ts';
 
 type Json = Record<string, unknown>;
 type Kw = [string, string];
@@ -72,6 +73,16 @@ function renderList(items: string[], indent: number): string {
   const pad = ' '.repeat(indent);
   const pad2 = ' '.repeat(indent + 4);
   return `[\n${items.map((i) => pad2 + i).join(',\n')},\n${pad}]`;
+}
+
+/** A JSON value as a single-line Python literal. */
+function pyInline(v: unknown): string {
+  if (v === null || v === undefined) return 'None';
+  if (typeof v === 'boolean') return pyBool(v);
+  if (typeof v === 'number') return pyNum(v);
+  if (typeof v === 'string') return pyStr(v);
+  if (Array.isArray(v)) return `[${v.map(pyInline).join(', ')}]`;
+  return `{${Object.entries(v as Json).map(([k, val]) => `${pyStr(k)}: ${pyInline(val)}`).join(', ')}}`;
 }
 
 function strArray(values: unknown): string {
@@ -124,7 +135,7 @@ class PyBuilder {
     this.use('KeyToMultiValue');
     const entries = Object.entries((map ?? {}) as Json);
     const items = entries.map(([k, vals]) =>
-      renderInline('KeyToMultiValue', [['name', pyStr(k)], ['values', strArray(vals)]]),
+      renderInline('KeyToMultiValue', [['name', pyStr(k)], ['values', this.matcherValues(vals)]]),
     );
     return renderList(items, indent);
   }
@@ -134,9 +145,24 @@ class PyBuilder {
     this.use('KeyToMultiValue');
     const entries = Object.entries((map ?? {}) as Json);
     const items = entries.map(([k, v]) =>
-      renderInline('KeyToMultiValue', [['name', pyStr(k)], ['values', `[${pyStr(v)}]`]]),
+      renderInline('KeyToMultiValue', [['name', pyStr(k)], ['values', this.matcherValues([v])]]),
     );
     return renderList(items, indent);
+  }
+
+  /** A matcher-value list: strings as literals, a date-time matcher via `DateTimeMatcher`, any other
+   *  object form (nottable / schema) as the dict the client sends verbatim. */
+  private matcherValues(values: unknown): string {
+    const arr = Array.isArray(values) ? values : [];
+    return `[${arr.map((v) => this.matcherValue(v)).join(', ')}]`;
+  }
+
+  private matcherValue(v: unknown): string {
+    if (v === null || typeof v !== 'object') return pyStr(v);
+    const dt = dateTimeMatcherOf(v);
+    if (!dt) return pyInline(v);
+    this.use('DateTimeMatcher');
+    return dateTimeBuilderExpr(dt, { head: 'DateTimeMatcher.', naming: 'snake', str: pyStr, bool: pyBool });
   }
 
   private delay(v: unknown, at: string): string {

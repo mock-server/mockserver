@@ -78,7 +78,6 @@ final class TypedRoundTripFidelityTest extends TestCase
      * typed model ({@see HttpRequest}) declares a deliberately narrow field set:
      *
      *   - dnsClass/dnsName/dnsType : DNS-query matcher fields (no typed setter).
-     *   - pathParameters           : OpenAPI path-parameter matcher (unmodelled).
      *   - protocol                 : request protocol matcher (unmodelled).
      *   - method/path              : dropped ONLY when a fixture encodes them as a
      *                                NottableString object {not,value}; the model
@@ -95,7 +94,6 @@ final class TypedRoundTripFidelityTest extends TestCase
         'httpRequest.dnsClass',
         'httpRequest.dnsName',
         'httpRequest.dnsType',
-        'httpRequest.pathParameters',
         'httpRequest.protocol',
         'httpRequest.method',
         'httpRequest.path',

@@ -15,7 +15,8 @@ namespace MockServer.Client.Models;
 /// A header, query parameter, cookie or path-parameter value whose first character is <c>'!'</c> or
 /// <c>'?'</c> is a marker the server strips when reading, so <c>Headers["X"] = ["!foo"]</c> asks for
 /// "X is anything but foo", not "X is !foo". A <see cref="MatcherValue"/> keeps the text and the flags
-/// apart and escapes to the object form only when the plain form would be misread. This converter is
+/// apart and escapes to the object form only when the plain form would be misread; a date-time matcher
+/// (<c>{"after":"now -1 hours"}</c>) is always an object, so it always lands in the matcher map. This converter is
 /// the sibling-aware serialisation that the additive matcher maps need: a per-property converter
 /// cannot consult a sibling field to decide whether to override the plain map.
 /// <para>
@@ -110,7 +111,7 @@ public sealed class HttpRequestConverter : JsonConverter<HttpRequest>
         var query = DetachObject(node, "queryStringParameters");
         var cookies = DetachObject(node, "cookies");
         // pathParameters is left in place: it deserialises into List<JsonElement>, which round-trips the
-        // object form AND the schema-matcher form ({"schema":{...}}) losslessly, so nothing to detach.
+        // nottable and date-time object forms AND the schema-matcher form ({"schema":{...}}) losslessly.
 
         // path/method are plain strings on this model; tolerate an object-form (nottable) value by
         // flattening it to the plain string, so the rest of the request still decodes.

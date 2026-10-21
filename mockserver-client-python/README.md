@@ -208,6 +208,24 @@ client.when(
 HttpRequest(headers={"keyMatchStyle": "MATCHING_KEY", "X-Tag": ["a", "b"]})
 ```
 
+A value can also be a `DateTimeMatcher`, which matches a header, query or path
+parameter, or cookie holding a date-time before, after or equal to an expected
+value (`now`, `now -1 hours`, or a date-time such as `2026-10-21T00:00:00Z`).
+A plain string such as `"before:2026-01-01"` is always matched literally.
+
+```python
+from mockserver import DateTimeMatcher, HttpRequest
+
+HttpRequest(path="/orders") \
+    .with_header("X-Issued-At", DateTimeMatcher.after("now -1 hours")) \
+    .with_header("If-Modified-Since", DateTimeMatcher.before("now").with_actual_format("rfc1123")) \
+    .with_cookie("seen", DateTimeMatcher.equal_to_date_time("now").with_truncate_actual("startOfDay"))
+```
+
+Each `with_*` option (`with_actual_format`, `with_truncate_expected`,
+`with_truncate_actual`, `with_apply_truncation_last`, `with_zone`, `with_not`)
+returns a new matcher.
+
 ### JWT matcher
 
 Match requests by the claims (and metadata) of a JWT carried in a header. Each

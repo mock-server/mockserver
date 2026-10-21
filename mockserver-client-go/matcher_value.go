@@ -31,6 +31,10 @@ const (
 //
 //	req.HeaderMatcher("X-Tag", mockserver.Literal("!foo"))    // X-Tag IS "!foo"
 //	req.HeaderMatcher("X-Tag", mockserver.NotLiteral("foo"))  // X-Tag is NOT "foo"
+//
+// Use Before, After or EqualToDateTime to compare the value as a date-time:
+//
+//	req.HeaderMatcher("X-Issued-At", mockserver.After("now -1 hours"))
 type MatcherValue struct {
 	// Value is the matcher text, taken verbatim -- markers in it are not parsed.
 	Value string
@@ -38,6 +42,9 @@ type MatcherValue struct {
 	Not bool
 	// Optional marks the header/parameter/cookie as optional.
 	Optional bool
+	// DateTime, when non-nil, makes this a date-time matcher; Value and
+	// Optional must then be empty. See Before, After and EqualToDateTime.
+	DateTime *DateTimeMatcher
 }
 
 // Literal returns a matcher for exactly value, even when value starts with '!'
@@ -113,6 +120,10 @@ func parsePlain(s string) MatcherValue {
 // by testing for a leading marker, so it stays correct for compound markers
 // ("?!", "!?") and any marker added later.
 func (m MatcherValue) ambiguous() bool {
+	if m.DateTime != nil {
+		// a date-time matcher has no plain-string form at all
+		return true
+	}
 	if isBlank(m.Value) {
 		// A blank value has no marker to misread, and it cannot be expressed in
 		// the object form either: the server's object-form reader ignores a
@@ -126,6 +137,9 @@ func (m MatcherValue) ambiguous() bool {
 // MarshalJSON emits the plain string when it round-trips, and the object form
 // when it would not.
 func (m MatcherValue) MarshalJSON() ([]byte, error) {
+	if m.DateTime != nil {
+		return m.marshalDateTime()
+	}
 	if !m.ambiguous() {
 		return json.Marshal(m.serialise())
 	}
@@ -139,7 +153,8 @@ func (m MatcherValue) MarshalJSON() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-// UnmarshalJSON accepts both the plain-string and the object form.
+// UnmarshalJSON accepts the plain-string form, the nottable object form and the
+// date-time object form.
 func (m *MatcherValue) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err == nil {
@@ -150,11 +165,16 @@ func (m *MatcherValue) UnmarshalJSON(data []byte) error {
 		Not      *bool   `json:"not"`
 		Optional *bool   `json:"optional"`
 		Value    *string `json:"value"`
+		dateTimeWire
 	}
 	if err := json.Unmarshal(data, &obj); err != nil {
 		return err
 	}
-	*m = MatcherValue{}
+	dateTime, err := obj.dateTimeWire.toMatcher()
+	if err != nil {
+		return err
+	}
+	*m = MatcherValue{DateTime: dateTime}
 	if obj.Value != nil {
 		m.Value = *obj.Value
 	}
@@ -167,5 +187,13 @@ func (m *MatcherValue) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// String returns the plain-string form, for logging.
-func (m MatcherValue) String() string { return m.serialise() }
+// String returns the plain-string form, for logging. A date-time matcher has no
+// plain form, so it is rendered as its JSON object instead.
+func (m MatcherValue) String() string {
+	if m.DateTime != nil {
+		if b, err := json.Marshal(m); err == nil {
+			return string(b)
+		}
+	}
+	return m.serialise()
+}

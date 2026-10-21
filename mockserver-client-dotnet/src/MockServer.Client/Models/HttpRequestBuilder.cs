@@ -45,7 +45,8 @@ public sealed class HttpRequestBuilder
     /// <remarks>
     /// A bare <c>string</c> argument is implicitly parsed with the server's marker-stripping semantics
     /// (so <c>"!foo"</c> means "not foo"); pass <c>MatcherValue.Literal("!foo")</c> to get the escape
-    /// this method exists to provide. The same applies to the other <c>With*Matcher</c> methods.
+    /// this method exists to provide. The same applies to the other <c>With*Matcher</c> methods. A
+    /// date-time matcher (<c>MatcherValue.After("now -1 hours")</c>) is passed the same way.
     /// </remarks>
     public HttpRequestBuilder WithHeaderMatcher(string name, params MatcherValue[] values)
     {
@@ -109,10 +110,11 @@ public sealed class HttpRequestBuilder
     /// Adds a path-parameter matcher whose values are taken verbatim. See <see cref="WithHeaderMatcher"/>.
     /// </summary>
     /// <remarks>
-    /// String-valued entries already set through <see cref="HttpRequest.PathParameters"/> are carried
-    /// over so the two APIs compose. The schema-matcher form (<c>{"schema":{...}}</c>) cannot be
-    /// expressed as a <see cref="MatcherValue"/>, so it is NOT carried by this API — do not mix a
-    /// schema-matcher path parameter with this method on the same request.
+    /// String-valued and object-form (nottable or date-time) entries already set through
+    /// <see cref="HttpRequest.PathParameters"/> are carried over so the two APIs compose. The
+    /// schema-matcher form (<c>{"schema":{...}}</c>) cannot be expressed as a <see cref="MatcherValue"/>,
+    /// so it is NOT carried by this API — do not mix a schema-matcher path parameter with this method on
+    /// the same request.
     /// </remarks>
     public HttpRequestBuilder WithPathParameterMatcher(string name, params MatcherValue[] values)
     {
@@ -124,8 +126,9 @@ public sealed class HttpRequestBuilder
                 foreach (var existing in _request.PathParameters)
                 {
                     _request.PathParameterMatchers[existing.Key] = existing.Value
-                        .Where(element => element.ValueKind == JsonValueKind.String)
-                        .Select(element => MatcherValue.ParsePlain(element.GetString()))
+                        .Where(element => element.ValueKind == JsonValueKind.String
+                                          || (element.ValueKind == JsonValueKind.Object && !element.TryGetProperty("schema", out _)))
+                        .Select(element => element.Deserialize<MatcherValue>())
                         .ToList();
                 }
             }

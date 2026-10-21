@@ -8,6 +8,14 @@
  * the PUT request; keep the two in sync.
  */
 
+import {
+  dateTimeBuilderExpr,
+  dateTimeMatcherOf,
+  nottableObjectOf,
+  parseMatcherKeyValueLines,
+  type WireMatcherValue,
+} from './matcherValue.ts';
+
 // ---------------------------------------------------------------------------
 // Types — mirror ComposerView's per-action state contracts.
 // ---------------------------------------------------------------------------
@@ -1267,20 +1275,22 @@ export function buildExpectationJson(
     httpRequest = { path: matcher.path };
     if (matcher.method) httpRequest['method'] = matcher.method;
 
-    const headers = parseKeyValueLines(matcher.headers, ':');
+    // Matcher values: a line whose value is a JSON matcher object (date-time, schema,
+    // nottable) is sent as that object, so a loaded object survives a save unchanged.
+    const headers = parseMatcherKeyValueLines(matcher.headers, ':');
     if (headers) httpRequest['headers'] = headers;
 
-    const query = parseKeyValueLines(matcher.queryString, '=');
+    const query = parseMatcherKeyValueLines(matcher.queryString, '=');
     if (query) httpRequest['queryStringParameters'] = query;
 
-    const cookies = parseKeyValueLines(matcher.cookies, '=');
+    const cookies = parseMatcherKeyValueLines(matcher.cookies, '=');
     if (cookies) {
-      const flat: Record<string, string> = {};
+      const flat: Record<string, WireMatcherValue> = {};
       for (const [k, vs] of Object.entries(cookies)) flat[k] = vs[0] ?? '';
       httpRequest['cookies'] = flat;
     }
 
-    const pathParams = parseKeyValueLines(matcher.pathParams, '=');
+    const pathParams = parseMatcherKeyValueLines(matcher.pathParams, '=');
     if (pathParams) httpRequest['pathParameters'] = pathParams;
 
     if (matcher.bodyMatcherType === 'allOf') {
@@ -2584,7 +2594,80 @@ export function standardToJson(matcher: StandardMatcher, action: StandardActionP
 // Java client codegen — emits a snippet usable with MockServerClient
 // ---------------------------------------------------------------------------
 
-function matcherToJava(matcher: StandardMatcher): string {
+const JAVA_STRING_IMPORT = 'import static org.mockserver.model.NottableString.string;';
+
+/** A Java NottableString expression for one matcher value; undefined when the Java builder cannot express it. */
+function matcherValueToJava(v: WireMatcherValue, imports: Set<string>): string | undefined {
+  if (typeof v === 'string') {
+    imports.add(JAVA_STRING_IMPORT);
+    return `string("${escapeJava(v)}")`;
+  }
+  const dt = dateTimeMatcherOf(v);
+  if (dt) {
+    imports.add('import org.mockserver.model.NottableDateTimeString;');
+    return dateTimeBuilderExpr(dt, {
+      head: 'NottableDateTimeString.', naming: 'camel', str: (x) => `"${escapeJava(x)}"`, bool: String,
+    });
+  }
+  // The two-argument factories take the value verbatim, so a leading ! or ? stays literal.
+  const nottable = nottableObjectOf(v);
+  if (nottable?.optional) {
+    imports.add('import static org.mockserver.model.NottableOptionalString.optional;');
+    return `optional("${escapeJava(nottable.value)}", ${nottable.not})`;
+  }
+  if (nottable) {
+    imports.add(JAVA_STRING_IMPORT);
+    return `string("${escapeJava(nottable.value)}", ${nottable.not})`;
+  }
+  if ('schema' in v && Object.keys(v).every((k) => k === 'schema' || (k === 'not' && typeof v[k] === 'boolean'))) {
+    imports.add('import static org.mockserver.model.NottableSchemaString.schemaString;');
+    const schema = typeof v['schema'] === 'string' ? v['schema'] : JSON.stringify(v['schema']);
+    return `schemaString("${escapeJava(schema)}", ${v['not'] === true})`;
+  }
+  return undefined;
+}
+
+/**
+ * Builder calls for one header / query / cookie / path-parameter field. Plain string values keep the
+ * String overload; a key with any object value uses the NottableString overload, which needs the name
+ * as `string("..")` too. Values the builder cannot express are recorded in `omitted`.
+ */
+function javaMatcherFieldLines(
+  values: Record<string, WireMatcherValue[]> | undefined,
+  method: string,
+  wireField: string,
+  plain: (k: string, vs: string[]) => string[],
+  single: boolean,
+  extras: JavaMatcherExtras,
+): string[] {
+  if (!values) return [];
+  const lines: string[] = [];
+  for (const [k, all] of Object.entries(values)) {
+    const vs = single ? all.slice(0, 1) : all;
+    if (vs.every((v): v is string => typeof v === 'string')) {
+      lines.push(...plain(k, vs));
+      continue;
+    }
+    const args: string[] = [];
+    for (const v of vs) {
+      const expr = matcherValueToJava(v, extras.imports);
+      if (expr === undefined) extras.omitted.push(`httpRequest.${wireField}.${k}`);
+      else args.push(expr);
+    }
+    if (args.length === 0) continue;
+    extras.imports.add(JAVA_STRING_IMPORT);
+    lines.push(`    .${method}(string("${escapeJava(k)}"), ${args.join(', ')})`);
+  }
+  return lines;
+}
+
+/** Imports the request matcher needs beyond the form-driven ones, and the wire values it could not express. */
+interface JavaMatcherExtras {
+  imports: Set<string>;
+  omitted: string[];
+}
+
+function matcherToJava(matcher: StandardMatcher, extras: JavaMatcherExtras = { imports: new Set(), omitted: [] }): string {
   // DNS expectations use a DnsRequestDefinition matcher, not an HttpRequest.
   if (matcher.dns && matcher.dns.dnsName.trim()) {
     const dnsLines: string[] = ['dnsRequest()'];
@@ -2597,36 +2680,22 @@ function matcherToJava(matcher: StandardMatcher): string {
   if (matcher.method) lines.push(`    .withMethod("${escapeJava(matcher.method)}")`);
   if (matcher.path) lines.push(`    .withPath("${escapeJava(matcher.path)}")`);
 
-  const headers = parseKeyValueLines(matcher.headers, ':');
-  if (headers) {
-    for (const [k, vs] of Object.entries(headers)) {
-      for (const v of vs) {
-        lines.push(`    .withHeader("${escapeJava(k)}", "${escapeJava(v)}")`);
-      }
-    }
-  }
-
-  const query = parseKeyValueLines(matcher.queryString, '=');
-  if (query) {
-    for (const [k, vs] of Object.entries(query)) {
-      const values = vs.map((v) => `"${escapeJava(v)}"`).join(', ');
-      lines.push(`    .withQueryStringParameter("${escapeJava(k)}", ${values})`);
-    }
-  }
-
-  const cookies = parseKeyValueLines(matcher.cookies, '=');
-  if (cookies) {
-    for (const [k, vs] of Object.entries(cookies)) {
-      lines.push(`    .withCookie("${escapeJava(k)}", "${escapeJava(vs[0] ?? '')}")`);
-    }
-  }
-
-  const pathParams = parseKeyValueLines(matcher.pathParams, '=');
-  if (pathParams) {
-    for (const [k, vs] of Object.entries(pathParams)) {
-      lines.push(`    .withPathParameter("${escapeJava(k)}", "${escapeJava(vs[0] ?? '')}")`);
-    }
-  }
+  lines.push(...javaMatcherFieldLines(
+    parseMatcherKeyValueLines(matcher.headers, ':'), 'withHeader', 'headers',
+    (k, vs) => vs.map((v) => `    .withHeader("${escapeJava(k)}", "${escapeJava(v)}")`), false, extras,
+  ));
+  lines.push(...javaMatcherFieldLines(
+    parseMatcherKeyValueLines(matcher.queryString, '='), 'withQueryStringParameter', 'queryStringParameters',
+    (k, vs) => [`    .withQueryStringParameter("${escapeJava(k)}", ${vs.map((v) => `"${escapeJava(v)}"`).join(', ')})`], false, extras,
+  ));
+  lines.push(...javaMatcherFieldLines(
+    parseMatcherKeyValueLines(matcher.cookies, '='), 'withCookie', 'cookies',
+    (k, vs) => [`    .withCookie("${escapeJava(k)}", "${escapeJava(vs[0] ?? '')}")`], true, extras,
+  ));
+  lines.push(...javaMatcherFieldLines(
+    parseMatcherKeyValueLines(matcher.pathParams, '='), 'withPathParameter', 'pathParameters',
+    (k, vs) => [`    .withPathParameter("${escapeJava(k)}", "${escapeJava(vs[0] ?? '')}")`], false, extras,
+  ));
 
   if (matcher.bodyMatcherType === 'allOf') {
     const entries = allOfEntries(matcher);
@@ -3856,11 +3925,15 @@ export function standardToJava(matcher: StandardMatcher, action: StandardActionP
     terminalCode = actionToJava(action, wireAction);
   }
   const lines: string[] = [];
+  const matcherExtras: JavaMatcherExtras = { imports: wireAction.imports, omitted: [] };
+  const matcherJava = '    ' + matcherToJava(matcher, matcherExtras).split('\n').join('\n    ');
+  const matcherNote = matcherExtras.omitted.length > 0
+    ? `// NOTE: the Java preview omits matcher value(s) the builder cannot express: ${matcherExtras.omitted.join(', ')} -- see the JSON tab.`
+    : undefined;
   for (const imp of collectJavaImports(matcher, action, hasChaos, json, llmEmit?.imports, wireAction.imports)) lines.push(imp);
   lines.push('');
   lines.push('mockServerClient');
   const when = whenArgsFromJson(json);
-  const matcherJava = '    ' + matcherToJava(matcher).split('\n').join('\n    ');
   if (when.useFullWhen) {
     lines.push('  .when(');
     lines.push(matcherJava + ',');
@@ -3886,6 +3959,7 @@ export function standardToJava(matcher: StandardMatcher, action: StandardActionP
     lines.push('');
     lines.push('// NOTE: the step action payloads are simplified in the Java preview.');
     lines.push('// See the JSON tab for the full step bodies.');
+    if (matcherNote) lines.push(matcherNote);
     return lines.join('\n');
   }
 
@@ -3933,6 +4007,7 @@ export function standardToJava(matcher: StandardMatcher, action: StandardActionP
   if (unrep.length > 0) {
     lines.push(`// NOTE: the Java client API cannot set these preserved field(s): ${unrep.join(', ')} -- see the JSON tab.`);
   }
+  if (matcherNote) lines.push(matcherNote);
   return lines.join('\n');
 }
 

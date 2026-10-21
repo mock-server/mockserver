@@ -17,6 +17,7 @@
  */
 import { buildExpectationJson, type StandardMatcher, type StandardActionPayload } from '../standardCodegen.ts';
 import { clientHostPort, rustClientVersionRequirement } from './shared.ts';
+import { dateTimeBuilderExpr, dateTimeMatcherOf, nottableObjectOf } from '../matcherValue.ts';
 
 // ---------------------------------------------------------------------------
 // Low-level literal helpers
@@ -270,36 +271,56 @@ const REQUEST_BUILDER_KEYS = new Set([
   'secure',
 ]);
 
+const isPlainValue = (v: unknown): boolean => v === null || typeof v !== 'object';
+
+/** A `MatcherValue` expression; undefined for a form MatcherValue cannot hold (a schema). A plain
+ *  string goes through `From`, which parses it as the server would ("!foo" is not foo). */
+function rustMatcherValue(v: unknown): string | undefined {
+  if (isPlainValue(v)) return `MatcherValue::from(${rustStr(String(v))})`;
+  const dt = dateTimeMatcherOf(v);
+  if (dt) return dateTimeBuilderExpr(dt, { head: 'MatcherValue::', naming: 'snake', str: rustStr, bool: String });
+  const n = nottableObjectOf(v);
+  if (!n) return undefined;
+  return `MatcherValue { value: ${rustStr(n.value)}.to_string(), not: ${n.not}, optional: ${n.optional} }`;
+}
+
+/** Header / query / cookie / path-parameter wire fields and their plain and matcher builder methods. */
+const RUST_MATCHER_FAMILIES: [wire: string, plain: string, matcher: string, single: boolean][] = [
+  ['headers', 'header', 'header_matcher', false],
+  ['queryStringParameters', 'query_param', 'query_param_matcher', false],
+  ['cookies', 'cookie', 'cookie_matcher', true],
+  ['pathParameters', 'path_param', 'path_param_matcher', false],
+];
+
 function renderHttpRequest(req: Record<string, unknown>, ctx: Ctx, indent: number, name?: string): Rendered {
   const calls: string[] = [];
   if (typeof req['method'] === 'string') calls.push(`.method(${rustStr(req['method'])})`);
   if (typeof req['path'] === 'string') calls.push(`.path(${rustStr(req['path'])})`);
 
-  const headers = req['headers'];
-  if (headers && typeof headers === 'object') {
-    for (const [k, vs] of Object.entries(headers as Record<string, string[]>)) {
-      for (const v of vs) calls.push(`.header(${rustStr(k)}, ${rustStr(String(v))})`);
+  // A key holding a non-string value uses the *_matcher method. Once called it replaces the plain
+  // map for that field, so every plain call is emitted first. A field with a value MatcherValue
+  // cannot hold is carried whole through `extra` instead.
+  const rawFields = new Set<string>();
+  const matcherCalls: string[] = [];
+  for (const [wire, plain, matcher, single] of RUST_MATCHER_FAMILIES) {
+    const map = req[wire];
+    if (!map || typeof map !== 'object' || Array.isArray(map)) continue;
+    const entries = Object.entries(map as Record<string, unknown>).map(
+      ([k, v]) => [k, single ? [v] : Array.isArray(v) ? v : [v]] as [string, unknown[]],
+    );
+    if (entries.some(([, vs]) => vs.some((v) => !isPlainValue(v) && rustMatcherValue(v) === undefined))) {
+      rawFields.add(wire);
+      continue;
+    }
+    for (const [k, vs] of entries) {
+      if (vs.every(isPlainValue)) {
+        for (const v of vs) calls.push(`.${plain}(${rustStr(k)}, ${rustStr(String(v))})`);
+      } else {
+        for (const v of vs) matcherCalls.push(`.${matcher}(${rustStr(k)}, ${rustMatcherValue(v)})`);
+      }
     }
   }
-  const query = req['queryStringParameters'];
-  if (query && typeof query === 'object') {
-    for (const [k, vs] of Object.entries(query as Record<string, string[]>)) {
-      for (const v of vs) calls.push(`.query_param(${rustStr(k)}, ${rustStr(String(v))})`);
-    }
-  }
-  const cookies = req['cookies'];
-  if (cookies && typeof cookies === 'object') {
-    for (const [k, v] of Object.entries(cookies as Record<string, string>)) {
-      calls.push(`.cookie(${rustStr(k)}, ${rustStr(String(v))})`);
-    }
-  }
-  const pathParams = req['pathParameters'];
-  if (pathParams && typeof pathParams === 'object') {
-    for (const [k, vs] of Object.entries(pathParams as Record<string, unknown>)) {
-      // Plain multi-value form (the only form the composer emits).
-      if (Array.isArray(vs)) for (const v of vs) calls.push(`.path_param(${rustStr(k)}, ${rustStr(String(v))})`);
-    }
-  }
+  calls.push(...matcherCalls);
   if ('body' in req) calls.push(requestBodyCall(req['body'], indent));
 
   // A JWT with a `claims` object round-trips faithfully via the typed builder. A
@@ -319,6 +340,7 @@ function renderHttpRequest(req: Record<string, unknown>, ctx: Ctx, indent: numbe
   for (const [k, v] of Object.entries(req)) {
     if (REQUEST_BUILDER_KEYS.has(k)) {
       if (k === 'jwt' && !jwtTyped) extras.push([k, v]); // claims-less jwt → raw
+      if (rawFields.has(k)) extras.push([k, v]);
       continue;
     }
     extras.push([k, v]);

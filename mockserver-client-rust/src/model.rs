@@ -117,6 +117,27 @@ const OPTIONAL_CHAR: char = '?';
 ///     .header_matcher("X-Tag", MatcherValue::literal("!foo"))   // X-Tag IS "!foo"
 ///     .header_matcher("X-Env", MatcherValue::not_literal("dev")); // X-Env is NOT "dev"
 /// ```
+///
+/// [`before`](Self::before), [`after`](Self::after) and
+/// [`equal_to_date_time`](Self::equal_to_date_time) build a date-time matcher,
+/// which compares the actual value as a date-time and is sent in the object
+/// form (`{"after":"now -1 hours"}`):
+///
+/// ```
+/// use mockserver_client::{HttpRequest, MatcherValue};
+///
+/// let request = HttpRequest::new()
+///     .header_matcher("X-Issued-At", MatcherValue::after("now -1 hours"))
+///     .cookie_matcher(
+///         "seen",
+///         MatcherValue::before("2026-10-21T00:00:00Z").with_actual_format("rfc1123"),
+///     );
+/// ```
+///
+/// A date-time matcher is stored in [`value`](Self::value) in an internal
+/// encoding (the fields of this struct are public, so a new field would break
+/// struct literals); inspect it with [`is_date_time`](Self::is_date_time) rather
+/// than reading `value`.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct MatcherValue {
     /// The matcher text, taken verbatim — markers in it are not parsed.
@@ -130,6 +151,54 @@ pub struct MatcherValue {
 /// Mirrors Java's `StringUtils.isBlank`: empty or whitespace only.
 fn is_blank(s: &str) -> bool {
     s.trim().is_empty()
+}
+
+/// Marks a [`MatcherValue::value`] that holds an encoded [`DateTimeSpec`]. NUL
+/// cannot appear in a real header, cookie or parameter value, so the marker
+/// cannot collide with a literal the user meant.
+const DATE_TIME_PREFIX: &str = "\u{0}mockserver-date-time\u{0}";
+
+/// The date-time object form minus `not` (carried by [`MatcherValue::not`]).
+/// Field order mirrors the Java serializer; exactly one operator is set.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DateTimeSpec {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    before: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    after: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    equal_to_date_time: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    actual_format: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    truncate_expected: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    truncate_actual: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    apply_truncation_last: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    zone: Option<String>,
+}
+
+impl DateTimeSpec {
+    fn operator_count(&self) -> usize {
+        [&self.before, &self.after, &self.equal_to_date_time]
+            .iter()
+            .filter(|o| o.is_some())
+            .count()
+    }
+
+    fn encode(&self) -> String {
+        let json = serde_json::to_string(self)
+            .expect("BUG: DateTimeSpec serialization failed for an in-memory value");
+        format!("{}{}", DATE_TIME_PREFIX, json)
+    }
+
+    fn decode(value: &str) -> Option<Self> {
+        let spec: Self = serde_json::from_str(value.strip_prefix(DATE_TIME_PREFIX)?).ok()?;
+        (spec.operator_count() == 1).then_some(spec)
+    }
 }
 
 impl MatcherValue {
@@ -158,6 +227,125 @@ impl MatcherValue {
             not: false,
             optional: true,
         }
+    }
+
+    fn date_time(spec: DateTimeSpec) -> Self {
+        Self {
+            value: spec.encode(),
+            not: false,
+            optional: false,
+        }
+    }
+
+    /// A date-time matcher that matches a value strictly before `expected`:
+    /// `now`, `now <offset>` (e.g. `now -1 hours`), or an ISO-8601, RFC-1123 or
+    /// epoch date-time. The server validates the text.
+    pub fn before(expected: impl Into<String>) -> Self {
+        Self::date_time(DateTimeSpec {
+            before: Some(expected.into()),
+            ..DateTimeSpec::default()
+        })
+    }
+
+    /// A date-time matcher that matches a value strictly after `expected`. See
+    /// [`before`](Self::before) for the accepted forms.
+    pub fn after(expected: impl Into<String>) -> Self {
+        Self::date_time(DateTimeSpec {
+            after: Some(expected.into()),
+            ..DateTimeSpec::default()
+        })
+    }
+
+    /// A date-time matcher that matches a value equal to `expected`. See
+    /// [`before`](Self::before) for the accepted forms.
+    pub fn equal_to_date_time(expected: impl Into<String>) -> Self {
+        Self::date_time(DateTimeSpec {
+            equal_to_date_time: Some(expected.into()),
+            ..DateTimeSpec::default()
+        })
+    }
+
+    /// Whether this is a date-time matcher built by [`before`](Self::before),
+    /// [`after`](Self::after) or [`equal_to_date_time`](Self::equal_to_date_time),
+    /// or decoded from the date-time object form.
+    pub fn is_date_time(&self) -> bool {
+        self.date_time_spec().is_some()
+    }
+
+    fn date_time_spec(&self) -> Option<DateTimeSpec> {
+        DateTimeSpec::decode(&self.value)
+    }
+
+    /// Apply `f` to the date-time options of a date-time matcher.
+    ///
+    /// # Panics
+    /// Panics if this is not a date-time matcher, so a misplaced option is never silently dropped.
+    fn map_date_time(mut self, option: &str, f: impl FnOnce(&mut DateTimeSpec)) -> Self {
+        let Some(mut spec) = self.date_time_spec() else {
+            panic!("{option} applies only to a date-time matcher; build one with MatcherValue::before, after or equal_to_date_time");
+        };
+        f(&mut spec);
+        self.value = spec.encode();
+        self
+    }
+
+    /// The format of the ACTUAL value (e.g. `rfc1123`, `dd/MM/yyyy`).
+    ///
+    /// # Panics
+    /// Panics if this is not a date-time matcher.
+    pub fn with_actual_format(self, actual_format: impl Into<String>) -> Self {
+        let actual_format = actual_format.into();
+        self.map_date_time("with_actual_format", |s| {
+            s.actual_format = Some(actual_format)
+        })
+    }
+
+    /// Truncate the EXPECTED date-time before comparing (e.g. `startOfDay`).
+    ///
+    /// # Panics
+    /// Panics if this is not a date-time matcher.
+    pub fn with_truncate_expected(self, truncate_expected: impl Into<String>) -> Self {
+        let truncate_expected = truncate_expected.into();
+        self.map_date_time("with_truncate_expected", |s| {
+            s.truncate_expected = Some(truncate_expected)
+        })
+    }
+
+    /// Truncate the ACTUAL date-time before comparing (e.g. `startOfDay`).
+    ///
+    /// # Panics
+    /// Panics if this is not a date-time matcher.
+    pub fn with_truncate_actual(self, truncate_actual: impl Into<String>) -> Self {
+        let truncate_actual = truncate_actual.into();
+        self.map_date_time("with_truncate_actual", |s| {
+            s.truncate_actual = Some(truncate_actual)
+        })
+    }
+
+    /// Apply truncation after, rather than before, the `now` offset.
+    ///
+    /// # Panics
+    /// Panics if this is not a date-time matcher.
+    pub fn with_apply_truncation_last(self, apply_truncation_last: bool) -> Self {
+        self.map_date_time("with_apply_truncation_last", |s| {
+            s.apply_truncation_last = Some(apply_truncation_last)
+        })
+    }
+
+    /// The time zone used to interpret date-times without one (e.g.
+    /// `Europe/London`).
+    ///
+    /// # Panics
+    /// Panics if this is not a date-time matcher.
+    pub fn with_zone(self, zone: impl Into<String>) -> Self {
+        let zone = zone.into();
+        self.map_date_time("with_zone", |s| s.zone = Some(zone))
+    }
+
+    /// Negate the matcher. Sets [`not`](Self::not) on any value, date-time or not.
+    pub fn with_not(mut self, not: bool) -> Self {
+        self.not = not;
+        self
     }
 
     /// Render the plain-string form, matching `NottableString.serialise()`.
@@ -208,6 +396,10 @@ impl MatcherValue {
     /// for a leading marker, so it stays correct for compound markers (`?!`,
     /// `!?`) and any marker added later.
     fn ambiguous(&self) -> bool {
+        if self.is_date_time() {
+            // Has no plain-string form; it must be sent as an object.
+            return true;
+        }
         if is_blank(&self.value) {
             // A blank value has no marker to misread, and it cannot be expressed
             // in the object form either: the server's object-form reader ignores
@@ -236,7 +428,12 @@ impl From<&str> for MatcherValue {
 }
 
 impl std::fmt::Display for MatcherValue {
+    /// The plain-string form, or the JSON object form for a date-time matcher.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.is_date_time() {
+            let json = serde_json::to_string(self).map_err(|_| std::fmt::Error)?;
+            return f.write_str(&json);
+        }
         f.write_str(&self.serialise())
     }
 }
@@ -246,10 +443,42 @@ impl Serialize for MatcherValue {
     where
         S: serde::Serializer,
     {
+        use serde::ser::SerializeMap;
+        if let Some(spec) = self.date_time_spec() {
+            // Like Java's writeDateTime: "not" only when true, then the operator
+            // and the options that are set. "optional" is not part of the form;
+            // it is written only if set so the server rejects it loudly.
+            let mut map = serializer.serialize_map(None)?;
+            if self.not {
+                map.serialize_entry("not", &true)?;
+            }
+            let strings = [
+                ("before", &spec.before),
+                ("after", &spec.after),
+                ("equalToDateTime", &spec.equal_to_date_time),
+                ("actualFormat", &spec.actual_format),
+                ("truncateExpected", &spec.truncate_expected),
+                ("truncateActual", &spec.truncate_actual),
+            ];
+            for (key, value) in strings {
+                if let Some(value) = value {
+                    map.serialize_entry(key, value)?;
+                }
+            }
+            if let Some(last) = spec.apply_truncation_last {
+                map.serialize_entry("applyTruncationLast", &last)?;
+            }
+            if let Some(zone) = &spec.zone {
+                map.serialize_entry("zone", zone)?;
+            }
+            if self.optional {
+                map.serialize_entry("optional", &true)?;
+            }
+            return map.end();
+        }
         if !self.ambiguous() {
             return serializer.serialize_str(&self.serialise());
         }
-        use serde::ser::SerializeMap;
         // "not" is written even when false so the intent is unmistakable to a
         // reader and to the other clients, rather than relying on absent==false.
         let count = if self.optional { 3 } else { 2 };
@@ -280,7 +509,10 @@ impl<'de> Deserialize<'de> for MatcherValue {
             type Value = MatcherValue;
 
             fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                f.write_str("a matcher string or an object with a \"value\" field")
+                f.write_str(
+                    "a matcher string, an object with a \"value\" field, or a date-time \
+                     object with \"before\", \"after\" or \"equalToDateTime\"",
+                )
             }
 
             fn visit_str<E>(self, v: &str) -> std::result::Result<MatcherValue, E>
@@ -297,16 +529,48 @@ impl<'de> Deserialize<'de> for MatcherValue {
                 let mut value: Option<String> = None;
                 let mut not = false;
                 let mut optional = false;
+                let mut date_time = DateTimeSpec::default();
                 while let Some(key) = map.next_key::<String>()? {
                     match key.as_str() {
                         "value" => value = Some(map.next_value()?),
                         "not" => not = map.next_value()?,
                         "optional" => optional = map.next_value()?,
+                        "before" => date_time.before = Some(map.next_value()?),
+                        "after" => date_time.after = Some(map.next_value()?),
+                        "equalToDateTime" => date_time.equal_to_date_time = Some(map.next_value()?),
+                        "actualFormat" => date_time.actual_format = Some(map.next_value()?),
+                        "truncateExpected" => date_time.truncate_expected = Some(map.next_value()?),
+                        "truncateActual" => date_time.truncate_actual = Some(map.next_value()?),
+                        "applyTruncationLast" => {
+                            date_time.apply_truncation_last = Some(map.next_value()?)
+                        }
+                        "zone" => date_time.zone = Some(map.next_value()?),
                         // Ignore any other key so the object form stays
                         // forward-compatible with fields added later.
                         _ => {
                             let _ = map.next_value::<serde::de::IgnoredAny>()?;
                         }
+                    }
+                }
+                match date_time.operator_count() {
+                    0 => {}
+                    1 if value.is_none() => {
+                        return Ok(MatcherValue {
+                            value: date_time.encode(),
+                            not,
+                            optional,
+                        });
+                    }
+                    1 => {
+                        return Err(serde::de::Error::custom(
+                            "a date-time matcher cannot also have a \"value\"",
+                        ));
+                    }
+                    _ => {
+                        return Err(serde::de::Error::custom(
+                            "a date-time matcher needs exactly one of \"before\", \"after\" \
+                             or \"equalToDateTime\"",
+                        ));
                     }
                 }
                 let value = value.ok_or_else(|| serde::de::Error::missing_field("value"))?;

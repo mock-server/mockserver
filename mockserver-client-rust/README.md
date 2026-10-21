@@ -227,6 +227,48 @@ println!("Listening on: {:?}", ports.ports);
 client.reset()?;
 ```
 
+### Header, query-string, cookie and path parameter value matchers
+
+Plain values passed to `header`, `query_param`, `cookie` and `path_param` are
+exact-or-regex strings, and a leading `!` negates them. The `*_matcher` builders
+take a `MatcherValue` instead. Use it to match a value that really starts with
+`!` or `?`, or to compare the value as a date-time:
+
+```rust
+use mockserver_client::*;
+
+client.when(
+    HttpRequest::new()
+        .path("/date-time")
+        .header_matcher("X-Tag", MatcherValue::literal("!foo"))       // X-Tag IS "!foo"
+        .header_matcher("X-Env", MatcherValue::not_literal("dev"))    // X-Env is NOT "dev"
+        .header_matcher("X-Issued-At", MatcherValue::after("now -1 hours"))
+        .header_matcher(
+            "If-Modified-Since",
+            MatcherValue::before("2026-10-21T00:00:00Z").with_actual_format("rfc1123"),
+        )
+        .query_param_matcher(
+            "from",
+            MatcherValue::after("2026-01-01")
+                .with_actual_format("dd/MM/yyyy")
+                .with_zone("Europe/London"),
+        )
+        .cookie_matcher(
+            "seen",
+            MatcherValue::equal_to_date_time("now")
+                .with_truncate_expected("startOfDay")
+                .with_truncate_actual("startOfDay"),
+        ),
+)
+.respond(HttpResponse::new().status_code(200))?;
+```
+
+`before`, `after` and `equal_to_date_time` accept `now`, `now <offset>` (for
+example `now -1 hours`), or an ISO-8601, RFC-1123 or epoch date-time. The
+optional `with_actual_format`, `with_truncate_expected`, `with_truncate_actual`,
+`with_apply_truncation_last`, `with_zone` and `with_not` each return a new
+value. A plain string such as `"before:2026-01-01"` is still matched literally.
+
 ### JWT and composite (ALL_OF) body matchers
 
 Match requests by the claims in a JSON Web Token, and combine several body

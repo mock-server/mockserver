@@ -141,6 +141,15 @@ describe('previewMatch', () => {
     expect(row.verdict).toBe('unsupported');
   });
 
+  it('flags a date-time header value as unsupported, not a presence check', () => {
+    const exp = { httpRequest: { headers: { Accept: [{ after: 'now -1 hours' }] } } };
+    const res = previewMatch(exp, baseSample);
+    expect(res.matches).toBe(false);
+    expect(res.hasUnsupported).toBe(true);
+    const row = res.results.find((r) => r.field === 'header "Accept"')!;
+    expect(row.verdict).toBe('unsupported');
+  });
+
   it('flags an object-form negated header key as unsupported, not a false match', () => {
     const exp = { httpRequest: { headers: { '!X-Internal': ['true'] } } };
     const res = previewMatch(exp, baseSample);

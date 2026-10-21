@@ -526,7 +526,8 @@ The fundamental primitive throughout the model. A string value that can be negat
 |---------|-------|---------|
 | Standard | `NottableString` | Exact or regex string matching with NOT operator |
 | Optional | `NottableOptionalString` | Matches if present; absence also matches |
-| Schema | `NottableSchemaString` | Validates against a JSON Schema |
+| Schema | `NottableSchemaString` | Validates against a JSON Schema (a `NottableMatcherString`) |
+| Date-time | `NottableDateTimeString` | `before` / `after` / `equalToDateTime` comparison (a `NottableMatcherString`) |
 
 ### Expectation
 
@@ -814,6 +815,31 @@ Each field uses the appropriate body matcher type:
 | Cookies | `HashMapMatcher` |
 | Body (by type) | `JsonStringMatcher`, `XmlStringMatcher`, `RegexStringMatcher`, `BinaryMatcher`, etc. |
 | keepAlive, secure | `BooleanMatcher` |
+
+### Matcher values: plain strings, directives and matcher objects
+
+A header, cookie, query-string or path-parameter value is matched in one of two ways:
+
+- **Plain string.** Exact or regex matching, plus two string directives read only by `RegexStringMatcher`'s key/value constructor: numeric comparison (`> 60`, `!== 5`, `NumericComparisonMatcher`) and content negotiation (`accept:application/json`, `AcceptHeaderMatcher`).
+- **Matcher object.** A `NottableMatcherString` subtype built only from the explicit object form of a value: `NottableSchemaString` (`{"schema": ...}`) or `NottableDateTimeString` (`{"after": "now -1 days", ...}`). `RegexStringMatcher.matches` dispatches it with the same `instanceof` it always used for schema values, so a plain value takes exactly the branches it took before.
+
+**Date-time matchers** (`NottableDateTimeString`, WireMock's `before` / `after` / `equalToDateTime`):
+
+- Fields: `before` / `after` / `equalToDateTime`, plus optional `actualFormat`, `truncateExpected`, `truncateActual`, `applyTruncationLast` and `zone`, plus `not`.
+- The expected value is `now` (read from `TimeService.now()`, so the controllable clock applies), `now` with a `DateOffset`, or an ISO-8601 / RFC-1123 / epoch literal.
+- The Java builder is `NottableDateTimeString.after(...)` and its siblings. Instances are immutable, and each step validates.
+- The serialiser writes the object form, and `NottableStringToJavaSerializer` generates the builder call.
+- Offsets, truncation names and strict pattern parsing are shared with the `dates` template helper through `org.mockserver.time` (`DateOffset`, `DateTruncation`, `StrictDateFormats`).
+
+Cost model:
+
+- **Expectations without date-time matchers** do no new work. The dispatch `instanceof` was retargeted from `NottableSchemaString` to its new superclass, so the check count is the same. `NottableString` gained no field. `CandidateIndex` treats every `NottableMatcherString` as non-literal, as it did schema values. `DateTimeMatcherHotPathStructureTest` pins all three facts.
+- **When it is parsed.** The value is parsed once, when the `NottableDateTimeString` is constructed (deserialisation or the Java builder), into an immutable `DateTimeComparisonMatcher`. An invalid value rejects the expectation with the reason.
+- **Per match, expected side.** A literal expected value is a precomputed `Instant`. `now` costs one `Instant.plus(Duration)` when the offset is calendar-free (seconds to hours, or days/weeks in a fixed-offset zone) and there is no expected truncation; otherwise it costs a `ZonedDateTime` offset/truncate.
+- **Per match, actual side.** `SubSetMatcher` compares a matcher value against every value of the request map, not just the one under the same key, so most values a date-time matcher sees are not dates at all. The form is chosen from the first character (digits for epoch and ISO, a letter for RFC-1123), then the formatter's syntax is checked with `parseUnresolved` and a `ParsePosition`, which never throws. A value that is not a date-time, such as `application/json`, is rejected without an exception; `DateTimeComparisonMatcherCostTest` bounds it below 2 KB per comparison at depth 400 (an exception there costs about 9 KB). A value with date-time syntax is then parsed and resolved strictly, so only an impossible date such as 30 February creates an exception.
+- **Unreadable actual value.** It never matches, even when negated, and never throws to the caller.
+
+Body JSONPath/XPath date comparisons are not supported yet; they need a value matcher on `JsonPathBody`/`XPathBody`.
 
 ### HttpRequestsPropertiesMatcher (OpenAPI)
 

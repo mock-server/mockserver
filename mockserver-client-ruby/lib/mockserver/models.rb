@@ -244,7 +244,7 @@ module MockServer
   def self.serialize_key_multi_values(items, key_match_style = nil)
     if key_match_style
       map = { 'keyMatchStyle' => key_match_style }
-      (items || []).each { |item| (map[item.name] ||= []).concat(Array(item.values)) }
+      (items || []).each { |item| (map[item.name] ||= []).concat(serialize_matcher_values(Array(item.values))) }
       return map
     end
     return nil if items.nil?
@@ -291,8 +291,41 @@ module MockServer
       next item unless item.is_a?(Hash)
 
       item = stringify_keys(item)
-      KeyToMultiValue.new(name: item.fetch('name', ''), values: item.key?('value') ? [item['value']] : item.fetch('values', []))
+      values = item.key?('value') ? [item['value']] : item.fetch('values', [])
+      KeyToMultiValue.new(name: item.fetch('name', ''), values: deserialize_matcher_values(values))
     end
+  end
+
+  # @api private
+  # A header, query, path-parameter or cookie value is a plain String, the
+  # nottable / schema object form (kept as a Hash) or a DateTimeMatcher. Only a
+  # Hash holding exactly one date-time operator and nothing but date-time keys
+  # becomes a DateTimeMatcher, so any other object form round-trips unchanged.
+  def self.date_time_matcher_hash?(value)
+    return false unless value.is_a?(Hash)
+
+    keys = value.keys.map(&:to_s)
+    (keys & DateTimeMatcher::OPERATOR_FIELDS).length == 1 && (keys - DateTimeMatcher::FIELDS).empty?
+  end
+
+  # @api private
+  def self.deserialize_matcher_value(value)
+    date_time_matcher_hash?(value) ? DateTimeMatcher.from_hash(stringify_keys(value)) : value
+  end
+
+  # @api private
+  def self.deserialize_matcher_values(values)
+    values.is_a?(Array) ? values.map { |v| deserialize_matcher_value(v) } : deserialize_matcher_value(values)
+  end
+
+  # @api private
+  def self.serialize_matcher_value(value)
+    value.is_a?(DateTimeMatcher) ? value.to_h : value
+  end
+
+  # @api private
+  def self.serialize_matcher_values(values)
+    values.is_a?(Array) ? values.map { |v| serialize_matcher_value(v) } : serialize_matcher_value(values)
   end
 
   # @api private
@@ -304,7 +337,7 @@ module MockServer
   def self.serialize_key_multi_values_object(items)
     return nil if items.nil?
 
-    items.each_with_object({}) { |item, map| map[item.name] = item.values }
+    items.each_with_object({}) { |item, map| map[item.name] = serialize_matcher_values(item.values) }
   end
 
   # @api private
@@ -313,7 +346,7 @@ module MockServer
 
     if data.is_a?(Hash)
       return data.reject { |k, _v| k == 'keyMatchStyle' }
-                 .map { |k, v| KeyToMultiValue.new(name: k, values: v.is_a?(Array) ? v : [v]) }
+                 .map { |k, v| KeyToMultiValue.new(name: k, values: deserialize_matcher_values(v.is_a?(Array) ? v : [v])) }
     end
 
     data.map do |item|
@@ -334,7 +367,7 @@ module MockServer
     return nil if items.nil?
 
     items.each_with_object({}) do |item, map|
-      map[item.name] = item.values.is_a?(Array) ? item.values.first : item.values
+      map[item.name] = serialize_matcher_value(item.values.is_a?(Array) ? item.values.first : item.values)
     end
   end
 
@@ -343,7 +376,7 @@ module MockServer
     return nil if data.nil?
 
     if data.is_a?(Hash)
-      return data.map { |k, v| KeyToMultiValue.new(name: k, values: v.is_a?(Array) ? v : [v]) }
+      return data.map { |k, v| KeyToMultiValue.new(name: k, values: deserialize_matcher_values(v.is_a?(Array) ? v : [v])) }
     end
 
     # tolerate the legacy array form on read
@@ -517,7 +550,7 @@ module MockServer
     def to_h
       {
         'name'   => @name,
-        'values' => @values
+        'values' => MockServer.serialize_matcher_values(@values)
       }
     end
 
@@ -526,8 +559,133 @@ module MockServer
 
       new(
         name:   data.fetch('name', ''),
-        values: data.fetch('values', [])
+        values: MockServer.deserialize_matcher_values(data.fetch('values', []))
       )
+    end
+  end
+
+  # A date-time matcher for a header, query-string parameter, path parameter or
+  # cookie value, written on the wire as an object such as
+  # { "after": "now -1 hours", "actualFormat": "rfc1123" }. Instances are frozen;
+  # every with_* method returns a new matcher.
+  #
+  #   request.with_header('X-Issued-At', MockServer::DateTimeMatcher.after('now -1 hours'))
+  class DateTimeMatcher
+    OPERATOR_FIELDS = %w[before after equalToDateTime].freeze
+    FIELDS = (%w[not] + OPERATOR_FIELDS +
+              %w[actualFormat truncateExpected truncateActual applyTruncationLast zone]).freeze
+
+    # +operator+ is the wire field name: 'before', 'after' or 'equalToDateTime'.
+    attr_reader :operator, :expected, :actual_format, :truncate_expected, :truncate_actual,
+                :apply_truncation_last, :zone, :not_matcher
+
+    def initialize(operator:, expected:, actual_format: nil, truncate_expected: nil, truncate_actual: nil,
+                   apply_truncation_last: nil, zone: nil, not_matcher: nil)
+      unless operator.nil? || OPERATOR_FIELDS.include?(operator)
+        raise ArgumentError, "Unknown date-time operator #{operator.inspect}; expected one of #{OPERATOR_FIELDS.join(', ')}"
+      end
+
+      @operator = operator
+      @expected = expected
+      @actual_format = actual_format
+      @truncate_expected = truncate_expected
+      @truncate_actual = truncate_actual
+      @apply_truncation_last = apply_truncation_last
+      @zone = zone
+      @not_matcher = not_matcher
+      freeze
+    end
+
+    def self.before(expected)
+      new(operator: 'before', expected: expected)
+    end
+
+    def self.after(expected)
+      new(operator: 'after', expected: expected)
+    end
+
+    def self.equal_to_date_time(expected)
+      new(operator: 'equalToDateTime', expected: expected)
+    end
+
+    def with_actual_format(actual_format)
+      copy(actual_format: actual_format)
+    end
+
+    def with_truncate_expected(truncate_expected)
+      copy(truncate_expected: truncate_expected)
+    end
+
+    def with_truncate_actual(truncate_actual)
+      copy(truncate_actual: truncate_actual)
+    end
+
+    def with_apply_truncation_last(apply_truncation_last)
+      copy(apply_truncation_last: apply_truncation_last)
+    end
+
+    def with_zone(zone)
+      copy(zone: zone)
+    end
+
+    def with_not(not_matcher)
+      copy(not_matcher: not_matcher)
+    end
+
+    # Field order and omission follow the server: not only when true, every
+    # other optional field only when set.
+    def to_h
+      result = {}
+      result['not'] = true if @not_matcher == true
+      result[@operator] = @expected unless @operator.nil?
+      result['actualFormat'] = @actual_format unless @actual_format.nil?
+      result['truncateExpected'] = @truncate_expected unless @truncate_expected.nil?
+      result['truncateActual'] = @truncate_actual unless @truncate_actual.nil?
+      result['applyTruncationLast'] = @apply_truncation_last unless @apply_truncation_last.nil?
+      result['zone'] = @zone unless @zone.nil?
+      result
+    end
+
+    def to_json(*args)
+      to_h.to_json(*args)
+    end
+
+    def ==(other)
+      other.is_a?(DateTimeMatcher) && other.to_h == to_h
+    end
+    alias eql? ==
+
+    def hash
+      to_h.hash
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      operators = OPERATOR_FIELDS.select { |field| data.key?(field) }
+      if operators.length > 1
+        raise ArgumentError, "A date-time matcher takes one of #{OPERATOR_FIELDS.join(', ')}, got #{operators.join(', ')}"
+      end
+
+      new(
+        operator:              operators.first,
+        expected:              operators.first && data[operators.first],
+        actual_format:         data['actualFormat'],
+        truncate_expected:     data['truncateExpected'],
+        truncate_actual:       data['truncateActual'],
+        apply_truncation_last: data['applyTruncationLast'],
+        zone:                  data['zone'],
+        not_matcher:           data['not']
+      )
+    end
+
+    private
+
+    def copy(**changes)
+      fields = { operator: @operator, expected: @expected, actual_format: @actual_format,
+                 truncate_expected: @truncate_expected, truncate_actual: @truncate_actual,
+                 apply_truncation_last: @apply_truncation_last, zone: @zone, not_matcher: @not_matcher }
+      self.class.new(**fields.merge(changes))
     end
   end
 

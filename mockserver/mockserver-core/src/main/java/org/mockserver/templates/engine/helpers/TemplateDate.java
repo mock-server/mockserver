@@ -1,14 +1,15 @@
 package org.mockserver.templates.engine.helpers;
 
+import org.mockserver.time.DateOffset;
+import org.mockserver.time.DateTruncation;
+import org.mockserver.time.StrictDateFormats;
 import org.mockserver.time.TimeService;
 
 import java.time.DateTimeException;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -16,15 +17,12 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
 import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
-import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.TemporalQueries;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -41,14 +39,9 @@ public final class TemplateDate {
      */
     static final DateTimeFormatter IMF_FIXDATE = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.ENGLISH).withZone(ZoneOffset.UTC);
 
-    // the JDK's ISO formatters are already strict; its RFC-1123 one is SMART, which turns 30 Feb into 28 Feb
-    private static final DateTimeFormatter RFC_1123_STRICT = DateTimeFormatter.RFC_1123_DATE_TIME.withResolverStyle(ResolverStyle.STRICT);
-    // epoch values with a magnitude below this are seconds (up to the year 5138), at or above it millis
-    private static final long EPOCH_MILLIS_THRESHOLD = 100_000_000_000L;
+    private static final DateTimeFormatter RFC_1123_STRICT = StrictDateFormats.RFC_1123_STRICT;
+    private static final long EPOCH_MILLIS_THRESHOLD = StrictDateFormats.EPOCH_MILLIS_THRESHOLD;
     private static final Pattern EPOCH_NUMBER = Pattern.compile("[+-]?\\d{1,19}");
-    private static final Pattern OFFSET_PART = Pattern.compile("([+-]?\\d+)\\s*([a-zA-Z]+)");
-    private static final Pattern OFFSET_SPEC = Pattern.compile("\\s*(?:[+-]?\\d+\\s*[a-zA-Z]+[\\s,]*)+");
-    private static final Pattern TRUNCATION_SEPARATORS = Pattern.compile("[\\s_-]");
     // Patterns and zones can come from request data, so each cache holds at most MAX_CACHED entries of
     // short keys (emptied when full), and an over-long pattern or zone is refused outright.
     static final int MAX_CACHED = 256;
@@ -59,7 +52,6 @@ public final class TemplateDate {
     static final Map<String, DateTimeFormatter> PARSERS = new ConcurrentHashMap<>();
     static final Map<String, ZoneId> ZONES = new ConcurrentHashMap<>();
     private static final int MAX_QUOTED_LENGTH = 100;
-    private static final String TRUNCATIONS = "startOfSecond, startOfMinute, startOfHour, startOfDay, firstDayOfMonth, lastDayOfMonth, firstDayOfNextMonth, firstDayOfYear, lastDayOfYear or firstDayOfNextYear";
 
     private final ZonedDateTime value;
 
@@ -272,7 +264,7 @@ public final class TemplateDate {
         if (cached != null) {
             return cached;
         }
-        DateTimeFormatter parser = compile(yearOfEraAsYear(pattern), pattern).withResolverStyle(ResolverStyle.STRICT);
+        DateTimeFormatter parser = compile(StrictDateFormats.strictPattern(pattern), pattern).withResolverStyle(ResolverStyle.STRICT);
         cache(PARSERS, pattern, parser);
         return parser;
     }
@@ -293,22 +285,6 @@ public final class TemplateDate {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("dates: invalid date pattern " + quote(pattern) + ": " + brief(e.getMessage()));
         }
-    }
-
-    private static String yearOfEraAsYear(String pattern) {
-        if (pattern.indexOf('y') < 0) {
-            return pattern;
-        }
-        StringBuilder result = new StringBuilder(pattern.length());
-        boolean quoted = false;
-        for (int i = 0; i < pattern.length(); i++) {
-            char c = pattern.charAt(i);
-            if (c == '\'') {
-                quoted = !quoted;
-            }
-            result.append(!quoted && c == 'y' ? 'u' : c);
-        }
-        return result.toString();
     }
 
     private static <V> void cache(Map<String, V> cache, String key, V value) {
@@ -396,104 +372,59 @@ public final class TemplateDate {
      * {@code PT90M}.
      */
     public TemplateDate offset(String offset) {
-        if (offset == null || offset.trim().isEmpty()) {
-            throw new IllegalArgumentException("dates: no date offset given");
-        }
-        String spec = offset.trim();
-        String unsigned = spec.startsWith("-") || spec.startsWith("+") ? spec.substring(1) : spec;
+        DateOffset parsed;
         try {
-            if (unsigned.startsWith("P") || unsigned.startsWith("p")) {
-                return unsigned.toUpperCase(Locale.ROOT).contains("T")
-                    ? new TemplateDate(value.plus(Duration.parse(spec)))
-                    : new TemplateDate(value.plus(Period.parse(spec)));
-            }
-            if (OFFSET_SPEC.matcher(spec).matches()) {
-                ZonedDateTime result = value;
-                Matcher part = OFFSET_PART.matcher(spec);
-                while (part.find()) {
-                    long amount = Long.parseLong(part.group(1).startsWith("+") ? part.group(1).substring(1) : part.group(1));
-                    result = result.plus(amount, offsetUnit(part.group(2), offset));
-                }
-                return new TemplateDate(result);
-            }
-        } catch (DateTimeException | ArithmeticException | NumberFormatException e) {
-            throw new IllegalArgumentException("dates: invalid date offset " + quote(offset) + ": " + brief(e.getMessage()));
+            parsed = DateOffset.parse(offset);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("dates: " + e.getMessage());
         }
-        throw new IllegalArgumentException("dates: invalid date offset " + quote(offset) + "; use an amount and unit such as \"1 days\", \"-2 hours\" or \"+3 months\", or an ISO-8601 period such as P1D or PT1H");
-    }
-
-    private static ChronoUnit offsetUnit(String unit, String offset) {
-        switch (unit.toLowerCase(Locale.ROOT)) {
-            case "second":
-            case "seconds":
-                return ChronoUnit.SECONDS;
-            case "minute":
-            case "minutes":
-                return ChronoUnit.MINUTES;
-            case "hour":
-            case "hours":
-                return ChronoUnit.HOURS;
-            case "day":
-            case "days":
-                return ChronoUnit.DAYS;
-            case "week":
-            case "weeks":
-                return ChronoUnit.WEEKS;
-            case "month":
-            case "months":
-                return ChronoUnit.MONTHS;
-            case "year":
-            case "years":
-                return ChronoUnit.YEARS;
-            default:
-                throw new IllegalArgumentException("dates: invalid date offset " + quote(offset) + ": unknown unit " + quote(unit) + "; use seconds, minutes, hours, days, weeks, months or years");
+        try {
+            return new TemplateDate(parsed.addTo(value));
+        } catch (DateTimeException | ArithmeticException e) {
+            throw new IllegalArgumentException("dates: invalid date offset " + quote(offset) + ": " + brief(e.getMessage()));
         }
     }
 
     // ----- truncation (in this date's time zone) -----
 
     public TemplateDate startOfSecond() {
-        return new TemplateDate(value.truncatedTo(ChronoUnit.SECONDS));
+        return new TemplateDate(DateTruncation.START_OF_SECOND.apply(value));
     }
 
     public TemplateDate startOfMinute() {
-        return new TemplateDate(value.truncatedTo(ChronoUnit.MINUTES));
+        return new TemplateDate(DateTruncation.START_OF_MINUTE.apply(value));
     }
 
     public TemplateDate startOfHour() {
-        return new TemplateDate(value.truncatedTo(ChronoUnit.HOURS));
+        return new TemplateDate(DateTruncation.START_OF_HOUR.apply(value));
     }
 
     public TemplateDate startOfDay() {
-        return atStartOf(value.toLocalDate());
+        return new TemplateDate(DateTruncation.START_OF_DAY.apply(value));
     }
 
     public TemplateDate firstDayOfMonth() {
-        return atStartOf(value.toLocalDate().with(TemporalAdjusters.firstDayOfMonth()));
+        return new TemplateDate(DateTruncation.FIRST_DAY_OF_MONTH.apply(value));
     }
 
     public TemplateDate lastDayOfMonth() {
-        return atStartOf(value.toLocalDate().with(TemporalAdjusters.lastDayOfMonth()));
+        return new TemplateDate(DateTruncation.LAST_DAY_OF_MONTH.apply(value));
     }
 
     public TemplateDate firstDayOfNextMonth() {
-        return atStartOf(value.toLocalDate().with(TemporalAdjusters.firstDayOfNextMonth()));
+        return new TemplateDate(DateTruncation.FIRST_DAY_OF_NEXT_MONTH.apply(value));
     }
 
     public TemplateDate firstDayOfYear() {
-        return atStartOf(value.toLocalDate().with(TemporalAdjusters.firstDayOfYear()));
+        return new TemplateDate(DateTruncation.FIRST_DAY_OF_YEAR.apply(value));
     }
 
     public TemplateDate lastDayOfYear() {
-        return atStartOf(value.toLocalDate().with(TemporalAdjusters.lastDayOfYear()));
+        return new TemplateDate(DateTruncation.LAST_DAY_OF_YEAR.apply(value));
     }
 
     public TemplateDate firstDayOfNextYear() {
-        return atStartOf(value.toLocalDate().with(TemporalAdjusters.firstDayOfNextYear()));
-    }
-
-    private TemplateDate atStartOf(LocalDate date) {
-        return new TemplateDate(date.atStartOfDay(value.getZone()));
+        return new TemplateDate(DateTruncation.FIRST_DAY_OF_NEXT_YEAR.apply(value));
     }
 
     /**
@@ -502,37 +433,11 @@ public final class TemplateDate {
      * {@code "first hour of day"}.
      */
     public TemplateDate truncate(String truncation) {
-        String name = truncation == null ? "" : TRUNCATION_SEPARATORS.matcher(truncation.toLowerCase(Locale.ROOT)).replaceAll("");
-        switch (name) {
-            case "startofsecond":
-                return startOfSecond();
-            case "startofminute":
-                return startOfMinute();
-            case "startofhour":
-            case "firstminuteofhour":
-                return startOfHour();
-            case "startofday":
-            case "firsthourofday":
-                return startOfDay();
-            case "firstdayofmonth":
-            case "startofmonth":
-                return firstDayOfMonth();
-            case "lastdayofmonth":
-                return lastDayOfMonth();
-            case "firstdayofnextmonth":
-            case "startofnextmonth":
-                return firstDayOfNextMonth();
-            case "firstdayofyear":
-            case "startofyear":
-                return firstDayOfYear();
-            case "lastdayofyear":
-                return lastDayOfYear();
-            case "firstdayofnextyear":
-            case "startofnextyear":
-                return firstDayOfNextYear();
-            default:
-                throw new IllegalArgumentException("dates: unknown date truncation " + quote(truncation) + "; use " + TRUNCATIONS);
+        DateTruncation named = DateTruncation.named(truncation);
+        if (named == null) {
+            throw new IllegalArgumentException("dates: unknown date truncation " + quote(truncation) + "; use " + DateTruncation.NAMES);
         }
+        return new TemplateDate(named.apply(value));
     }
 
     // ----- zone and output -----

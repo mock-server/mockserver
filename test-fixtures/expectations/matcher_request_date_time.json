@@ -1,0 +1,44 @@
+{
+  "httpRequest": {
+    "method": "GET",
+    "path": "/date-time",
+    "headers": {
+      "X-Issued-At": [
+        {
+          "after": "now -1 hours"
+        }
+      ],
+      "If-Modified-Since": [
+        {
+          "before": "2026-10-21T00:00:00Z",
+          "actualFormat": "rfc1123"
+        }
+      ],
+      "X-Plain": [
+        "before:2026-01-01"
+      ]
+    },
+    "queryStringParameters": {
+      "from": [
+        {
+          "after": "2026-01-01",
+          "actualFormat": "dd/MM/yyyy",
+          "zone": "Europe/London"
+        }
+      ]
+    },
+    "cookies": {
+      "seen": {
+        "not": true,
+        "equalToDateTime": "now +1 days",
+        "truncateExpected": "first day of month",
+        "truncateActual": "startOfDay",
+        "applyTruncationLast": true
+      }
+    }
+  },
+  "httpResponse": {
+    "statusCode": 200,
+    "body": "dated"
+  }
+}

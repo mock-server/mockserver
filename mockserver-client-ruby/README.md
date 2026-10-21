@@ -99,6 +99,7 @@ All 27 domain model classes are available under the `MockServer` module:
 - `Ports`
 - `RequestDefinition` (alias for `HttpRequest`)
 - `Jwt` (JWT / bearer-token request matcher)
+- `DateTimeMatcher` (date-time matcher for header, query, path-parameter and cookie values)
 
 Every model can also be built from the expectation JSON with `from_hash`. Keys
 may be strings (`'httpRequest' => {...}`, as `JSON.parse` returns them) or
@@ -128,6 +129,30 @@ MockServer::HttpRequest.new(
   cookies: { 'session' => '4930456C' }
 )
 ```
+
+A header, query parameter, path parameter or cookie value can also be a
+date-time matcher. It compares the request's value as a date-time with
+`before`, `after` or `equal_to_date_time`, where the expected value is `now`,
+`now` with an offset such as `now -1 hours`, or a date-time such as
+`2026-10-21T00:00:00Z`. A plain string such as `'before:2026-01-01'` is still
+matched literally.
+
+```ruby
+MockServer::HttpRequest.new(path: '/orders')
+  .with_header('X-Issued-At', MockServer::DateTimeMatcher.after('now -1 hours'))
+  .with_header('If-Modified-Since',
+               MockServer::DateTimeMatcher.before('2026-10-21T00:00:00Z').with_actual_format('rfc1123'))
+  .with_cookie('seen', MockServer::DateTimeMatcher.equal_to_date_time('now')
+                                                   .with_truncate_expected('startOfDay')
+                                                   .with_truncate_actual('startOfDay')
+                                                   .with_zone('Europe/London'))
+# headers => [{"name"=>"X-Issued-At", "values"=>[{"after"=>"now -1 hours"}]}, ...]
+```
+
+Each `with_*` option (`with_actual_format`, `with_truncate_expected`,
+`with_truncate_actual`, `with_apply_truncation_last`, `with_zone`, `with_not`)
+returns a new matcher. `from_hash` reads an object holding `before`, `after` or
+`equalToDateTime` as a `DateTimeMatcher`.
 
 An `httpRequest` holding `specUrlOrPayload` is read as an `OpenAPIDefinition`
 matcher, and `HttpOverrideForwardedRequest` carries `request_override`,

@@ -120,6 +120,34 @@ client.When(
 
 ### Request Matchers
 
+#### Header, query-string, cookie and path-parameter values
+
+`HeaderMatcher`, `QueryStringParameterMatcher`, `CookieMatcher` and
+`PathParameterMatcher` take `MatcherValue`s. Use `Literal` for an exact value
+(even one starting with `!` or `?`) and `NotLiteral` to negate one.
+
+`Before`, `After` and `EqualToDateTime` compare the value as a date-time instead.
+The expected value is `now`, `now` with an offset such as `now -1 hours`, or an
+ISO-8601, RFC-1123 or epoch date-time. Each option returns a new value:
+`WithActualFormat`, `WithTruncateExpected`, `WithTruncateActual`,
+`WithApplyTruncationLast`, `WithZone` and `WithNot`.
+
+```go
+client.When(
+    mockserver.Request().Path("/orders").
+        HeaderMatcher("X-Tag", mockserver.Literal("!urgent")).
+        HeaderMatcher("X-Issued-At", mockserver.After("now -1 hours")).
+        HeaderMatcher("If-Modified-Since",
+            mockserver.Before("2026-10-21T00:00:00Z").WithActualFormat("rfc1123")).
+        QueryStringParameterMatcher("from",
+            mockserver.After("2026-01-01").WithActualFormat("dd/MM/yyyy").WithZone("Europe/London")),
+).Respond(
+    mockserver.Response().StatusCode(200),
+)
+```
+
+A plain string such as `"before:2026-01-01"` is still an ordinary literal value.
+
 #### JWT matcher
 
 Match a decoded bearer-token JWT by its claims, issuer, audience, and algorithm.

@@ -198,13 +198,22 @@ public class ExpectationSerializer implements Serializer<Expectation> {
                             .setArguments(jsonExpectation)
                             .setThrowable(throwable)
                     );
-                    throw new IllegalArgumentException("exception while parsing [" + jsonExpectation + "] for Expectation", throwable);
+                    throw new IllegalArgumentException("exception while parsing [" + jsonExpectation + "] for Expectation" + rootCauseMessage(throwable), throwable);
                 }
                 return expectation;
             } else {
                 throw new IllegalArgumentException(Strings.CI.removeEnd(formatLogMessage("incorrect expectation json format for:{}schema validation errors:{}", jsonExpectation, validationErrors), "\n"));
             }
         }
+    }
+
+    // the innermost message says what is wrong, for example why a date-time matcher value is not valid
+    private static String rootCauseMessage(Throwable throwable) {
+        Throwable root = throwable;
+        while (root.getCause() != null && root.getCause() != root) {
+            root = root.getCause();
+        }
+        return isBlank(root.getMessage()) ? "" : " because " + root.getMessage();
     }
 
     @Override

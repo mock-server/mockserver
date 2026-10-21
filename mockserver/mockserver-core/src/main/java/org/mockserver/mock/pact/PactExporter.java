@@ -12,6 +12,7 @@ import org.mockserver.model.Headers;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.JsonSchemaBody;
+import org.mockserver.model.NottableDateTimeString;
 import org.mockserver.model.NottableSchemaString;
 import org.mockserver.model.NottableString;
 import org.mockserver.model.Parameter;
@@ -291,6 +292,10 @@ public class PactExporter {
             // the value carries a JSON schema string (e.g. {"type":"integer"}); derive the Pact
             // match kind from its declared type, defaulting to the generic "type" rule
             return typeRule(schemaTypeOf(value.getValue()));
+        }
+        if (value instanceof NottableDateTimeString) {
+            // Pact has no date-time comparison, so the closest rule is "any value of this type"
+            return typeRule(null);
         }
         return looksLikeRegex(value.getValue()) ? regexRule(value.getValue()) : null;
     }

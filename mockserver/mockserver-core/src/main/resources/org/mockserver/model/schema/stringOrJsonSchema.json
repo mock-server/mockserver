@@ -38,6 +38,38 @@
             "DEEP_OBJECT"
           ],
           "default": ""
+        },
+        "before": {
+          "type": "string",
+          "description": "date-time matcher: matches a value earlier than this; now, now with an offset such as now -1 days, or a date-time such as 2026-10-21T15:00:00Z"
+        },
+        "after": {
+          "type": "string",
+          "description": "date-time matcher: matches a value later than this; now, now with an offset such as now -1 days, or a date-time such as 2026-10-21T15:00:00Z"
+        },
+        "equalToDateTime": {
+          "type": "string",
+          "description": "date-time matcher: matches a value at the same instant as this; now, now with an offset such as now -1 days, or a date-time such as 2026-10-21T15:00:00Z"
+        },
+        "actualFormat": {
+          "type": "string",
+          "description": "date-time matcher: how the actual value is written, a Java DateTimeFormatter pattern or iso, rfc1123, epochSeconds or epochMillis; by default any of those forms"
+        },
+        "truncateExpected": {
+          "type": "string",
+          "description": "date-time matcher: truncate the expected value, such as startOfDay or first day of month"
+        },
+        "truncateActual": {
+          "type": "string",
+          "description": "date-time matcher: truncate the actual value, such as startOfDay or first day of month"
+        },
+        "applyTruncationLast": {
+          "type": "boolean",
+          "description": "date-time matcher: truncate now after adding its offset instead of before"
+        },
+        "zone": {
+          "type": "string",
+          "description": "date-time matcher: zone for values without one, for truncation and for day, month and year offsets; default UTC"
         }
       }
     }

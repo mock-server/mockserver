@@ -48,6 +48,8 @@ import HumanErrorAlert from './HumanErrorAlert';
 import LintWarningsBadge from './LintWarningsBadge';
 import StandardReview from './StandardReview';
 import MatcherPlaygroundDialog from './MatcherPlaygroundDialog';
+import DateTimeMatcherDialog from './DateTimeMatcherDialog';
+import { appendLine, matcherValueToText } from '../lib/matcherValue';
 import TemplateTestDialog from './TemplateTestDialog';
 import LiveResponseWidget from './LiveResponseWidget';
 import {
@@ -687,6 +689,7 @@ function MatcherPanel({ matcher, setMatcher }: { matcher: MatcherState; setMatch
   const queryWarning = ignoredLinesWarning(matcher.queryString, '=', 'key=value');
   const cookiesWarning = ignoredLinesWarning(matcher.cookies, '=', 'name=value');
   const pathParamsWarning = ignoredLinesWarning(matcher.pathParams, '=', 'name=value');
+  const [dateTimeOpen, setDateTimeOpen] = useState(false);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       <Box sx={{ display: 'flex', gap: 1 }}>
@@ -722,10 +725,18 @@ function MatcherPanel({ matcher, setMatcher }: { matcher: MatcherState; setMatch
           placeholder="/foo/bar  ·  prefix with ! to negate"
         />
       </Box>
-      <Typography variant="caption" color="text.secondary" sx={{ mt: -1, display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-        Prefix any string field or any line below with <code>!</code> to negate the match.
-        <InfoTip text="A leading ! means &quot;must NOT match this value&quot;. e.g. path !/admin matches every path except /admin; header !Authorization: … matches requests that do not carry that header." />
-      </Typography>
+      <Box sx={{ mt: -1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, flex: 1 }}>
+          Prefix any string field or any line below with <code>!</code> to negate the match.
+          <InfoTip text="A leading ! means &quot;must NOT match this value&quot;. e.g. path !/admin matches every path except /admin; header !Authorization: … matches requests that do not carry that header. A value written as a JSON object is a matcher object, e.g. X-Issued-At: {&quot;after&quot;:&quot;now -1 hours&quot;} compares the header as a date-time." />
+        </Typography>
+        <Button size="small" onClick={() => setDateTimeOpen(true)}>Add Date-Time Matcher</Button>
+      </Box>
+      <DateTimeMatcherDialog
+        open={dateTimeOpen}
+        onClose={() => setDateTimeOpen(false)}
+        onAdd={(field, line) => setMatcher({ ...matcher, [field]: appendLine(matcher[field], line) })}
+      />
       <Box sx={{ display: 'flex', gap: 1 }}>
         <TextField
           label="Headers (Name: value per line)"
@@ -1122,18 +1133,20 @@ function DnsMatcherPanel({
  */
 /**
  * Convert a Headers / Parameters / Cookies record back to "key separator
- * value" lines. Each value is run through `denottable` so NottableString
- * `{value, not}` objects round-trip as `!value` strings the matcher
- * textareas understand.
+ * value" lines. A plain string value is written as-is; an object value (the
+ * nottable, schema or date-time matcher form) is written as compact JSON, which
+ * buildExpectationJson reads back into the same object, so a save never
+ * flattens or drops it.
  */
 function mapToLines(map: unknown, separator: ':' | '='): string {
   if (!map || typeof map !== 'object') return '';
   const lines: string[] = [];
   for (const [k, val] of Object.entries(map as Record<string, unknown>)) {
-    if (Array.isArray(val)) {
-      for (const vv of val as unknown[]) lines.push(`${k}${separator} ${denottable(vv)}`.replace(/^(.+): $/, '$1: '));
-    } else if (typeof val === 'string' || (val && typeof val === 'object')) {
-      lines.push(`${k}${separator} ${denottable(val)}`);
+    const values = Array.isArray(val) ? (val as unknown[]) : [val];
+    for (const vv of values) {
+      if (typeof vv === 'string' || (vv && typeof vv === 'object')) {
+        lines.push(`${k}${separator} ${matcherValueToText(vv)}`);
+      }
     }
   }
   return lines.join('\n');

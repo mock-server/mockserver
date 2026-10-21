@@ -399,11 +399,69 @@ export interface TimeToLive {
   unlimited?: boolean;
 }
 
+/**
+ * Header, query-string parameter and path parameter matchers. In the map form each value
+ * may be a plain string, a `{ not, value }` / `{ schema }` object, or a {@link DateTimeMatcher},
+ * e.g. `{ "X-Issued-At": [{ after: "now -1 hours" }] }`.
+ */
 export type KeyToMultiValue =
   | { name?: string; values?: string[] }[]
   | { keyMatchStyle?: "MATCHING_KEY" | "SUB_SET"; [key: string]: any };
 
+/**
+ * Cookie matchers. In the map form each value may be a plain string, a `{ not, value }` /
+ * `{ schema }` object, or a {@link DateTimeMatcher}, e.g. `{ seen: { before: "now" } }`.
+ */
 export type KeyToValue = { name?: string; value?: string }[] | Record<string, any>;
+
+/** Options shared by every {@link DateTimeMatcher} form; write only the ones you need. */
+export interface DateTimeMatcherOptions {
+  /** how the actual value is written: a Java DateTimeFormatter pattern, or iso, rfc1123, epochSeconds or epochMillis */
+  actualFormat?: string;
+  /** truncate the expected value, such as startOfDay or first day of month */
+  truncateExpected?: string;
+  /** truncate the actual value, such as startOfDay or first day of month */
+  truncateActual?: string;
+  /** truncate now after adding its offset instead of before */
+  applyTruncationLast?: boolean;
+  /** zone for values without one, for truncation and for day, month and year offsets; default UTC */
+  zone?: string;
+  /** invert the match */
+  not?: boolean;
+  /** the server rejects a date-time matcher combined with value, schema or optional */
+  value?: never;
+  schema?: never;
+  optional?: never;
+}
+
+/** Matches a date-time earlier than `before`. */
+export interface DateTimeBeforeMatcher extends DateTimeMatcherOptions {
+  before: string;
+  after?: never;
+  equalToDateTime?: never;
+}
+
+/** Matches a date-time later than `after`. */
+export interface DateTimeAfterMatcher extends DateTimeMatcherOptions {
+  after: string;
+  before?: never;
+  equalToDateTime?: never;
+}
+
+/** Matches a date-time at the same instant as `equalToDateTime`. */
+export interface DateTimeEqualToMatcher extends DateTimeMatcherOptions {
+  equalToDateTime: string;
+  before?: never;
+  after?: never;
+}
+
+/**
+ * Date-time matcher for a header, query-string parameter, path parameter or cookie value.
+ * Exactly one of `before`, `after` or `equalToDateTime` holds the expected value: `now`,
+ * `now` with an offset such as `now -1 days`, or an ISO-8601, RFC-1123 or epoch date-time.
+ * A plain string such as `"before:2026-01-01"` is a literal, not a date-time matcher.
+ */
+export type DateTimeMatcher = DateTimeBeforeMatcher | DateTimeAfterMatcher | DateTimeEqualToMatcher;
 
 export type StringOrJsonSchema =
   | string

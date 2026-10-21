@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Union
 
 
@@ -206,6 +206,126 @@ def _deserialize_body(data: Any) -> Body | JsonRpcBody | str | dict | None:
     return data
 
 
+_DATE_TIME_OPERATORS = ("before", "after", "equalToDateTime")
+_DATE_TIME_OPTIONS = (
+    ("actualFormat", "actual_format"),
+    ("truncateExpected", "truncate_expected"),
+    ("truncateActual", "truncate_actual"),
+    ("applyTruncationLast", "apply_truncation_last"),
+    ("zone", "zone"),
+)
+_DATE_TIME_KEYS = frozenset(("not", *_DATE_TIME_OPERATORS, *(wire for wire, _ in _DATE_TIME_OPTIONS)))
+
+
+@dataclass(frozen=True)
+class DateTimeMatcher:
+    """Date-time matcher for a header, query parameter, path parameter or cookie value.
+
+    Build one with ``DateTimeMatcher.before(..)``, ``.after(..)`` or ``.equal_to_date_time(..)``;
+    the expected value is ``now``, ``now <offset>`` or an ISO-8601 / RFC-1123 / epoch date-time.
+    Each ``with_*`` method returns a new matcher. The server validates the text and options.
+    """
+
+    operator: str
+    expected: str
+    actual_format: str | None = None
+    truncate_expected: str | None = None
+    truncate_actual: str | None = None
+    apply_truncation_last: bool | None = None
+    zone: str | None = None
+    not_: bool | None = None
+
+    def __post_init__(self) -> None:
+        if self.operator not in _DATE_TIME_OPERATORS:
+            raise ValueError(f"operator must be one of {_DATE_TIME_OPERATORS}, got {self.operator!r}")
+
+    @classmethod
+    def before(cls, expected: str) -> DateTimeMatcher:
+        return cls(operator="before", expected=expected)
+
+    @classmethod
+    def after(cls, expected: str) -> DateTimeMatcher:
+        return cls(operator="after", expected=expected)
+
+    @classmethod
+    def equal_to_date_time(cls, expected: str) -> DateTimeMatcher:
+        return cls(operator="equalToDateTime", expected=expected)
+
+    def with_actual_format(self, actual_format: str) -> DateTimeMatcher:
+        return replace(self, actual_format=actual_format)
+
+    def with_truncate_expected(self, truncate_expected: str) -> DateTimeMatcher:
+        return replace(self, truncate_expected=truncate_expected)
+
+    def with_truncate_actual(self, truncate_actual: str) -> DateTimeMatcher:
+        return replace(self, truncate_actual=truncate_actual)
+
+    def with_apply_truncation_last(self, apply_truncation_last: bool) -> DateTimeMatcher:
+        return replace(self, apply_truncation_last=apply_truncation_last)
+
+    def with_zone(self, zone: str) -> DateTimeMatcher:
+        return replace(self, zone=zone)
+
+    def with_not(self, not_: bool) -> DateTimeMatcher:
+        return replace(self, not_=not_)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        if self.not_ is not None:
+            result["not"] = self.not_
+        result[self.operator] = self.expected
+        for wire, attr in _DATE_TIME_OPTIONS:
+            value = getattr(self, attr)
+            if value is not None:
+                result[wire] = value
+        return result
+
+    @classmethod
+    def from_dict(cls, data: dict) -> DateTimeMatcher:
+        if data is None:
+            return None
+        operators = [op for op in _DATE_TIME_OPERATORS if op in data]
+        if len(operators) != 1:
+            raise ValueError(f"a date-time matcher needs exactly one of {_DATE_TIME_OPERATORS}, got {data!r}")
+        operator = operators[0]
+        return cls(
+            operator=operator,
+            expected=data[operator],
+            not_=data.get("not"),
+            **{attr: data.get(wire) for wire, attr in _DATE_TIME_OPTIONS},
+        )
+
+
+def _is_date_time_matcher_dict(value: Any) -> bool:
+    # Only an object whose every key belongs to the date-time form becomes a DateTimeMatcher;
+    # anything else (nottable {"not", "value"}, {"schema"}, unknown keys) stays a dict verbatim.
+    return (
+        isinstance(value, dict)
+        and value.keys() <= _DATE_TIME_KEYS
+        and sum(1 for op in _DATE_TIME_OPERATORS if op in value) == 1
+    )
+
+
+def _deserialize_matcher_value(value: Any) -> Any:
+    return DateTimeMatcher.from_dict(value) if _is_date_time_matcher_dict(value) else value
+
+
+def _deserialize_matcher_values(values: Any) -> Any:
+    if isinstance(values, list):
+        return [_deserialize_matcher_value(v) for v in values]
+    return values
+
+
+def _serialize_matcher_value(value: Any) -> Any:
+    return value.to_dict() if isinstance(value, DateTimeMatcher) else value
+
+
+def _serialize_matcher_values(values: Any) -> Any:
+    if isinstance(values, list):
+        return [_serialize_matcher_value(v) for v in values]
+    return values
+
+
 def _serialize_key_multi_values(
     items: list[KeyToMultiValue] | None, key_match_style: str | None = None, field_name: str = ""
 ) -> list[dict] | dict | None:
@@ -217,7 +337,7 @@ def _serialize_key_multi_values(
                 raise ValueError(
                     f"{field_name} with keyMatchStyle needs plain string names, got {item.name!r}"
                 )
-            result.setdefault(item.name, []).extend(item.values)
+            result.setdefault(item.name, []).extend(_serialize_matcher_values(item.values))
         return result
     if items is None:
         return None
@@ -257,7 +377,7 @@ def _coerce_cookies(value: Any) -> list[KeyToMultiValue] | None:
     result = []
     for item in value:
         if isinstance(item, dict):
-            values = [item["value"]] if "value" in item else item.get("values", [])
+            values = _deserialize_matcher_values([item["value"]] if "value" in item else item.get("values", []))
             item = KeyToMultiValue(name=item.get("name", ""), values=values)
         result.append(item)
     return result
@@ -270,7 +390,7 @@ def _serialize_key_multi_values_map(items: list[KeyToMultiValue] | None) -> dict
     # multipart matcher is silently dropped), so this is the canonical wire shape.
     if items is None:
         return None
-    return {item.name: list(item.values) for item in items}
+    return {item.name: list(_serialize_matcher_values(item.values)) for item in items}
 
 
 def _deserialize_key_multi_values(data: list | dict | None) -> list[KeyToMultiValue] | None:
@@ -278,7 +398,7 @@ def _deserialize_key_multi_values(data: list | dict | None) -> list[KeyToMultiVa
         return None
     if isinstance(data, dict):
         return [
-            KeyToMultiValue(name=k, values=v if isinstance(v, list) else [v])
+            KeyToMultiValue(name=k, values=_deserialize_matcher_values(v if isinstance(v, list) else [v]))
             for k, v in data.items()
             if k != "keyMatchStyle"
         ]
@@ -298,7 +418,7 @@ def _serialize_cookies(items: list[KeyToMultiValue] | None) -> dict | None:
     # single-value {name: value} object map, not a [{name, values}] array.
     if items is None:
         return None
-    return {item.name: (item.values[0] if item.values else "") for item in items}
+    return {item.name: (_serialize_matcher_value(item.values[0]) if item.values else "") for item in items}
 
 
 def _deserialize_cookies(data: dict | list | None) -> list[KeyToMultiValue] | None:
@@ -306,7 +426,7 @@ def _deserialize_cookies(data: dict | list | None) -> list[KeyToMultiValue] | No
         return None
     if isinstance(data, dict):
         return [
-            KeyToMultiValue(name=k, values=v if isinstance(v, list) else [v])
+            KeyToMultiValue(name=k, values=_deserialize_matcher_values(v if isinstance(v, list) else [v]))
             for k, v in data.items()
         ]
     # tolerate the legacy array form on read
@@ -543,14 +663,14 @@ class HttpChaosProfile:
 @dataclass
 class KeyToMultiValue:
     name: str = ""
-    values: list[str] = field(default_factory=list)
+    values: list[Any] = field(default_factory=list)
 
     # name and values are always emitted (not stripped via _strip_none) because
     # the MockServer protocol requires both fields on every header/cookie/parameter.
     def to_dict(self) -> dict:
         return {
             "name": self.name,
-            "values": self.values,
+            "values": _serialize_matcher_values(self.values),
         }
 
     @classmethod
@@ -559,7 +679,7 @@ class KeyToMultiValue:
             return None
         return cls(
             name=data.get("name", ""),
-            values=data.get("values", []),
+            values=_deserialize_matcher_values(data.get("values", [])),
         )
 
 
@@ -1306,7 +1426,7 @@ class HttpRequest:
         self.path = path
         return self
 
-    def with_header(self, name: str, *values: str) -> HttpRequest:
+    def with_header(self, name: str, *values: str | DateTimeMatcher) -> HttpRequest:
         self._normalise()
         items = _coerce_key_multi_values(self.headers)
         if items is None:
@@ -1315,7 +1435,7 @@ class HttpRequest:
         self.headers = items
         return self
 
-    def with_query_param(self, name: str, *values: str) -> HttpRequest:
+    def with_query_param(self, name: str, *values: str | DateTimeMatcher) -> HttpRequest:
         self._normalise()
         items = _coerce_key_multi_values(self.query_string_parameters)
         if items is None:
@@ -1324,7 +1444,7 @@ class HttpRequest:
         self.query_string_parameters = items
         return self
 
-    def with_cookie(self, name: str, value: str) -> HttpRequest:
+    def with_cookie(self, name: str, value: str | DateTimeMatcher) -> HttpRequest:
         self._normalise()
         items = _coerce_cookies(self.cookies)
         if items is None:

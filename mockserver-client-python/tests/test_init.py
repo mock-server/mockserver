@@ -35,6 +35,7 @@ class TestPublicExports:
             "VerificationSequence",
             "Ports",
             "KeyToMultiValue",
+            "DateTimeMatcher",
             "Body",
             "SocketAddress",
             "ConnectionOptions",
