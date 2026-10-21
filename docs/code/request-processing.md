@@ -147,7 +147,7 @@ The retrieve and clear endpoints accept type parameters:
 |-------|-------------|
 | `REQUESTS` | Received requests matching the filter |
 | `REQUEST_RESPONSES` | Request/response pairs |
-| `RECORDED_EXPECTATIONS` | Expectations recorded from proxy forwarding (supports `?consolidate=true` / `?parameterize=true` — see [Record-to-Expectations](#record-to-expectations-rest--consolidation--promotion)) |
+| `RECORDED_EXPECTATIONS` | Expectations recorded from proxy forwarding (supports `?consolidate=true` / `?parameterize=true`, plus `?repeatsAsScenarios=true`, `?captureHeaders=a,b` and `?extractBodiesLargerThan=<bytes>` — see [Record-to-Expectations](#record-to-expectations-rest--consolidation--promotion) and [event-system.md](event-system.md#record--mock-consolidation-promotion-har-import)) |
 | `ACTIVE_EXPECTATIONS` | Currently active expectations |
 | `LOGS` | Log messages |
 

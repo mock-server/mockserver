@@ -2225,16 +2225,49 @@ public class MockServerClient implements Stoppable {
      * @return an array of all expectations that have been recorded by the MockServer in the order they have been received and including duplicates where the same request has been received multiple times
      */
     public String retrieveRecordedExpectations(RequestDefinition requestDefinition, Format format) {
-        HttpResponse httpResponse = sendRequest(
-            request()
-                .withMethod("PUT")
-                .withContentType(APPLICATION_JSON_UTF_8)
-                .withPath(calculatePath("retrieve"))
-                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
-                .withQueryStringParameter("format", format.name())
-                .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8),
-            true
-        );
+        return retrieveRecordedExpectations(requestDefinition, format, null);
+    }
+
+    /**
+     * Retrieve the request-response combinations that have been recorded as a list of expectations, shaped by the
+     * given options, for example to replay a request recorded with different responses in order
+     * ({@link RecordedExpectationsOptions#withRepeatsAsScenarios(Boolean)}), keep only some request headers
+     * ({@link RecordedExpectationsOptions#withCaptureHeaders(String...)}) or move large bodies into files
+     * ({@link RecordedExpectationsOptions#withExtractBodiesLargerThan(Long)}).
+     *
+     * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @param options           the options to apply, use null for none
+     * @return the recorded expectations
+     */
+    public Expectation[] retrieveRecordedExpectations(RequestDefinition requestDefinition, RecordedExpectationsOptions options) {
+        String recordedExpectations = retrieveRecordedExpectations(requestDefinition, Format.JSON, options);
+        if (isNotBlank(recordedExpectations) && !recordedExpectations.equals("[]")) {
+            return expectationSerializer.deserializeArray(recordedExpectations, true);
+        } else {
+            return new Expectation[0];
+        }
+    }
+
+    /**
+     * As {@link #retrieveRecordedExpectations(RequestDefinition, RecordedExpectationsOptions)}, in the given format.
+     *
+     * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
+     * @param format            the format to retrieve the expectations in
+     * @param options           the options to apply, use null for none
+     * @return the recorded expectations in the given format
+     */
+    public String retrieveRecordedExpectations(RequestDefinition requestDefinition, Format format, RecordedExpectationsOptions options) {
+        HttpRequest retrieveRequest = request()
+            .withMethod("PUT")
+            .withContentType(APPLICATION_JSON_UTF_8)
+            .withPath(calculatePath("retrieve"))
+            .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+            .withQueryStringParameter("format", format.name())
+            .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8);
+        if (options != null) {
+            options.addTo(retrieveRequest);
+        }
+        HttpResponse httpResponse = sendRequest(retrieveRequest, true);
         return httpResponse.getBodyAsString();
     }
 

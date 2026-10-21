@@ -443,6 +443,21 @@
                   "key": "parameterize",
                   "value": "false",
                   "disabled": true
+                },
+                {
+                  "key": "repeatsAsScenarios",
+                  "value": "false",
+                  "disabled": true
+                },
+                {
+                  "key": "captureHeaders",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "extractBodiesLargerThan",
+                  "value": "",
+                  "disabled": true
                 }
               ]
             },

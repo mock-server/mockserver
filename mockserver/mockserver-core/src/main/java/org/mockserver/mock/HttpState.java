@@ -32,6 +32,7 @@ import org.mockserver.openapi.OpenAPIConverter;
 import org.mockserver.openapi.OpenAPILoadProblems;
 import org.mockserver.openapi.OpenApiSyncPlanner;
 import org.mockserver.persistence.ExpectationFileSystemPersistence;
+import org.mockserver.persistence.RecordedBodyFileExtractor;
 import org.mockserver.persistence.RecordedExpectationPostProcessor;
 import org.mockserver.proxyconfiguration.InetAddressValidator;
 import org.mockserver.persistence.ExpectationFileWatcher;
@@ -2799,10 +2800,11 @@ public class HttpState {
         }
 
         // Loading an OpenAPI spec may fetch a URL with blocking I/O. On an event-loop thread that fetch stalls
-        // until it times out when the URL is served by this server on the same loop, so these requests are
-        // dispatched on the scheduler, which writes the response. A servlet container, or a synchronous scheduler,
-        // has no event loop and needs the response written before handle() returns.
-        if (!warDeployment && scheduler.getExecutorService() != null && mayLoadOpenAPISpec(request)) {
+        // until it times out when the URL is served by this server on the same loop, and writing recorded bodies
+        // to files would stall the loop for the whole write, so these requests are dispatched on the scheduler,
+        // which writes the response. A servlet container, or a synchronous scheduler, has no event loop and needs
+        // the response written before handle() returns.
+        if (!warDeployment && scheduler.getExecutorService() != null && (mayLoadOpenAPISpec(request) || writesRecordedBodyFiles(request))) {
             dispatchOffTheEventLoop(request, responseWriter);
             return true;
         }
@@ -7008,7 +7010,7 @@ public class HttpState {
         org.mockserver.authentication.authorization.ControlPlaneAuthorizer authorizer = controlPlaneAuthorizer(scopeMapping);
         String method = request.getMethod() != null ? request.getMethod().getValue() : "";
         String operation = auditOperation(request.getPath() != null ? request.getPath().getValue() : "");
-        boolean isRead = isControlPlaneRead(method, operation);
+        boolean isRead = isControlPlaneRead(request, method, operation);
         java.util.Set<String> scopes = authenticationResult != null ? authenticationResult.getScopes() : java.util.Set.of();
         boolean authorized = authorizer.isAuthorized(scopes, isRead);
         if (!authorized && mockServerLogger != null && mockServerLogger.isEnabledForInstance(Level.INFO)) {
@@ -7074,7 +7076,7 @@ public class HttpState {
             // Reads are skipped by default (controlPlaneAuditReads), but a FORBIDDEN
             // outcome is a security-relevant denial and is always recorded when auditing
             // is enabled, even for a read.
-            if (!"FORBIDDEN".equals(outcome) && !configuration.controlPlaneAuditReads() && isControlPlaneRead(method, operation)) {
+            if (!"FORBIDDEN".equals(outcome) && !configuration.controlPlaneAuditReads() && isControlPlaneRead(request, method, operation)) {
                 return;
             }
             String sourceAddress = request.getRemoteAddress();
@@ -7178,6 +7180,18 @@ public class HttpState {
         }
         String verb = "GET".equalsIgnoreCase(method) ? "Read" : "DELETE".equalsIgnoreCase(method) ? "Deleted" : "Changed";
         return verb + " " + (operation == null || operation.isEmpty() ? "control plane" : operation);
+    }
+
+    /**
+     * As {@link #isControlPlaneRead(String, String)}, except that a retrieve asking for recorded bodies to be written
+     * to files ({@code extractBodiesLargerThan}) writes to the server's filesystem, so it needs the role that may
+     * change state.
+     */
+    private static boolean isControlPlaneRead(HttpRequest request, String method, String operation) {
+        if ("retrieve".equals(operation) && isNotBlank(request.getFirstQueryStringParameter(EXTRACT_BODIES_PARAMETER))) {
+            return false;
+        }
+        return isControlPlaneRead(method, operation);
     }
 
     private static boolean isControlPlaneRead(String method, String operation) {
@@ -7427,6 +7441,11 @@ public class HttpState {
         if (suppliedTlsMutualAuthenticationAllowBundledCa != null && !suppliedTlsMutualAuthenticationAllowBundledCa.equals(configuration.tlsMutualAuthenticationAllowBundledCa())) {
             warnInitOnlyProperty("tlsMutualAuthenticationAllowBundledCa", String.valueOf(suppliedTlsMutualAuthenticationAllowBundledCa), String.valueOf(configuration.tlsMutualAuthenticationAllowBundledCa()),
                 "it lets mTLS trust client certificates anyone can create, so a request to the control plane cannot enable it");
+        }
+        String suppliedRecordedBodyFilesDirectory = suppliedConfiguration.getRecordedBodyFilesDirectory();
+        if (suppliedRecordedBodyFilesDirectory != null && !suppliedRecordedBodyFilesDirectory.equals(configuration.recordedBodyFilesDirectory())) {
+            warnInitOnlyProperty("recordedBodyFilesDirectory", "\"" + suppliedRecordedBodyFilesDirectory + "\"", "\"" + configuration.recordedBodyFilesDirectory() + "\"",
+                "it decides where the server writes files, so a request to the control plane cannot change it");
         }
         Integer suppliedMaxWebSocketExpectations = suppliedConfiguration.getMaxWebSocketExpectations();
         if (suppliedMaxWebSocketExpectations != null && configuration.maxWebSocketExpectations() != maxWebSocketExpectationsInForce) {
@@ -7943,6 +7962,16 @@ public class HttpState {
         if (!warDeployment && scheduler.getExecutorService() != null) {
             canHandle.complete(true);
         }
+    }
+
+    private static final String EXTRACT_BODIES_PARAMETER = "extractBodiesLargerThan";
+
+    /**
+     * Whether this request is a retrieve that writes recorded response bodies to files.
+     */
+    private static boolean writesRecordedBodyFiles(HttpRequest request) {
+        return isNotBlank(request.getFirstQueryStringParameter(EXTRACT_BODIES_PARAMETER))
+            && request.matches("PUT", PATH_PREFIX + "/retrieve", "/retrieve");
     }
 
     /**
@@ -8601,17 +8630,24 @@ public class HttpState {
     }
 
     /**
-     * Apply the opt-in recorded-expectation post-processor (deduplicate +
-     * templatize) to a retrieved list of recorded expectations when
-     * {@code configuration.deduplicateRecordedExpectations()} is enabled. When the
-     * flag is off (the default) the input list is returned unchanged, so the
-     * retrieved output is byte-for-byte identical to historical behaviour.
+     * Apply the opt-in recorded-expectation steps to a retrieved list of recorded expectations, in order:
+     * {@code ?captureHeaders}, {@code ?repeatsAsScenarios}, consolidation ({@code ?consolidate} /
+     * {@code ?parameterize}) or the {@code deduplicateRecordedExpectations} flag, secret redaction, then
+     * {@code ?extractBodiesLargerThan}. With no option and every flag off the input list is returned unchanged.
      *
      * @param expectations the recorded expectations as retrieved from the event log
      * @return the post-processed list when the flag is on, otherwise the input list
      */
     private List<Expectation> postProcessRecordedExpectations(List<Expectation> expectations, HttpRequest request) {
+        RecordedBodyFileExtractor bodyFileExtractor = recordedBodyFileExtractor(request);
         List<Expectation> processed = expectations;
+        List<String> capturedHeaders = capturedHeaderNames(request);
+        if (capturedHeaders != null) {
+            processed = RecordedExpectationPostProcessor.captureHeaders(processed, capturedHeaders);
+        }
+        if ("true".equalsIgnoreCase(request.getFirstQueryStringParameter("repeatsAsScenarios"))) {
+            processed = RecordedExpectationPostProcessor.sequenceRepeats(processed);
+        }
         // Per-request opt-in overrides via query parameters take precedence over the
         // config-flag path: ?consolidate=true collapses recorded exchanges by request
         // shape into unlimited-times mocks (sequencing differing responses), and
@@ -8656,7 +8692,54 @@ public class HttpState {
                 );
             }
         }
+        if (bodyFileExtractor != null) {
+            processed = bodyFileExtractor.extract(processed);
+        }
         return processed;
+    }
+
+    /**
+     * The request header names given by {@code ?captureHeaders=a,b}, or {@code null} when the parameter is absent.
+     * A present but empty parameter captures no headers.
+     */
+    private static List<String> capturedHeaderNames(HttpRequest request) {
+        if (request.getQueryStringParameters() == null || !request.getQueryStringParameters().containsEntry("captureHeaders")) {
+            return null;
+        }
+        List<String> names = new java.util.ArrayList<>();
+        for (String value : request.getQueryStringParameters().getValues("captureHeaders")) {
+            for (String name : value.split(",")) {
+                if (isNotBlank(name)) {
+                    names.add(name.trim());
+                }
+            }
+        }
+        return names;
+    }
+
+    /**
+     * The extractor for {@code ?extractBodiesLargerThan=<bytes>}, or {@code null} when the parameter is absent.
+     * Files are only ever written to the configured {@code recordedBodyFilesDirectory}.
+     */
+    private RecordedBodyFileExtractor recordedBodyFileExtractor(HttpRequest request) {
+        String threshold = request.getFirstQueryStringParameter(EXTRACT_BODIES_PARAMETER);
+        if (isBlank(threshold)) {
+            return null;
+        }
+        long thresholdBytes;
+        try {
+            thresholdBytes = Long.parseLong(threshold.trim());
+        } catch (NumberFormatException notANumber) {
+            thresholdBytes = -1;
+        }
+        if (thresholdBytes < 0) {
+            throw new IllegalArgumentException("\"" + threshold + "\" is not a valid value for \"extractBodiesLargerThan\" parameter, it must be a number of bytes greater than or equal to zero");
+        }
+        String directory = configuration.recordedBodyFilesDirectory();
+        if (isBlank(directory)) {
+            throw new IllegalArgumentException("\"extractBodiesLargerThan\" requires the recordedBodyFilesDirectory configuration property to name the directory recorded bodies are written to");
+        }
+        return new RecordedBodyFileExtractor(mockServerLogger, directory, thresholdBytes, configuration.maxFutureTimeoutInMillis());
     }
 
     /**

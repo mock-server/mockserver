@@ -2884,6 +2884,33 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetRecordedBodyFilesDirectory() {
+        String original = ConfigurationProperties.recordedBodyFilesDirectory();
+        try {
+            // then - default value
+            ConfigurationProperties.recordedBodyFilesDirectory(null);
+            assertThat(ConfigurationProperties.recordedBodyFilesDirectory(), equalTo(""));
+            assertThat(configuration.recordedBodyFilesDirectory(), equalTo(""));
+
+            // when - system property setter
+            ConfigurationProperties.recordedBodyFilesDirectory("recorded-bodies");
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.recordedBodyFilesDirectory(), equalTo("recorded-bodies"));
+            assertThat(System.getProperty("mockserver.recordedBodyFilesDirectory"), equalTo("recorded-bodies"));
+            assertThat(configuration.recordedBodyFilesDirectory(), equalTo("recorded-bodies"));
+
+            // when - setter
+            configuration.recordedBodyFilesDirectory("other-bodies");
+
+            // then - getter
+            assertThat(configuration.recordedBodyFilesDirectory(), equalTo("other-bodies"));
+        } finally {
+            ConfigurationProperties.recordedBodyFilesDirectory(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetMaximumNumberOfRequestToReturnInVerificationFailure() {
         int original = ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure();
         try {

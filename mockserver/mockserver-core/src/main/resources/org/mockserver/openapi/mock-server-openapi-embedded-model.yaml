@@ -479,6 +479,45 @@ paths:
             only applies to "recorded_expectations" retrieval. When true, additionally generalises
             volatile path/query/header/body values in the consolidated expectations (implies
             consolidate). Per-request opt-in.
+        - in: query
+          name: repeatsAsScenarios
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: >-
+            only applies to "recorded_expectations" retrieval. When true, a request that was recorded
+            several times with different responses becomes one expectation that replays those
+            responses in the recorded order (responseMode SWITCH, unlimited times) and then keeps
+            returning the last one. Recordings are the same request only when everything the
+            generated matcher would match on is equal, every header included; use captureHeaders to
+            choose which headers tell requests apart. Requests recorded with the same response every
+            time (ignoring response headers such as Date) are left as they are.
+        - in: query
+          name: captureHeaders
+          schema:
+            type: string
+          required: false
+          description: >-
+            only applies to "recorded_expectations" retrieval. Comma-separated request header names
+            (case-insensitive) to keep in each recorded request matcher; every other request header
+            is removed. An empty value keeps no headers. When omitted every recorded header except
+            hop-by-hop transport headers is kept.
+        - in: query
+          name: extractBodiesLargerThan
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+          required: false
+          description: >-
+            only applies to "recorded_expectations" retrieval. Each recorded response body with more
+            bytes than this is written to the directory named by the recordedBodyFilesDirectory
+            configuration property and returned as a FILE body. Files are named by the SHA-256 of
+            their contents; at most 1000 files and 256 MB are written per retrieve. Rejected with 400
+            when recordedBodyFilesDirectory is not configured. Writes files, so it needs the MUTATE
+            role when control-plane authorization is enabled. Bodies are written exactly as recorded,
+            secrets included.
       responses:
         '200':
           description: recorded requests or active expectations returned

@@ -81,6 +81,18 @@ public class ConfigurationDTOTest {
     }
 
     @Test
+    public void shouldNotApplyRecordedBodyFilesDirectoryToARunningServer() {
+        Configuration target = configuration().recordedBodyFilesDirectory("recorded-bodies");
+
+        ConfigurationDTO dto = new ConfigurationDTO();
+        dto.setRecordedBodyFilesDirectory("/etc");
+        dto.applyTo(target);
+
+        assertThat(target.recordedBodyFilesDirectory(), is("recorded-bodies"));
+        assertThat(new ConfigurationDTO().setRecordedBodyFilesDirectory("dir").buildObject().recordedBodyFilesDirectory(), is("dir"));
+    }
+
+    @Test
     public void shouldRoundTripDataPlaneAuthenticationFields() {
         Configuration original = configuration()
             .dataPlaneAuthenticationRequired(true)
@@ -493,7 +505,9 @@ public class ConfigurationDTOTest {
         "controlPlaneCorsAllowOrigin",
         "controlPlaneTrustedHostSuffixes",
         // would let mTLS trust client certificates anyone can create with the bundled CA's published key
-        "tlsMutualAuthenticationAllowBundledCa"
+        "tlsMutualAuthenticationAllowBundledCa",
+        // decides where the server writes recorded body files, so a control-plane request must not repoint it
+        "recordedBodyFilesDirectory"
     ));
 
     @Test

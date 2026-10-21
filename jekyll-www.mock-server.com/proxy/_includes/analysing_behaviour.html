@@ -37,6 +37,35 @@ curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTAT
 
 <p>Recording with no query parameter is unchanged, so existing scripts keep working.</p>
 
+<a id="recording_options" class="anchor" href="#recording_options">&nbsp;</a>
+
+<h2>Shape a Recording: Response Sequences, Headers and Body Files</h2>
+
+<p>Three more options on the same retrieve call control what a recording turns into. Each is off unless you add it, and each only changes the expectations returned; the recorded traffic itself is not changed.</p>
+
+<ul>
+    <li><strong>repeatsAsScenarios=true</strong> &mdash; when the same request was recorded several times with <em>different</em> responses (for example a job status that goes <code class="inline code">pending</code>, <code class="inline code">running</code>, <code class="inline code">done</code>), you get one expectation that replays those responses in the order they were recorded, then keeps returning the last one. Two recordings count as the same request only when everything the expectation would match on is the same, every header included, so calls to different hosts, from different users (<code class="inline code">Authorization</code>) or asking for different formats (<code class="inline code">Accept</code>) stay separate expectations. If your client sends a header that changes on every call, such as <code class="inline code">traceparent</code> or <code class="inline code">x-request-id</code>, add <code class="inline code">captureHeaders</code> to say which headers matter. A request that got the same response every time is left as it was; response headers that change on every call, such as <code class="inline code">Date</code>, are ignored when comparing responses.</li>
+    <li><strong>captureHeaders=X-Tenant,Accept</strong> &mdash; keeps only the request headers you name (the case of the names does not matter) in each recorded expectation, so it matches on the headers that matter rather than every header the client happened to send. An empty value (<code class="inline code">captureHeaders=</code>) keeps no headers. Without it every recorded header is kept, except connection headers such as <code class="inline code">Connection</code>. When you combine it with <code class="inline code">repeatsAsScenarios</code>, only the headers you name are used to tell requests apart.</li>
+    <li><strong>extractBodiesLargerThan=1024</strong> &mdash; writes each recorded response body larger than this many bytes to a file and returns a <a href="/mock_server/creating_expectations.html#button_response_file_body">file body</a> that points at it, so a recording with large payloads stays small and readable. Files are written only to the directory set by the <a href="/mock_server/configuration_properties.html#button_configuration_recorded_body_files_directory"><code class="inline code">recordedBodyFilesDirectory</code></a> configuration property; the retrieve call cannot choose the directory, and it is rejected with a 400 when the property is not set. Each file is named after a hash of its contents (for example <code class="inline code">3f2a&hellip;9c.json</code>), so the same body is stored once, and an existing file with that name is reused or replaced. Files are readable only by the user MockServer runs as, and MockServer never deletes them, not even on reset, so clear the directory yourself when you no longer need them. One retrieve writes at most 1,000 files and 256 MB, and stops starting new files after <code class="inline code">maxFutureTimeout</code> (90 seconds by default); bodies beyond that stay in the expectations. Because it writes files, a retrieve with this option needs a role that may change expectations when <a href="/mock_server/configuration_properties.html#button_configuration_control_plane_authorization">control-plane authorization</a> is on.</li>
+</ul>
+
+<pre class="prettyprint lang-bash code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&amp;repeatsAsScenarios=true&amp;captureHeaders=X-Tenant&amp;extractBodiesLargerThan=1024"</code></pre>
+
+<p>From Java, pass the same options to <code class="inline code">retrieveRecordedExpectations</code>:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">Expectation[] recorded = new MockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations(
+        request().withPath("/jobs/.*"),
+        recordedExpectationsOptions()
+            .withRepeatsAsScenarios(true)
+            .withCaptureHeaders("X-Tenant")
+            .withExtractBodiesLargerThan(1024L)
+    );</code></pre>
+
+<p>These options work together with <code class="inline code">consolidate</code>, <code class="inline code">parameterize</code> and the recording configuration properties. A request turned into a response sequence by <code class="inline code">repeatsAsScenarios</code> is kept as that sequence and is not merged again by <code class="inline code">consolidate</code>.</p>
+
+<p><strong>Extracted bodies are written exactly as recorded, secrets included.</strong> <code class="inline code">redactSecretsInRecordedExpectations</code> masks headers, cookies and query parameters only; it does not redact response bodies, so a recorded token response or personal data lands in the file as it was sent. Use a private directory, treat it as sensitive, and do not commit or share its files without reviewing them. Files are readable only by the user MockServer runs as, so a MockServer replaying them under a different user (for example in another container) needs them made readable first.</p>
+
 <a id="promote_to_mocks" class="anchor" href="#promote_to_mocks">&nbsp;</a>
 
 <h2>Promote a Recording to Active Mocks</h2>

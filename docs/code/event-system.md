@@ -635,6 +635,39 @@ JSON-body leaf values are additionally generalised to regex matchers (same heuri
 precedence over the config-flag path; with neither present and the flag off, output is byte-for-byte
 identical to historical behaviour (non-breaking).
 
+**Retrieve-time recording options.** Three more query parameters shape the retrieved recording; each is
+off unless given and none touches the recording or serving path (the stored log entries are never changed).
+`postProcessRecordedExpectations` applies them in this order:
+
+| Step | Query parameter | Implementation |
+|------|-----------------|----------------|
+| 1 | `captureHeaders=a,b` (empty value = none) | `RecordedExpectationPostProcessor.captureHeaders` keeps only the named request headers (case-insensitive) |
+| 2 | `repeatsAsScenarios=true` | `RecordedExpectationPostProcessor.sequenceRepeats` turns a request recorded with *different* responses into one `ResponseMode.SWITCH`, `Times.unlimited()` expectation holding every recorded response in order (clamps on the last); requests with one distinct response pass through untouched |
+| 3 | existing `consolidate` / dedupe | sequence expectations have no single `httpResponse`, so both engines pass them through |
+| 4 | existing `redactSecretsInRecordedExpectations` | redacts headers, cookies and query parameters of each response of a sequence too; never bodies |
+| 5 | `extractBodiesLargerThan=<bytes>` | `RecordedBodyFileExtractor` writes each larger `STRING`/`JSON`/`XML`/`BINARY` response body to the `recordedBodyFilesDirectory` configuration property and replaces it with a `FileBody` |
+
+`sequenceRepeats` groups by the full matcher identity: the recorded request with only the fields the
+matcher never compares (`remoteAddress`, `localAddress`, `streamId`) removed, every header included, so
+recordings that differ in `Host`, `Authorization` or `Accept` stay separate expectations; the first
+recording is the sequence's matcher, unchanged. `captureHeaders` (step 1) is how a caller chooses which
+headers tell requests apart. Responses are compared without `HarImporter.volatileResponseHeaders()`
+(`Date`, `Set-Cookie`, `x-request-id`, ...), so repeats that differ only there are left alone. `SWITCH`
+was chosen over a scenario state machine because it needs no shared scenario name and clamps on the last
+response, which is WireMock's `repeatsAsScenarios` end state.
+
+Body extraction is a server-side file write, so the directory comes only from configuration (blank =
+disabled, and the retrieve is a 400), file names are `sha256(body)` plus an extension chosen from a fixed
+content-type table, and each file is written to a temp file in the directory and atomically moved into
+place, which replaces a symlink at the target name instead of writing through it. A write failure leaves
+that body inline and logs a warning; each run logs one INFO line with the directory and the files and
+bytes written. One retrieve references at most 1,000 files and 256 MB, files are never deleted, and the
+directory is fixed at startup. Because it writes, a retrieve with `extractBodiesLargerThan` is a mutation
+for control-plane authorization and audit, and `HttpState.handle` dispatches it on the scheduler
+(`dispatchOffTheEventLoop`, as for OpenAPI loads) so the file I/O never runs on a Netty event loop; other
+retrieves keep the in-line path. A run starts no new write once `maxFutureTimeoutInMillis` has elapsed, and
+the remaining bodies stay inline. Extracted bodies are written exactly as recorded, secrets included: `redactSecretsInRecordedExpectations` uses `new FixtureRedactor()`, which masks headers, cookies and query parameters but never body fields, so treat the directory as sensitive.
+
 **Promotion (`PUT /mockserver/recordings/promote`).** The server-side equivalent of the MCP
 `create_expectations_from_recorded_traffic` tool. It retrieves recorded expectations matching an
 optional request-matcher filter (JSON body; empty body = all), **redacts secrets first** (via

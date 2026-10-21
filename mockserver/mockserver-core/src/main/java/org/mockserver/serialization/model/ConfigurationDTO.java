@@ -227,6 +227,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Boolean perExpectationMetricsEnabled;
     private Boolean deduplicateRecordedExpectations;
     private Boolean templatizeRecordedValues;
+    private String recordedBodyFilesDirectory;
     private Boolean redactSecretsInRecordedExpectations;
     private Boolean redactSecretsInLog;
     private Double llmCostBudgetUsd;
@@ -605,6 +606,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.perExpectationMetricsEnabled = configuration.perExpectationMetricsEnabled();
             this.deduplicateRecordedExpectations = configuration.deduplicateRecordedExpectations();
             this.templatizeRecordedValues = configuration.templatizeRecordedValues();
+            this.recordedBodyFilesDirectory = configuration.recordedBodyFilesDirectory();
             this.redactSecretsInRecordedExpectations = configuration.redactSecretsInRecordedExpectations();
             this.redactSecretsInLog = configuration.redactSecretsInLog();
             this.llmCostBudgetUsd = configuration.llmCostBudgetUsd();
@@ -1080,6 +1082,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.perExpectationMetricsEnabled(perExpectationMetricsEnabled);
         configuration.deduplicateRecordedExpectations(deduplicateRecordedExpectations);
         configuration.templatizeRecordedValues(templatizeRecordedValues);
+        configuration.recordedBodyFilesDirectory(recordedBodyFilesDirectory);
         configuration.redactSecretsInRecordedExpectations(redactSecretsInRecordedExpectations);
         configuration.redactSecretsInLog(redactSecretsInLog);
         configuration.llmCostBudgetUsd(llmCostBudgetUsd);
@@ -1937,6 +1940,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (templatizeRecordedValues != null) {
             target.templatizeRecordedValues(templatizeRecordedValues);
         }
+        // recordedBodyFilesDirectory is deliberately not applied: it decides where the server writes files, so it is
+        // fixed at startup (see HttpState.applyConfigurationUpdate)
         if (redactSecretsInRecordedExpectations != null) {
             target.redactSecretsInRecordedExpectations(redactSecretsInRecordedExpectations);
         }
@@ -4097,6 +4102,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setTemplatizeRecordedValues(Boolean templatizeRecordedValues) {
         this.templatizeRecordedValues = templatizeRecordedValues;
+        return this;
+    }
+
+    public String getRecordedBodyFilesDirectory() {
+        return recordedBodyFilesDirectory;
+    }
+
+    public ConfigurationDTO setRecordedBodyFilesDirectory(String recordedBodyFilesDirectory) {
+        this.recordedBodyFilesDirectory = recordedBodyFilesDirectory;
         return this;
     }
 

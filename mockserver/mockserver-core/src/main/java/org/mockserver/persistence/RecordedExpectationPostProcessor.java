@@ -22,6 +22,8 @@ import org.mockserver.model.RequestDefinition;
 import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -305,6 +307,178 @@ public class RecordedExpectationPostProcessor {
         }
 
         return result;
+    }
+
+    /**
+     * Keep only the named request headers in each recorded request matcher, so a recording matches on the
+     * headers that matter rather than every header the client happened to send. Names are compared
+     * case-insensitively; an empty collection removes every header. Every other part of each expectation is
+     * kept. Pure function: the input and its elements are not mutated.
+     *
+     * @param expectations recorded expectations (may be {@code null} or empty)
+     * @param headerNames  the request header names to keep
+     * @return the expectations with every other request header removed from their matchers
+     */
+    public static List<Expectation> captureHeaders(List<Expectation> expectations, Collection<String> headerNames) {
+        List<Expectation> result = new ArrayList<>();
+        if (expectations == null || expectations.isEmpty()) {
+            return result;
+        }
+        Set<String> keep = new HashSet<>();
+        for (String name : headerNames) {
+            keep.add(name.toLowerCase(Locale.ROOT));
+        }
+        for (Expectation expectation : expectations) {
+            if (expectation == null || !(expectation.getHttpRequest() instanceof HttpRequest)) {
+                result.add(expectation);
+                continue;
+            }
+            HttpRequest request = (HttpRequest) expectation.getHttpRequest();
+            HttpRequest selected = withoutHeaders(request, name -> !keep.contains(name.toLowerCase(Locale.ROOT)));
+            result.add(selected == request ? expectation : expectation.cloneWith(selected, expectation.getHttpResponse()));
+        }
+        return result;
+    }
+
+    /**
+     * Turn a request that was recorded several times with <b>different</b> responses into one expectation that
+     * replays those responses in the order they were recorded (WireMock's {@code repeatsAsScenarios}). The
+     * expectation uses {@link ResponseMode#SWITCH}, so after the last recorded response it keeps returning that
+     * last response, and is unlimited so it can be matched once per recorded response and beyond. It takes the
+     * position of the first recorded request and uses that request, unchanged, as its matcher.
+     *
+     * <p>Two recordings are the same request only when their matchers would match the same requests: every
+     * matched property is compared, every header included. Only the client and local address and the HTTP/2
+     * stream id, which the matcher ignores, are left out. Requests that differ in any header, such as
+     * {@code Host}, {@code Authorization} or {@code Accept}, therefore stay separate expectations; apply
+     * {@link #captureHeaders(List, Collection)} first to choose which headers tell requests apart.
+     *
+     * <p>Responses are compared without the headers that change on every response
+     * ({@link HarImporter#volatileResponseHeaders()}, such as {@code Date}). A request recorded with the same
+     * response every time, or recorded once, is left exactly as it was. Expectations without a single concrete
+     * response pass through unchanged. Pure function: the input and its elements are not mutated.
+     *
+     * @param expectations recorded expectations (may be {@code null} or empty)
+     * @return the expectations with each differently-answered repeated request replaced by one response sequence
+     */
+    public static List<Expectation> sequenceRepeats(List<Expectation> expectations) {
+        List<Expectation> result = new ArrayList<>();
+        if (expectations == null || expectations.isEmpty()) {
+            return result;
+        }
+        // linear: each key and each normalised response is computed once, and each group is decided once
+        HttpRequest[] keys = new HttpRequest[expectations.size()];
+        Map<HttpRequest, List<Expectation>> groups = new LinkedHashMap<>();
+        for (int i = 0; i < keys.length; i++) {
+            Expectation expectation = expectations.get(i);
+            if (isEligible(expectation)) {
+                keys[i] = repeatKey(expectation);
+                groups.computeIfAbsent(keys[i], k -> new ArrayList<>()).add(expectation);
+            }
+        }
+        Map<HttpRequest, Expectation> sequences = new HashMap<>();
+        Set<HttpRequest> emitted = new HashSet<>();
+        for (Map.Entry<HttpRequest, List<Expectation>> group : groups.entrySet()) {
+            if (hasDifferentResponses(group.getValue())) {
+                sequences.put(group.getKey(), responseSequence(group.getValue()));
+            }
+        }
+        for (int i = 0; i < keys.length; i++) {
+            if (keys[i] == null) {
+                result.add(expectations.get(i));
+                continue;
+            }
+            Expectation sequence = sequences.get(keys[i]);
+            if (sequence == null) {
+                result.add(expectations.get(i));
+            } else if (emitted.add(keys[i])) {
+                result.add(sequence);
+            }
+        }
+        return result;
+    }
+
+    private static Expectation responseSequence(List<Expectation> group) {
+        Expectation first = group.get(0);
+        List<HttpResponse> responses = new ArrayList<>(group.size());
+        for (Expectation expectation : group) {
+            responses.add(expectation.getHttpResponse());
+        }
+        return new Expectation(first.getHttpRequest(), Times.unlimited(), TimeToLive.unlimited(), first.getPriority())
+            .withResponseMode(ResponseMode.SWITCH)
+            .thenRespond(responses);
+    }
+
+    /**
+     * A copy of the recorded request without the per-connection fields the request matcher never compares.
+     */
+    private static HttpRequest repeatKey(Expectation expectation) {
+        return ((HttpRequest) expectation.getHttpRequest()).clone()
+            .withStreamId(null)
+            .withLocalAddress(null)
+            .withRemoteAddress(null);
+    }
+
+    private static boolean hasDifferentResponses(List<Expectation> group) {
+        if (group.size() < 2) {
+            return false;
+        }
+        HttpResponse first = withoutVolatileResponseHeaders(group.get(0).getHttpResponse());
+        for (int i = 1; i < group.size(); i++) {
+            if (!first.equals(withoutVolatileResponseHeaders(group.get(i).getHttpResponse()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * A copy of {@code response} without its volatile headers and without its parsed cookies, which a proxied
+     * response carries alongside its {@code Set-Cookie} headers.
+     */
+    private static HttpResponse withoutVolatileResponseHeaders(HttpResponse response) {
+        HttpResponse copy = response.clone();
+        Headers headers = response.getHeaders();
+        if (headers != null && !headers.isEmpty()) {
+            for (Header header : headers.getEntries()) {
+                String name = header.getName() != null ? header.getName().getValue() : null;
+                if (name != null && HarImporter.volatileResponseHeaders().contains(name.toLowerCase(Locale.ROOT))) {
+                    copy.removeHeader(header.getName());
+                }
+            }
+            if (copy.getHeaders() != null && copy.getHeaders().isEmpty()) {
+                copy.withHeaders((Headers) null);
+            }
+        }
+        return copy.withCookies((org.mockserver.model.Cookies) null);
+    }
+
+    /**
+     * A copy of {@code request} without the headers whose name {@code remove} accepts, or {@code request}
+     * itself when none are removed. An emptied header list becomes no headers.
+     */
+    private static HttpRequest withoutHeaders(HttpRequest request, java.util.function.Predicate<String> remove) {
+        Headers headers = request.getHeaders();
+        if (headers == null || headers.isEmpty()) {
+            return request;
+        }
+        List<NottableString> toRemove = new ArrayList<>();
+        for (Header entry : headers.getEntries()) {
+            if (entry.getName() != null && entry.getName().getValue() != null && remove.test(entry.getName().getValue())) {
+                toRemove.add(entry.getName());
+            }
+        }
+        if (toRemove.isEmpty()) {
+            return request;
+        }
+        HttpRequest copy = request.clone();
+        for (NottableString name : toRemove) {
+            copy.removeHeader(name);
+        }
+        if (copy.getHeaders() != null && copy.getHeaders().isEmpty()) {
+            copy.withHeaders((Headers) null);
+        }
+        return copy;
     }
 
     /**

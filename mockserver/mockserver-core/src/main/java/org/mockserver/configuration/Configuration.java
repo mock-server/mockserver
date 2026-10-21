@@ -95,6 +95,7 @@ public class Configuration {
     private volatile Boolean perExpectationMetricsEnabled;
     private volatile Boolean deduplicateRecordedExpectations;
     private volatile Boolean templatizeRecordedValues;
+    private volatile String recordedBodyFilesDirectory;
     private volatile Boolean redactSecretsInRecordedExpectations;
     private volatile Boolean redactSecretsInLog;
     private volatile Double llmCostBudgetUsd;
@@ -816,6 +817,25 @@ public class Configuration {
      */
     public Configuration templatizeRecordedValues(Boolean templatizeRecordedValues) {
         this.templatizeRecordedValues = templatizeRecordedValues;
+        return this;
+    }
+
+    public String recordedBodyFilesDirectory() {
+        if (recordedBodyFilesDirectory == null) {
+            return ConfigurationProperties.recordedBodyFilesDirectory();
+        }
+        return recordedBodyFilesDirectory;
+    }
+
+    /**
+     * The directory that retrieving recorded expectations with {@code extractBodiesLargerThan} writes large
+     * response bodies to, as content-addressed files referenced by FILE bodies. Empty (the default) disables
+     * body extraction.
+     *
+     * @param recordedBodyFilesDirectory the directory to write extracted recorded response bodies to
+     */
+    public Configuration recordedBodyFilesDirectory(String recordedBodyFilesDirectory) {
+        this.recordedBodyFilesDirectory = recordedBodyFilesDirectory;
         return this;
     }
 

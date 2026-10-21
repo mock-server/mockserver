@@ -65,6 +65,16 @@ public class HarImporter {
         "traceparent", "tracestate", "vary"
     );
 
+    /**
+     * The lower-cased set of response header names that are hop-by-hop or change on every response
+     * (such as {@code Date}), so they are left out when deciding whether two recorded responses are the same.
+     *
+     * @return an immutable set of lower-cased volatile response header names
+     */
+    public static Set<String> volatileResponseHeaders() {
+        return VOLATILE_RESPONSE_HEADERS;
+    }
+
     /** Maximum request body size (in characters) to include in a matcher. */
     private static final int MAX_REQUEST_BODY_SIZE = 4096;
 

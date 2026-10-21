@@ -241,6 +241,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_DEDUPLICATE_RECORDED_EXPECTATIONS = "mockserver.deduplicateRecordedExpectations";
     private static final String MOCKSERVER_TEMPLATIZE_RECORDED_VALUES = "mockserver.templatizeRecordedValues";
     private static final String MOCKSERVER_REDACT_SECRETS_IN_RECORDED_EXPECTATIONS = "mockserver.redactSecretsInRecordedExpectations";
+    private static final String MOCKSERVER_RECORDED_BODY_FILES_DIRECTORY = "mockserver.recordedBodyFilesDirectory";
     private static final String MOCKSERVER_REDACT_SECRETS_IN_LOG = "mockserver.redactSecretsInLog";
     private static final String MOCKSERVER_LLM_COST_BUDGET_USD = "mockserver.llmCostBudgetUsd";
     private static final String MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR = "mockserver.useSemicolonAsQueryParameterSeparator";
@@ -4174,6 +4175,22 @@ public class ConfigurationProperties {
      */
     public static void templatizeRecordedValues(boolean enable) {
         setProperty(MOCKSERVER_TEMPLATIZE_RECORDED_VALUES, "" + enable);
+    }
+
+    public static String recordedBodyFilesDirectory() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_RECORDED_BODY_FILES_DIRECTORY, "MOCKSERVER_RECORDED_BODY_FILES_DIRECTORY", "");
+    }
+
+    /**
+     * The directory that retrieving recorded expectations with {@code extractBodiesLargerThan} writes large
+     * response bodies to, as content-addressed files that the returned expectations reference as FILE bodies.
+     * Empty (the default) disables body extraction. The directory only comes from configuration, never from
+     * the retrieve request, and is created when missing.
+     *
+     * @param directory the directory to write extracted recorded response bodies to
+     */
+    public static void recordedBodyFilesDirectory(String directory) {
+        setProperty(MOCKSERVER_RECORDED_BODY_FILES_DIRECTORY, directory == null ? "" : directory);
     }
 
     public static boolean redactSecretsInRecordedExpectations() {
