@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Response templates: the `dates` helper now works on any date and in any time zone, not only on the current time in UTC. `dates.parse` reads ISO-8601, RFC-1123, epoch seconds or millis, or text in a given pattern; `dates.format(date, pattern, zone)` formats any date; `dates.offset` moves a date by amounts such as `"-2 hours"` or an ISO-8601 period such as `P1M`; `dates.truncate` (and methods such as `startOfDay()`, `firstDayOfMonth()`, `lastDayOfMonth()` and `firstDayOfNextYear()`) moves it to the start of a period in its own time zone; `dates.now(zone)` gives the current time in a zone; and `dates.rfc1123()` writes the HTTP date format for headers such as `Expires` and `Last-Modified`. The returned dates can be chained, for example `$dates.parse($!request.headers['Date'][0]).plusHours(1).rfc1123()`. Mustache, which cannot pass arguments, gets the no-argument forms (`{{ dates.now.firstDayOfNextMonth.rfc1123 }}`) and a `{{#dates.render}}date|offset=1 days|format=yyyy-MM-dd{{/dates.render}}` section. The current time still comes from the server clock, so clock control applies, and the existing `dates` methods return exactly what they did before. An invalid date, pattern, time zone, offset or truncation fails the template with an error naming the value
+
 ### Changed
 
 ### Fixed

@@ -52,6 +52,7 @@ import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSA
 public class MustacheTemplateEngine implements TemplateEngine {
 
     private static final ObjectMapper objectMapper = ObjectMapperFactory.createObjectMapper();
+    private static final MustacheDateTemplateHelper MUSTACHE_DATES = new MustacheDateTemplateHelper();
     private final MockServerLogger mockServerLogger;
     private final Configuration configuration;
     private final Mustache.Compiler compiler;
@@ -128,6 +129,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
         Map<String, Object> base = new HashMap<>(TemplateFunctions.BUILT_IN_FUNCTIONS.size() + TemplateFunctions.BUILT_IN_HELPERS.size() + 2);
         base.putAll(TemplateFunctions.BUILT_IN_FUNCTIONS);
         base.putAll(TemplateFunctions.BUILT_IN_HELPERS);
+        base.put("dates", MUSTACHE_DATES);
         if (seededFaker != null) {
             base.put("faker", seededFaker);
         }

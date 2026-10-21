@@ -224,7 +224,7 @@ curl_close($ch);</code></pre>
             <li><a href="#faker_helper">Faker Helper</a> &mdash; generate realistic fake names, addresses, emails, phone numbers, and 250+ other categories</li>
             <li><a href="#strings_helper">String Helper</a> &mdash; trim, capitalize, URL/Base64 encode/decode, substring, replace</li>
             <li><a href="#json_helper">JSON Transform Helper</a> &mdash; merge, sort, extract fields, add/remove elements, pretty-print</li>
-            <li><a href="#dates_helper">Date Helper</a> &mdash; date formatting, arithmetic, and epoch conversion</li>
+            <li><a href="#dates_helper">Date Helper</a> &mdash; date parsing, formatting, offsets, truncation, time zones, and epoch conversion</li>
             <li><a href="#math_helper">Calc Helper</a> &mdash; random numbers, rounding, min/max, abs, ceil/floor, number formatting</li>
             <li><a href="#crypto_helper">Crypto Helper</a> &mdash; MD5, SHA-1, SHA-256, SHA-512 digests and HMAC-SHA-256 signatures, all as lowercase hex</li>
             <li><a href="#regex_helper">Regex Helper</a> &mdash; test patterns, capture groups, and replace substrings using Java regex</li>
@@ -340,7 +340,7 @@ curl_close($ch);</code></pre>
         </tr>
         <tr>
             <td><code>dates</code></td>
-            <td>Date formatting, arithmetic (plus/minus seconds/minutes/hours/days), epoch conversion</td>
+            <td>Parse, format, offset and truncate dates, in any time zone, including the HTTP date format and epoch conversion</td>
             <td><a href="#dates_helper">Date Helper</a></td>
         </tr>
         <tr>
@@ -1280,12 +1280,12 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
 
 <h3>Date Helper (<code>dates</code>)</h3>
 
-<p>Provides date/time arithmetic and formatting functions. All times are UTC-based.</p>
+<p>Reads, offsets, truncates and formats dates. The helper can work on the current time or on any date, such as one taken from the request, in any time zone. The current time comes from the server clock, so <a href="/mock_server/clock_control.html">freezing or advancing the clock</a> changes it too. The methods that take no date work on the current time in UTC and return text, as they always have:</p>
 
 <table class="table">
     <thead><tr><th>Method</th><th>Description</th><th>Example Output</th></tr></thead>
     <tbody>
-        <tr><td><code>dates.format(pattern)</code></td><td>Format current time with a pattern (e.g., <code>yyyy-MM-dd</code>)</td><td><code>"2026-05-11"</code></td></tr>
+        <tr><td><code>dates.format(pattern)</code></td><td>Format current time with a pattern (e.g., <code>yyyy-MM-dd</code>), or <code>iso</code>, <code>rfc1123</code>, <code>epochSeconds</code> or <code>epochMillis</code></td><td><code>"2026-05-11"</code></td></tr>
         <tr><td><code>dates.plusSeconds(n)</code></td><td>Current time plus n seconds (ISO-8601)</td><td><code>"2026-05-11T10:15:30Z"</code></td></tr>
         <tr><td><code>dates.plusMinutes(n)</code></td><td>Current time plus n minutes (ISO-8601)</td><td><code>"2026-05-11T10:20:00Z"</code></td></tr>
         <tr><td><code>dates.plusHours(n)</code></td><td>Current time plus n hours (ISO-8601)</td><td><code>"2026-05-11T11:15:00Z"</code></td></tr>
@@ -1298,15 +1298,580 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
         <tr><td><code>dates.epochMillis()</code></td><td>Current time as Unix epoch milliseconds</td><td><code>1747048530000</code></td></tr>
         <tr><td><code>dates.epochSecondsPlus(n)</code></td><td>Epoch seconds plus n seconds</td><td><code>"1747048590"</code></td></tr>
         <tr><td><code>dates.epochSecondsMinus(n)</code></td><td>Epoch seconds minus n seconds</td><td><code>"1747048470"</code></td></tr>
+        <tr><td><code>dates.rfc1123()</code></td><td>Current time in the HTTP date format, for headers such as <code>Expires</code> and <code>Last-Modified</code></td><td><code>"Wed, 21 Oct 2026 15:04:05 GMT"</code></td></tr>
     </tbody>
 </table>
 
+<p>The following methods take a <em>date</em> or return one. A date can be a date returned by another <code>dates</code> method, text, or a number:</p>
+<ul>
+    <li>ISO-8601 text: <code>2026-10-21T15:04:05Z</code>, <code>2026-10-21T16:04:05+01:00</code>, <code>2026-10-21T15:04:05</code> or <code>2026-10-21</code>. Text without an offset is read as UTC.</li>
+    <li>RFC-1123 text, the format HTTP headers use: <code>Wed, 21 Oct 2026 15:04:05 GMT</code>.</li>
+    <li>Epoch seconds or epoch milliseconds, as a number or digits. A value below 100,000,000,000 is read as seconds and anything larger as milliseconds. To choose explicitly, pass <code>epochSeconds</code> or <code>epochMillis</code> as the pattern.</li>
+    <li><code>now</code>, the current time. An empty value, such as a header the request does not have, is not a date and makes the template fail.</li>
+</ul>
+<p>When text is not in one of these formats, pass the <a target="_blank" href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/time/format/DateTimeFormatter.html#patterns" rel="noopener noreferrer">pattern</a> it is written in. Text read with a pattern must be a real date: <code>2026-02-30</code> fails rather than becoming 28 February, and a 12-hour <code>hh</code> needs an AM/PM marker (<code>a</code>). A time zone is a region such as <code>Europe/London</code>, an offset such as <code>+01:00</code>, or <code>UTC</code>. Prefer a region to a three-letter abbreviation: <code>EST</code> is a fixed <code>-05:00</code> all year, while <code>PST</code> means <code>America/Los_Angeles</code>. A local time that falls in a daylight-saving gap moves forward by the length of the gap (01:30 on the day London's clocks go forward becomes 02:30), and one that occurs twice takes the earlier offset. Month and day names are in English. A returned date prints as ISO-8601: in UTC as <code>2026-10-21T15:04:05Z</code>, and in other time zones with the offset, as in <code>2026-10-21T16:04:05+01:00</code>.</p>
+
+<table class="table">
+    <thead><tr><th>Method</th><th>Description</th><th>Example</th></tr></thead>
+    <tbody>
+        <tr><td><code>dates.now()</code></td><td>The current time in UTC, as a date</td><td><code>dates.now().plusHours(1)</code></td></tr>
+        <tr><td><code>dates.now(zone)</code></td><td>The current time in a time zone</td><td><code>dates.now("Europe/London").format("HH:mm")</code> &rarr; <code>"16:04"</code></td></tr>
+        <tr><td><code>dates.parse(date)</code></td><td>Read a date in any of the formats above</td><td><code>dates.parse("Wed, 21 Oct 2026 15:04:05 GMT")</code> &rarr; <code>2026-10-21T15:04:05Z</code></td></tr>
+        <tr><td><code>dates.parse(text, pattern)</code></td><td>Read text written in a pattern, read as UTC if the pattern has no zone or offset</td><td><code>dates.parse("21/10/2026", "dd/MM/yyyy")</code> &rarr; <code>2026-10-21T00:00:00Z</code></td></tr>
+        <tr><td><code>dates.parse(text, pattern, zone)</code></td><td>Read text in a time zone, giving a date in that zone</td><td><code>dates.parse("21/10/2026 16:04", "dd/MM/yyyy HH:mm", "Europe/London")</code> &rarr; <code>2026-10-21T16:04:00+01:00</code></td></tr>
+        <tr><td><code>dates.format(date, pattern)</code></td><td>Format a date in its own time zone. The pattern can also be <code>iso</code>, <code>rfc1123</code>, <code>epochSeconds</code> or <code>epochMillis</code></td><td><code>dates.format("2026-10-21T15:04:05Z", "yyyy-MM-dd")</code> &rarr; <code>"2026-10-21"</code></td></tr>
+        <tr><td><code>dates.format(date, pattern, zone)</code></td><td>Format a date in a time zone</td><td><code>dates.format("2026-10-21T15:04:05Z", "HH:mm", "America/New_York")</code> &rarr; <code>"11:04"</code></td></tr>
+        <tr><td><code>dates.offset(date, offset)</code></td><td>Move a date by an amount and a unit (seconds, minutes, hours, days, weeks, months or years), or by an ISO-8601 period such as <code>P1D</code>, <code>-P1M</code> or <code>PT90M</code></td><td><code>dates.offset("2026-10-21T15:04:05Z", "-2 hours")</code> &rarr; <code>2026-10-21T13:04:05Z</code></td></tr>
+        <tr><td><code>dates.truncate(date, truncation)</code></td><td>Move a date back to the start of a period, in the date's time zone (see the truncations below)</td><td><code>dates.truncate("2026-10-21T15:04:05Z", "firstDayOfNextMonth")</code> &rarr; <code>2026-11-01T00:00:00Z</code></td></tr>
+        <tr><td><code>dates.withZone(date, zone)</code></td><td>Show the same moment in another time zone</td><td><code>dates.withZone("2026-10-21T15:04:05Z", "Asia/Tokyo")</code> &rarr; <code>2026-10-22T00:04:05+09:00</code></td></tr>
+        <tr><td><code>dates.rfc1123(date)</code></td><td>Format a date in the HTTP date format, always in GMT and with a two-digit day</td><td><code>dates.rfc1123("2026-10-01T09:00:00Z")</code> &rarr; <code>"Thu, 01 Oct 2026 09:00:00 GMT"</code></td></tr>
+        <tr><td><code>dates.epochSeconds(date)</code>, <code>dates.epochMillis(date)</code></td><td>A date as Unix epoch seconds or milliseconds</td><td><code>dates.epochSeconds("2026-10-21T15:04:05Z")</code> &rarr; <code>1792595045</code></td></tr>
+    </tbody>
+</table>
+
+<p>Each returned date has its own methods, so calls can be chained, for example <code>dates.parse(text).plusDays(1).startOfDay().rfc1123()</code>:</p>
+<ul>
+    <li><strong>Offsets:</strong> <code>plusSeconds(n)</code>, <code>plusMinutes(n)</code>, <code>plusHours(n)</code>, <code>plusDays(n)</code>, <code>plusWeeks(n)</code>, <code>plusMonths(n)</code>, <code>plusYears(n)</code>, the matching <code>minus</code> methods, and <code>offset("1 days")</code>. A month or year offset that lands past the end of a month gives that month's last day, so 31 January plus one month is 28 February.</li>
+    <li><strong>Truncations:</strong> <code>startOfSecond()</code>, <code>startOfMinute()</code>, <code>startOfHour()</code>, <code>startOfDay()</code>, <code>firstDayOfMonth()</code>, <code>lastDayOfMonth()</code>, <code>firstDayOfNextMonth()</code>, <code>firstDayOfYear()</code>, <code>lastDayOfYear()</code>, <code>firstDayOfNextYear()</code>, and <code>truncate(name)</code>. Every truncation to a day gives the start of that day (00:00). <code>truncate</code> also accepts the names with spaces, such as <code>"first day of month"</code>, and WireMock's <code>"first minute of hour"</code> and <code>"first hour of day"</code>.</li>
+    <li><strong>Output:</strong> <code>format(pattern)</code>, <code>iso()</code>, <code>rfc1123()</code>, <code>epochSeconds()</code>, <code>epochMillis()</code>, <code>withZone(zone)</code>, and <code>isBefore(date)</code> and <code>isAfter(date)</code> for conditions.</li>
+</ul>
+
+<p>Mustache cannot pass arguments to a method. Instead, it can use the methods that take no arguments, for example <code class="inline code">&lbrace;&lbrace; dates.rfc1123 &rbrace;&rbrace;</code> or <code class="inline code">&lbrace;&lbrace; dates.now.firstDayOfNextMonth.rfc1123 &rbrace;&rbrace;</code>, and the <code>dates.render</code> section. The section's content is a date followed by options separated by <code>|</code>: <code class="inline code">&lbrace;&lbrace;#dates.render&rbrace;&rbrace;&lbrace;&lbrace; request.headers.Date.0 &rbrace;&rbrace;|offset=1 hours|format=rfc1123&lbrace;&lbrace;/dates.render&rbrace;&rbrace;</code>.</p>
+
+<table class="table">
+    <thead><tr><th>Option</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>(first part)</td><td>The date, in any of the formats above, or <code>now</code> for the current time. An empty date, for example from a missing header, makes the template fail</td></tr>
+        <tr><td><code>pattern=</code></td><td>The pattern the date is written in</td></tr>
+        <tr><td><code>zone=</code></td><td>Show the date in this time zone. The first <code>zone=</code> is also used to read a date that has no zone or offset</td></tr>
+        <tr><td><code>offset=</code></td><td>Move the date, such as <code>offset=-1 days</code> or <code>offset=P1M</code></td></tr>
+        <tr><td><code>truncate=</code></td><td>Truncate the date, such as <code>truncate=firstDayOfMonth</code></td></tr>
+        <tr><td><code>format=</code></td><td>How to write the result (a pattern, <code>iso</code>, <code>rfc1123</code>, <code>epochSeconds</code> or <code>epochMillis</code>). It must come last. Without it, the result is ISO-8601</td></tr>
+    </tbody>
+</table>
+
+<p>The <code>zone=</code>, <code>offset=</code> and <code>truncate=</code> options apply in the order they are written, so <code>truncate=firstDayOfMonth|offset=-1 days</code> gives the last day of the previous month. A pattern in <code>format=</code> cannot contain <code>|</code>. A value rendered into the section from the request, such as a header, cannot add options either: if it contains <code>|</code> the template fails.</p>
+
 <p>Usage examples:</p>
 <ul>
-    <li><strong>Velocity:</strong> <code class="inline code">$dates.plusHours(1)</code> (token expiry 1 hour from now)</li>
-    <li><strong>JavaScript:</strong> <code class="inline code">dates.format("yyyy-MM-dd")</code></li>
-    <li><strong>Mustache:</strong> <code class="inline code">&lbrace;&lbrace; dates &rbrace;&rbrace;</code> (outputs current ISO-8601 timestamp via toString)</li>
+    <li><strong>Velocity:</strong> <code class="inline code">$dates.plusHours(1)</code> (token expiry 1 hour from now), <code class="inline code">$dates.rfc1123($dates.offset($!request.headers['Date'][0], '1 hours'))</code> (one hour after the request's <code>Date</code> header)</li>
+    <li><strong>JavaScript:</strong> <code class="inline code">dates.format("yyyy-MM-dd")</code>, <code class="inline code">dates.now("Europe/London").lastDayOfMonth().format("d MMMM yyyy")</code></li>
+    <li><strong>Mustache:</strong> <code class="inline code">&lbrace;&lbrace; dates &rbrace;&rbrace;</code> (outputs current ISO-8601 timestamp via toString), <code class="inline code">&lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|zone=Europe/London|truncate=startOfDay&lbrace;&lbrace;/dates.render&rbrace;&rbrace;</code></li>
 </ul>
+
+<p>An invalid date, pattern, time zone, offset or truncation makes the template fail, with an error that names the value and lists what is accepted.</p>
+
+<p>The examples below return an <code>Expires</code> header one hour from now and a <code>Last-Modified</code> header for the start of today, both in the HTTP date format, and a body with the last day of the month in London, such as <code>billing period ends 31 October 2026</code>:</p>
+
+<button id="button_dates_helper_mustache" class="accordion">Mustache: Expires and Last-Modified headers and a formatted date</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080)
+    .when(request().withPath("/subscription"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.MUSTACHE,
+            "{ 'statusCode': 200, 'headers': { 'Expires': [ '&lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|offset=1 hours|format=rfc1123&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' ], 'Last-Modified': [ '&lbrace;&lbrace; dates.now.startOfDay.rfc1123 &rbrace;&rbrace;' ] }, 'body': 'billing period ends &lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|zone=Europe/London|truncate=lastDayOfMonth|format=d MMMM yyyy&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' }"
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'Expires': [ '&lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|offset=1 hours|format=rfc1123&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' ], 'Last-Modified': [ '&lbrace;&lbrace; dates.now.startOfDay.rfc1123 &rbrace;&rbrace;' ] }, 'body': 'billing period ends &lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|zone=Europe/London|truncate=lastDayOfMonth|format=d MMMM yyyy&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' }",
+        "templateType": "MUSTACHE"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver.client import MockServerClient
+from mockserver.models import Expectation
+
+client = MockServerClient("localhost", 1080)
+client.upsert(Expectation.from_dict({
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'Expires': [ '&lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|offset=1 hours|format=rfc1123&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' ], 'Last-Modified': [ '&lbrace;&lbrace; dates.now.startOfDay.rfc1123 &rbrace;&rbrace;' ] }, 'body': 'billing period ends &lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|zone=Europe/London|truncate=lastDayOfMonth|format=d MMMM yyyy&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' }",
+        "templateType": "MUSTACHE"
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+client.upsert(MockServer::Expectation.from_hash({
+    'httpRequest' =&gt; {
+        'path' =&gt; '/subscription'
+    },
+    'httpResponseTemplate' =&gt; {
+        'template' =&gt; "{ 'statusCode': 200, 'headers': { 'Expires': [ '&lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|offset=1 hours|format=rfc1123&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' ], 'Last-Modified': [ '&lbrace;&lbrace; dates.now.startOfDay.rfc1123 &rbrace;&rbrace;' ] }, 'body': 'billing period ends &lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|zone=Europe/London|truncate=lastDayOfMonth|format=d MMMM yyyy&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' }",
+        'templateType' =&gt; 'MUSTACHE'
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`{
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'Expires': [ '&lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|offset=1 hours|format=rfc1123&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' ], 'Last-Modified': [ '&lbrace;&lbrace; dates.now.startOfDay.rfc1123 &rbrace;&rbrace;' ] }, 'body': 'billing period ends &lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|zone=Europe/London|truncate=lastDayOfMonth|format=d MMMM yyyy&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' }",
+        "templateType": "MUSTACHE"
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"{
+    ""httpRequest"": {
+        ""path"": ""/subscription""
+    },
+    ""httpResponseTemplate"": {
+        ""template"": ""{ 'statusCode': 200, 'headers': { 'Expires': [ '&lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|offset=1 hours|format=rfc1123&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' ], 'Last-Modified': [ '&lbrace;&lbrace; dates.now.startOfDay.rfc1123 &rbrace;&rbrace;' ] }, 'body': 'billing period ends &lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|zone=Europe/London|truncate=lastDayOfMonth|format=d MMMM yyyy&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' }"",
+        ""templateType"": ""MUSTACHE""
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+
+let client = Client::new();
+let body = r#"{
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'Expires': [ '&lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|offset=1 hours|format=rfc1123&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' ], 'Last-Modified': [ '&lbrace;&lbrace; dates.now.startOfDay.rfc1123 &rbrace;&rbrace;' ] }, 'body': 'billing period ends &lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|zone=Europe/London|truncate=lastDayOfMonth|format=d MMMM yyyy&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' }",
+        "templateType": "MUSTACHE"
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'Expires': [ '&lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|offset=1 hours|format=rfc1123&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' ], 'Last-Modified': [ '&lbrace;&lbrace; dates.now.startOfDay.rfc1123 &rbrace;&rbrace;' ] }, 'body': 'billing period ends &lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|zone=Europe/London|truncate=lastDayOfMonth|format=d MMMM yyyy&lbrace;&lbrace;/dates.render&rbrace;&rbrace;' }",
+        "templateType": "MUSTACHE"
+    }
+}
+JSON;
+
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "{ '\''statusCode'\'': 200, '\''headers'\'': { '\''Expires'\'': [ '\''&lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|offset=1 hours|format=rfc1123&lbrace;&lbrace;/dates.render&rbrace;&rbrace;'\'' ], '\''Last-Modified'\'': [ '\''&lbrace;&lbrace; dates.now.startOfDay.rfc1123 &rbrace;&rbrace;'\'' ] }, '\''body'\'': '\''billing period ends &lbrace;&lbrace;#dates.render&rbrace;&rbrace;now|zone=Europe/London|truncate=lastDayOfMonth|format=d MMMM yyyy&lbrace;&lbrace;/dates.render&rbrace;&rbrace;'\'' }",
+        "templateType": "MUSTACHE"
+    }
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+
+<button id="button_dates_helper_velocity" class="accordion">Velocity: Expires and Last-Modified headers and a formatted date</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080)
+    .when(request().withPath("/subscription"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.VELOCITY,
+            "{ 'statusCode': 200, 'headers': { 'Expires': [ '$dates.now().plusHours(1).rfc1123()' ], 'Last-Modified': [ '$dates.now().startOfDay().rfc1123()' ] }, 'body': 'billing period ends $dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy')' }"
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'Expires': [ '$dates.now().plusHours(1).rfc1123()' ], 'Last-Modified': [ '$dates.now().startOfDay().rfc1123()' ] }, 'body': 'billing period ends $dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy')' }",
+        "templateType": "VELOCITY"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver.client import MockServerClient
+from mockserver.models import Expectation
+
+client = MockServerClient("localhost", 1080)
+client.upsert(Expectation.from_dict({
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'Expires': [ '$dates.now().plusHours(1).rfc1123()' ], 'Last-Modified': [ '$dates.now().startOfDay().rfc1123()' ] }, 'body': 'billing period ends $dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy')' }",
+        "templateType": "VELOCITY"
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+client.upsert(MockServer::Expectation.from_hash({
+    'httpRequest' =&gt; {
+        'path' =&gt; '/subscription'
+    },
+    'httpResponseTemplate' =&gt; {
+        'template' =&gt; "{ 'statusCode': 200, 'headers': { 'Expires': [ '$dates.now().plusHours(1).rfc1123()' ], 'Last-Modified': [ '$dates.now().startOfDay().rfc1123()' ] }, 'body': 'billing period ends $dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy')' }",
+        'templateType' =&gt; 'VELOCITY'
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`{
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'Expires': [ '$dates.now().plusHours(1).rfc1123()' ], 'Last-Modified': [ '$dates.now().startOfDay().rfc1123()' ] }, 'body': 'billing period ends $dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy')' }",
+        "templateType": "VELOCITY"
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"{
+    ""httpRequest"": {
+        ""path"": ""/subscription""
+    },
+    ""httpResponseTemplate"": {
+        ""template"": ""{ 'statusCode': 200, 'headers': { 'Expires': [ '$dates.now().plusHours(1).rfc1123()' ], 'Last-Modified': [ '$dates.now().startOfDay().rfc1123()' ] }, 'body': 'billing period ends $dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy')' }"",
+        ""templateType"": ""VELOCITY""
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+
+let client = Client::new();
+let body = r#"{
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'Expires': [ '$dates.now().plusHours(1).rfc1123()' ], 'Last-Modified': [ '$dates.now().startOfDay().rfc1123()' ] }, 'body': 'billing period ends $dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy')' }",
+        "templateType": "VELOCITY"
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'Expires': [ '$dates.now().plusHours(1).rfc1123()' ], 'Last-Modified': [ '$dates.now().startOfDay().rfc1123()' ] }, 'body': 'billing period ends $dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy')' }",
+        "templateType": "VELOCITY"
+    }
+}
+JSON;
+
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "{ '\''statusCode'\'': 200, '\''headers'\'': { '\''Expires'\'': [ '\''$dates.now().plusHours(1).rfc1123()'\'' ], '\''Last-Modified'\'': [ '\''$dates.now().startOfDay().rfc1123()'\'' ] }, '\''body'\'': '\''billing period ends $dates.now('\''Europe/London'\'').lastDayOfMonth().format('\''d MMMM yyyy'\'')'\'' }",
+        "templateType": "VELOCITY"
+    }
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+
+<button id="button_dates_helper_javascript" class="accordion">JavaScript: Expires and Last-Modified headers and a formatted date</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080)
+    .when(request().withPath("/subscription"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.JAVASCRIPT,
+            "return { 'statusCode': 200, 'headers': { 'Expires': [ dates.now().plusHours(1).rfc1123() ], 'Last-Modified': [ dates.now().startOfDay().rfc1123() ] }, 'body': 'billing period ends ' + dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy') };"
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'Expires': [ dates.now().plusHours(1).rfc1123() ], 'Last-Modified': [ dates.now().startOfDay().rfc1123() ] }, 'body': 'billing period ends ' + dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy') };",
+        "templateType": "JAVASCRIPT"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver.client import MockServerClient
+from mockserver.models import Expectation
+
+client = MockServerClient("localhost", 1080)
+client.upsert(Expectation.from_dict({
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'Expires': [ dates.now().plusHours(1).rfc1123() ], 'Last-Modified': [ dates.now().startOfDay().rfc1123() ] }, 'body': 'billing period ends ' + dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy') };",
+        "templateType": "JAVASCRIPT"
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+client.upsert(MockServer::Expectation.from_hash({
+    'httpRequest' =&gt; {
+        'path' =&gt; '/subscription'
+    },
+    'httpResponseTemplate' =&gt; {
+        'template' =&gt; "return { 'statusCode': 200, 'headers': { 'Expires': [ dates.now().plusHours(1).rfc1123() ], 'Last-Modified': [ dates.now().startOfDay().rfc1123() ] }, 'body': 'billing period ends ' + dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy') };",
+        'templateType' =&gt; 'JAVASCRIPT'
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`{
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'Expires': [ dates.now().plusHours(1).rfc1123() ], 'Last-Modified': [ dates.now().startOfDay().rfc1123() ] }, 'body': 'billing period ends ' + dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy') };",
+        "templateType": "JAVASCRIPT"
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"{
+    ""httpRequest"": {
+        ""path"": ""/subscription""
+    },
+    ""httpResponseTemplate"": {
+        ""template"": ""return { 'statusCode': 200, 'headers': { 'Expires': [ dates.now().plusHours(1).rfc1123() ], 'Last-Modified': [ dates.now().startOfDay().rfc1123() ] }, 'body': 'billing period ends ' + dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy') };"",
+        ""templateType"": ""JAVASCRIPT""
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+
+let client = Client::new();
+let body = r#"{
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'Expires': [ dates.now().plusHours(1).rfc1123() ], 'Last-Modified': [ dates.now().startOfDay().rfc1123() ] }, 'body': 'billing period ends ' + dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy') };",
+        "templateType": "JAVASCRIPT"
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'Expires': [ dates.now().plusHours(1).rfc1123() ], 'Last-Modified': [ dates.now().startOfDay().rfc1123() ] }, 'body': 'billing period ends ' + dates.now('Europe/London').lastDayOfMonth().format('d MMMM yyyy') };",
+        "templateType": "JAVASCRIPT"
+    }
+}
+JSON;
+
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/subscription"
+    },
+    "httpResponseTemplate": {
+        "template": "return { '\''statusCode'\'': 200, '\''headers'\'': { '\''Expires'\'': [ dates.now().plusHours(1).rfc1123() ], '\''Last-Modified'\'': [ dates.now().startOfDay().rfc1123() ] }, '\''body'\'': '\''billing period ends '\'' + dates.now('\''Europe/London'\'').lastDayOfMonth().format('\''d MMMM yyyy'\'') };",
+        "templateType": "JAVASCRIPT"
+    }
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 
 <a id="math_helper" class="anchor" href="#math_helper">&nbsp;</a>
 
