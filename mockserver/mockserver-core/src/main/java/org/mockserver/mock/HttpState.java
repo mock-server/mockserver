@@ -3046,7 +3046,7 @@ public class HttpState {
                             } else if ("pact".equalsIgnoreCase(formatParam)) {
                                 importedExpectations = new org.mockserver.mock.pact.PactImporter().importExpectations(requestBody, redactionOptions);
                             } else if ("wiremock".equalsIgnoreCase(formatParam)) {
-                                org.mockserver.imports.ImportResult result = new org.mockserver.imports.WireMockImporter().importExpectations(requestBody, redactionOptions);
+                                org.mockserver.imports.ImportResult result = new org.mockserver.imports.WireMockImporter().importExpectations(requestBody, redactionOptions, request.getFirstQueryStringParameter("filesDirectory"));
                                 importedExpectations = result.getExpectations();
                                 importWarnings = result.getWarnings();
                             } else if ("mountebank".equalsIgnoreCase(formatParam)) {
@@ -3074,7 +3074,7 @@ public class HttpState {
                                     || rootNode.path("request").path("urlPattern").isTextual()
                                     || rootNode.path("response").path("jsonBody").isObject()
                                     || rootNode.path("response").path("fault").isTextual()) {
-                                    org.mockserver.imports.ImportResult result = new org.mockserver.imports.WireMockImporter().importExpectations(requestBody, redactionOptions);
+                                    org.mockserver.imports.ImportResult result = new org.mockserver.imports.WireMockImporter().importExpectations(requestBody, redactionOptions, request.getFirstQueryStringParameter("filesDirectory"));
                                     importedExpectations = result.getExpectations();
                                     importWarnings = result.getWarnings();
                                 } else if (rootNode.path("imposters").isArray()

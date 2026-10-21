@@ -34,15 +34,27 @@ public class ClientImportDocumentIntegrationTest {
 
     private static final long TIMEOUT_SECONDS = 30;
 
-    // the transformers construct cannot be mapped, so the server replies with a warning alongside the expectation
+    // a custom transformer cannot be mapped, so the server replies with a warning alongside the expectation
     private static final String WIREMOCK_MAPPINGS = """
         {
           "mappings": [
             {
               "request": { "method": "GET", "urlPath": "/wiremock/greeting" },
-              "response": { "status": 200, "body": "hello from wiremock", "transformers": [ "response-template" ] }
+              "response": { "status": 200, "body": "hello from wiremock", "transformers": [ "my-transformer" ] }
             }
           ]
+        }
+        """;
+
+    private static final String WIREMOCK_TEMPLATE = """
+        {
+          "request": { "method": "GET", "urlPath": "/wiremock/echo" },
+          "response": {
+            "status": 200,
+            "headers": { "Content-Type": "text/plain" },
+            "body": "{{request.method}} {{request.path}} for {{request.query.name}} via {{request.headers.X-Client}}",
+            "transformers": [ "response-template" ]
+          }
         }
         """;
 
@@ -89,6 +101,17 @@ public class ClientImportDocumentIntegrationTest {
         assertThat(imported.length, is(1));
         assertThat(((HttpRequest) imported[0].getHttpRequest()).getPath().getValue(), is("/wiremock/greeting"));
         assertThat(send(request().withMethod("GET").withPath("/wiremock/greeting")).getBodyAsString(), is("hello from wiremock"));
+    }
+
+    @Test
+    public void shouldServeAnImportedWireMockResponseTemplate() throws Exception {
+        // when
+        server.importDocument(WIREMOCK_TEMPLATE, "wiremock");
+
+        // then
+        HttpResponse response = send(request().withMethod("GET").withPath("/wiremock/echo")
+            .withQueryStringParameter("name", "Ada").withHeader("X-Client", "cli"));
+        assertThat(response.getBodyAsString(), is("GET /wiremock/echo for Ada via cli"));
     }
 
     @Test

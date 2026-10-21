@@ -810,6 +810,15 @@ paths:
           required: false
           description: comma-separated body field names to redact in addition to the built-in set
         - in: query
+          name: filesDirectory
+          schema:
+            type: string
+          required: false
+          description: >-
+            only used for WireMock imports. The WireMock __files directory on the MockServer host; each
+            stub's response bodyFileName is resolved inside it and served as a file body. Without it a
+            bodyFileName is reported as an import warning.
+        - in: query
           name: consolidate
           schema:
             type: boolean

@@ -255,7 +255,7 @@ public class RecordToMockHttpStateTest {
         HttpState httpState = newHttpState();
         String wiremock = "{\"mappings\":[{"
             + "\"request\":{\"method\":\"GET\",\"urlPath\":\"/api/thing\","
-            + "\"bodyPatterns\":[{\"matchesXPath\":\"//x\"}]},"
+            + "\"multipartPatterns\":[{\"matchingType\":\"ANY\"}]},"
             + "\"response\":{\"status\":200,\"body\":\"ok\"}}]}";
 
         FakeResponseWriter responseWriter = new FakeResponseWriter();
@@ -266,13 +266,39 @@ public class RecordToMockHttpStateTest {
         com.fasterxml.jackson.databind.JsonNode body = parseImportBody(responseWriter.response.getBodyAsString());
         assertThat(body.path("expectations").isArray(), is(true));
         assertThat(body.path("expectations").size(), is(1));
-        // the matchesXPath body pattern must surface as a structured warning, not a silent drop
+        // the unmapped multipartPatterns must surface as a structured warning, not a silent drop
         assertThat(body.path("warnings").isArray(), is(true));
         assertThat(body.path("warnings").size(), is(not(0)));
-        assertThat(body.path("warnings").toString(), containsString("matchesXPath"));
+        assertThat(body.path("warnings").toString(), containsString("multipartPatterns"));
         // imported expectation is active
         assertThat(httpState.firstMatchingExpectation(request("/api/thing").withMethod("GET")),
             is(org.hamcrest.CoreMatchers.notNullValue()));
+    }
+
+    @Test
+    public void shouldResolveWireMockBodyFileNameFromFilesDirectoryParameter() throws Exception {
+        java.nio.file.Path files = java.nio.file.Files.createTempDirectory("wiremock-files");
+        try {
+            java.nio.file.Files.writeString(files.resolve("thing.json"), "{\"from\":\"file\"}");
+            HttpState httpState = newHttpState();
+            String wiremock = "{\"request\":{\"method\":\"GET\",\"urlPath\":\"/api/file\"},"
+                + "\"response\":{\"status\":200,\"bodyFileName\":\"thing.json\"}}";
+
+            FakeResponseWriter responseWriter = new FakeResponseWriter();
+            httpState.handle(request("/mockserver/import").withMethod("PUT")
+                .withQueryStringParameter("format", "wiremock")
+                .withQueryStringParameter("filesDirectory", files.toString())
+                .withBody(wiremock), responseWriter, false);
+
+            assertThat(responseWriter.response.getStatusCode(), is(201));
+            assertThat(parseImportBody(responseWriter.response.getBodyAsString()).path("warnings").size(), is(0));
+            Expectation imported = httpState.firstMatchingExpectation(request("/api/file").withMethod("GET"));
+            assertThat(((org.mockserver.model.FileBody) imported.getHttpResponse().getBody()).getFilePath(),
+                is(files.resolve("thing.json").toRealPath().toString()));
+        } finally {
+            java.nio.file.Files.deleteIfExists(files.resolve("thing.json"));
+            java.nio.file.Files.deleteIfExists(files);
+        }
     }
 
     @Test

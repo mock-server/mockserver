@@ -93,6 +93,11 @@ sitemap:
             <td><span class="inline_code">recording</span></td>
             <td>Reload a persisted recorded-traffic NDJSON archive (see <a href="#recording_reimport">Reloading Recorded Traffic</a>). Unlike the other formats this does not create expectations — it re-loads recorded request/response pairs so they are retrievable like live in-memory recordings. Must be specified explicitly (NDJSON is never auto-detected).</td>
         </tr>
+        <tr>
+            <td><span class="inline_code">filesDirectory</span></td>
+            <td>a directory path</td>
+            <td>WireMock imports only: the WireMock <span class="inline_code">__files</span> directory <strong>on the machine running MockServer</strong>, so stubs that use <span class="inline_code">bodyFileName</span> serve that file (see <a href="#import_wiremock">WireMock stub mappings</a>)</td>
+        </tr>
     </tbody>
 </table>
 
@@ -132,8 +137,8 @@ curl -v -X PUT "http://localhost:1080/mockserver/import?format=recording" \
 # {
 #   "expectations": [ ... ],
 #   "warnings": [
-#     { "item": "stub[3]", "construct": "bodyPatterns.matchesXPath",
-#       "detail": "XML/XPath body matching is not mapped by this importer" }
+#     { "item": "stub[3]", "construct": "response.transformers.response-template",
+#       "detail": "the template uses [{{now}}], which has no MockServer Mustache equivalent; the response is served verbatim" }
 #   ]
 # }</code></pre>
 
@@ -143,13 +148,41 @@ curl -v -X PUT "http://localhost:1080/mockserver/import?format=recording" \
 
 <h3>WireMock stub mappings</h3>
 
-<p>Accepts a single stub object, a <span class="inline_code">{ "mappings": [ ... ] }</span> export (from <span class="inline_code">GET /__admin/mappings</span> or a <span class="inline_code">mappings/</span> directory), or a bare JSON array. Mapping:</p>
-<ul>
-    <li><strong>Request</strong> &mdash; <span class="inline_code">method</span>, <span class="inline_code">urlPath</span> (exact), <span class="inline_code">urlPathPattern</span>/<span class="inline_code">urlPattern</span> (regex path), <span class="inline_code">url</span> (path + query); <span class="inline_code">queryParameters</span> and <span class="inline_code">headers</span> predicates (<span class="inline_code">equalTo</span>, <span class="inline_code">matches</span>, <span class="inline_code">contains</span>); <span class="inline_code">bodyPatterns</span> (<span class="inline_code">equalToJson</span>, <span class="inline_code">matchesJsonPath</span>, <span class="inline_code">contains</span>, <span class="inline_code">matches</span>, <span class="inline_code">equalTo</span>).</li>
-    <li><strong>Response</strong> &mdash; <span class="inline_code">status</span>, <span class="inline_code">headers</span>, <span class="inline_code">body</span>/<span class="inline_code">base64Body</span>/<span class="inline_code">jsonBody</span>, <span class="inline_code">fixedDelayMilliseconds</span> (delay). A <span class="inline_code">fault</span> becomes a connection-drop error; a <span class="inline_code">proxyBaseUrl</span> response becomes a forward to that host.</li>
-    <li><strong>Scenarios &amp; priority</strong> &mdash; WireMock scenarios (<span class="inline_code">scenarioName</span>/<span class="inline_code">requiredScenarioState</span>/<span class="inline_code">newScenarioState</span>) map straight onto MockServer scenarios; <span class="inline_code">priority</span> is inverted (WireMock 1 = highest).</li>
-</ul>
-<p><em>Warned, not mapped:</em> <span class="inline_code">matchesXPath</span>/<span class="inline_code">equalToXml</span> body matching, random <span class="inline_code">delayDistribution</span>, response templating <span class="inline_code">transformers</span>, and <span class="inline_code">bodyFileName</span> references.</p>
+<p>Accepts a single stub object, a <span class="inline_code">{ "mappings": [ ... ] }</span> export (from <span class="inline_code">GET /__admin/mappings</span> or a <span class="inline_code">mappings/</span> directory), or a bare JSON array. Each WireMock construct maps onto the matching MockServer feature:</p>
+
+<table class="table table-bordered table-condensed">
+    <thead>
+        <tr><th>WireMock</th><th>MockServer</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><span class="inline_code">method</span>, <span class="inline_code">urlPath</span>, <span class="inline_code">urlPathPattern</span>/<span class="inline_code">urlPattern</span>, <span class="inline_code">url</span></td><td>method, exact path, regex path, path + query parameters</td></tr>
+        <tr><td><span class="inline_code">urlPathTemplate</span> (+ optional <span class="inline_code">pathParameters</span>)</td><td>a <span class="inline_code">/users/{id}</span> path with path parameter matchers; a name without a <span class="inline_code">pathParameters</span> entry matches any one path segment, as in WireMock</td></tr>
+        <tr><td><span class="inline_code">queryParameters</span>, <span class="inline_code">headers</span> (<span class="inline_code">equalTo</span>, <span class="inline_code">matches</span>, <span class="inline_code">contains</span>, <span class="inline_code">doesNotMatch</span>)</td><td>query parameter and header matchers</td></tr>
+        <tr><td><span class="inline_code">bodyPatterns</span>: <span class="inline_code">equalToJson</span>, <span class="inline_code">matchesJsonPath</span>, <span class="inline_code">equalTo</span>, <span class="inline_code">contains</span>, <span class="inline_code">matches</span>, <span class="inline_code">binaryEqualTo</span></td><td>JSON, JsonPath, exact, substring, regex and binary body matchers</td></tr>
+        <tr><td><span class="inline_code">bodyPatterns</span>: <span class="inline_code">equalToXml</span></td><td>XML body matcher (ignores whitespace, comments and element order)</td></tr>
+        <tr><td><span class="inline_code">bodyPatterns</span>: <span class="inline_code">matchesXPath</span> (with <span class="inline_code">xPathNamespaces</span>, and an <span class="inline_code">equalTo</span> or <span class="inline_code">contains</span> result matcher)</td><td>XPath body matcher</td></tr>
+        <tr><td><span class="inline_code">status</span>, <span class="inline_code">headers</span>, <span class="inline_code">body</span>/<span class="inline_code">base64Body</span>/<span class="inline_code">jsonBody</span></td><td>response status, headers and body</td></tr>
+        <tr><td><span class="inline_code">bodyFileName</span></td><td>a file body read from the <span class="inline_code">filesDirectory</span> you pass on the import request</td></tr>
+        <tr><td><span class="inline_code">fixedDelayMilliseconds</span>, <span class="inline_code">delayDistribution</span> (<span class="inline_code">uniform</span>, <span class="inline_code">lognormal</span>, <span class="inline_code">fixed</span>)</td><td>a fixed delay, or a uniform or log-normal delay distribution (a log-normal keeps the same median and 99th percentile)</td></tr>
+        <tr><td><span class="inline_code">chunkedDribbleDelay</span></td><td>chunked response with a delay between chunks (<span class="inline_code">connectionOptions</span> <span class="inline_code">chunkSize</span>/<span class="inline_code">chunkDelay</span>)</td></tr>
+        <tr><td><span class="inline_code">transformers: ["response-template"]</span></td><td>a Mustache response template, when the template only uses simple request references (see below)</td></tr>
+        <tr><td><span class="inline_code">fault</span>: <span class="inline_code">EMPTY_RESPONSE</span></td><td>the connection is closed without a response</td></tr>
+        <tr><td><span class="inline_code">fault</span>: <span class="inline_code">MALFORMED_RESPONSE_CHUNK</span>, <span class="inline_code">RANDOM_DATA_THEN_CLOSE</span></td><td>the same bytes WireMock sends are written, then the connection is closed (HTTP/1.1; over HTTP/2 the connection is just closed)</td></tr>
+        <tr><td><span class="inline_code">fault</span>: <span class="inline_code">CONNECTION_RESET_BY_PEER</span></td><td>the connection is closed, with a warning: this is a normal close, not a TCP reset. For a real reset, use <a href="chaos_testing.html">TCP chaos</a> <span class="inline_code">resetPeer</span> for the host</td></tr>
+        <tr><td><span class="inline_code">proxyBaseUrl</span></td><td>a forward to that host and port</td></tr>
+        <tr><td><span class="inline_code">postServeActions</span> / <span class="inline_code">serveEventListeners</span> webhooks</td><td><a href="before_and_after_actions.html">after-actions</a> that send the webhook request, with its delay</td></tr>
+        <tr><td><span class="inline_code">scenarioName</span>, <span class="inline_code">requiredScenarioState</span>, <span class="inline_code">newScenarioState</span></td><td>MockServer scenarios (both tools start in <span class="inline_code">Started</span>)</td></tr>
+        <tr><td><span class="inline_code">priority</span></td><td>priority, inverted (WireMock 1 is the highest)</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Response templates.</strong> A stub with the <span class="inline_code">response-template</span> transformer becomes a MockServer Mustache template when every <span class="inline_code">{{...}}</span> reference in its body and headers is one of: <span class="inline_code">request.method</span>, <span class="inline_code">request.path</span>, <span class="inline_code">request.body</span>, <span class="inline_code">request.query.<em>name</em></span>, <span class="inline_code">request.headers.<em>name</em></span> (optionally with <span class="inline_code">.[n]</span> for a later value), <span class="inline_code">request.cookies.<em>name</em></span>, <span class="inline_code">request.path.<em>name</em></span> for a <span class="inline_code">urlPathTemplate</span> stub, or <span class="inline_code">request.pathSegments.[n]</span> for a stub with an exact path. Handlebars helpers (<span class="inline_code">{{now}}</span>, <span class="inline_code">{{jsonPath ...}}</span>, <span class="inline_code">{{#if}}</span> and the rest) and triple-brace <span class="inline_code">{{{...}}}</span> output are not translated: the stub is then served with its body unchanged, and you get a warning listing the references to rewrite. Request values are rendered inside MockServer's JSON response template, so a backslash in a referenced request value is read as a JSON escape, and a value ending in a backslash stops the response rendering; the import warns about this for every template that renders request values. Secret redaction applies to the template's headers and body as it does to any other imported response. Without the transformer, WireMock serves <span class="inline_code">{{...}}</span> literally, and so does the import. (If you ran WireMock with global templating turned on, add the transformer to each stub before importing.)</p>
+
+<p><strong>Body files.</strong> Pass the WireMock <span class="inline_code">__files</span> directory as <span class="inline_code">filesDirectory</span>, for example <span class="inline_code">PUT /mockserver/import?format=wiremock&amp;filesDirectory=/wiremock/__files</span>. The path is on the machine (or container) running MockServer, so mount the directory there first. A file that is missing, or a name (or symbolic link) that points outside the directory, gives a warning. The import can serve any file the MockServer process can read from the directory you name, so protect the control plane (see <a href="control_plane_authorisation.html">API security</a>) wherever untrusted callers can reach it. Without <span class="inline_code">filesDirectory</span>, each <span class="inline_code">bodyFileName</span> gives a warning and the stub has no body.</p>
+
+<p><strong>Webhooks.</strong> Webhook <span class="inline_code">{{originalRequest.method}}</span>, <span class="inline_code">{{originalRequest.headers.<em>name</em>}}</span>, <span class="inline_code">{{originalRequest.query.<em>name</em>}}</span> and <span class="inline_code">{{jsonPath originalRequest.body '$.a.b'}}</span> references are translated. Any other reference is sent as written, with a warning.</p>
+
+<p><em>Warned, not mapped:</em> cookie and <span class="inline_code">basicAuthCredentials</span> matchers, <span class="inline_code">multipartPatterns</span>, the result matcher of a <span class="inline_code">matchesJsonPath</span> object, <span class="inline_code">equalToXml</span> placeholders, the lognormal <span class="inline_code">maxValue</span> cap, custom transformers and <span class="inline_code">transformerParameters</span>, serve-event listeners other than <span class="inline_code">webhook</span>, stub <span class="inline_code">metadata</span>, and the per-stub <span class="inline_code">persistent</span> flag (use the <span class="inline_code">persistExpectations</span> configuration property instead).</p>
 
 <a id="import_mountebank" class="anchor" href="#import_mountebank">&nbsp;</a>
 
@@ -183,6 +216,8 @@ curl -v -X PUT "http://localhost:1080/mockserver/import?format=recording" \
 <p><strong>Headers redacted by default:</strong> <span class="inline_code">Authorization</span>, <span class="inline_code">X-Api-Key</span>, <span class="inline_code">X-Auth-Token</span>, <span class="inline_code">Cookie</span>, <span class="inline_code">Set-Cookie</span>, <span class="inline_code">Proxy-Authorization</span>, and similar credential-bearing headers. The header name is preserved in the generated expectation but the value is replaced with a placeholder so the mock does not depend on a specific secret.</p>
 
 <p><strong>JSON body fields redacted by default:</strong> common secret field names such as <span class="inline_code">password</span>, <span class="inline_code">secret</span>, <span class="inline_code">token</span>, <span class="inline_code">api_key</span>, <span class="inline_code">apiKey</span>, <span class="inline_code">access_token</span>, and <span class="inline_code">refresh_token</span> are replaced with a placeholder value in request and response bodies.</p>
+
+<p><strong>Request body matchers.</strong> In an imported request matcher, redaction masks the redacted JSON fields inside JSON, exact, substring and binary body matchers. It replaces an XML body matcher, or a non-JSON body matcher, that contains a redacted field name with a placeholder. For a WireMock <span class="inline_code">matchesXPath</span> with an <span class="inline_code">equalTo</span> or <span class="inline_code">contains</span> value, it masks the value when the expression names a redacted field. A masked matcher matches only a request carrying the placeholder, and the import warns about it. XPath, JsonPath and regex expressions, and exact or substring matchers that start with a quoted string or a number followed by more text (such as <span class="inline_code">"api_key":"abc"</span>, which redaction reads as the single JSON value <span class="inline_code">"api_key"</span>), are not redacted. The import warns about any of these that contains a redacted field name, so you can check it holds no real secret.</p>
 
 <p>If you need to disable redaction (for example when importing a file that contains only test credentials and you want exact value matching), or to extend the set of redacted fields for your organisation, pass import options in the query string:</p>
 

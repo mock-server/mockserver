@@ -3,14 +3,22 @@ package org.mockserver.imports;
 import org.junit.Test;
 import org.mockserver.fixture.FixtureRedactor;
 import org.mockserver.mock.Expectation;
+import org.mockserver.matchers.MatchType;
+import org.mockserver.model.BinaryBody;
+import org.mockserver.model.Body;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.JsonBody;
+import org.mockserver.model.XPathBody;
+import org.mockserver.model.XmlBody;
 
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
@@ -247,5 +255,39 @@ public class ImportRedactionTest {
         HttpResponse response = expectation.getHttpResponse();
         assertThat(response.getFirstHeader("Set-Cookie"), is("session=abc123; HttpOnly"));
         assertThat(response.getBodyAsString(), containsString("at-secret-999"));
+    }
+
+    @Test
+    public void preservingRedactionMasksSecretsInsideXmlAndBinaryMatchersButKeepsTheirType() {
+        List<Expectation> redacted = ImportRedaction.redactPreservingActions(List.of(
+            new Expectation(HttpRequest.request("/xml").withBody(XmlBody.xml("<login><password>HUNTER2</password></login>"))).thenRespond(HttpResponse.response()),
+            new Expectation(HttpRequest.request("/bin").withBody(BinaryBody.binary("{\"api_key\":\"BINSECRET\"}".getBytes(UTF_8)))).thenRespond(HttpResponse.response())
+        ), ImportRedaction.Options.enabled());
+
+        Body<?> xml = ((HttpRequest) redacted.get(0).getHttpRequest()).getBody();
+        assertThat(xml, instanceOf(XmlBody.class));
+        assertThat(xml.toString(), not(containsString("HUNTER2")));
+
+        Body<?> binary = ((HttpRequest) redacted.get(1).getHttpRequest()).getBody();
+        assertThat(binary, instanceOf(BinaryBody.class));
+        assertThat(new String(binary.getRawBytes(), UTF_8), is("{\"api_key\":\"" + PLACEHOLDER + "\"}"));
+    }
+
+    @Test
+    public void preservingRedactionKeepsJsonMatcherTypeAndFlagsAndExpressionMatchers() {
+        JsonBody json = JsonBody.json("{\"password\":\"pw\",\"user\":\"a\"}", MatchType.ONLY_MATCHING_FIELDS);
+        json.withOptional(true);
+        json.setNot(true);
+        List<Expectation> redacted = ImportRedaction.redactPreservingActions(List.of(
+            new Expectation(HttpRequest.request("/json").withBody(json)).thenRespond(HttpResponse.response()),
+            new Expectation(HttpRequest.request("/xpath").withBody(XPathBody.xpath("//password[text()='x']"))).thenRespond(HttpResponse.response())
+        ), ImportRedaction.Options.enabled());
+
+        JsonBody redactedJson = (JsonBody) ((HttpRequest) redacted.get(0).getHttpRequest()).getBody();
+        assertThat(redactedJson.getValue(), not(containsString("\"pw\"")));
+        assertThat(redactedJson.getMatchType(), is(MatchType.ONLY_MATCHING_FIELDS));
+        assertThat(redactedJson.getOptional(), is(true));
+        assertThat(redactedJson.isNot(), is(true));
+        assertThat(((HttpRequest) redacted.get(1).getHttpRequest()).getBody(), is(XPathBody.xpath("//password[text()='x']")));
     }
 }
