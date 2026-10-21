@@ -97,6 +97,10 @@ KEEP_LINE = re.compile(r'version-ref:\s*keep(?![-\w])')
 BUMP_LINE = re.compile(r'version-ref:\s*bump\b')
 KEEP_BEGIN = re.compile(r'version-ref:\s*keep-begin\b')
 KEEP_END = re.compile(r'version-ref:\s*keep-end\b')
+# A SHA-pinned action's trailing `# vX.Y.Z` names that action's release, never MockServer's.
+PINNED_ACTION = re.compile(r'\buses:\s*[^\s@]+@[0-9a-f]{40}\b')
+# The release pushes with a token that GitHub refuses for any change under this path.
+WORKFLOWS = '.github/workflows/'
 
 
 def bounded(version):
@@ -142,7 +146,7 @@ def classify(rel, lines, versions):
             in_block, block_start = True, n
         hits = [(m.start(), m.end(), v) for v, rx in finders for m in rx.finditer(line)]
         if hits:
-            keep = rel in KEEP_FILES or in_block or KEEP_LINE.search(line)
+            keep = rel in KEEP_FILES or in_block or KEEP_LINE.search(line) or PINNED_ACTION.search(line)
             # A KEEP_LINES fragment keeps only the occurrences inside it.
             fragment_spans = [(m.start(), m.end()) for f in fragments for m in re.finditer(re.escape(f), line)]
             accepted = BUMP_LINE.search(line)
@@ -272,6 +276,12 @@ def cmd_check(args):
                 bad += 1
                 if not args.list:
                     print(f'{rel}:{n}: {verdict}: {describe(lines, n, start, verdict)}')
+            elif verdict == 'bump' and rel.startswith(WORKFLOWS) and v == version:
+                bad += 1
+                if not args.list:
+                    print(f'{rel}:{n}: workflow: the release cannot push a bump here (its token has no '
+                          f'workflow scope); add `version-ref:keep` or remove the version: '
+                          f'{describe(lines, n, start, verdict)}')
     if in_git or args.allowlist:
         for problem in stale_allowlist(args.root):
             bad += 1

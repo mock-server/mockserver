@@ -860,7 +860,8 @@ git_commit_and_push() {
       # Bounded retries to fail loud if there's a systemic conflict.
       local attempts=0
       while ! git -C "$REPO_ROOT" push origin HEAD:master 2>/tmp/push_err.$$; do
-        if ! grep -qE "non-fast-forward|rejected" /tmp/push_err.$$; then
+        # "[remote rejected]" (permissions, hooks) is not a race; retrying cannot fix it.
+        if ! grep -qE "\[rejected\]|non-fast-forward|fetch first" /tmp/push_err.$$; then
           cat /tmp/push_err.$$ >&2
           rm -f /tmp/push_err.$$
           rc=1
