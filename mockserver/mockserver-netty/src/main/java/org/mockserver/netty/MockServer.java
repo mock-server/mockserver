@@ -27,6 +27,7 @@ import org.mockserver.netty.http3.Http3StartupException;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.socket.NettyAllocator;
 import org.mockserver.socket.NettyTransport;
+import org.mockserver.socket.tls.DataPlaneMutualTlsTrust;
 import org.mockserver.socket.tls.NettySslContextFactory;
 import org.slf4j.event.Level;
 
@@ -183,6 +184,7 @@ public class MockServer extends LifeCycle {
         // boss/worker event-loop groups by the time we get here; hoisting alone would not release those.
         try {
             ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(configuration);
+            DataPlaneMutualTlsTrust.requireUsableDataPlaneMutualTls(configuration, mockServerLogger);
         } catch (Throwable throwable) {
             stopRefusedStart();
             throw throwable;

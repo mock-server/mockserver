@@ -42,6 +42,7 @@ sitemap:
         <tr><td><a href="#dns_refuses_to_start">DNS mocking refuses to start if its port can't be used</a></td><td>Anyone who sets <span class="inline_code">dnsEnabled=true</span> with a fixed <span class="inline_code">dnsPort</span></td><td>Free the port, or leave <span class="inline_code">dnsPort=0</span> (default) so the OS picks one</td></tr>
         <tr><td><a href="#control_plane_500">Unexpected control-plane failures answer 500, not 400</a></td><td>Code that treats any control-plane <span class="inline_code">400</span> as "my input was wrong", or catches the Java client's bare <span class="inline_code">IllegalArgumentException</span></td><td>Treat <span class="inline_code">500</span> as an internal MockServer fault (correlation id in the body and log); <span class="inline_code">400</span> still means your request was rejected</td></tr>
         <tr><td><a href="#control_plane_mtls">Control-plane mTLS trusts only the configured CA chain</a></td><td>Anyone using <span class="inline_code">controlPlaneTLSMutualAuthenticationCAChain</span> with certificates signed by MockServer's own CA; also anyone with control-plane mTLS required, no chain set, and the bundled default CA &mdash; the server now refuses to start</td><td>Add MockServer's CA certificate to the chain (server and Java client each need this separately), or set <span class="inline_code">certificateAuthorityCertificate</span>/<span class="inline_code">certificateAuthorityPrivateKey</span> to give MockServer its own CA</td></tr>
+        <tr><td><a href="#mtls_bundled_ca">mTLS never trusts the bundled default CA</a> (later 9.x)</td><td>Anyone with <span class="inline_code">tlsMutualAuthenticationRequired</span> (or <span class="inline_code">tlsMutualAuthenticationCertificateChain</span>) while MockServer uses its default CA &mdash; the server now refuses to start, or stops accepting client certificates signed by the default CA</td><td>Give MockServer its own CA, set <span class="inline_code">dynamicallyCreateCertificateAuthorityCertificate=true</span>, or set <span class="inline_code">tlsMutualAuthenticationCertificateChain</span> to the CA that signs your client certificates; for a throwaway local test only, <span class="inline_code">tlsMutualAuthenticationAllowBundledCa=true</span></td></tr>
         <tr><td><a href="#verification_wording">Over-count verification failures reword "not found" to "found"</a></td><td>Tests that assert the exact text of a <span class="inline_code">never()</span>/<span class="inline_code">atMost</span>/<span class="inline_code">exactly</span>/<span class="inline_code">between</span> failure message</td><td>Update the assertion to the new wording</td></tr>
         <tr><td><a href="#response_body_verification">Response-body verification now applies the matcher</a></td><td>Response verifications using a regex/JSON path/JSON Schema/XPath/XML Schema/form/multipart/fuzzy/GraphQL/JSON-RPC/WASM/allOf matcher, or <span class="inline_code">matchType</span>/<span class="inline_code">not</span></td><td>Fix the matcher or the system under test &mdash; a verification that only passed because the matcher was ignored now fails</td></tr>
         <tr><td><a href="#openapi_verification">OpenAPI request verification now counts only matching operations</a></td><td>Verifications using <span class="inline_code">verify(openAPI(...), ...)</span></td><td>Fix the matcher or the system under test if a verification now fails</td></tr>
@@ -170,6 +171,28 @@ sitemap:
 </ul>
 
 <p>Without control-plane mTLS, nothing changes. See <a href="/mock_server/control_plane_authorisation.html">Control Plane Authorisation</a> and <a href="/mock_server/HTTPS_TLS.html">HTTPS &amp; TLS</a>.</p>
+
+<a id="mtls_bundled_ca" class="anchor" href="#mtls_bundled_ca">&nbsp;</a>
+
+<h3>mTLS never trusts the bundled default CA</h3>
+
+<p>When mTLS is on (<span class="inline_code">tlsMutualAuthenticationRequired=true</span>, or a <span class="inline_code">tlsMutualAuthenticationCertificateChain</span> is set), MockServer used to accept client certificates signed by its own CA. By default that is the CA bundled with MockServer, and its private key is published in the MockServer jar, so anyone could create a client certificate MockServer accepted. MockServer now never trusts the bundled CA for client certificates:</p>
+
+<ul>
+  <li><strong>mTLS on, no chain, default CA:</strong> MockServer refuses to start, and <span class="inline_code">PUT /mockserver/configuration</span> answers <span class="inline_code">400</span>. The message names the fix.</li>
+  <li><strong>A chain that contains the bundled CA:</strong> the same.</li>
+  <li><strong>A chain without the bundled CA, default CA:</strong> MockServer starts and trusts only the chain. A client certificate signed by MockServer's default CA, such as the one <span class="inline_code">MockServerClient</span> presents by default, is no longer accepted.</li>
+</ul>
+
+<p>To fix it, do one of these:</p>
+
+<ul>
+  <li>give MockServer its own CA with <span class="inline_code">certificateAuthorityCertificate</span> and <span class="inline_code">certificateAuthorityPrivateKey</span>, and sign your client certificates with it;</li>
+  <li>set <span class="inline_code">dynamicallyCreateCertificateAuthorityCertificate=true</span>, so MockServer creates a CA of its own (a client in the same JVM, such as <span class="inline_code">ClientAndServer</span> or the JUnit rule, then presents a certificate signed by it);</li>
+  <li>set <span class="inline_code">tlsMutualAuthenticationCertificateChain</span> to the CA that signs your client certificates.</li>
+</ul>
+
+<p>For a throwaway local test only, <span class="inline_code">tlsMutualAuthenticationAllowBundledCa=true</span> restores the old behaviour. Because anyone can then create a client certificate MockServer accepts, a warning is logged whenever the bundled CA becomes trusted (at startup, when a configuration change makes it trusted, and each time the TLS context is rebuilt to trust it). It can only be set at startup. See <a href="/mock_server/HTTPS_TLS.html#mtls_data_plane">HTTPS &amp; TLS</a>.</p>
 
 <a id="docker_helm" class="anchor" href="#docker_helm">&nbsp;</a>
 

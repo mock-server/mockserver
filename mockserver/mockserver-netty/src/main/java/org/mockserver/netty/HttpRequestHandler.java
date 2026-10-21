@@ -31,6 +31,7 @@ import org.mockserver.serialization.ConfigurationSerializer;
 import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.PortBindingSerializer;
 import org.mockserver.serialization.model.ConfigurationDTO;
+import org.mockserver.socket.tls.DataPlaneMutualTlsTrust;
 import org.mockserver.socket.tls.HostSubjectAlternativeNames;
 import org.slf4j.event.Level;
 
@@ -341,6 +342,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                             synchronized (configuration) {
                                 // refused whole, before any of it is applied
                                 ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(configurationDTO, configuration);
+                                DataPlaneMutualTlsTrust.requireUsableDataPlaneMutualTls(configurationDTO, configuration, mockServerLogger);
                                 // audit (but do not block) a runtime TLS-posture downgrade BEFORE applying,
                                 // while the configuration still holds the pre-change values to compare against
                                 httpState.warnIfLoweringTlsPosture(configurationDTO);

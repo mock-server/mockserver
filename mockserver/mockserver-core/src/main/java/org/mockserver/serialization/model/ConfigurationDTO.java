@@ -193,6 +193,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private String x509CertificatePath;
     private Boolean tlsMutualAuthenticationRequired;
     private String tlsMutualAuthenticationCertificateChain;
+    private Boolean tlsMutualAuthenticationAllowBundledCa;
 
     private String forwardProxyTLSX509CertificatesTrustManagerType;
     private String forwardProxyTLSCustomTrustX509Certificates;
@@ -567,6 +568,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.x509CertificatePath = configuration.x509CertificatePath();
             this.tlsMutualAuthenticationRequired = configuration.tlsMutualAuthenticationRequired();
             this.tlsMutualAuthenticationCertificateChain = configuration.tlsMutualAuthenticationCertificateChain();
+            this.tlsMutualAuthenticationAllowBundledCa = configuration.tlsMutualAuthenticationAllowBundledCa();
 
             ForwardProxyTLSX509CertificatesTrustManager trustManagerType = configuration.forwardProxyTLSX509CertificatesTrustManagerType();
             if (trustManagerType != null) {
@@ -1042,6 +1044,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.x509CertificatePath(x509CertificatePath);
         configuration.tlsMutualAuthenticationRequired(tlsMutualAuthenticationRequired);
         configuration.tlsMutualAuthenticationCertificateChain(tlsMutualAuthenticationCertificateChain);
+        configuration.tlsMutualAuthenticationAllowBundledCa(tlsMutualAuthenticationAllowBundledCa);
 
         if (forwardProxyTLSX509CertificatesTrustManagerType != null) {
             configuration.forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.valueOf(forwardProxyTLSX509CertificatesTrustManagerType));
@@ -1834,6 +1837,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (tlsMutualAuthenticationCertificateChain != null) {
             target.tlsMutualAuthenticationCertificateChain(tlsMutualAuthenticationCertificateChain);
         }
+        // tlsMutualAuthenticationAllowBundledCa is deliberately not applied: a runtime update must not be able to make
+        // mTLS trust client certificates anyone can create, so it is fixed at startup (see HttpState.applyConfigurationUpdate)
         if (forwardProxyTLSX509CertificatesTrustManagerType != null) {
             target.forwardProxyTLSX509CertificatesTrustManagerType(ForwardProxyTLSX509CertificatesTrustManager.valueOf(forwardProxyTLSX509CertificatesTrustManagerType));
         }
@@ -3802,6 +3807,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setTlsMutualAuthenticationCertificateChain(String tlsMutualAuthenticationCertificateChain) {
         this.tlsMutualAuthenticationCertificateChain = tlsMutualAuthenticationCertificateChain;
+        return this;
+    }
+
+    public Boolean getTlsMutualAuthenticationAllowBundledCa() {
+        return tlsMutualAuthenticationAllowBundledCa;
+    }
+
+    public ConfigurationDTO setTlsMutualAuthenticationAllowBundledCa(Boolean tlsMutualAuthenticationAllowBundledCa) {
+        this.tlsMutualAuthenticationAllowBundledCa = tlsMutualAuthenticationAllowBundledCa;
         return this;
     }
 

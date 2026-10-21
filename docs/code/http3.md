@@ -810,7 +810,9 @@ declarations are needed -- they resolve automatically.
 - **mTLS client-certificate capture**: when `tlsMutualAuthenticationRequired` is
   enabled (or a `tlsMutualAuthenticationCertificateChain` is configured), the QUIC
   SSL context requests client certificates under the same conditions as the TCP
-  path. Peer certificates are extracted from the `QuicChannel` `SSLEngine` session
+  path, and trusts the same CAs (`DataPlaneMutualTlsTrust.clientCertificateTrust`, which
+  never includes the bundled CA unless `tlsMutualAuthenticationAllowBundledCa` is set; see
+  [tls-and-security.md](tls-and-security.md#incoming-connection-mtls)). Peer certificates are extracted from the `QuicChannel` `SSLEngine` session
   and plumbed into the `HttpRequest` via `withClientCertificateChain`. The chain is
   captured and serialized, so it is available for retrieval over HTTP/3 (the
   serialized recorded request includes it). Expectations can also **match** on the

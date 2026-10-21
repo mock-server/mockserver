@@ -4,17 +4,22 @@ import org.junit.AfterClass;
 import org.junit.Test;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.serialization.model.ConfigurationDTO;
 
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mockserver.configuration.Configuration.configuration;
+import static org.mockserver.configuration.ConfigurationProperties.DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE;
 
 public class CustomKeyAndCertificateFactorySupplierTest {
 
@@ -70,6 +75,60 @@ public class CustomKeyAndCertificateFactorySupplierTest {
         } finally {
             KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier(originalCustomKeyAndCertificateFactorySupplier);
         }
+    }
+
+    @Test
+    public void shouldDecideDataPlaneMutualTlsTrustFromTheCustomFactoryCertificateAuthority() {
+        KeyAndCertificateFactorySupplier originalCustomKeyAndCertificateFactorySupplier
+            = KeyAndCertificateFactoryFactory.getCustomKeyAndCertificateFactorySupplier();
+        // mTLS on, no chain, and certificateAuthorityCertificate left at the bundled default
+        Configuration configuration = configuration()
+            .tlsMutualAuthenticationRequired(true)
+            .tlsMutualAuthenticationCertificateChain("")
+            .tlsMutualAuthenticationAllowBundledCa(false)
+            .dynamicallyCreateCertificateAuthorityCertificate(false)
+            .certificateAuthorityCertificate(DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE)
+            .proactivelyInitialiseTLS(false);
+        try {
+            KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier((logger, isServer, config) -> factoryWithCertificateAuthority("org/mockserver/authentication/mtls/ca.pem"));
+            DataPlaneMutualTlsTrust.requireUsableDataPlaneMutualTls(configuration, new MockServerLogger());
+            DataPlaneMutualTlsTrust.requireUsableDataPlaneMutualTls(new ConfigurationDTO().setTlsMutualAuthenticationRequired(true), configuration, new MockServerLogger());
+
+            KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier((logger, isServer, config) -> factoryWithCertificateAuthority(DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE));
+            assertThrows(DataPlaneMutualTlsConfigurationException.class, () -> DataPlaneMutualTlsTrust.requireUsableDataPlaneMutualTls(configuration, new MockServerLogger()));
+        } finally {
+            KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier(originalCustomKeyAndCertificateFactorySupplier);
+        }
+    }
+
+    @Test
+    public void shouldNotBuildTheCustomFactoryToCheckDataPlaneMutualTlsWhenItIsOff() {
+        KeyAndCertificateFactorySupplier originalCustomKeyAndCertificateFactorySupplier
+            = KeyAndCertificateFactoryFactory.getCustomKeyAndCertificateFactorySupplier();
+        Configuration configuration = configuration()
+            .tlsMutualAuthenticationRequired(false)
+            .tlsMutualAuthenticationCertificateChain("")
+            .proactivelyInitialiseTLS(false);
+        AtomicInteger built = new AtomicInteger();
+        try {
+            KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier((logger, isServer, config) -> {
+                built.incrementAndGet();
+                return factoryWithCertificateAuthority(DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE);
+            });
+
+            DataPlaneMutualTlsTrust.requireUsableDataPlaneMutualTls(configuration, new MockServerLogger());
+            DataPlaneMutualTlsTrust.requireUsableDataPlaneMutualTls(new ConfigurationDTO().setMaxExpectations(10), configuration, new MockServerLogger());
+
+            assertThat(built.get(), equalTo(0));
+        } finally {
+            KeyAndCertificateFactoryFactory.setCustomKeyAndCertificateFactorySupplier(originalCustomKeyAndCertificateFactorySupplier);
+        }
+    }
+
+    private static KeyAndCertificateFactory factoryWithCertificateAuthority(String certificateAuthority) {
+        KeyAndCertificateFactory factory = mock(KeyAndCertificateFactory.class);
+        when(factory.certificateAuthorityX509Certificate()).thenReturn(PEMToFile.x509FromPEMFile(certificateAuthority));
+        return factory;
     }
 
     @Test

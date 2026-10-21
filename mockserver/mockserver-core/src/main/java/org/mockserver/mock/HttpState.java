@@ -7423,6 +7423,11 @@ public class HttpState {
             warnInitOnlyProperty("controlPlaneTrustedHostSuffixes", "\"" + suppliedControlPlaneTrustedHostSuffixes + "\"", "\"" + configuration.controlPlaneTrustedHostSuffixes() + "\"",
                 "it decides which web sites may use the control plane, so a request to the control plane cannot widen it");
         }
+        Boolean suppliedTlsMutualAuthenticationAllowBundledCa = suppliedConfiguration.getTlsMutualAuthenticationAllowBundledCa();
+        if (suppliedTlsMutualAuthenticationAllowBundledCa != null && !suppliedTlsMutualAuthenticationAllowBundledCa.equals(configuration.tlsMutualAuthenticationAllowBundledCa())) {
+            warnInitOnlyProperty("tlsMutualAuthenticationAllowBundledCa", String.valueOf(suppliedTlsMutualAuthenticationAllowBundledCa), String.valueOf(configuration.tlsMutualAuthenticationAllowBundledCa()),
+                "it lets mTLS trust client certificates anyone can create, so a request to the control plane cannot enable it");
+        }
         Integer suppliedMaxWebSocketExpectations = suppliedConfiguration.getMaxWebSocketExpectations();
         if (suppliedMaxWebSocketExpectations != null && configuration.maxWebSocketExpectations() != maxWebSocketExpectationsInForce) {
             warnInitOnlyProperty("maxWebSocketExpectations", configuration.maxWebSocketExpectations(), maxWebSocketExpectationsInForce,

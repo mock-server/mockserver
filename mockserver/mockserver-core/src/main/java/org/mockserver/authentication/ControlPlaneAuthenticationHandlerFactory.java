@@ -1,29 +1,20 @@
 package org.mockserver.authentication;
 
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
-import org.bouncycastle.asn1.pkcs.RSAPublicKey;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.mockserver.authentication.jwt.JWTAuthenticationHandler;
 import org.mockserver.authentication.mtls.MTLSAuthenticationHandler;
 import org.mockserver.authentication.oidc.OidcAuthenticationHandler;
 import org.mockserver.configuration.Configuration;
-import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.configuration.ControlPlaneAuthenticationSettings;
 import org.mockserver.configuration.ServerTlsSettings;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.serialization.model.ConfigurationDTO;
+import org.mockserver.socket.tls.BundledCertificateAuthority;
 import org.mockserver.socket.tls.NettySslContextFactory;
-import org.mockserver.socket.tls.PEMToFile;
 import org.slf4j.event.Level;
 
-import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.ECPublicKey;
-import java.security.spec.ECParameterSpec;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -142,13 +133,13 @@ public class ControlPlaneAuthenticationHandlerFactory {
     static X509Certificate[] controlPlaneClientCertificateTrust(String controlPlaneTLSMutualAuthenticationCAChain, Configuration configuration, MockServerLogger mockServerLogger) {
         if (isNotBlank(controlPlaneTLSMutualAuthenticationCAChain)) {
             X509Certificate[] trusted = NettySslContextFactory.controlPlaneTrustCertificates(controlPlaneTLSMutualAuthenticationCAChain);
-            if (containsBundledCertificateAuthority(trusted)) {
+            if (BundledCertificateAuthority.containsBundledCertificateAuthority(trusted)) {
                 throw ControlPlaneMutualTlsConfigurationException.bundledCertificateAuthorityInChain();
             }
             return trusted;
         }
         X509Certificate[] mockServerCertificateAuthority = new NettySslContextFactory(configuration, mockServerLogger, true).trustCertificateChain(null);
-        if (containsBundledCertificateAuthority(mockServerCertificateAuthority)) {
+        if (BundledCertificateAuthority.containsBundledCertificateAuthority(mockServerCertificateAuthority)) {
             throw new ControlPlaneMutualTlsConfigurationException();
         }
         return mockServerCertificateAuthority;
@@ -195,90 +186,12 @@ public class ControlPlaneAuthenticationHandlerFactory {
             return;
         }
         if (isNotBlank(controlPlaneTLSMutualAuthenticationCAChain)) {
-            if (chainContainsBundledCertificateAuthority(controlPlaneTLSMutualAuthenticationCAChain)) {
+            if (BundledCertificateAuthority.chainContainsBundledCertificateAuthority(controlPlaneTLSMutualAuthenticationCAChain)) {
                 throw ControlPlaneMutualTlsConfigurationException.bundledCertificateAuthorityInChain();
             }
-        } else if (!Boolean.TRUE.equals(dynamicallyCreateCertificateAuthorityCertificate) && isBundledCertificateAuthority(certificateAuthorityCertificate)) {
+        } else if (!Boolean.TRUE.equals(dynamicallyCreateCertificateAuthorityCertificate) && BundledCertificateAuthority.isBundledCertificateAuthority(certificateAuthorityCertificate)) {
             throw new ControlPlaneMutualTlsConfigurationException();
         }
-    }
-
-    private static boolean chainContainsBundledCertificateAuthority(String controlPlaneTLSMutualAuthenticationCAChain) {
-        try {
-            return containsBundledCertificateAuthority(NettySslContextFactory.controlPlaneTrustCertificates(controlPlaneTLSMutualAuthenticationCAChain));
-        } catch (RuntimeException unreadable) {
-            // an unreadable chain fails handler construction, which denies every control-plane request
-            return false;
-        }
-    }
-
-    private static boolean isBundledCertificateAuthority(String certificateAuthorityCertificate) {
-        if (ConfigurationProperties.DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE.equals(certificateAuthorityCertificate)) {
-            return true;
-        }
-        try {
-            return containsBundledCertificateAuthority(new X509Certificate[]{PEMToFile.x509FromPEMFile(certificateAuthorityCertificate)});
-        } catch (RuntimeException unreadable) {
-            // an unreadable CA certificate fails the server's own TLS set-up with its own message
-            return false;
-        }
-    }
-
-    /**
-     * Compares key material, not certificates or key encodings: RSA by modulus and public exponent whatever the
-     * algorithm identifier (rsaEncryption or RSASSA-PSS), EC by curve and point. So a certificate re-issued or
-     * re-encoded for the bundled CA's key is caught too.
-     */
-    static boolean containsBundledCertificateAuthority(X509Certificate[] certificates) {
-        PublicKey bundledPublicKey = bundledCertificateAuthority().getPublicKey();
-        for (X509Certificate certificate : certificates) {
-            if (certificate != null && sameKeyMaterial(bundledPublicKey, certificate.getPublicKey())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    static boolean sameKeyMaterial(PublicKey first, PublicKey second) {
-        if (first == null || second == null) {
-            return false;
-        }
-        if (first.equals(second)) {
-            return true;
-        }
-        try {
-            SubjectPublicKeyInfo firstInfo = SubjectPublicKeyInfo.getInstance(first.getEncoded());
-            SubjectPublicKeyInfo secondInfo = SubjectPublicKeyInfo.getInstance(second.getEncoded());
-            if (isRsa(firstInfo) && isRsa(secondInfo)) {
-                RSAPublicKey firstRsa = RSAPublicKey.getInstance(firstInfo.parsePublicKey());
-                RSAPublicKey secondRsa = RSAPublicKey.getInstance(secondInfo.parsePublicKey());
-                return firstRsa.getModulus().equals(secondRsa.getModulus()) && firstRsa.getPublicExponent().equals(secondRsa.getPublicExponent());
-            }
-            if (first instanceof ECPublicKey && second instanceof ECPublicKey) {
-                ECPublicKey firstEc = (ECPublicKey) first;
-                ECPublicKey secondEc = (ECPublicKey) second;
-                return firstEc.getW().equals(secondEc.getW()) && sameCurve(firstEc.getParams(), secondEc.getParams());
-            }
-            return Arrays.equals(firstInfo.getPublicKeyData().getBytes(), secondInfo.getPublicKeyData().getBytes());
-        } catch (Exception unparseable) {
-            return false;
-        }
-    }
-
-    private static boolean isRsa(SubjectPublicKeyInfo info) {
-        ASN1ObjectIdentifier algorithm = info.getAlgorithm().getAlgorithm();
-        return PKCSObjectIdentifiers.rsaEncryption.equals(algorithm) || PKCSObjectIdentifiers.id_RSASSA_PSS.equals(algorithm);
-    }
-
-    private static boolean sameCurve(ECParameterSpec first, ECParameterSpec second) {
-        return first.getCurve().equals(second.getCurve())
-            && first.getGenerator().equals(second.getGenerator())
-            && first.getOrder().equals(second.getOrder())
-            && first.getCofactor() == second.getCofactor();
-    }
-
-    private static X509Certificate bundledCertificateAuthority() {
-        return PEMToFile.x509FromPEMFile(ConfigurationProperties.DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE);
     }
 
     /**

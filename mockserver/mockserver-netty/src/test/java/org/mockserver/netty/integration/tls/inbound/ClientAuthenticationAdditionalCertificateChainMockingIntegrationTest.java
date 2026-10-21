@@ -15,8 +15,10 @@ import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.mockserver.socket.tls.KeyAndCertificateFactoryFactory;
 import org.mockserver.socket.tls.KeyStoreFactory;
 import org.mockserver.testing.integration.mock.AbstractMockingIntegrationTestBase;
+import org.mockserver.uuid.UUIDService;
 
 import javax.net.ssl.SSLContext;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 
@@ -26,6 +28,8 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.configuration.Configuration.configuration;
+import static org.mockserver.configuration.ConfigurationProperties.directoryToSaveDynamicSSLCertificate;
+import static org.mockserver.configuration.ConfigurationProperties.dynamicallyCreateCertificateAuthorityCertificate;
 import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuthenticationCertificateChain;
 import static org.mockserver.configuration.ConfigurationProperties.tlsMutualAuthenticationRequired;
 import static org.mockserver.echo.tls.UniqueCertificateChainSSLContextBuilder.uniqueCertificateChainSSLContext;
@@ -44,12 +48,23 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
 
     private static String originalTLSMutualAuthenticationCertificateChain;
     private static boolean originalTLSMutualAuthenticationRequired;
+    private static boolean originalDynamicallyCreateCertificateAuthorityCertificate;
+    private static String originalDirectoryToSaveDynamicSSLCertificate;
 
     @BeforeClass
-    public static void startServer() {
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static void startServer() throws Exception {
         // save original value
         originalTLSMutualAuthenticationCertificateChain = tlsMutualAuthenticationCertificateChain();
         originalTLSMutualAuthenticationRequired = tlsMutualAuthenticationRequired();
+        originalDynamicallyCreateCertificateAuthorityCertificate = dynamicallyCreateCertificateAuthorityCertificate();
+        originalDirectoryToSaveDynamicSSLCertificate = directoryToSaveDynamicSSLCertificate();
+
+        // MockServer's own CA is trusted alongside the chain only when it is not the bundled CA
+        File temporaryDirectory = new File(File.createTempFile("random", "temp").getParent(), UUIDService.getUUID());
+        temporaryDirectory.mkdirs();
+        dynamicallyCreateCertificateAuthorityCertificate(true);
+        directoryToSaveDynamicSSLCertificate(temporaryDirectory.getAbsolutePath());
 
         // set new certificate authority values
         tlsMutualAuthenticationCertificateChain("org/mockserver/netty/integration/tls/ca.pem");
@@ -65,6 +80,8 @@ public class ClientAuthenticationAdditionalCertificateChainMockingIntegrationTes
         // set back to original value
         tlsMutualAuthenticationCertificateChain(originalTLSMutualAuthenticationCertificateChain);
         tlsMutualAuthenticationRequired(originalTLSMutualAuthenticationRequired);
+        dynamicallyCreateCertificateAuthorityCertificate(originalDynamicallyCreateCertificateAuthorityCertificate);
+        directoryToSaveDynamicSSLCertificate(originalDirectoryToSaveDynamicSSLCertificate);
     }
 
     @Override

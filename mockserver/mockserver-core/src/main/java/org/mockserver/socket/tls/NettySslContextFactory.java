@@ -723,7 +723,12 @@ public class NettySslContextFactory {
                     .clientAuth(mutualAuthenticationRequired ? ClientAuth.REQUIRE : ClientAuth.OPTIONAL);
                 configureALPN(sslContextBuilder, Boolean.TRUE.equals(settings.http2Enabled()));
                 if (isNotBlank(settings.tlsMutualAuthenticationCertificateChain()) || mutualAuthenticationRequired) {
-                    sslContextBuilder.trustManager(trustCertificateChain(settings.tlsMutualAuthenticationCertificateChain()));
+                    sslContextBuilder.trustManager(DataPlaneMutualTlsTrust.clientCertificateTrust(
+                        settings.tlsMutualAuthenticationCertificateChain(),
+                        keyAndCertificateFactory.certificateAuthorityX509Certificate(),
+                        Boolean.TRUE.equals(configuration.tlsMutualAuthenticationAllowBundledCa()),
+                        mockServerLogger
+                    ));
                 } else {
                     sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
                 }
@@ -738,7 +743,7 @@ public class NettySslContextFactory {
                     serverContextSignature(settings, afterBuild.updatedSince(settings) ? settings : afterBuild, subjectAlternativeNames)));
                 recordFixedServerCertificateState();
                 configuration.rebuildServerTLSContext(false);
-            } catch (Error error) {
+            } catch (Error | DataPlaneMutualTlsConfigurationException error) {
                 throw error;
             } catch (Exception exception) {
                 throw new RuntimeException(
@@ -896,6 +901,10 @@ public class NettySslContextFactory {
         return x509ChainFromPEMFile(controlPlaneTLSMutualAuthenticationCAChain).toArray(new X509Certificate[0]);
     }
 
+    /**
+     * The certificates in {@code tlsMutualAuthenticationCertificateChain}, if set, plus MockServer's CA certificate,
+     * whatever that CA is. Data-plane mTLS does not use this: see {@link DataPlaneMutualTlsTrust#clientCertificateTrust}.
+     */
     public X509Certificate[] trustCertificateChain(String tlsMutualAuthenticationCertificateChain) {
         if (isNotBlank(tlsMutualAuthenticationCertificateChain)) {
             List<X509Certificate> x509Certificates = x509ChainFromPEMFile(tlsMutualAuthenticationCertificateChain);

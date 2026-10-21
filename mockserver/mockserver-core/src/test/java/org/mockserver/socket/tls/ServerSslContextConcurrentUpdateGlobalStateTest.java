@@ -56,7 +56,7 @@ public class ServerSslContextConcurrentUpdateGlobalStateTest {
 
     @Test
     public void shouldRebuildWhenMutualAuthenticationIsRequiredWhileTheContextIsBeingBuilt() throws Exception {
-        Configuration configuration = Configuration.configuration().tlsMutualAuthenticationRequired(false);
+        Configuration configuration = Configuration.configuration().tlsMutualAuthenticationAllowBundledCa(true).tlsMutualAuthenticationRequired(false);
         NettySslContextFactory factory = new NettySslContextFactory(configuration, new MockServerLogger(), true);
 
         SslContext builtDuringUpdate = buildWhile(factory, () -> new ConfigurationDTO()
@@ -71,7 +71,7 @@ public class ServerSslContextConcurrentUpdateGlobalStateTest {
 
     @Test
     public void shouldRebuildWhenMutualAuthenticationIsDroppedWhileTheContextIsBeingBuilt() throws Exception {
-        Configuration configuration = Configuration.configuration().tlsMutualAuthenticationRequired(true);
+        Configuration configuration = Configuration.configuration().tlsMutualAuthenticationAllowBundledCa(true).tlsMutualAuthenticationRequired(true);
         NettySslContextFactory factory = new NettySslContextFactory(configuration, new MockServerLogger(), true);
 
         SslContext builtDuringUpdate = buildWhile(factory, () -> new ConfigurationDTO()
@@ -134,7 +134,7 @@ public class ServerSslContextConcurrentUpdateGlobalStateTest {
                 }
                 return super.controlPlaneOidcAuthenticationRequired(controlPlaneOidcAuthenticationRequired);
             }
-        }.tlsMutualAuthenticationRequired(false);
+        }.tlsMutualAuthenticationAllowBundledCa(true).tlsMutualAuthenticationRequired(false);
         NettySslContextFactory factory = new NettySslContextFactory(configuration, new MockServerLogger(), true);
         SslContext before = factory.createServerSslContext();
 

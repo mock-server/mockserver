@@ -374,6 +374,9 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
             case "tlsMutualAuthenticationRequired":
                 config.tlsMutualAuthenticationRequired(parseStrictBoolean(value, key));
                 break;
+            case "tlsMutualAuthenticationAllowBundledCa":
+                config.tlsMutualAuthenticationAllowBundledCa(parseStrictBoolean(value, key));
+                break;
 
             // --- Integer properties ---
             case "maxExpectations":

@@ -443,6 +443,7 @@ public class Configuration {
     // inbound - mTLS
     private volatile Boolean tlsMutualAuthenticationRequired;
     private volatile String tlsMutualAuthenticationCertificateChain;
+    private volatile Boolean tlsMutualAuthenticationAllowBundledCa;
 
     // outbound - CA
     private volatile ForwardProxyTLSX509CertificatesTrustManager forwardProxyTLSX509CertificatesTrustManagerType;
@@ -6441,6 +6442,31 @@ public class Configuration {
         // same reasoning as tlsMutualAuthenticationRequired: this feeds the server context's trust manager
         rebuildServerTLSContext(true);
         publishServerTlsSettings();
+        return this;
+    }
+
+    public Boolean tlsMutualAuthenticationAllowBundledCa() {
+        if (tlsMutualAuthenticationAllowBundledCa == null) {
+            return ConfigurationProperties.tlsMutualAuthenticationAllowBundledCa();
+        }
+        return tlsMutualAuthenticationAllowBundledCa;
+    }
+
+    /**
+     * Let mTLS (tlsMutualAuthenticationRequired or tlsMutualAuthenticationCertificateChain) trust client certificates signed
+     * by the default CA bundled with MockServer. Its private key is published in the MockServer jar, so anyone can create a
+     * client certificate MockServer then accepts. Only for throwaway local tests; MockServer logs a WARN whenever the
+     * bundled CA becomes trusted (at startup, on a configuration change, or when the TLS context is rebuilt). Without it,
+     * MockServer refuses to start with mTLS that would trust the bundled CA.
+     * <p>
+     * Fixed at startup: PUT /mockserver/configuration cannot change it.
+     * <p>
+     * The default is false
+     *
+     * @param tlsMutualAuthenticationAllowBundledCa true to trust client certificates signed by the bundled CA
+     */
+    public Configuration tlsMutualAuthenticationAllowBundledCa(Boolean tlsMutualAuthenticationAllowBundledCa) {
+        this.tlsMutualAuthenticationAllowBundledCa = tlsMutualAuthenticationAllowBundledCa;
         return this;
     }
 

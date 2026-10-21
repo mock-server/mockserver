@@ -26,6 +26,8 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.netty.MockServer;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
+import org.mockserver.socket.tls.PEMToFile;
+import org.mockserver.test.TestCertificates;
 import org.mockserver.testing.socket.Ipv4DatagramChannelFactory;
 
 import java.net.InetSocketAddress;
@@ -42,6 +44,8 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockserver.configuration.Configuration.configuration;
+import static org.mockserver.configuration.ConfigurationProperties.DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY;
+import static org.mockserver.configuration.ConfigurationProperties.DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.netty.http3.Http3TestServer.startWithHttp3;
@@ -59,6 +63,7 @@ public class Http3ParityIntegrationTest {
 
     private MockServer mockServer;
     private NioEventLoopGroup clientGroup;
+    private int responseTimeoutSeconds = 20;
 
     @Before
     public void setUp() {
@@ -223,6 +228,49 @@ public class Http3ParityIntegrationTest {
         assertThat("should have recorded request", recordedJava, is(notNullValue()));
         assertThat("recorded request should contain clientCertificateChain",
             recordedJava, containsString("clientCertificateChain"));
+    }
+
+    @Test
+    public void shouldRefuseClientCertificateSignedWithTheBundledCaKeyOverHttp3() throws Exception {
+        // given -- mTLS required over H3 with a client CA chain, while MockServer's own CA is the bundled CA
+        Configuration config = configuration()
+            .http3MaxIdleTimeout(30000L)
+            .attemptToProxyIfNoMatchingExpectation(false)
+            .tlsMutualAuthenticationRequired(true)
+            .tlsMutualAuthenticationAllowBundledCa(false)
+            .tlsMutualAuthenticationCertificateChain("org/mockserver/netty/integration/tls/ca.pem")
+            .dynamicallyCreateCertificateAuthorityCertificate(false)
+            .certificateAuthorityCertificate(DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE)
+            .certificateAuthorityPrivateKey(DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY);
+        mockServer = startWithHttp3(config);
+        int http3Port = mockServer.getHttp3Port();
+        new MockServerClient("127.0.0.1", mockServer.getLocalPort()).when(
+            request().withMethod("GET").withPath("/mtls-bundled")
+        ).respond(
+            response().withStatusCode(200).withBody("mtls-ok")
+        );
+        TestCertificates.Issued trusted = TestCertificates.clientCertificate("trusted", TestCertificates.issuer(
+            PEMToFile.x509FromPEMFile("org/mockserver/netty/integration/tls/ca.pem"),
+            PEMToFile.privateKeyFromPEMFile("org/mockserver/netty/integration/tls/ca-key-pkcs8.pem")
+        ));
+        TestCertificates.Issued attacker = TestCertificates.clientCertificate("attacker", TestCertificates.issuer(
+            PEMToFile.x509FromPEMFile(DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE),
+            PEMToFile.privateKeyFromPEMFile(DEFAULT_CERTIFICATE_AUTHORITY_PRIVATE_KEY)
+        ));
+
+        // then -- a certificate signed by the chain's CA is accepted and one signed with the bundled CA's key is not
+        assertThat(sendHttp3RequestWithClientCert(http3Port, "GET", "/mtls-bundled", null,
+            trusted.keyPair.getPrivate(), new X509Certificate[]{trusted.certificate}).status, is("200"));
+        String attackerStatus;
+        responseTimeoutSeconds = 5;
+        try {
+            attackerStatus = sendHttp3RequestWithClientCert(http3Port, "GET", "/mtls-bundled", null,
+                attacker.keyPair.getPrivate(), new X509Certificate[]{attacker.certificate}).status;
+        } catch (Exception handshakeRefused) {
+            attackerStatus = "null";
+        }
+        // "null": no response, because the server ended the QUIC connection
+        assertThat(attackerStatus, is("null"));
     }
 
     @Test
@@ -432,8 +480,8 @@ public class Http3ParityIntegrationTest {
         }
 
         // wait for response
-        String status = statusQueue.poll(20, TimeUnit.SECONDS);
-        String responseBody = bodyQueue.poll(20, TimeUnit.SECONDS);
+        String status = statusQueue.poll(responseTimeoutSeconds, TimeUnit.SECONDS);
+        String responseBody = bodyQueue.poll(responseTimeoutSeconds, TimeUnit.SECONDS);
 
         quicChannel.close().sync();
         clientChannel.close().sync();

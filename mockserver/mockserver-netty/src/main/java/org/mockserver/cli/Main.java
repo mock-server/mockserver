@@ -15,6 +15,7 @@ import org.mockserver.netty.dns.DnsStartupException;
 import org.mockserver.netty.http3.Http3NativeUnavailableException;
 import org.mockserver.netty.http3.Http3StartupException;
 import org.mockserver.socket.NettyDirectMemoryLimit;
+import org.mockserver.socket.tls.DataPlaneMutualTlsConfigurationException;
 import org.mockserver.version.Version;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -232,8 +233,8 @@ public class Main {
     }
 
     /**
-     * A missing HTTP/3 native, an HTTP/3 or DNS port that cannot be used, and an unusable control-plane mTLS
-     * set-up are configuration problems whose fixes the message already spells out, so print just that
+     * A missing HTTP/3 native, an HTTP/3 or DNS port that cannot be used, and an unusable control-plane or data-plane
+     * mTLS set-up are configuration problems whose fixes the message already spells out, so print just that
      * message: a stack trace buries the fix.
      */
     static void logStartupFailure(Throwable throwable, boolean disableSystemOut) {
@@ -250,6 +251,11 @@ public class Main {
         ControlPlaneMutualTlsConfigurationException controlPlaneMutualTls = ExceptionUtils.throwableOfType(throwable, ControlPlaneMutualTlsConfigurationException.class);
         if (controlPlaneMutualTls != null) {
             logFailureItsMessageExplains(new LogEntry().setMessageFormat("control plane mTLS configuration refused:{}"), controlPlaneMutualTls.getMessage(), disableSystemOut);
+            return;
+        }
+        DataPlaneMutualTlsConfigurationException dataPlaneMutualTls = ExceptionUtils.throwableOfType(throwable, DataPlaneMutualTlsConfigurationException.class);
+        if (dataPlaneMutualTls != null) {
+            logFailureItsMessageExplains(new LogEntry().setMessageFormat("mTLS configuration refused:{}"), dataPlaneMutualTls.getMessage(), disableSystemOut);
             return;
         }
         MOCK_SERVER_LOGGER.logEvent(

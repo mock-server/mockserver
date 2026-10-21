@@ -264,7 +264,8 @@ public class BinaryTlsUpgradeIntegrationTest {
 
     @Test
     public void shouldRequireAClientCertificateOfAnUpgradedConnectionAsOfOneThatStartedWithTls() {
-        mockServerWith(configuration().tlsMutualAuthenticationRequired(true));
+        // the client certificate is signed by the bundled CA
+        mockServerWith(configuration().tlsMutualAuthenticationAllowBundledCa(true).tlsMutualAuthenticationRequired(true));
         mock(SSL_REQUEST, new byte[]{'S'});
         String answered = ByteBufUtil.hexDump(AUTHENTICATION_OK_AND_READY);
 

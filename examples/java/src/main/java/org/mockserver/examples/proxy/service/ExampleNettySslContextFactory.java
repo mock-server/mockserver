@@ -223,6 +223,9 @@ public class ExampleNettySslContextFactory {
         return trustCertificateChain(configuration.tlsMutualAuthenticationCertificateChain());
     }
 
+    /**
+     * Example backend only: MockServer itself never trusts its bundled CA for mTLS, see DataPlaneMutualTlsTrust.
+     */
     public X509Certificate[] trustCertificateChain(String tlsMutualAuthenticationCertificateChain) {
         if (isNotBlank(tlsMutualAuthenticationCertificateChain)) {
             List<X509Certificate> x509Certificates = x509ChainFromPEMFile(tlsMutualAuthenticationCertificateChain);

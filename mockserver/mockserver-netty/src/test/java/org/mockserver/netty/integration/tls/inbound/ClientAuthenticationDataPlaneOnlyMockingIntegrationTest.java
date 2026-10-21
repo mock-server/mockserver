@@ -18,13 +18,17 @@ public class ClientAuthenticationDataPlaneOnlyMockingIntegrationTest extends Abs
 
     private static boolean originalTLSMutualAuthenticationRequired;
     private static boolean originalControlPlaneTLSMutualAuthenticationRequired;
+    private static boolean originalTLSMutualAuthenticationAllowBundledCa;
 
     @BeforeClass
     public static void startServer() {
         originalTLSMutualAuthenticationRequired = tlsMutualAuthenticationRequired();
         originalControlPlaneTLSMutualAuthenticationRequired = controlPlaneTLSMutualAuthenticationRequired();
+        originalTLSMutualAuthenticationAllowBundledCa = tlsMutualAuthenticationAllowBundledCa();
 
         tlsMutualAuthenticationRequired(true);
+        // plain HTTP only, so which CA mTLS trusts does not matter here
+        tlsMutualAuthenticationAllowBundledCa(true);
         controlPlaneTLSMutualAuthenticationRequired(false);
 
         mockServerClient = ClientAndServer.startClientAndServer();
@@ -36,6 +40,7 @@ public class ClientAuthenticationDataPlaneOnlyMockingIntegrationTest extends Abs
 
         tlsMutualAuthenticationRequired(originalTLSMutualAuthenticationRequired);
         controlPlaneTLSMutualAuthenticationRequired(originalControlPlaneTLSMutualAuthenticationRequired);
+        tlsMutualAuthenticationAllowBundledCa(originalTLSMutualAuthenticationAllowBundledCa);
     }
 
     @Override

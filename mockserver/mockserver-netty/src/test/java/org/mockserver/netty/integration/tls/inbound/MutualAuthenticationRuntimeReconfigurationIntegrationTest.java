@@ -61,7 +61,8 @@ public class MutualAuthenticationRuntimeReconfigurationIntegrationTest {
     public void startServer() {
         // a fresh server per test, always started with mTLS OFF, so each test exercises a genuine
         // runtime OFF -> ON transition on an already-listening instance with no cross-test state
-        configuration = configuration().tlsMutualAuthenticationRequired(false);
+        // the client certificate below is signed by the bundled CA
+        configuration = configuration().tlsMutualAuthenticationAllowBundledCa(true).tlsMutualAuthenticationRequired(false);
         mockServer = ClientAndServer.startClientAndServer(configuration);
     }
 

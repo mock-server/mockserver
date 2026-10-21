@@ -20,6 +20,9 @@ import org.mockserver.netty.http3.Http3StartupException;
 import org.mockserver.netty.integration.proxy.http.HttpProxyChainedIntegrationTest;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.PortFactory;
+import org.mockserver.socket.tls.DataPlaneMutualTlsConfigurationException;
+import org.mockserver.socket.tls.DataPlaneMutualTlsTrust;
+import org.mockserver.socket.tls.PEMToFile;
 import org.slf4j.event.Level;
 
 import java.io.ByteArrayOutputStream;
@@ -43,6 +46,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockserver.character.Character.NEW_LINE;
 import static org.mockserver.configuration.Configuration.configuration;
@@ -466,6 +470,17 @@ public class MainTest {
         String printed = printedToSystemErr(() -> Main.logStartupFailure(new RuntimeException("wrapped by the caller", new ControlPlaneMutualTlsConfigurationException()), true));
 
         assertThat(printed, containsString("controlPlaneTLSMutualAuthenticationRequired is enabled without controlPlaneTLSMutualAuthenticationCAChain"));
+        assertThat("the fix must not be buried in a stack trace", printed, not(containsString("\tat ")));
+    }
+
+    @Test
+    public void shouldPrintTheMessageAloneWhenDataPlaneMutualTlsIsRefused() {
+        DataPlaneMutualTlsConfigurationException refused = assertThrows(DataPlaneMutualTlsConfigurationException.class,
+            () -> DataPlaneMutualTlsTrust.clientCertificateTrust("", PEMToFile.x509FromPEMFile(ConfigurationProperties.DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE), false, null));
+
+        String printed = printedToSystemErr(() -> Main.logStartupFailure(new RuntimeException("wrapped by the caller", refused), true));
+
+        assertThat(printed, containsString("tlsMutualAuthenticationRequired is enabled while MockServer's CA certificate is the default CA bundled with MockServer"));
         assertThat("the fix must not be buried in a stack trace", printed, not(containsString("\tat ")));
     }
 

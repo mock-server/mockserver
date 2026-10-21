@@ -41,6 +41,7 @@ import org.mockserver.netty.mcp.McpRequestProcessor;
 import org.mockserver.netty.mcp.McpSessionManager;
 import org.mockserver.socket.NettyAllocator;
 import org.mockserver.socket.NettyTransport;
+import org.mockserver.socket.tls.DataPlaneMutualTlsTrust;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,14 +52,12 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.socket.tls.KeyAndCertificateFactoryFactory.createKeyAndCertificateFactory;
-import static org.mockserver.socket.tls.PEMToFile.x509ChainFromPEMFile;
 
 /**
  * HTTP/3 (QUIC) server for MockServer, integrated with the full request pipeline.
@@ -482,8 +481,8 @@ public class Http3Server {
         // - clientAuth is REQUIRE when tlsMutualAuthenticationRequired is true,
         //   OPTIONAL otherwise (OPTIONAL is the safe default: it will request
         //   a client cert but not reject connections that don't present one)
-        // - trustManager is set to the configured mTLS trust chain when present,
-        //   or an insecure trust-all factory when no explicit chain is provided
+        // - trustManager is DataPlaneMutualTlsTrust's client-certificate trust when mTLS is on,
+        //   or an insecure trust-all factory when it is not
         //   (same as the TCP path's InsecureTrustManagerFactory fallback)
         if (configuration != null && keyAndCertFactory != null) {
             // one snapshot, so the client-auth mode and trust chain come from the same configuration update
@@ -491,31 +490,18 @@ public class Http3Server {
             boolean mutualAuthenticationRequired = Boolean.TRUE.equals(tlsSettings.tlsMutualAuthenticationRequired());
             quicSslBuilder.clientAuth(mutualAuthenticationRequired ? ClientAuth.REQUIRE : ClientAuth.OPTIONAL);
             if (isNotBlank(tlsSettings.tlsMutualAuthenticationCertificateChain()) || mutualAuthenticationRequired) {
-                quicSslBuilder.trustManager(buildTrustCertificateChain(keyAndCertFactory, tlsSettings.tlsMutualAuthenticationCertificateChain()));
+                quicSslBuilder.trustManager(DataPlaneMutualTlsTrust.clientCertificateTrust(
+                    tlsSettings.tlsMutualAuthenticationCertificateChain(),
+                    keyAndCertFactory.certificateAuthorityX509Certificate(),
+                    Boolean.TRUE.equals(configuration.tlsMutualAuthenticationAllowBundledCa()),
+                    mockServerLogger
+                ));
             } else {
                 quicSslBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE);
             }
         }
 
         return quicSslBuilder.build();
-    }
-
-    /**
-     * Build the trust certificate chain for mTLS client verification, mirroring
-     * the TCP path's {@code NettySslContextFactory.trustCertificateChain()}.
-     * When a custom mTLS trust chain is configured, it is loaded from PEM and
-     * combined with the CA certificate; otherwise, only the CA certificate is used.
-     */
-    private X509Certificate[] buildTrustCertificateChain(KeyAndCertificateFactory keyAndCertFactory, String mtlsCertChainPath) {
-        if (isNotBlank(mtlsCertChainPath)) {
-            List<X509Certificate> x509Certificates = x509ChainFromPEMFile(mtlsCertChainPath);
-            x509Certificates.add(keyAndCertFactory.certificateAuthorityX509Certificate());
-            return x509Certificates.toArray(new X509Certificate[0]);
-        } else {
-            return Collections
-                .singletonList(keyAndCertFactory.certificateAuthorityX509Certificate())
-                .toArray(new X509Certificate[0]);
-        }
     }
 
     /**

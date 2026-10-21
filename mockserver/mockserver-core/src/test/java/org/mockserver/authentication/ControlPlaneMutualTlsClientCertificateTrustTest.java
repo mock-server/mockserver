@@ -19,6 +19,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.JDKCertificateToMockServerX509Certificate;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.serialization.model.ConfigurationDTO;
+import org.mockserver.socket.tls.BundledCertificateAuthority;
 import org.mockserver.socket.tls.KeyAndCertificateFactory;
 import org.mockserver.socket.tls.NettySslContextFactory;
 import org.mockserver.socket.tls.PEMToFile;
@@ -182,7 +183,7 @@ public class ControlPlaneMutualTlsClientCertificateTrustTest {
             if (PKCSObjectIdentifiers.id_RSASSA_PSS.equals(algorithm.getAlgorithm())) {
                 assertThat(parsed[0].getPublicKey().equals(bundledCa.getPublicKey()), is(false));
             }
-            assertThat(algorithm.getAlgorithm().getId(), ControlPlaneAuthenticationHandlerFactory.containsBundledCertificateAuthority(parsed), is(true));
+            assertThat(algorithm.getAlgorithm().getId(), BundledCertificateAuthority.containsBundledCertificateAuthority(parsed), is(true));
             assertThrows(ControlPlaneMutualTlsConfigurationException.class,
                 () -> ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(withOwnCa().controlPlaneTLSMutualAuthenticationCAChain(chain.getAbsolutePath())));
             assertThat(ControlPlaneAuthenticationHandlerFactory.build(withOwnCa().controlPlaneTLSMutualAuthenticationCAChain(chain.getAbsolutePath()), mockServerLogger),
@@ -196,9 +197,9 @@ public class ControlPlaneMutualTlsClientCertificateTrustTest {
         KeyPair second = TestCertificates.certificateAuthority("second").keyPair;
         PublicKey firstReParsed = KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(first.getPublic().getEncoded()));
 
-        assertThat(ControlPlaneAuthenticationHandlerFactory.sameKeyMaterial(first.getPublic(), firstReParsed), is(true));
-        assertThat(ControlPlaneAuthenticationHandlerFactory.sameKeyMaterial(first.getPublic(), second.getPublic()), is(false));
-        assertThat(ControlPlaneAuthenticationHandlerFactory.sameKeyMaterial(first.getPublic(), PEMToFile.x509FromPEMFile(DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE).getPublicKey()), is(false));
+        assertThat(BundledCertificateAuthority.sameKeyMaterial(first.getPublic(), firstReParsed), is(true));
+        assertThat(BundledCertificateAuthority.sameKeyMaterial(first.getPublic(), second.getPublic()), is(false));
+        assertThat(BundledCertificateAuthority.sameKeyMaterial(first.getPublic(), PEMToFile.x509FromPEMFile(DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE).getPublicKey()), is(false));
     }
 
     @Test
@@ -212,7 +213,7 @@ public class ControlPlaneMutualTlsClientCertificateTrustTest {
         X509Certificate[] trusted = ControlPlaneAuthenticationHandlerFactory.controlPlaneClientCertificateTrust("", configuration, mockServerLogger);
 
         assertThat(trusted.length, is(1));
-        assertThat(ControlPlaneAuthenticationHandlerFactory.containsBundledCertificateAuthority(trusted), is(false));
+        assertThat(BundledCertificateAuthority.containsBundledCertificateAuthority(trusted), is(false));
     }
 
     @Test

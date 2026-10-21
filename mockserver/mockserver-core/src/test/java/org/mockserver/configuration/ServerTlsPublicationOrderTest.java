@@ -28,6 +28,7 @@ public class ServerTlsPublicationOrderTest {
         AtomicBoolean armed = new AtomicBoolean();
         AtomicBoolean handshakeRan = new AtomicBoolean();
         AtomicReference<Supplier<SslContext>> handshake = new AtomicReference<>();
+        // about publication ordering, not which CA mTLS trusts, so the bundled CA is allowed
         Configuration configuration = new Configuration() {
             @Override
             void serverTlsSettingsPublished() {
@@ -36,7 +37,7 @@ public class ServerTlsPublicationOrderTest {
                     handshakeRan.set(true);
                 }
             }
-        }.tlsMutualAuthenticationRequired(false);
+        }.tlsMutualAuthenticationAllowBundledCa(true).tlsMutualAuthenticationRequired(false);
         NettySslContextFactory factory = new NettySslContextFactory(configuration, new MockServerLogger(), true);
         handshake.set(factory::createServerSslContext);
         assertThat(requiresClientCertificate(factory.createServerSslContext()), is(false));

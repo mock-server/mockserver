@@ -3944,6 +3944,32 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetTlsMutualAuthenticationAllowBundledCa() {
+        boolean original = ConfigurationProperties.tlsMutualAuthenticationAllowBundledCa();
+        try {
+            // then - default value
+            assertThat(configuration.tlsMutualAuthenticationAllowBundledCa(), equalTo(false));
+
+            // when - system property setter
+            ConfigurationProperties.tlsMutualAuthenticationAllowBundledCa(true);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.tlsMutualAuthenticationAllowBundledCa(), equalTo(true));
+            assertThat(System.getProperty("mockserver.tlsMutualAuthenticationAllowBundledCa"), equalTo("true"));
+            assertThat(configuration.tlsMutualAuthenticationAllowBundledCa(), equalTo(true));
+            ConfigurationProperties.tlsMutualAuthenticationAllowBundledCa(original);
+
+            // when - setter
+            configuration.tlsMutualAuthenticationAllowBundledCa(true);
+
+            // then - getter
+            assertThat(configuration.tlsMutualAuthenticationAllowBundledCa(), equalTo(true));
+        } finally {
+            ConfigurationProperties.tlsMutualAuthenticationAllowBundledCa(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetTlsMutualAuthenticationCertificateChain() {
         String original = ConfigurationProperties.tlsMutualAuthenticationCertificateChain();
         try {

@@ -34,6 +34,11 @@ public class MutualAuthenticationRuntimeReconfigurationTest {
 
     private MockServerLogger mockServerLogger;
 
+    // these tests are about rebuilding the context, not about which CA it trusts
+    private static Configuration bundledCaConfiguration() {
+        return Configuration.configuration().tlsMutualAuthenticationAllowBundledCa(true);
+    }
+
     @Before
     public void setUp() {
         mockServerLogger = new MockServerLogger();
@@ -47,7 +52,7 @@ public class MutualAuthenticationRuntimeReconfigurationTest {
 
     @Test
     public void shouldRebuildServerSslContextWhenMutualAuthenticationRequiredSetOnConfiguration() {
-        Configuration configuration = Configuration.configuration();
+        Configuration configuration = bundledCaConfiguration();
         NettySslContextFactory sslContextFactory = new NettySslContextFactory(configuration, mockServerLogger, true);
 
         SslContext before = sslContextFactory.createServerSslContext();
@@ -65,7 +70,7 @@ public class MutualAuthenticationRuntimeReconfigurationTest {
     public void shouldRebuildServerSslContextWhenMutualAuthenticationRequiredSetViaSystemProperty() {
         // the static route has no Configuration instance on which to raise rebuildServerTLSContext, so it
         // is covered by the client-authentication signature check inside NettySslContextFactory
-        Configuration configuration = Configuration.configuration();
+        Configuration configuration = bundledCaConfiguration();
         NettySslContextFactory sslContextFactory = new NettySslContextFactory(configuration, mockServerLogger, true);
 
         SslContext before = sslContextFactory.createServerSslContext();
@@ -78,7 +83,7 @@ public class MutualAuthenticationRuntimeReconfigurationTest {
 
     @Test
     public void shouldRebuildServerSslContextWhenMutualAuthenticationDisabledAgain() {
-        Configuration configuration = Configuration.configuration().tlsMutualAuthenticationRequired(true);
+        Configuration configuration = bundledCaConfiguration().tlsMutualAuthenticationRequired(true);
         NettySslContextFactory sslContextFactory = new NettySslContextFactory(configuration, mockServerLogger, true);
 
         SslContext before = sslContextFactory.createServerSslContext();
@@ -92,7 +97,7 @@ public class MutualAuthenticationRuntimeReconfigurationTest {
     public void shouldRebuildEvenWhenPreventCertificateDynamicUpdateIsSet() {
         // preventCertificateDynamicUpdate suppresses certificate REGENERATION on a domain-list change; it
         // must not be able to suppress a tightening of client-authentication policy
-        Configuration configuration = Configuration.configuration().preventCertificateDynamicUpdate(true);
+        Configuration configuration = bundledCaConfiguration().preventCertificateDynamicUpdate(true);
         NettySslContextFactory sslContextFactory = new NettySslContextFactory(configuration, mockServerLogger, true);
 
         SslContext before = sslContextFactory.createServerSslContext();
@@ -104,7 +109,7 @@ public class MutualAuthenticationRuntimeReconfigurationTest {
 
     @Test
     public void shouldNotRebuildWhenNothingRelevantChanged() {
-        Configuration configuration = Configuration.configuration();
+        Configuration configuration = bundledCaConfiguration();
         NettySslContextFactory sslContextFactory = new NettySslContextFactory(configuration, mockServerLogger, true);
 
         SslContext before = sslContextFactory.createServerSslContext();

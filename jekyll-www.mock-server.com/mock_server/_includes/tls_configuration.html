@@ -296,6 +296,7 @@
 <button id="button_configuration_require_mtls_for_all_tls_connections" class="accordion title"><strong>Require Inbound mTLS Client Authentication</strong></button>
 <div class="panel title">
     <p>Require mTLS (also called client authentication and two-way TLS) for all TLS connections / HTTPS requests to MockServer</p>
+    <p>Client certificates must be signed by a CA in <a href="#button_configuration_mtls_certificate_chain">tlsMutualAuthenticationCertificateChain</a> or by MockServer's own CA, but never by the default CA bundled with MockServer, whose private key is published. MockServer refuses to start if mTLS would trust only the bundled CA; see <a href="#button_configuration_mtls_allow_bundled_ca">tlsMutualAuthenticationAllowBundledCa</a> for the fixes.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.tlsMutualAuthenticationRequired(boolean enable)</code></pre>
@@ -325,6 +326,25 @@
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.tlsMutualAuthenticationCertificateChain=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.tlsMutualAuthenticationCertificateChain="/some/existing/path"</code></pre>
+</div>
+
+<button id="button_configuration_mtls_allow_bundled_ca" class="accordion title"><strong>Allow Inbound mTLS To Trust The Bundled CA (Unsafe)</strong></button>
+<div class="panel title">
+    <p>Let inbound mTLS (<a href="#button_configuration_require_mtls_for_all_tls_connections">tlsMutualAuthenticationRequired</a> or <a href="#button_configuration_mtls_certificate_chain">tlsMutualAuthenticationCertificateChain</a>) trust client certificates signed by the default CA bundled with MockServer.</p>
+    <p>That CA's private key is published in the MockServer jar, so with this set <strong>anyone can create a client certificate MockServer accepts</strong>, with any name, which also satisfies any client certificate condition in your expectations. Only use it for throwaway local tests. While it is set, a warning is logged whenever the bundled CA becomes trusted (at startup, when a configuration change makes it trusted, and each time the TLS context is rebuilt to trust it).</p>
+    <p>Without it, MockServer refuses to start, and <span class="inline_code">PUT /mockserver/configuration</span> answers <span class="inline_code">400</span>, when mTLS would trust the bundled CA. Instead, give MockServer its own CA with <a href="#button_configuration_tls_certificate_authority_certificate">certificateAuthorityCertificate</a> and <a href="#button_configuration_tls_certificate_authority_private_key">certificateAuthorityPrivateKey</a>, set <a href="#button_configuration_dynamically_create_ca_certificate">dynamicallyCreateCertificateAuthorityCertificate</a> to true, or set <a href="#button_configuration_mtls_certificate_chain">tlsMutualAuthenticationCertificateChain</a> to the CA that signs your client certificates. See <a href="/mock_server/HTTPS_TLS.html#mtls_data_plane">HTTPS &amp; TLS</a>.</p>
+    <p>It can only be set at startup; <span class="inline_code">PUT /mockserver/configuration</span> cannot change it.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.tlsMutualAuthenticationAllowBundledCa(boolean allow)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.tlsMutualAuthenticationAllowBundledCa=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_ALLOW_BUNDLED_CA=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.tlsMutualAuthenticationAllowBundledCa=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.tlsMutualAuthenticationAllowBundledCa="true"</code></pre>
 </div>
 
 <br/><br/>

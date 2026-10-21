@@ -138,7 +138,8 @@ public class ControlPlaneMTLSPresentedChainIntegrationTest {
 
     @Test
     public void shouldRejectChainSignedByBundledCaWithTrustedCertificateAuthorityAppendedWhenDataPlaneMutualTlsIsAlsoRequired() throws Exception {
-        assertThat(createExpectation(controlPlaneAndDataPlaneMutualTls, signedByBundledCa, trustedCa.certificate), is("401"));
+        // data-plane mTLS does not trust the bundled CA, so the TLS layer refuses it before the control plane sees it
+        assertThat(createExpectation(controlPlaneAndDataPlaneMutualTls, signedByBundledCa, trustedCa.certificate), is(TLS_REJECTED));
     }
 
     private static Configuration controlPlaneMutualTls(String caChain) {

@@ -381,6 +381,25 @@ rm -f ca-csr.json cfssl-config.json server-csr.json client-csr.json server-key.p
 
 <p>Data-plane mTLS requires every HTTPS client to present a valid certificate. Non-TLS (HTTP) requests receive a <strong>426 Upgrade Required</strong> response. This is the most common mTLS setup.</p>
 
+<h4>Which client certificates are accepted</h4>
+
+<p>MockServer accepts client certificates signed by a CA in <code class="inline_code">tlsMutualAuthenticationCertificateChain</code>, and by MockServer's own CA, <strong>except</strong> the default CA bundled with MockServer. That CA's private key is published in the MockServer jar, so anyone could use it to create a client certificate. MockServer therefore refuses to start with mTLS on if it would trust the bundled CA:</p>
+
+<ul>
+    <li>mTLS is on, no chain is set, and MockServer uses its default CA; or</li>
+    <li>the chain contains the bundled CA.</li>
+</ul>
+
+<p>A <code class="inline_code">PUT /mockserver/configuration</code> that would do the same is rejected with <strong>400</strong>. The error message names the fix. Use one of these:</p>
+
+<ul>
+    <li>give MockServer its own CA with <code class="inline_code">certificateAuthorityCertificate</code> and <code class="inline_code">certificateAuthorityPrivateKey</code>, as in the example below;</li>
+    <li>set <code class="inline_code">dynamicallyCreateCertificateAuthorityCertificate=true</code>, so MockServer creates its own CA (in a test that starts MockServer and its client in the same JVM, such as <code class="inline_code">ClientAndServer</code> or the JUnit rule, the client then presents a certificate signed by that CA);</li>
+    <li>set <code class="inline_code">tlsMutualAuthenticationCertificateChain</code> to the CA that signs your client certificates. If MockServer still uses its default CA, only the chain is trusted.</li>
+</ul>
+
+<p>For a throwaway local test only, <code class="inline_code">tlsMutualAuthenticationAllowBundledCa=true</code> lets mTLS trust the bundled CA again. While it is set, a warning is logged whenever the bundled CA becomes trusted (at startup, when a configuration change makes it trusted, and each time the TLS context is rebuilt to trust it), because anyone can then create a client certificate MockServer accepts, with any name, which also satisfies any client certificate condition in your expectations. It can only be set at startup. This applies to HTTPS and HTTP/3.</p>
+
 <h4>Docker Compose Configuration</h4>
 
 <pre class="prettyprint lang-yaml code"><code class="code">version: "2.4"
@@ -951,7 +970,7 @@ apk add --no-cache ca-certificates java-cacerts</code></pre>
 
 <p>If curl reports <code class="inline_code">sslv3 alert bad certificate</code> or <code class="inline_code">SSL_ERROR_HANDSHAKE_FAILURE_ALERT</code>, the client certificate was rejected by MockServer. Check that:</p>
 <ul>
-    <li>The client certificate was signed by the same CA configured in <code class="inline_code">MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN</code></li>
+    <li>The client certificate was signed by the same CA configured in <code class="inline_code">MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN</code>, or by MockServer's own CA if that is not the default bundled CA (see <a href="#mtls_data_plane">which client certificates are accepted</a>)</li>
     <li>The client certificate has not expired</li>
     <li>You are passing both <code class="inline_code">--cert</code> and <code class="inline_code">--key</code> to curl</li>
 </ul>

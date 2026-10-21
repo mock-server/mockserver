@@ -467,6 +467,7 @@ public class ConfigurationProperties {
     // inbound - mTLS
     private static final String MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_REQUIRED = "mockserver.tlsMutualAuthenticationRequired";
     private static final String MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN = "mockserver.tlsMutualAuthenticationCertificateChain";
+    private static final String MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_ALLOW_BUNDLED_CA = "mockserver.tlsMutualAuthenticationAllowBundledCa";
 
     // outbound - CA
     private static final String MOCKSERVER_FORWARD_PROXY_TLS_X509_CERTIFICATES_TRUST_MANAGER_TYPE = "mockserver.forwardProxyTLSX509CertificatesTrustManagerType";
@@ -6743,6 +6744,27 @@ public class ConfigurationProperties {
     public static void tlsMutualAuthenticationCertificateChain(String trustCertificateChain) {
         fileExists(trustCertificateChain);
         setProperty(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_CERTIFICATE_CHAIN, "" + trustCertificateChain);
+    }
+
+    public static boolean tlsMutualAuthenticationAllowBundledCa() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_ALLOW_BUNDLED_CA, "MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_ALLOW_BUNDLED_CA", "false"));
+    }
+
+    /**
+     * Let mTLS (tlsMutualAuthenticationRequired or tlsMutualAuthenticationCertificateChain) trust client certificates signed
+     * by the default CA bundled with MockServer. Its private key is published in the MockServer jar, so anyone can create a
+     * client certificate MockServer then accepts. Only for throwaway local tests; MockServer logs a WARN whenever the
+     * bundled CA becomes trusted (at startup, on a configuration change, or when the TLS context is rebuilt). Without it,
+     * MockServer refuses to start with mTLS that would trust the bundled CA.
+     * <p>
+     * Fixed at startup: PUT /mockserver/configuration cannot change it.
+     * <p>
+     * The default is false
+     *
+     * @param allow true to trust client certificates signed by the bundled CA
+     */
+    public static void tlsMutualAuthenticationAllowBundledCa(boolean allow) {
+        setProperty(MOCKSERVER_TLS_MUTUAL_AUTHENTICATION_ALLOW_BUNDLED_CA, "" + allow);
     }
 
     public static ForwardProxyTLSX509CertificatesTrustManager forwardProxyTLSX509CertificatesTrustManagerType() {
