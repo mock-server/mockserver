@@ -84,6 +84,7 @@ _FIELD_MAP = {
     "initial_data": "initialData",
     "http_class_callback": "httpClassCallback",
     "http_object_callback": "httpObjectCallback",
+    "http_request_template": "httpRequestTemplate",
     "failure_policy": "failurePolicy",
     "http_llm_response": "httpLlmResponse",
     "response_weights": "responseWeights",
@@ -2583,10 +2584,13 @@ class AfterAction:
     blocking: bool | None = None
     timeout: Delay | None = None
     failure_policy: str | None = None
+    # a webhook whose request a template renders from the triggering request; escape request values in it
+    http_request_template: HttpTemplate | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
             "httpRequest": self.http_request.to_dict() if self.http_request else None,
+            "httpRequestTemplate": self.http_request_template.to_dict() if self.http_request_template else None,
             "httpClassCallback": self.http_class_callback.to_dict() if self.http_class_callback else None,
             "httpObjectCallback": self.http_object_callback.to_dict() if self.http_object_callback else None,
             "delay": self.delay.to_dict() if self.delay else None,
@@ -2607,6 +2611,7 @@ class AfterAction:
             blocking=data.get("blocking"),
             timeout=Delay.from_dict(data.get("timeout")),
             failure_policy=data.get("failurePolicy"),
+            http_request_template=HttpTemplate.from_dict(data.get("httpRequestTemplate")),
         )
 
 

@@ -4,6 +4,7 @@ import org.mockserver.model.*;
 
 public class AfterActionDTO extends ObjectWithJsonToString implements DTO<AfterAction> {
     private HttpRequestDTO httpRequest;
+    private HttpTemplateDTO httpRequestTemplate;
     private HttpClassCallbackDTO httpClassCallback;
     private HttpObjectCallbackDTO httpObjectCallback;
     private DelayDTO delay;
@@ -18,6 +19,9 @@ public class AfterActionDTO extends ObjectWithJsonToString implements DTO<AfterA
         if (afterAction != null) {
             if (afterAction.getHttpRequest() != null) {
                 this.httpRequest = new HttpRequestDTO(afterAction.getHttpRequest());
+            }
+            if (afterAction.getHttpRequestTemplate() != null) {
+                this.httpRequestTemplate = new HttpTemplateDTO(afterAction.getHttpRequestTemplate());
             }
             if (afterAction.getHttpClassCallback() != null) {
                 this.httpClassCallback = new HttpClassCallbackDTO(afterAction.getHttpClassCallback());
@@ -41,6 +45,9 @@ public class AfterActionDTO extends ObjectWithJsonToString implements DTO<AfterA
         AfterAction afterAction = new AfterAction();
         if (httpRequest != null) {
             afterAction.withHttpRequest(httpRequest.buildObject());
+        }
+        if (httpRequestTemplate != null) {
+            afterAction.withHttpRequestTemplate(httpRequestTemplate.buildObject());
         }
         if (httpClassCallback != null) {
             afterAction.withHttpClassCallback(httpClassCallback.buildObject());
@@ -69,6 +76,15 @@ public class AfterActionDTO extends ObjectWithJsonToString implements DTO<AfterA
 
     public AfterActionDTO setHttpRequest(HttpRequestDTO httpRequest) {
         this.httpRequest = httpRequest;
+        return this;
+    }
+
+    public HttpTemplateDTO getHttpRequestTemplate() {
+        return httpRequestTemplate;
+    }
+
+    public AfterActionDTO setHttpRequestTemplate(HttpTemplateDTO httpRequestTemplate) {
+        this.httpRequestTemplate = httpRequestTemplate;
         return this;
     }
 

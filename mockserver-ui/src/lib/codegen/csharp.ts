@@ -583,10 +583,11 @@ function renderGrpc(grpc: Record<string, unknown>, indent: number, ctx: Ctx): st
 // ---------------------------------------------------------------------------
 
 function renderAfterAction(a: Record<string, unknown>, indent: number, ctx: Ctx): string {
-  const known = new Set(['httpRequest', 'httpClassCallback', 'httpObjectCallback', 'delay', 'blocking', 'timeout', 'failurePolicy']);
+  const known = new Set(['httpRequest', 'httpRequestTemplate', 'httpClassCallback', 'httpObjectCallback', 'delay', 'blocking', 'timeout', 'failurePolicy']);
   if (Object.keys(a).some((k) => !known.has(k))) return rawTyped('AfterAction', a, ctx);
   const props: string[] = [];
   if (isObject(a['httpRequest'])) props.push(`HttpRequest = ${renderRequest(a['httpRequest'] as Record<string, unknown>, indent + 4, ctx)}`);
+  if (isObject(a['httpRequestTemplate'])) props.push(`HttpRequestTemplate = ${renderTemplate(a['httpRequestTemplate'] as Record<string, unknown>, indent + 4, ctx)}`);
   if (isObject(a['httpClassCallback'])) props.push(`HttpClassCallback = ${renderClassCallback(a['httpClassCallback'] as Record<string, unknown>, indent + 4, ctx)}`);
   if (isObject(a['httpObjectCallback'])) props.push(`HttpObjectCallback = ${rawTyped('HttpObjectCallback', a['httpObjectCallback'], ctx)}`);
   if (isObject(a['delay'])) props.push(`Delay = ${renderDelay(a['delay'] as Record<string, unknown>)}`);

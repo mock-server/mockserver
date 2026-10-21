@@ -623,6 +623,7 @@ class PyBuilder {
     const items = (v as Json[]).map((a, n) => {
       const ak: Kw[] = [];
       if (a['httpRequest'] != null) ak.push(['http_request', this.request(a['httpRequest'] as Json, indent + 8, `${at}[${n}].httpRequest`)]);
+      if (a['httpRequestTemplate'] != null) ak.push(['http_request_template', this.template(a['httpRequestTemplate'], indent + 8, `${at}[${n}].httpRequestTemplate`)]);
       if (a['delay'] != null) ak.push(['delay', this.delay(a['delay'], `${at}[${n}].delay`)]);
       if (a['blocking'] != null) ak.push(['blocking', pyBool(a['blocking'])]);
       if (a['timeout'] != null) ak.push(['timeout', this.delay(a['timeout'], `${at}[${n}].timeout`)]);

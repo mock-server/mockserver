@@ -145,16 +145,19 @@ const (
 
 // AfterAction is a side-effect action run before (beforeActions) or after
 // (afterActions) the primary action — e.g. fire a webhook via HttpRequest or a
-// callback (mockserver-core AfterAction). Blocking runs it synchronously;
+// callback (mockserver-core AfterAction). HttpRequestTemplate is a webhook whose
+// request a template renders from the triggering request; escape request values
+// and keep them out of its destination. Blocking runs it synchronously;
 // Timeout bounds a blocking action; FailurePolicy selects error handling.
 type AfterAction struct {
-	HttpRequest        *HttpRequest        `json:"httpRequest,omitempty"`
-	HttpClassCallback  *HttpClassCallback  `json:"httpClassCallback,omitempty"`
-	HttpObjectCallback *HttpObjectCallback `json:"httpObjectCallback,omitempty"`
-	Delay              *Delay              `json:"delay,omitempty"`
-	Blocking           *bool               `json:"blocking,omitempty"`
-	Timeout            *Delay              `json:"timeout,omitempty"`
-	FailurePolicy      string              `json:"failurePolicy,omitempty"`
+	HttpRequest         *HttpRequest        `json:"httpRequest,omitempty"`
+	HttpRequestTemplate *HttpTemplate       `json:"httpRequestTemplate,omitempty"`
+	HttpClassCallback   *HttpClassCallback  `json:"httpClassCallback,omitempty"`
+	HttpObjectCallback  *HttpObjectCallback `json:"httpObjectCallback,omitempty"`
+	Delay               *Delay              `json:"delay,omitempty"`
+	Blocking            *bool               `json:"blocking,omitempty"`
+	Timeout             *Delay              `json:"timeout,omitempty"`
+	FailurePolicy       string              `json:"failurePolicy,omitempty"`
 }
 
 // --- Multi-step expectations (Expectation.steps) ---

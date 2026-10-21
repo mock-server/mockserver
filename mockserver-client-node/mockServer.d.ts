@@ -1583,6 +1583,8 @@ export interface LoadScenarioStopResult {
 
 export interface AfterAction {
   httpRequest?: HttpRequest;
+  /** a webhook whose request a template renders from the triggering request; escape request values and keep them out of its destination */
+  httpRequestTemplate?: HttpTemplate;
   httpClassCallback?: HttpClassCallback;
   httpObjectCallback?: HttpObjectCallback;
   delay?: Delay;

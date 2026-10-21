@@ -307,6 +307,41 @@ fn chained_before_and_after_action_calls_append() {
 }
 
 #[test]
+fn templated_after_action_round_trips() {
+    let exp = round_trip_expectation(
+        r#"{
+            "httpRequest": { "path": "/hooked" },
+            "httpResponse": { "statusCode": 200 },
+            "afterActions": [
+                {
+                    "httpRequestTemplate": { "templateType": "VELOCITY", "template": "{ \"path\": \"/hook\" }" },
+                    "delay": { "timeUnit": "MILLISECONDS", "value": 5 }
+                }
+            ]
+        }"#,
+    );
+    let action = &exp.after_actions.as_ref().unwrap()[0];
+    assert!(action.http_request.is_none());
+    assert_eq!(
+        action.http_request_template(),
+        Some(HttpTemplate::new("VELOCITY", "{ \"path\": \"/hook\" }"))
+    );
+}
+
+#[test]
+fn request_template_builder_serialises_only_the_template() {
+    let action = ExpectationAction::request_template(HttpTemplate::new("MUSTACHE", "{}"));
+    assert_eq!(
+        serde_json::to_value(&action).unwrap(),
+        json!({ "httpRequestTemplate": { "templateType": "MUSTACHE", "template": "{}" } })
+    );
+    assert_eq!(
+        ExpectationAction::request(HttpRequest::new().path("/x")).http_request_template(),
+        None
+    );
+}
+
+#[test]
 fn capture_array_form_round_trips() {
     let exp = round_trip_expectation(
         r#"{

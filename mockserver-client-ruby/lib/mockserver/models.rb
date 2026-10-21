@@ -86,6 +86,7 @@ module MockServer
     'degradation_ramp_millis'        => 'degradationRampMillis',
     'http_class_callback'            => 'httpClassCallback',
     'http_object_callback'           => 'httpObjectCallback',
+    'http_request_template'          => 'httpRequestTemplate',
     'failure_policy'                 => 'failurePolicy',
     'http_responses'                 => 'httpResponses',
     'response_mode'                  => 'responseMode',
@@ -2267,13 +2268,16 @@ module MockServer
   end
 
   class AfterAction
-    # blocking, timeout and failure_policy are only meaningful for before-actions
+    # blocking, timeout and failure_policy are only meaningful for before-actions.
+    # http_request_template (an {HttpTemplate}) renders the webhook request from the triggering
+    # request; escape request values in it and keep them out of its destination.
     attr_accessor :http_request, :http_class_callback, :http_object_callback, :delay,
-                  :blocking, :timeout, :failure_policy
+                  :blocking, :timeout, :failure_policy, :http_request_template
 
     def initialize(http_request: nil, http_class_callback: nil, http_object_callback: nil, delay: nil,
-                   blocking: nil, timeout: nil, failure_policy: nil)
+                   blocking: nil, timeout: nil, failure_policy: nil, http_request_template: nil)
       @http_request = http_request
+      @http_request_template = http_request_template
       @http_class_callback = http_class_callback
       @http_object_callback = http_object_callback
       @delay = delay
@@ -2284,9 +2288,10 @@ module MockServer
 
     def to_h
       MockServer.strip_none({
-        'httpRequest'        => @http_request&.to_h,
-        'httpClassCallback'  => @http_class_callback&.to_h,
-        'httpObjectCallback' => @http_object_callback&.to_h,
+        'httpRequest'         => @http_request&.to_h,
+        'httpRequestTemplate' => @http_request_template&.to_h,
+        'httpClassCallback'   => @http_class_callback&.to_h,
+        'httpObjectCallback'  => @http_object_callback&.to_h,
         'delay'              => @delay&.to_h,
         'blocking'           => @blocking,
         'timeout'            => @timeout&.to_h,
@@ -2304,7 +2309,8 @@ module MockServer
         delay:               Delay.from_hash(data['delay']),
         blocking:            data['blocking'],
         timeout:             Delay.from_hash(data['timeout']),
-        failure_policy:      data['failurePolicy']
+        failure_policy:      data['failurePolicy'],
+        http_request_template: HttpTemplate.from_hash(data['httpRequestTemplate'])
       )
     end
   end

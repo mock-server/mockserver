@@ -1741,6 +1741,27 @@ class TestExpectation:
         assert before.failure_policy == "FAIL_FAST"
         assert restored.after_actions[0].http_request.path == "/after"
 
+    def test_round_trip_templated_after_action(self):
+        original = Expectation(
+            http_request=HttpRequest(path="/api"),
+            http_response=HttpResponse(status_code=200),
+            after_actions=[
+                AfterAction(
+                    http_request_template=HttpTemplate(template_type="VELOCITY", template='{ "path": "/hook" }'),
+                    delay=Delay(time_unit="MILLISECONDS", value=5),
+                )
+            ],
+        )
+        d = original.to_dict()
+        assert d["afterActions"][0] == {
+            "httpRequestTemplate": {"templateType": "VELOCITY", "template": '{ "path": "/hook" }'},
+            "delay": {"timeUnit": "MILLISECONDS", "value": 5},
+        }
+        restored = Expectation.from_dict(d)
+        assert restored.after_actions[0].http_request_template.template_type == "VELOCITY"
+        assert restored.after_actions[0].http_request is None
+        assert restored.to_dict() == d
+
     def test_before_action_controls_omitted_when_unset(self):
         e = Expectation(
             http_request=HttpRequest(path="/api"),

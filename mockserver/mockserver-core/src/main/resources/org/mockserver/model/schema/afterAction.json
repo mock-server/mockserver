@@ -6,6 +6,9 @@
     "httpRequest": {
       "$ref": "#/definitions/httpRequest"
     },
+    "httpRequestTemplate": {
+      "$ref": "#/definitions/httpTemplate"
+    },
     "httpClassCallback": {
       "$ref": "#/definitions/httpClassCallback"
     },
@@ -27,6 +30,7 @@
   },
   "oneOf": [
     { "required": ["httpRequest"] },
+    { "required": ["httpRequestTemplate"] },
     { "required": ["httpClassCallback"] },
     { "required": ["httpObjectCallback"] }
   ]

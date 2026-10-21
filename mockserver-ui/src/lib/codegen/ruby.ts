@@ -547,6 +547,7 @@ function httpChaosProfile(w: Obj, indent: number): string {
 function afterAction(w: Obj, indent: number, at: string): string {
   const args: Arg[] = [];
   if ('httpRequest' in w) args.push({ name: 'http_request', value: httpRequest(w['httpRequest'] as Obj, indent + 2, `${at}.httpRequest`) });
+  if ('httpRequestTemplate' in w) args.push({ name: 'http_request_template', value: httpTemplate(w['httpRequestTemplate'] as Obj, indent + 2, `${at}.httpRequestTemplate`) });
   if ('httpClassCallback' in w) args.push({ name: 'http_class_callback', value: httpClassCallback(w['httpClassCallback'] as Obj, indent + 2, `${at}.httpClassCallback`) });
   if ('delay' in w) args.push({ name: 'delay', value: delay(w['delay'] as Obj, indent + 2, `${at}.delay`) });
   if ('blocking' in w) args.push({ name: 'blocking', value: scalar(w['blocking']) });

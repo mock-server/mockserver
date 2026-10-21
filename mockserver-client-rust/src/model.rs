@@ -4152,6 +4152,26 @@ impl ExpectationAction {
             ..Default::default()
         }
     }
+    /// Create a before/after action whose webhook request `template` renders
+    /// from the triggering request (sent as `httpRequestTemplate`). Escape
+    /// request values in the template and keep them out of its destination,
+    /// or a caller can redirect the webhook.
+    pub fn request_template(template: HttpTemplate) -> Self {
+        let mut action = Self::default();
+        action.extra.insert(
+            "httpRequestTemplate".into(),
+            serde_json::to_value(template).unwrap_or(serde_json::Value::Null),
+        );
+        action
+    }
+
+    /// The `httpRequestTemplate` of a templated webhook action, or `None` when
+    /// this action is not one.
+    pub fn http_request_template(&self) -> Option<HttpTemplate> {
+        self.extra
+            .get("httpRequestTemplate")
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+    }
 }
 
 /// A capture rule (`capture`) — extract a value from the matched request and

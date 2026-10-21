@@ -3363,4 +3363,24 @@ RSpec.describe 'MockServer models' do
       expect(MockServer::Expectation.from_hash(data).to_h).to include(data)
     end
   end
+
+  describe 'templated after-action webhook' do
+    it 'round-trips httpRequestTemplate and omits it when unset' do
+      data = {
+        'httpRequest' => { 'path' => '/api' },
+        'httpResponse' => { 'statusCode' => 200 },
+        'afterActions' => [
+          {
+            'httpRequestTemplate' => { 'templateType' => 'VELOCITY', 'template' => '{ "path": "/hook" }' },
+            'delay' => { 'timeUnit' => 'MILLISECONDS', 'value' => 5 }
+          }
+        ]
+      }
+      expectation = MockServer::Expectation.from_hash(data)
+      expect(expectation.after_actions.first.http_request_template.template_type).to eq('VELOCITY')
+      expect(expectation.after_actions.first.http_request).to be_nil
+      expect(expectation.to_h['afterActions']).to eq(data['afterActions'])
+      expect(MockServer::AfterAction.new(http_request: MockServer::HttpRequest.new(path: '/x')).to_h.keys).to eq(['httpRequest'])
+    end
+  end
 end

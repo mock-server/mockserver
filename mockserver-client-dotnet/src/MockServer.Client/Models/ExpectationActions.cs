@@ -18,7 +18,7 @@ public enum ActionFailurePolicy
 /// <summary>
 /// A before/after side-effect action attached to an expectation via <see cref="Expectation.BeforeActions"/>
 /// or <see cref="Expectation.AfterActions"/>. Exactly one of <see cref="HttpRequest"/>,
-/// <see cref="HttpClassCallback"/> or <see cref="HttpObjectCallback"/> is set. Mirrors the server's
+/// <see cref="HttpRequestTemplate"/>, <see cref="HttpClassCallback"/> or <see cref="HttpObjectCallback"/> is set. Mirrors the server's
 /// <c>afterAction</c> schema.
 /// </summary>
 public sealed class AfterAction
@@ -27,6 +27,14 @@ public sealed class AfterAction
     [JsonPropertyName("httpRequest")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public HttpRequest? HttpRequest { get; set; }
+
+    /// <summary>
+    /// A webhook whose request a Velocity, Mustache or JavaScript template renders from the triggering request.
+    /// Escape request values in the template and keep them out of the destination.
+    /// </summary>
+    [JsonPropertyName("httpRequestTemplate")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public HttpTemplate? HttpRequestTemplate { get; set; }
 
     [JsonPropertyName("httpClassCallback")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

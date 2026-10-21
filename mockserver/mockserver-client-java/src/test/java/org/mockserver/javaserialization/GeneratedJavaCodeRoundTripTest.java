@@ -236,6 +236,18 @@ public class GeneratedJavaCodeRoundTripTest {
     }
 
     @Test
+    public void shouldRecreateTemplatedBeforeAndAfterActions() throws Exception {
+        assertRecreated(new Expectation(request().withPath("/templated-hooks"))
+            .withBeforeActions(AfterAction.beforeAction()
+                .withHttpRequestTemplate(HttpTemplate.template(HttpTemplate.TemplateType.MUSTACHE, "{ \"path\": \"/before{{ request.path }}\" }"))
+                .withFailurePolicy(FailurePolicy.FAIL_FAST))
+            .withAfterActions(AfterAction.afterAction()
+                .withHttpRequestTemplate(HttpTemplate.template(HttpTemplate.TemplateType.VELOCITY, "{ \"path\": \"/after$!request.path\" }"))
+                .withDelay(new Delay(TimeUnit.MILLISECONDS, 5)))
+            .thenRespond(response().withStatusCode(204)));
+    }
+
+    @Test
     public void shouldRecreateExpectationWhosePrimaryActionIsANewActionTypeAmongOthers() throws Exception {
         assertRecreated(new Expectation(request().withPath("/several"))
             .thenRespondWithSse(HttpSseResponse.sseResponse().withEvent(SseEvent.sseEvent().withData("primary")).withPrimary(true))
@@ -377,6 +389,7 @@ public class GeneratedJavaCodeRoundTripTest {
             "import static org.mockserver.model.HttpOverrideForwardedRequest.forwardOverriddenRequest;\n" +
             "import static org.mockserver.model.HttpRequest.request;\n" +
             "import static org.mockserver.model.HttpResponse.response;\n" +
+            "import static org.mockserver.model.HttpTemplate.template;\n" +
             "\n" +
             "public class GeneratedExpectation implements java.util.function.Consumer<MockServerClient> {\n" +
             "    public void accept(MockServerClient client) {\n" +

@@ -21,6 +21,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.model.Delay;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
+import org.mockserver.model.HttpTemplate;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.LoadScenarioSerializer;
 import org.slf4j.event.Level;
@@ -52,6 +53,7 @@ import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
 import static org.mockserver.model.AfterAction.afterAction;
 import static org.mockserver.model.AfterAction.beforeAction;
+import static org.mockserver.model.HttpTemplate.template;
 import static org.mockserver.model.ExpectationStep.step;
 import static org.mockserver.model.FailurePolicy.BEST_EFFORT;
 import static org.mockserver.model.FailurePolicy.FAIL_FAST;
@@ -118,6 +120,39 @@ public class OutboundRequestsBlockPrivateNetworksIntegrationTest {
 
             assertThat(response.getBodyAsString(), is("mocked"));
             assertRefusedOnlyWhenBlocking(block, "after-action webhook blocked by SSRF policy");
+        }
+    }
+
+    @Test
+    public void shouldApplyTheSettingToTheRenderedTargetOfATemplatedAfterActionWebhook() throws Exception {
+        for (boolean block : new boolean[]{true, false}) {
+            startServer(block, new Expectation(request().withPath("/webhooked"))
+                .thenRespond(response().withBody("mocked"))
+                .withAfterActions(afterAction().withHttpRequestTemplate(templatedTarget())));
+
+            HttpResponse response = sendTo(server, request().withPath("/webhooked"));
+
+            assertThat(response.getBodyAsString(), is("mocked"));
+            assertRefusedOnlyWhenBlocking(block, "after-action webhook blocked by SSRF policy");
+        }
+    }
+
+    @Test
+    public void shouldApplyTheSettingToTheRenderedTargetOfATemplatedFailFastBlockingBeforeActionWebhook() throws Exception {
+        for (boolean block : new boolean[]{true, false}) {
+            startServer(block, new Expectation(request().withPath("/webhooked"))
+                .thenRespond(response().withBody("mocked"))
+                .withBeforeActions(beforeAction().withHttpRequestTemplate(templatedTarget()).withFailurePolicy(FAIL_FAST)));
+
+            HttpResponse response = sendTo(server, request().withPath("/webhooked"));
+
+            if (block) {
+                assertThat(response.getStatusCode(), is(502));
+                assertThat(response.getBodyAsString(), startsWith("before-action failed: " + BLOCKED));
+            } else {
+                assertThat(response.getBodyAsString(), is("mocked"));
+            }
+            assertRefusedOnlyWhenBlocking(block, "before-action webhook blocked by SSRF policy");
         }
     }
 
@@ -287,6 +322,11 @@ public class OutboundRequestsBlockPrivateNetworksIntegrationTest {
 
     private static HttpRequest target() {
         return request().withPath("/target").withHeader(HOST.toString(), "127.0.0.1:" + destinationPort);
+    }
+
+    /** {@link #target()}, with its loopback Host header rendered by the template. */
+    private static HttpTemplate templatedTarget() {
+        return template(HttpTemplate.TemplateType.VELOCITY, "{ \"path\": \"/target\", \"headers\": [ { \"name\": \"Host\", \"values\": [ \"127.0.0.#set($octet = 1)$octet:" + destinationPort + "\" ] } ] }");
     }
 
     private JsonNode loadStatus() throws Exception {

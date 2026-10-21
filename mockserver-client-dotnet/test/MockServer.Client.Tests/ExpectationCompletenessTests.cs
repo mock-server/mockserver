@@ -117,6 +117,17 @@ public class ExpectationCompletenessTests
     }
 
     [Fact]
+    public void TemplatedAfterAction_RoundTrips()
+    {
+        var json = "{\"httpRequest\":{\"path\":\"/ping\"},\"httpResponse\":{\"statusCode\":200}," +
+                   "\"afterActions\":[{\"httpRequestTemplate\":{\"templateType\":\"MUSTACHE\",\"template\":\"{ \\\"path\\\": \\\"/hook\\\" }\"},\"delay\":{\"timeUnit\":\"MILLISECONDS\",\"value\":5}}]}";
+        AssertRoundTrips<Expectation>(json);
+        var exp = JsonSerializer.Deserialize<Expectation>(json, JsonOptions)!;
+        exp.AfterActions![0].HttpRequestTemplate!.TemplateType.Should().Be(TemplateType.MUSTACHE);
+        exp.AfterActions[0].HttpRequest.Should().BeNull();
+    }
+
+    [Fact]
     public void Steps_RoundTrip()
     {
         var json = "{\"steps\":[" +

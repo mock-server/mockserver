@@ -8202,6 +8202,8 @@ components:
       properties:
         httpRequest:
           $ref: '#/components/schemas/HttpRequest'
+        httpRequestTemplate:
+          $ref: '#/components/schemas/HttpTemplate'
         httpClassCallback:
           $ref: '#/components/schemas/HttpClassCallback'
         httpObjectCallback:
@@ -8219,6 +8221,8 @@ components:
       oneOf:
         - required:
             - httpRequest
+        - required:
+            - httpRequestTemplate
         - required:
             - httpClassCallback
         - required:

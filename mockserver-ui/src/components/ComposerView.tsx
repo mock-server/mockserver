@@ -101,6 +101,7 @@ import {
   type SideEffectPosition,
   type SideEffectDelayUnit,
   type SideEffectFailurePolicy,
+  type SideEffectTemplateType,
   type StandardConnectionOptions,
   type StandardExpectationStep,
   type StepActionType,
@@ -3550,6 +3551,21 @@ function SideEffectsPanel({
               <MenuItem value="after">After</MenuItem>
             </TextField>
             <TextField
+              label="Request"
+              size="small"
+              select
+              value={se.templateType ?? ''}
+              onChange={(e) => updateRow(idx, { templateType: e.target.value as SideEffectTemplateType })}
+              sx={{ ...SIDE_EFFECT_FIELD_SX }}
+              slotProps={{ htmlInput: { 'data-testid': 'side-effect-request-kind' } }}
+              fullWidth
+            >
+              <MenuItem value="">Fields</MenuItem>
+              <MenuItem value="VELOCITY">Velocity Template</MenuItem>
+              <MenuItem value="MUSTACHE">Mustache Template</MenuItem>
+              <MenuItem value="JAVASCRIPT">JavaScript Template</MenuItem>
+            </TextField>
+            {!se.templateType && <TextField
               label="Method"
               size="small"
               value={se.method}
@@ -3557,8 +3573,8 @@ function SideEffectsPanel({
               placeholder="GET"
               sx={{ ...SIDE_EFFECT_FIELD_SX }}
               fullWidth
-            />
-            <TextField
+            />}
+            {!se.templateType && <TextField
               label="Path"
               size="small"
               sx={{ minWidth: 0, ...SIDE_EFFECT_FIELD_SX }}
@@ -3567,7 +3583,7 @@ function SideEffectsPanel({
               placeholder="/webhook/notify"
               slotProps={{ input: { sx: { fontFamily: monospaceFontFamily, fontSize: '0.78rem' } } }}
               fullWidth
-            />
+            />}
             <IconButton
               size="small"
               color="error"
@@ -3577,6 +3593,20 @@ function SideEffectsPanel({
               <DeleteIcon fontSize="small" />
             </IconButton>
           </Box>
+          {se.templateType ? (
+            <TextField
+              label="Request template"
+              size="small"
+              multiline
+              minRows={3}
+              value={se.template ?? ''}
+              onChange={(e) => updateRow(idx, { template: e.target.value })}
+              placeholder={'{ "method": "POST", "path": "/notify", "headers": { "Host": [ "audit.svc:8080" ] } }'}
+              helperText="Renders the whole webhook request from the triggering request. Escape request values, and never build the Host or URL from them."
+              slotProps={{ input: { sx: { fontFamily: monospaceFontFamily, fontSize: '0.78rem' } }, htmlInput: { 'data-testid': 'side-effect-template' } }}
+              fullWidth
+            />
+          ) : (
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 1, alignItems: 'start' }}>
             <TextField
               label="Host (optional)"
@@ -3599,6 +3629,7 @@ function SideEffectsPanel({
               fullWidth
             />
           </Box>
+          )}
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 1, alignItems: 'start' }}>
             <TextField
               label="Delay"

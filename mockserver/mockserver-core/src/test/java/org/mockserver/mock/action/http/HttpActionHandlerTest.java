@@ -22,6 +22,8 @@ import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.responsewriter.StreamErrorWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
+import org.mockserver.templates.engine.javascript.JavaScriptTemplateEngine;
+import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
 import org.mockserver.time.FixedTime;
 import org.mockserver.uuid.UUIDService;
 import org.slf4j.event.Level;
@@ -322,6 +324,196 @@ public class HttpActionHandlerTest {
         verify(mockNettyHttpClient, after(100).never()).sendRequest(any(HttpRequest.class));
         // but it does eventually fire once the delay elapses
         verify(mockNettyHttpClient, timeout(5000)).sendRequest(any(HttpRequest.class));
+    }
+
+    @Test
+    public void shouldRenderAfterActionWebhookTemplateAgainstTriggeringRequest() {
+        // given - an after-action whose request is a Velocity template over the triggering request
+        HttpTemplate webhook = template(HttpTemplate.TemplateType.VELOCITY, "{ \"method\": \"POST\", \"path\": \"/hook$!request.path\", \"body\": \"got $!request.body\" }");
+        HttpRequest triggering = request("/order").withBody("A-1");
+        expectation = new Expectation(triggering)
+            .withAfterActions(AfterAction.afterAction().withHttpRequestTemplate(webhook))
+            .thenRespond(response);
+        when(mockHttpStateHandler.firstMatchingExpectation(triggering)).thenReturn(expectation);
+        when(mockHttpForwardTemplateActionHandler.resolveTemplateEngine(webhook)).thenReturn(new VelocityTemplateEngine(new MockServerLogger(), configuration));
+        CompletableFuture<HttpResponse> webhookFuture = new CompletableFuture<>();
+        webhookFuture.complete(response("webhook_ok"));
+        when(mockNettyHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(webhookFuture);
+
+        // when
+        actionHandler.processAction(triggering, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then the response is written and the rendered webhook is sent
+        verify(mockResponseWriter).writeResponse(triggering, response, false);
+        verify(mockNettyHttpClient, timeout(5000)).sendRequest(argThat(r -> r != null
+            && "POST".equals(r.getMethod().getValue())
+            && "/hook/order".equals(r.getPath().getValue())
+            && "got A-1".equals(r.getBodyAsString())));
+    }
+
+    @Test
+    public void shouldRenderJavaScriptAfterActionWebhookTemplateAgainstTriggeringRequest() {
+        Assume.assumeTrue("JavaScript engine not available", JavaScriptTemplateEngine.isPolyglotAvailable());
+        // given
+        HttpTemplate webhook = template(HttpTemplate.TemplateType.JAVASCRIPT, "return { 'method': 'PUT', 'path': '/hook' + request.path, 'body': 'got ' + request.body };");
+        HttpRequest triggering = request("/order").withBody("A-1");
+        expectation = new Expectation(triggering)
+            .withAfterActions(AfterAction.afterAction().withHttpRequestTemplate(webhook))
+            .thenRespond(response);
+        when(mockHttpStateHandler.firstMatchingExpectation(triggering)).thenReturn(expectation);
+        when(mockHttpForwardTemplateActionHandler.resolveTemplateEngine(webhook)).thenReturn(new JavaScriptTemplateEngine(new MockServerLogger(), configuration));
+        CompletableFuture<HttpResponse> webhookFuture = new CompletableFuture<>();
+        webhookFuture.complete(response("webhook_ok"));
+        when(mockNettyHttpClient.sendRequest(any(HttpRequest.class))).thenReturn(webhookFuture);
+
+        // when
+        actionHandler.processAction(triggering, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then
+        verify(mockResponseWriter).writeResponse(triggering, response, false);
+        verify(mockNettyHttpClient, timeout(5000)).sendRequest(argThat(r -> r != null
+            && "PUT".equals(r.getMethod().getValue())
+            && "/hook/order".equals(r.getPath().getValue())
+            && "got A-1".equals(r.getBodyAsString())));
+    }
+
+    @Test
+    public void shouldNotSendAfterActionWebhookWhenTemplateDoesNotRenderARequest() {
+        // given
+        HttpTemplate webhook = template(HttpTemplate.TemplateType.VELOCITY, "not a request");
+        expectation = new Expectation(request)
+            .withAfterActions(AfterAction.afterAction().withHttpRequestTemplate(webhook))
+            .thenRespond(response);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        when(mockHttpForwardTemplateActionHandler.resolveTemplateEngine(webhook)).thenReturn(new VelocityTemplateEngine(new MockServerLogger(), configuration));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then the primary response is unaffected, the failure is logged and nothing is sent
+        verify(mockResponseWriter).writeResponse(request, response, false);
+        verify(mockServerLogger, timeout(5000)).logEvent(argThat(entry -> entry != null
+            && "after-action webhook not sent:{}".equals(entry.getMessageFormat())
+            && String.valueOf(entry.getArguments()[0]).startsWith("VELOCITY webhook template rendered output that is not a valid request")));
+        verify(mockNettyHttpClient, never()).sendRequest(any(HttpRequest.class));
+    }
+
+    @Test
+    public void shouldSendRenderedBlockingBeforeActionWebhookTemplateBeforePrimaryAction() {
+        // given
+        HttpTemplate webhook = template(HttpTemplate.TemplateType.VELOCITY, "{ \"path\": \"/before$!request.path\" }");
+        expectation = new Expectation(request)
+            .withBeforeActions(AfterAction.beforeAction().withHttpRequestTemplate(webhook))
+            .thenRespond(response);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        when(mockHttpForwardTemplateActionHandler.resolveTemplateEngine(webhook)).thenReturn(new VelocityTemplateEngine(new MockServerLogger(), configuration));
+        when(mockNettyHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class))).thenReturn(response("webhook_ok"));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then the rendered webhook is awaited before the primary response
+        InOrder inOrder = inOrder(mockNettyHttpClient, mockResponseWriter);
+        inOrder.verify(mockNettyHttpClient).sendRequest(argThat(r -> r != null && "/beforesome_path".equals(r.getPath().getValue())), anyLong(), any(TimeUnit.class));
+        inOrder.verify(mockResponseWriter).writeResponse(request, response, false);
+    }
+
+    @Test
+    public void shouldFailFastWhenBlockingBeforeActionWebhookTemplateFails() {
+        // given
+        HttpTemplate webhook = template(HttpTemplate.TemplateType.VELOCITY, "not a request");
+        expectation = new Expectation(request)
+            .withBeforeActions(AfterAction.beforeAction().withHttpRequestTemplate(webhook).withFailurePolicy(FailurePolicy.FAIL_FAST))
+            .thenRespond(response);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        when(mockHttpForwardTemplateActionHandler.resolveTemplateEngine(webhook)).thenReturn(new VelocityTemplateEngine(new MockServerLogger(), configuration));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then nothing is sent, the primary action is skipped and a 502 names the template failure
+        verify(mockNettyHttpClient, never()).sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class));
+        verify(mockHttpResponseActionHandler, never()).handle(any(HttpResponse.class), any(HttpRequest.class), any(RequestDefinition.class));
+        verify(mockResponseWriter).writeResponse(eq(request), argThat(r -> r != null && r.getStatusCode() == 502
+            && r.getBodyAsString().startsWith("before-action failed: VELOCITY webhook template")), eq(false));
+        verify(mockHttpStateHandler).postProcess(expectation);
+    }
+
+    @Test
+    public void shouldNotReturnTemplateTextInFailFastResponseWhenWebhookTemplateEngineFails() {
+        // given - a template holding a credential whose evaluation throws
+        HttpTemplate webhook = template(HttpTemplate.TemplateType.VELOCITY,
+            "{ \"path\": \"/hook$request.path.substring(999)\", \"headers\": { \"Authorization\": [ \"Bearer TOP-SECRET-TOKEN\" ] } }");
+        expectation = new Expectation(request)
+            .withBeforeActions(AfterAction.beforeAction().withHttpRequestTemplate(webhook).withFailurePolicy(FailurePolicy.FAIL_FAST))
+            .thenRespond(response);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        when(mockHttpForwardTemplateActionHandler.resolveTemplateEngine(webhook)).thenReturn(new VelocityTemplateEngine(new MockServerLogger(), configuration));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then the 502 names the failure without the template or the credential
+        ArgumentCaptor<HttpResponse> written = ArgumentCaptor.forClass(HttpResponse.class);
+        verify(mockResponseWriter).writeResponse(eq(request), written.capture(), eq(false));
+        assertThat(written.getValue().getStatusCode(), is(502));
+        assertThat(written.getValue().getBodyAsString(), containsString("before-action failed: VELOCITY webhook template failed"));
+        assertThat(written.getValue().getBodyAsString(), not(containsString("TOP-SECRET-TOKEN")));
+        assertThat(written.getValue().getBodyAsString(), not(containsString("Authorization")));
+        verify(mockNettyHttpClient, never()).sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class));
+    }
+
+    @Test
+    public void shouldAnswerFailFastWhenBlockingBeforeActionWebhookTemplateHasNoTemplateType() {
+        // given
+        HttpTemplate webhook = new HttpTemplate(null).withTemplate("{ \"path\": \"/hook\" }");
+        expectation = new Expectation(request)
+            .withBeforeActions(AfterAction.beforeAction().withHttpRequestTemplate(webhook).withFailurePolicy(FailurePolicy.FAIL_FAST))
+            .thenRespond(response);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then the client is answered and the expectation post-processed
+        verify(mockResponseWriter).writeResponse(eq(request), argThat(r -> r != null && r.getStatusCode() == 502
+            && r.getBodyAsString().contains("templateType is required")), eq(false));
+        verify(mockHttpStateHandler).postProcess(expectation);
+        verify(mockNettyHttpClient, never()).sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class));
+    }
+
+    @Test
+    public void shouldRespondWhenBestEffortBlockingBeforeActionWebhookTemplateHasNoTemplateType() {
+        // given
+        HttpTemplate webhook = new HttpTemplate(null).withTemplate("{ \"path\": \"/hook\" }");
+        expectation = new Expectation(request)
+            .withBeforeActions(AfterAction.beforeAction().withHttpRequestTemplate(webhook))
+            .thenRespond(response);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then
+        verify(mockResponseWriter).writeResponse(request, response, false);
+    }
+
+    @Test
+    public void shouldContinueToPrimaryActionWhenBestEffortBeforeActionWebhookTemplateFails() {
+        // given
+        HttpTemplate webhook = template(HttpTemplate.TemplateType.VELOCITY, "not a request");
+        expectation = new Expectation(request)
+            .withBeforeActions(AfterAction.beforeAction().withHttpRequestTemplate(webhook))
+            .thenRespond(response);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        when(mockHttpForwardTemplateActionHandler.resolveTemplateEngine(webhook)).thenReturn(new VelocityTemplateEngine(new MockServerLogger(), configuration));
+
+        // when
+        actionHandler.processAction(request, mockResponseWriter, null, new HashSet<>(), false, true);
+
+        // then
+        verify(mockNettyHttpClient, never()).sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class));
+        verify(mockResponseWriter).writeResponse(request, response, false);
     }
 
     @Test

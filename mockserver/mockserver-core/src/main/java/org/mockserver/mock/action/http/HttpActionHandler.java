@@ -43,6 +43,8 @@ import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.responsewriter.StreamErrorWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.curl.HttpRequestToCurlSerializer;
+import org.mockserver.serialization.model.HttpRequestDTO;
+import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.socket.tls.NettySslContextFactory;
 import org.mockserver.telemetry.GenAiSpans;
 import org.mockserver.telemetry.RequestSpans;
@@ -1879,6 +1881,42 @@ public class HttpActionHandler {
         }
     }
 
+    /**
+     * Renders a webhook's request template against the triggering request with the same engines, and so the same
+     * class-access restrictions, as forward templates. Call it only inside the scheduler task that sends the webhook,
+     * so rendering never runs on the event loop or delays the response write.
+     *
+     * @throws TemplateFailureException when the template fails or does not render a valid request
+     */
+    private HttpRequest renderWebhookTemplate(HttpTemplate template, HttpRequest request) {
+        return TemplateFailureException.render(template, "webhook", "request", true, () -> {
+            if (template.getTemplateType() == null) {
+                throw new IllegalArgumentException("templateType is required");
+            }
+            TemplateEngine engine = getHttpForwardTemplateActionHandler().resolveTemplateEngine(template);
+            return engine.executeTemplate(template.getTemplateContent(), request, HttpRequestDTO.class);
+        });
+    }
+
+    /**
+     * Logs a webhook template failure with its client-safe detail; the engine's own failure is attached as the
+     * throwable, as for response and forward template failures.
+     */
+    private void logWebhookTemplateFailure(TemplateFailureException failure, HttpRequest request, String label) {
+        if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(WARN)
+                    .setLogLevel(Level.INFO)
+                    .setCorrelationId(request.getLogCorrelationId())
+                    .setHttpRequest(request)
+                    .setMessageFormat(label + " webhook not sent:{}")
+                    .setArguments(failure.getDetail())
+                    .setThrowable(failure.loggedFailure())
+            );
+        }
+    }
+
     private void dispatchAfterAction(final AfterAction afterAction, final HttpRequest request) {
         dispatchSideAction(afterAction, request, "after-action");
     }
@@ -1891,11 +1929,11 @@ public class HttpActionHandler {
     private void dispatchSideAction(final AfterAction action, final HttpRequest request, final String label) {
         scheduler.submitAsync(sheddable(() -> {
             try {
-                if (action.getHttpRequest() != null) {
-                    // Resolve OpenAPI runtime expressions (no-op when none present)
-                    HttpRequest callbackRequest = OpenApiRuntimeExpressionResolver.resolve(
-                        action.getHttpRequest(), request
-                    );
+                if (action.getHttpRequest() != null || action.getHttpRequestTemplate() != null) {
+                    // a template renders the whole request; otherwise resolve OpenAPI runtime expressions (no-op when none present)
+                    HttpRequest callbackRequest = action.getHttpRequestTemplate() != null
+                        ? renderWebhookTemplate(action.getHttpRequestTemplate(), request)
+                        : OpenApiRuntimeExpressionResolver.resolve(action.getHttpRequest(), request);
                     if (refusedWebhook(callbackRequest, request, label) != null) {
                         return;
                     }
@@ -1924,6 +1962,8 @@ public class HttpActionHandler {
                         LocalCallbackRegistry.retrieveResponseCallback(clientId).handle(request);
                     }
                 }
+            } catch (TemplateFailureException e) {
+                logWebhookTemplateFailure(e, request, label);
             } catch (Exception e) {
                 if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
                     mockServerLogger.logEvent(
@@ -1960,10 +2000,11 @@ public class HttpActionHandler {
                 ? FailurePolicy.BEST_EFFORT
                 : beforeAction.getFailurePolicy();
 
-            if (!blocking || beforeAction.getHttpRequest() == null) {
+            final boolean webhook = beforeAction.getHttpRequest() != null || beforeAction.getHttpRequestTemplate() != null;
+            if (!blocking || !webhook) {
                 // non-blocking, or a callback before-action (no awaitable result in increment 1):
                 // dispatch fire-and-forget, started before the response
-                if (blocking && beforeAction.getHttpRequest() == null && mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                if (blocking && mockServerLogger.isEnabledForInstance(Level.INFO)) {
                     mockServerLogger.logEvent(
                         new LogEntry()
                             .setType(WARN)
@@ -1978,7 +2019,21 @@ public class HttpActionHandler {
             }
 
             // blocking webhook before-action: send and wait, honouring the optional timeout
-            final HttpRequest callbackRequest = OpenApiRuntimeExpressionResolver.resolve(beforeAction.getHttpRequest(), request);
+            final HttpRequest callbackRequest;
+            if (beforeAction.getHttpRequestTemplate() != null) {
+                try {
+                    callbackRequest = renderWebhookTemplate(beforeAction.getHttpRequestTemplate(), request);
+                } catch (TemplateFailureException e) {
+                    logWebhookTemplateFailure(e, request, "blocking before-action");
+                    if (failurePolicy == FailurePolicy.FAIL_FAST) {
+                        responseWriter.writeResponse(request, badGatewayResponse().withBody("before-action failed: " + e.getDetail()), false);
+                        return false;
+                    }
+                    continue;
+                }
+            } else {
+                callbackRequest = OpenApiRuntimeExpressionResolver.resolve(beforeAction.getHttpRequest(), request);
+            }
             final long timeoutMillis = beforeAction.getTimeout() != null
                 ? beforeAction.getTimeout().getTimeUnit().toMillis(beforeAction.getTimeout().getValue())
                 : configuration.maxSocketTimeoutInMillis();

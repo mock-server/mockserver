@@ -372,8 +372,23 @@ export type SideEffectPosition = 'before' | 'after';
 export type SideEffectDelayUnit = 'MILLISECONDS' | 'SECONDS' | 'MINUTES';
 export type SideEffectFailurePolicy = 'BEST_EFFORT' | 'FAIL_FAST';
 
+export type SideEffectTemplateType = '' | 'VELOCITY' | 'MUSTACHE' | 'JAVASCRIPT';
+
+export interface SideEffectPreserved {
+  action?: Record<string, unknown>;
+  httpRequest?: Record<string, unknown>;
+  httpRequestTemplate?: Record<string, unknown>;
+}
+
 export interface StandardSideEffectAction {
   position: SideEffectPosition;
+  /** When set, the webhook is an httpRequestTemplate rendered from the triggering request and
+   *  `template` replaces method / path / host / body. */
+  templateType?: SideEffectTemplateType;
+  template?: string;
+  /** Fields of a loaded action the composer does not edit (e.g. a template's templateFile), re-emitted
+   *  unchanged on save so editing an expectation never silently drops them. */
+  preserved?: SideEffectPreserved;
   method: string;
   path: string;
   host: string;
@@ -1546,10 +1561,10 @@ export function buildExpectationJson(
   // Side-effect actions — beforeActions / afterActions
   if (action.sideEffects && action.sideEffects.length > 0) {
     const beforeActions = action.sideEffects
-      .filter((se) => se.position === 'before' && se.path.trim())
+      .filter((se) => se.position === 'before' && isSideEffectComplete(se))
       .map(buildSideEffectActionJson);
     const afterActions = action.sideEffects
-      .filter((se) => se.position === 'after' && se.path.trim())
+      .filter((se) => se.position === 'after' && isSideEffectComplete(se))
       .map(buildSideEffectActionJson);
     if (beforeActions.length > 0) out['beforeActions'] = beforeActions;
     if (afterActions.length > 0) out['afterActions'] = afterActions;
@@ -2261,13 +2276,21 @@ export function captureFromExpectation(value: Record<string, unknown>): Standard
 function buildSideEffectActionJson(
   se: StandardSideEffectAction,
 ): Record<string, unknown> {
-  const httpReq: Record<string, unknown> = { path: se.path };
-  if (se.method.trim()) httpReq['method'] = se.method.trim();
-  // the webhook destination is derived from the Host header (HttpRequest has no
-  // top-level host field); this matches the .withHeader("Host", ...) Java preview
-  if (se.host.trim()) httpReq['headers'] = { Host: [se.host.trim()] };
-  if (se.body.trim()) httpReq['body'] = se.body.trim();
-  const out: Record<string, unknown> = { httpRequest: httpReq };
+  const out: Record<string, unknown> = { ...se.preserved?.action };
+  if (se.templateType) {
+    const tpl: Record<string, unknown> = { ...se.preserved?.httpRequestTemplate, templateType: se.templateType };
+    // a file-backed template needs no inline text; otherwise always send the (possibly empty) template
+    if (se.template?.trim() || !tpl['templateFile']) tpl['template'] = se.template ?? '';
+    out['httpRequestTemplate'] = tpl;
+  } else {
+    const httpReq: Record<string, unknown> = { ...se.preserved?.httpRequest, path: se.path };
+    if (se.method.trim()) httpReq['method'] = se.method.trim();
+    // the webhook destination is derived from the Host header (HttpRequest has no
+    // top-level host field); this matches the .withHeader("Host", ...) Java preview
+    if (se.host.trim()) httpReq['headers'] = { Host: [se.host.trim()] };
+    if (se.body.trim()) httpReq['body'] = se.body.trim();
+    out['httpRequest'] = httpReq;
+  }
   if (se.delayValue > 0) {
     out['delay'] = { timeUnit: se.delayUnit, value: se.delayValue };
   }
@@ -2281,6 +2304,13 @@ function buildSideEffectActionJson(
     if (se.failurePolicy === 'FAIL_FAST') out['failurePolicy'] = 'FAIL_FAST';
   }
   return out;
+}
+
+/** A side-effect row is emitted once it names a webhook: a path, or a template when templated. */
+export function isSideEffectComplete(se: StandardSideEffectAction): boolean {
+  return se.templateType
+    ? !!se.template?.trim() || typeof se.preserved?.httpRequestTemplate?.['templateFile'] === 'string'
+    : !!se.path.trim();
 }
 
 /**
@@ -2333,14 +2363,38 @@ export function sideEffectsFromExpectation(
     return '';
   }
 
+  function without(o: Record<string, unknown>, keys: string[]): Record<string, unknown> | undefined {
+    const rest = Object.fromEntries(Object.entries(o).filter(([k]) => !keys.includes(k)));
+    return Object.keys(rest).length > 0 ? rest : undefined;
+  }
+
+  function parseTemplateType(t: unknown): SideEffectTemplateType {
+    return t === 'VELOCITY' || t === 'MUSTACHE' || t === 'JAVASCRIPT' ? t : '';
+  }
+
   function parseOne(obj: Record<string, unknown>, position: SideEffectPosition): StandardSideEffectAction | null {
-    const req = obj['httpRequest'];
+    const tpl = obj['httpRequestTemplate'];
+    const templated = !!tpl && typeof tpl === 'object' && !!parseTemplateType((tpl as Record<string, unknown>)['templateType']);
+    const req = templated ? {} : obj['httpRequest'];
     if (!req || typeof req !== 'object') return null;
     const r = req as Record<string, unknown>;
+    const t = (templated ? tpl : {}) as Record<string, unknown>;
     const delay = obj['delay'] as Record<string, unknown> | undefined;
     const timeout = obj['timeout'] as Record<string, unknown> | undefined;
+    const preserved: SideEffectPreserved = {};
+    const actionRest = without(obj, ['httpRequest', 'httpRequestTemplate', 'delay', 'blocking', 'timeout', 'failurePolicy']);
+    if (actionRest) preserved.action = actionRest;
+    const requestRest = templated ? undefined : without(r, typeof r['body'] === 'string' ? ['path', 'method', 'headers', 'body'] : ['path', 'method', 'headers']);
+    if (requestRest) preserved.httpRequest = requestRest;
+    const templateRest = templated ? without(t, ['templateType', 'template']) : undefined;
+    if (templateRest) preserved.httpRequestTemplate = templateRest;
     return {
       position,
+      ...(Object.keys(preserved).length > 0 ? { preserved } : {}),
+      ...(templated ? {
+        templateType: parseTemplateType(t['templateType']),
+        template: typeof t['template'] === 'string' ? (t['template'] as string) : '',
+      } : {}),
       method: typeof r['method'] === 'string' ? (r['method'] as string) : '',
       path: typeof r['path'] === 'string' ? (r['path'] as string) : '',
       host: extractHost(r),
@@ -3483,10 +3537,14 @@ function collectJavaImports(
   }
 
   // Side-effect (before / after) actions — webhook (httpRequest) target only this increment
-  const sideEffects = (action.sideEffects ?? []).filter((se) => se.path.trim());
+  const sideEffects = (action.sideEffects ?? []).filter(isSideEffectComplete);
   const beforeActions = sideEffects.filter((se) => se.position === 'before');
   const afterActions = sideEffects.filter((se) => se.position === 'after');
-  if (sideEffects.length > 0) imp.add('import static org.mockserver.model.HttpRequest.request;');
+  if (sideEffects.some((se) => !se.templateType)) imp.add('import static org.mockserver.model.HttpRequest.request;');
+  if (sideEffects.some((se) => se.templateType)) {
+    imp.add('import static org.mockserver.model.HttpTemplate.template;');
+    imp.add('import org.mockserver.model.HttpTemplate.TemplateType;');
+  }
   if (beforeActions.length > 0) imp.add('import static org.mockserver.model.AfterAction.beforeAction;');
   if (afterActions.length > 0) imp.add('import static org.mockserver.model.AfterAction.afterAction;');
   if (beforeActions.some((se) => se.failurePolicy === 'FAIL_FAST')) {
@@ -3575,13 +3633,19 @@ function sideEffectToJava(se: StandardSideEffectAction): string {
   const factoryMethod = isBefore ? 'beforeAction' : 'afterAction';
   const lines: string[] = [];
   lines.push(`${factoryMethod}()`);
-  lines.push(`        .withHttpRequest(`);
-  lines.push(`            request()`);
-  if (se.method.trim()) lines.push(`                .withMethod("${escapeJava(se.method.trim())}")`);
-  lines.push(`                .withPath("${escapeJava(se.path)}")`);
-  if (se.host.trim()) lines.push(`                .withHeader("Host", "${escapeJava(se.host.trim())}")`);
-  if (se.body.trim()) lines.push(`                .withBody("${escapeJava(se.body.trim())}")`);
-  lines.push('        )');
+  if (se.templateType) {
+    const file = se.preserved?.httpRequestTemplate?.['templateFile'];
+    const expr = templateJavaExpr(se.templateType, se.template ?? '', typeof file === 'string' ? file : undefined);
+    lines.push(`        .withHttpRequestTemplate(${expr.split('\n').join('\n    ')})`);
+  } else {
+    lines.push(`        .withHttpRequest(`);
+    lines.push(`            request()`);
+    if (se.method.trim()) lines.push(`                .withMethod("${escapeJava(se.method.trim())}")`);
+    lines.push(`                .withPath("${escapeJava(se.path)}")`);
+    if (se.host.trim()) lines.push(`                .withHeader("Host", "${escapeJava(se.host.trim())}")`);
+    if (se.body.trim()) lines.push(`                .withBody("${escapeJava(se.body.trim())}")`);
+    lines.push('        )');
+  }
   if (se.delayValue > 0) {
     lines.push(`        .withDelay(new Delay(TimeUnit.${se.delayUnit}, ${se.delayValue}))`);
   }
@@ -3670,7 +3734,7 @@ export function standardToJava(matcher: StandardMatcher, action: StandardActionP
 
   const hasChaos = !!(action.chaos && buildChaosJson(action.chaos));
   const hasSteps = !!(action.steps && action.steps.length > 0);
-  const sideEffects = (action.sideEffects ?? []).filter((se) => se.path.trim());
+  const sideEffects = (action.sideEffects ?? []).filter(isSideEffectComplete);
   const beforeActions = sideEffects.filter((se) => se.position === 'before');
   const afterActions = sideEffects.filter((se) => se.position === 'after');
   // Build the exact expectation JSON once and drive the cross-cutting modifiers

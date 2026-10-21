@@ -5,6 +5,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.AfterAction;
 import org.mockserver.model.FailurePolicy;
+import org.mockserver.model.HttpTemplate;
 
 import java.util.List;
 
@@ -13,6 +14,7 @@ import static org.hamcrest.Matchers.*;
 import static org.mockserver.model.Delay.seconds;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.model.HttpTemplate.template;
 
 /**
  * Round-trips expectations carrying {@code beforeActions} / {@code afterActions} through
@@ -87,5 +89,43 @@ public class BeforeAndAfterActionsSerializationTest {
         assertThat(before.getTimeout(), is(nullValue()));
         assertThat(before.getFailurePolicy(), is(nullValue()));
         assertThat(json, not(containsString("\"failurePolicy\"")));
+    }
+
+    @Test
+    public void shouldRoundTripTemplatedAfterActionWebhook() {
+        // given
+        Expectation expectation = new Expectation(request("/path"))
+            .withAfterActions(AfterAction.afterAction()
+                .withHttpRequestTemplate(template(HttpTemplate.TemplateType.VELOCITY, "{ \"path\": \"/hook$!request.path\" }")))
+            .thenRespond(response("ok"));
+
+        // when
+        String json = serializer.serialize(expectation);
+        Expectation parsed = serializer.deserialize(json);
+
+        // then
+        assertThat(json, containsString("\"httpRequestTemplate\""));
+        AfterAction after = parsed.getAfterActions().get(0);
+        assertThat(after.getHttpRequest(), is(nullValue()));
+        assertThat(after.getHttpRequestTemplate().getTemplateType(), is(HttpTemplate.TemplateType.VELOCITY));
+        assertThat(after.getHttpRequestTemplate().getTemplate(), is("{ \"path\": \"/hook$!request.path\" }"));
+        assertThat(parsed, is(expectation));
+    }
+
+    @Test
+    public void shouldAcceptTemplatedWebhookJsonAndRejectOneWithBothRequestAndTemplate() {
+        // given
+        String templated = "{ \"httpRequest\": { \"path\": \"/path\" }, \"httpResponse\": { \"statusCode\": 200 }," +
+            " \"afterActions\": [ { \"httpRequestTemplate\": { \"templateType\": \"MUSTACHE\", \"template\": \"{ \\\"path\\\": \\\"/hook\\\" }\" } } ] }";
+        String both = "{ \"httpRequest\": { \"path\": \"/path\" }, \"httpResponse\": { \"statusCode\": 200 }," +
+            " \"afterActions\": [ { \"httpRequest\": { \"path\": \"/hook\" }, \"httpRequestTemplate\": { \"templateType\": \"MUSTACHE\", \"template\": \"x\" } } ] }";
+
+        // when
+        Expectation parsed = serializer.deserialize(templated);
+
+        // then
+        assertThat(parsed.getAfterActions().get(0).getHttpRequestTemplate().getTemplateType(), is(HttpTemplate.TemplateType.MUSTACHE));
+        IllegalArgumentException invalid = org.junit.Assert.assertThrows(IllegalArgumentException.class, () -> serializer.deserialize(both));
+        assertThat(invalid.getMessage(), containsString("afterActions"));
     }
 }

@@ -85,7 +85,11 @@ sitemap:
     <tbody>
         <tr>
             <td><span class="inline_code">httpRequest</span></td>
-            <td>An HTTP request (webhook) that MockServer sends. This is the only target that a before-action can <em>block</em> on.</td>
+            <td>An HTTP request (webhook) that MockServer sends. Webhooks are the only targets that a before-action can <em>block</em> on.</td>
+        </tr>
+        <tr>
+            <td><span class="inline_code">httpRequestTemplate</span></td>
+            <td>A webhook whose request is rendered by a Velocity, Mustache or JavaScript template from the triggering request. See <a href="#webhook_templates">Rendering a webhook with a template</a>.</td>
         </tr>
         <tr>
             <td><span class="inline_code">httpClassCallback</span></td>
@@ -139,7 +143,7 @@ sitemap:
     </tbody>
 </table>
 
-<p><strong>Only webhook before-actions can block.</strong> A <span class="inline_code">httpClassCallback</span> or <span class="inline_code">httpObjectCallback</span> before-action is always dispatched fire-and-forget, even if <span class="inline_code">blocking</span> is <span class="inline_code">true</span> (MockServer logs a warning). Use a <span class="inline_code">httpRequest</span> before-action when you need the response to wait or to gate on success.</p>
+<p><strong>Only webhook before-actions can block.</strong> A <span class="inline_code">httpClassCallback</span> or <span class="inline_code">httpObjectCallback</span> before-action is always dispatched fire-and-forget, even if <span class="inline_code">blocking</span> is <span class="inline_code">true</span> (MockServer logs a warning). Use a <span class="inline_code">httpRequest</span> or <span class="inline_code">httpRequestTemplate</span> before-action when you need the response to wait or to gate on success.</p>
 
 <a id="example_fan_out" class="anchor" href="#example_fan_out">&nbsp;</a>
 
@@ -774,6 +778,216 @@ Content-Type: application/json
 <h2>Using values from the triggering request</h2>
 
 <p>A webhook's fields can reference values from the request that triggered the expectation using <span class="inline_code">{$request.&hellip;}</span> runtime expressions, which are resolved before the webhook is sent. Supported expressions include <span class="inline_code">{$url}</span>, <span class="inline_code">{$request.method}</span>, <span class="inline_code">{$request.header.NAME}</span>, <span class="inline_code">{$request.query.NAME}</span>, <span class="inline_code">{$request.path.NAME}</span>, and <span class="inline_code">{$request.body#/json/pointer}</span>. Unknown or missing values resolve to an empty string. These are the same expressions used by <a href="using_openapi.html">OpenAPI callbacks</a>.</p>
+
+<a id="webhook_templates" class="anchor" href="#webhook_templates">&nbsp;</a>
+
+<h2>Rendering a webhook with a template</h2>
+
+<p>When runtime expressions are not enough, for example to build a JSON body, branch on a value or use template helpers such as dates, UUIDs or JWTs, use <span class="inline_code">httpRequestTemplate</span> instead of <span class="inline_code">httpRequest</span>. It takes the same <span class="inline_code">templateType</span> (<span class="inline_code">VELOCITY</span>, <span class="inline_code">MUSTACHE</span> or <span class="inline_code">JAVASCRIPT</span>) and <span class="inline_code">template</span> or <span class="inline_code">templateFile</span> as a <a href="response_templates.html">response template</a>, and the template sees the triggering request as <span class="inline_code">request</span> with the same <a href="response_templates.html#request_model_variables">request variables</a> and helpers. The template must render a whole HTTP request in MockServer's JSON format, including a <span class="inline_code">Host</span> header naming where to send it.</p>
+
+<ul>
+    <li>The rendered request is sent exactly like an <span class="inline_code">httpRequest</span> webhook: the same <span class="inline_code">delay</span>, <span class="inline_code">blocking</span>, <span class="inline_code">timeout</span> and <span class="inline_code">failurePolicy</span> apply, and, when <a href="configuration_properties.html">forwardProxyBlockPrivateNetworks</a> is enabled (it is off by default), the rendered destination is refused if it is a private, loopback or link-local address.</li>
+    <li>A template that fails, or does not render a valid request, is logged and nothing is sent. For a blocking before-action that counts as a failure, so <span class="inline_code">FAIL_FAST</span> returns <span class="inline_code">502 Bad Gateway</span>.</li>
+    <li>Templates run with the same time limits and class restrictions as response templates. In the standalone server they run on background worker threads, so rendering never delays the response of an after-action.</li>
+    <li><span class="inline_code">{$request&hellip;}</span> runtime expressions are not applied to a templated webhook; use the template's own variables instead.</li>
+    <li>Only the triggering request is available to the template, not the response sent to the client.</li>
+    <li>The template's own <span class="inline_code">delay</span>, <span class="inline_code">responseOverride</span> and <span class="inline_code">responseModifier</span> are ignored; use the action's <span class="inline_code">delay</span>.</li>
+</ul>
+
+<p><strong>Warning: escape request values, and keep them out of the destination.</strong> The template's output is parsed as the webhook request, so an unescaped request value can add or change fields, for example a <span class="inline_code">socketAddress</span> or <span class="inline_code">Host</span> that sends the webhook, with any credentials in its headers, to a server the caller chooses. In Velocity escape values with <span class="inline_code">$esc.java(&hellip;)</span> inside JSON strings (its escapes are valid JSON) and <span class="inline_code">$esc.url(&hellip;)</span> in the path (it form-encodes, so a space becomes <span class="inline_code">+</span>; validate IDs used in paths). Mustache HTML-escapes <span class="inline_code">&lbrace;&lbrace; &hellip; &rbrace;&rbrace;</span> values, which stops a quote ending a JSON string but not a trailing backslash, so prefer Velocity or JavaScript for values taken from the request. A JavaScript template returns an object, so request values cannot change its structure. In every engine, never build the <span class="inline_code">Host</span>, port, <span class="inline_code">socketAddress</span> or URL from request data unless you trust every caller. If webhook destinations can come from request data, enable <a href="configuration_properties.html">forwardProxyBlockPrivateNetworks</a> (it is off by default) so private, loopback and cloud-metadata addresses are refused; it never blocks public destinations.</p>
+
+<button class="accordion inner">Java</button>
+<div class="panel">
+    <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("POST")
+            .withPath("/order")
+    )
+    .withAfterActions(
+        afterAction().withHttpRequestTemplate(
+            template(
+                HttpTemplate.TemplateType.VELOCITY,
+                "{" +
+                "  \"method\": \"POST\"," +
+                "  \"path\": \"/orders/$!esc.url($request.headers['x-order-id'][0])/created\"," +
+                "  \"headers\": { \"Host\": [ \"orders.svc:8080\" ], \"Content-Type\": [ \"application/json\" ] }," +
+                "  \"body\": { \"received\": \"$!esc.java($request.body)\", \"at\": \"$!now_iso_8601\" }" +
+                "}"
+            )
+        )
+    )
+    .respond(
+        response()
+            .withStatusCode(201)
+            .withBody("{ \"status\": \"created\" }")
+    );</code></pre>
+</div>
+
+<button class="accordion inner">JavaScript</button>
+<div class="panel">
+    <pre class="prettyprint lang-java code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "POST",
+        "path": "/order"
+    },
+    "httpResponse": {
+        "statusCode": 201,
+        "body": "{ \"status\": \"created\" }"
+    },
+    "afterActions": [
+        {
+            "httpRequestTemplate": {
+                "templateType": "VELOCITY",
+                "template": "{ \"method\": \"POST\", \"path\": \"/orders/$!esc.url($request.headers['x-order-id'][0])/created\", \"headers\": { \"Host\": [ \"orders.svc:8080\" ], \"Content-Type\": [ \"application/json\" ] }, \"body\": { \"received\": \"$!esc.java($request.body)\", \"at\": \"$!now_iso_8601\" } }"
+            }
+        }
+    ]
+}).then(
+    function () { console.log("expectation created"); },
+    function (error) { console.log(error); }
+);</code></pre>
+</div>
+
+<button class="accordion inner">Python</button>
+<div class="panel">
+    <pre class="prettyprint lang-python code"><code class="code">from mockserver import (
+    MockServerClient, AfterAction, Expectation, HttpRequest, HttpResponse, HttpTemplate
+)
+
+client = MockServerClient("localhost", 1080)
+client.upsert(
+    Expectation(
+        http_request=HttpRequest(method="POST", path="/order"),
+        http_response=HttpResponse(status_code=201, body='{ "status": "created" }'),
+        after_actions=[
+            AfterAction(http_request_template=HttpTemplate(
+                template_type="VELOCITY",
+                template=r'''{ "method": "POST", "path": "/orders/$!esc.url($request.headers['x-order-id'][0])/created", "headers": { "Host": [ "orders.svc:8080" ], "Content-Type": [ "application/json" ] }, "body": { "received": "$!esc.java($request.body)", "at": "$!now_iso_8601" } }''',
+            )),
+        ],
+    )
+)</code></pre>
+</div>
+
+<button class="accordion inner">Ruby</button>
+<div class="panel">
+    <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+template = &lt;&lt;~'VTL'.chomp
+  { "method": "POST", "path": "/orders/$!esc.url($request.headers['x-order-id'][0])/created", "headers": { "Host": [ "orders.svc:8080" ], "Content-Type": [ "application/json" ] }, "body": { "received": "$!esc.java($request.body)", "at": "$!now_iso_8601" } }
+VTL
+
+client = MockServer::Client.new('localhost', 1080)
+client.upsert(
+  Expectation.new(
+    http_request:  HttpRequest.new(method: 'POST', path: '/order'),
+    http_response: HttpResponse.new(status_code: 201, body: '{ "status": "created" }'),
+    after_actions: [
+      AfterAction.new(http_request_template: HttpTemplate.new(template_type: 'VELOCITY', template: template))
+    ]
+  )
+)</code></pre>
+</div>
+
+<button class="accordion inner">Go</button>
+<div class="panel">
+    <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
+
+client := mockserver.New("localhost", 1080)
+client.Upsert(mockserver.Expectation{
+    HttpRequest:  &amp;mockserver.HttpRequest{Method: "POST", Path: "/order"},
+    HttpResponse: &amp;mockserver.HttpResponse{StatusCode: 201, Body: `{ "status": "created" }`},
+    AfterActions: []mockserver.AfterAction{
+        {HttpRequestTemplate: &amp;mockserver.HttpTemplate{
+            TemplateType: "VELOCITY",
+            Template:     `{ "method": "POST", "path": "/orders/$!esc.url($request.headers['x-order-id'][0])/created", "headers": { "Host": [ "orders.svc:8080" ], "Content-Type": [ "application/json" ] }, "body": { "received": "$!esc.java($request.body)", "at": "$!now_iso_8601" } }`,
+        }},
+    },
+})</code></pre>
+</div>
+
+<button class="accordion inner">.NET</button>
+<div class="panel">
+    <pre class="prettyprint lang-csharp code"><code class="code">using MockServer.Client;
+using MockServer.Client.Models;
+
+using var client = new MockServerClient("localhost", 1080);
+client.Upsert(new Expectation
+{
+    HttpRequest = HttpRequest.Request().WithMethod("POST").WithPath("/order"),
+    HttpResponse = HttpResponse.Response().WithStatusCode(201).WithBody("{ \"status\": \"created\" }"),
+    AfterActions = new List&lt;AfterAction&gt;
+    {
+        new AfterAction
+        {
+            HttpRequestTemplate = new HttpTemplate
+            {
+                TemplateType = TemplateType.VELOCITY,
+                Template = @"{ ""method"": ""POST"", ""path"": ""/orders/$!esc.url($request.headers['x-order-id'][0])/created"", ""headers"": { ""Host"": [ ""orders.svc:8080"" ], ""Content-Type"": [ ""application/json"" ] }, ""body"": { ""received"": ""$!esc.java($request.body)"", ""at"": ""$!now_iso_8601"" } }"
+            }
+        }
+    }
+});</code></pre>
+</div>
+
+<button class="accordion inner">Rust</button>
+<div class="panel">
+    <pre class="prettyprint lang-rust code"><code class="code">use mockserver_client::{ClientBuilder, Expectation, ExpectationAction, HttpRequest, HttpResponse, HttpTemplate};
+
+let client = ClientBuilder::new("localhost", 1080).build().unwrap();
+client.upsert(&amp;[
+    Expectation::new(HttpRequest::new().method("POST").path("/order"))
+        .respond(HttpResponse::new().status_code(201).body(r#"{ "status": "created" }"#))
+        .after_action(ExpectationAction::request_template(HttpTemplate::new(
+            "VELOCITY",
+            r#"{ "method": "POST", "path": "/orders/$!esc.url($request.headers['x-order-id'][0])/created", "headers": { "Host": [ "orders.svc:8080" ], "Content-Type": [ "application/json" ] }, "body": { "received": "$!esc.java($request.body)", "at": "$!now_iso_8601" } }"#,
+        ))),
+]).unwrap();</code></pre>
+</div>
+
+<button class="accordion inner">PHP</button>
+<div class="panel">
+    <pre class="prettyprint lang-php code"><code class="code">use MockServer\MockServerClient;
+use MockServer\Expectation;
+
+$client = new MockServerClient('localhost', 1080);
+$client-&gt;upsertExpectation(Expectation::fromArray([
+    'httpRequest'  =&gt; ['method' =&gt; 'POST', 'path' =&gt; '/order'],
+    'httpResponse' =&gt; ['statusCode' =&gt; 201, 'body' =&gt; '{ "status": "created" }'],
+    'afterActions' =&gt; [
+        ['httpRequestTemplate' =&gt; [
+            'templateType' =&gt; 'VELOCITY',
+            'template' =&gt; '{ "method": "POST", "path": "/orders/$!esc.url($request.headers[\'x-order-id\'][0])/created", "headers": { "Host": [ "orders.svc:8080" ], "Content-Type": [ "application/json" ] }, "body": { "received": "$!esc.java($request.body)", "at": "$!now_iso_8601" } }',
+        ]],
+    ],
+]));</code></pre>
+</div>
+
+<button class="accordion inner">REST API</button>
+<div class="panel">
+    <pre class="prettyprint lang-java code"><code class="code">PUT /mockserver/expectation HTTP/1.1
+Content-Type: application/json
+
+{
+  "httpRequest" : {
+    "method" : "POST",
+    "path" : "/order"
+  },
+  "httpResponse" : {
+    "statusCode" : 201,
+    "body" : "{ \"status\": \"created\" }"
+  },
+  "afterActions" : [ {
+    "httpRequestTemplate" : {
+      "templateType" : "VELOCITY",
+      "template" : "{ \"method\": \"POST\", \"path\": \"/orders/$!esc.url($request.headers['x-order-id'][0])/created\", \"headers\": { \"Host\": [ \"orders.svc:8080\" ], \"Content-Type\": [ \"application/json\" ] }, \"body\": { \"received\": \"$!esc.java($request.body)\", \"at\": \"$!now_iso_8601\" } }"
+    }
+  } ]
+}</code></pre>
+</div>
 
 <a id="unified_steps" class="anchor" href="#unified_steps">&nbsp;</a>
 

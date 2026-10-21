@@ -25,14 +25,14 @@ class TemplateFailureException extends RuntimeException {
 
     TemplateFailureException(HttpTemplate.TemplateType templateType, String templateRole, RuntimeException failure) {
         super(failure.getMessage(), failure);
-        this.detail = abbreviate(templateType + " " + templateRole + " template failed: " + engineMessage(failure), MAX_DETAIL_LENGTH);
+        this.detail = abbreviate(describe(templateType, templateRole) + " template failed: " + engineMessage(failure), MAX_DETAIL_LENGTH);
     }
 
     /**
      * A template that rendered, but whose output is not a valid request or response.
      */
     private TemplateFailureException(HttpTemplate.TemplateType templateType, String templateRole, String rendersA, String validationErrors) {
-        super(abbreviate(templateType + " " + templateRole + " template rendered output that is not a valid " + rendersA
+        super(abbreviate(describe(templateType, templateRole) + " template rendered output that is not a valid " + rendersA
             + (isNotBlank(validationErrors) ? ": " + validationErrors : ""), MAX_DETAIL_LENGTH));
         this.detail = getMessage();
     }
@@ -55,6 +55,10 @@ class TemplateFailureException extends RuntimeException {
             throw new TemplateFailureException(httpTemplate.getTemplateType(), templateRole, rendersA, validationErrors.get());
         }
         return rendered;
+    }
+
+    private static String describe(HttpTemplate.TemplateType templateType, String templateRole) {
+        return templateType != null ? templateType + " " + templateRole : templateRole;
     }
 
     /**

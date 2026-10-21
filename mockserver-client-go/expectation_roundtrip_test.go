@@ -159,6 +159,18 @@ func TestBeforeAndAfterActionsRoundTrip(t *testing.T) {
     }`)
 }
 
+func TestTemplatedAfterActionRoundTrip(t *testing.T) {
+	assertRoundTrip(t, `{
+      "httpResponse": {"statusCode": 200},
+      "beforeActions": [
+        {"httpRequestTemplate": {"templateType": "VELOCITY", "template": "{ \"path\": \"/before\" }"}, "failurePolicy": "FAIL_FAST"}
+      ],
+      "afterActions": [
+        {"httpRequestTemplate": {"templateType": "MUSTACHE", "templateFile": "hooks/after.mustache"}, "delay": {"timeUnit": "MILLISECONDS", "value": 5}}
+      ]
+    }`)
+}
+
 func TestStepsRoundTrip(t *testing.T) {
 	assertRoundTrip(t, `{
       "steps": [

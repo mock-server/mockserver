@@ -328,6 +328,7 @@ const STRUCTS: Record<string, FieldSpec[]> = {
   ],
   AfterAction: [
     ['httpRequest', 'HttpRequest', 'httpRequestPtr'],
+    ['httpRequestTemplate', 'HttpRequestTemplate', 'struct:HttpTemplate'],
     ['httpClassCallback', 'HttpClassCallback', 'struct:HttpClassCallback'],
     ['httpObjectCallback', 'HttpObjectCallback', 'struct:HttpObjectCallback'],
     ['delay', 'Delay', 'struct:Delay'],

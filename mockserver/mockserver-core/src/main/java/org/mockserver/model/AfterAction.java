@@ -5,6 +5,7 @@ import java.util.Objects;
 public class AfterAction extends ObjectWithJsonToString {
     private int hashCode;
     private HttpRequest httpRequest;
+    private HttpTemplate httpRequestTemplate;
     private HttpClassCallback httpClassCallback;
     private HttpObjectCallback httpObjectCallback;
     private Delay delay;
@@ -38,6 +39,26 @@ public class AfterAction extends ObjectWithJsonToString {
         return this;
     }
 
+    /**
+     * A webhook whose outbound request is rendered by a Velocity, Mustache or JavaScript template, which sees the
+     * triggering request as {@code request}. The template must produce a request in MockServer's JSON format. This
+     * action's {@link #getDelay() delay} applies; the template's own delay, primary, responseOverride and
+     * responseModifier are ignored. Escape request values (e.g. Velocity {@code $esc.java}) and keep them out of the
+     * target (Host, socketAddress, port): unescaped request data can change where the webhook, and its headers, go.
+     */
+    public HttpTemplate getHttpRequestTemplate() {
+        return httpRequestTemplate;
+    }
+
+    public AfterAction withHttpRequestTemplate(HttpTemplate httpRequestTemplate) {
+        if (httpRequestTemplate != null) {
+            clearTargets();
+        }
+        this.httpRequestTemplate = httpRequestTemplate;
+        this.hashCode = 0;
+        return this;
+    }
+
     public HttpClassCallback getHttpClassCallback() {
         return httpClassCallback;
     }
@@ -66,6 +87,7 @@ public class AfterAction extends ObjectWithJsonToString {
 
     private void clearTargets() {
         this.httpRequest = null;
+        this.httpRequestTemplate = null;
         this.httpClassCallback = null;
         this.httpObjectCallback = null;
     }
@@ -138,6 +160,7 @@ public class AfterAction extends ObjectWithJsonToString {
         }
         AfterAction that = (AfterAction) o;
         return Objects.equals(httpRequest, that.httpRequest) &&
+            Objects.equals(httpRequestTemplate, that.httpRequestTemplate) &&
             Objects.equals(httpClassCallback, that.httpClassCallback) &&
             Objects.equals(httpObjectCallback, that.httpObjectCallback) &&
             Objects.equals(delay, that.delay) &&
@@ -149,7 +172,7 @@ public class AfterAction extends ObjectWithJsonToString {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(httpRequest, httpClassCallback, httpObjectCallback, delay, blocking, timeout, failurePolicy);
+            hashCode = Objects.hash(httpRequest, httpRequestTemplate, httpClassCallback, httpObjectCallback, delay, blocking, timeout, failurePolicy);
         }
         return hashCode;
     }

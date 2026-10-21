@@ -722,6 +722,8 @@ function chaosExpr(c: Record<string, unknown>, indent: number): string {
 
 /** Render an ExpectationAction; pre-binds a nested HttpRequest when needed. */
 function renderExpectationAction(se: Record<string, unknown>, ctx: Ctx, indent: number): Rendered {
+  const tpl = se['httpRequestTemplate'];
+  if (tpl && typeof tpl === 'object') return renderTemplatedExpectationAction(se, tpl as Record<string, unknown>, ctx, indent);
   const setup: string[] = [];
   let reqExpr = 'HttpRequest::new()';
   const req = se['httpRequest'];
@@ -748,6 +750,21 @@ function renderExpectationAction(se: Record<string, unknown>, ctx: Ctx, indent: 
   if (typeof se['failurePolicy'] === 'string') fields.push(`failure_policy: Some(${rustStr(se['failurePolicy'])}.to_string()),`);
   const expr = 'ExpectationAction {\n' + fields.map((f) => inner + f).join('\n') + '\n' + inner + '..Default::default()\n' + pad(indent) + '}';
   return { setup, expr };
+}
+
+/** A templated webhook: the template is carried in `extra`, so envelope fields use struct update over the builder. */
+function renderTemplatedExpectationAction(se: Record<string, unknown>, tpl: Record<string, unknown>, ctx: Ctx, indent: number): Rendered {
+  const t = templateExpr(tpl, ctx, indent + 4);
+  const base = `ExpectationAction::request_template(${t.expr})`;
+  const fields: string[] = [];
+  if (se['delay'] && typeof se['delay'] === 'object') fields.push(`delay: Some(${delayExpr(se['delay'] as Record<string, unknown>)}),`);
+  if ('blocking' in se) fields.push(`blocking: Some(${se['blocking'] === true ? 'true' : 'false'}),`);
+  if (se['timeout'] && typeof se['timeout'] === 'object') fields.push(`timeout: Some(${delayExpr(se['timeout'] as Record<string, unknown>)}),`);
+  if (typeof se['failurePolicy'] === 'string') fields.push(`failure_policy: Some(${rustStr(se['failurePolicy'])}.to_string()),`);
+  if (fields.length === 0) return { setup: t.setup, expr: base };
+  const inner = pad(indent + 4);
+  const expr = 'ExpectationAction {\n' + fields.map((f) => inner + f).join('\n') + '\n' + inner + '..' + base + '\n' + pad(indent) + '}';
+  return { setup: t.setup, expr };
 }
 
 function captureRuleExpr(c: Record<string, unknown>): string {

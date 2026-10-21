@@ -219,6 +219,26 @@ class ExpectationTest extends TestCase
         $this->assertSame($raw, $reconstructed->jsonSerialize());
     }
 
+    public function testFromArrayPreservesTemplatedAfterActionWebhook(): void
+    {
+        // after-actions have no typed builder; a templated webhook must survive verbatim
+        $raw = [
+            'httpRequest' => ['path' => '/x'],
+            'httpResponse' => ['statusCode' => 200],
+            'afterActions' => [[
+                'httpRequestTemplate' => [
+                    'templateType' => 'VELOCITY',
+                    'template' => '{ "path": "/hook" }',
+                ],
+                'delay' => ['timeUnit' => 'MILLISECONDS', 'value' => 5],
+            ]],
+        ];
+
+        $reconstructed = Expectation::fromArray(json_decode(json_encode($raw, JSON_THROW_ON_ERROR), true));
+
+        $this->assertSame($raw, $reconstructed->toArray());
+    }
+
     public function testScenarioFieldsOmittedWhenUnset(): void
     {
         $array = (new Expectation())

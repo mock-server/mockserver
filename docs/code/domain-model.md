@@ -577,11 +577,12 @@ An expectation can return multiple responses by setting `httpResponses` (a `List
 
 #### Before & After Actions (`beforeActions` / `afterActions`)
 
-An expectation can carry two optional ordered side-effect lists, both `List<AfterAction>`: `beforeActions` run before the primary response (and can gate it), `afterActions` run after it (fire-and-forget). Each `AfterAction` fires one of three mutually-exclusive targets, with an optional delay:
+An expectation can carry two optional ordered side-effect lists, both `List<AfterAction>`: `beforeActions` run before the primary response (and can gate it), `afterActions` run after it (fire-and-forget). Each `AfterAction` fires one of four mutually-exclusive targets, with an optional delay:
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `httpRequest` | `HttpRequest` | An HTTP request (webhook) to send |
+| `httpRequestTemplate` | `HttpTemplate` | A webhook whose request a Velocity / Mustache / JavaScript template renders from the triggering request |
 | `httpClassCallback` | `HttpClassCallback` | A Java class callback to invoke |
 | `httpObjectCallback` | `HttpObjectCallback` | A WebSocket object callback to invoke |
 | `delay` | `Delay` | Optional delay before executing the action |

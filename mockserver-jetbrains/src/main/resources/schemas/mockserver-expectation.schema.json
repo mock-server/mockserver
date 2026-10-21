@@ -2032,6 +2032,9 @@
         "httpRequest": {
           "$ref": "#/definitions/httpRequest"
         },
+        "httpRequestTemplate": {
+          "$ref": "#/definitions/httpTemplate"
+        },
         "httpClassCallback": {
           "$ref": "#/definitions/httpClassCallback"
         },
@@ -2058,6 +2061,11 @@
         {
           "required": [
             "httpRequest"
+          ]
+        },
+        {
+          "required": [
+            "httpRequestTemplate"
           ]
         },
         {

@@ -327,7 +327,14 @@ export const sideEffectActionsLiteral: Expectation = {
     ],
     afterActions: [
         { httpClassCallback: { callbackClass: 'org.mockserver.examples.AfterCallback' }, blocking: false, failurePolicy: 'BEST_EFFORT' },
-        { httpObjectCallback: { clientId: 'audit-client' } }
+        { httpObjectCallback: { clientId: 'audit-client' } },
+        {
+            httpRequestTemplate: {
+                templateType: 'VELOCITY',
+                template: "{ \"method\": \"POST\", \"path\": \"/notify-after/$!esc.url($request.headers['x-id'][0])\" }"
+            },
+            delay: { timeUnit: 'MILLISECONDS', value: 5 }
+        }
     ]
 };
 
