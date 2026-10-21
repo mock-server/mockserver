@@ -21,6 +21,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  * Validation is opt-in via {@code mockserver.forwardProxyBlockPrivateNetworks}
  * (default false) because MockServer is most commonly used to mock services
  * running on localhost, Docker bridge networks, or Kubernetes service IPs.
+ * <p>
+ * The same checks also apply {@code forwardProxyAllowedHosts} and {@code forwardProxyDeniedHosts}
+ * (see {@link ForwardTargetHostPolicy}) to the name given and to the address it resolves to.
  */
 public final class InetAddressValidator {
 
@@ -69,19 +72,33 @@ public final class InetAddressValidator {
      * @param host          target host (may be a name or literal address)
      */
     public static void validateForwardTarget(Configuration configuration, String host) {
-        if (!isEnabled(configuration)) {
+        validateForwardTarget(isEnabled(configuration), hostPolicy(configuration), host);
+    }
+
+    /**
+     * As {@link #validateForwardTarget(Configuration, String)}, with the checks given rather than read from a
+     * configuration, for a caller that fixes them when it starts and applies them later.
+     *
+     * @param blockPrivateNetworks whether forwardProxyBlockPrivateNetworks applies
+     * @param hostPolicy           forwardProxyAllowedHosts and forwardProxyDeniedHosts, or null for neither
+     * @param host                 target host (may be a name or literal address)
+     */
+    public static void validateForwardTarget(boolean blockPrivateNetworks, @Nullable ForwardTargetHostPolicy hostPolicy, String host) {
+        if (!blockPrivateNetworks && hostPolicy == null) {
             return;
         }
         if (isBlank(host)) {
             return;
         }
-        InetAddress address;
-        try {
-            address = lookup(host);
-        } catch (UnknownHostException e) {
-            throw new ForwardTargetBlockedException("Forward target host \"" + host + "\" could not be resolved", e);
+        InetAddress address = null;
+        if (blockPrivateNetworks || hostPolicy.matchesAddresses()) {
+            try {
+                address = lookup(host);
+            } catch (UnknownHostException e) {
+                throw new ForwardTargetBlockedException("Forward target host \"" + host + "\" could not be resolved", e);
+            }
         }
-        rejectIfBlocked(host, address);
+        reject(blockPrivateNetworks, hostPolicy, host, address);
     }
 
     /**
@@ -97,13 +114,25 @@ public final class InetAddressValidator {
      * @param address       the concrete resolved target address (null is treated as nothing to check)
      */
     public static void validateForwardTarget(Configuration configuration, InetAddress address) {
-        if (!isEnabled(configuration)) {
+        boolean blockPrivateNetworks = isEnabled(configuration);
+        ForwardTargetHostPolicy hostPolicy = hostPolicy(configuration);
+        if (!blockPrivateNetworks && hostPolicy == null) {
             return;
         }
         if (address == null) {
             return;
         }
-        rejectIfBlocked(address.getHostAddress(), address);
+        reject(blockPrivateNetworks, hostPolicy, nameOrAddress(address), address);
+    }
+
+    /**
+     * The name an address was looked up by, or its literal when it has none; {@code getHostName()} is not used
+     * because it would look the address up in reverse.
+     */
+    private static String nameOrAddress(InetAddress address) {
+        String nameAndAddress = address.toString();
+        int slash = nameAndAddress.indexOf('/');
+        return slash > 0 ? nameAndAddress.substring(0, slash) : address.getHostAddress();
     }
 
     /**
@@ -117,21 +146,30 @@ public final class InetAddressValidator {
      * @return the address to connect to
      */
     public static InetSocketAddress validateForwardTarget(Configuration configuration, InetSocketAddress target) {
-        if (target == null || !isEnabled(configuration)) {
+        if (target == null) {
+            return null;
+        }
+        boolean blockPrivateNetworks = isEnabled(configuration);
+        ForwardTargetHostPolicy hostPolicy = hostPolicy(configuration);
+        if (!blockPrivateNetworks && hostPolicy == null) {
             return target;
         }
         if (!target.isUnresolved()) {
-            rejectIfBlocked(target.getHostString(), target.getAddress());
+            reject(blockPrivateNetworks, hostPolicy, target.getHostString(), target.getAddress());
             return target;
         }
         String host = target.getHostString();
+        if (!blockPrivateNetworks && !hostPolicy.matchesAddresses()) {
+            reject(false, hostPolicy, host, null);
+            return target;
+        }
         InetAddress address;
         try {
             address = InetAddress.getByAddress(host, lookup(host).getAddress());
         } catch (UnknownHostException e) {
             throw new ForwardTargetBlockedException("Forward target host \"" + host + "\" could not be resolved", e);
         }
-        rejectIfBlocked(host, address);
+        reject(blockPrivateNetworks, hostPolicy, host, address);
         return new InetSocketAddress(address, target.getPort());
     }
 
@@ -148,7 +186,7 @@ public final class InetAddressValidator {
      * @param throughHttpProxy whether it will be sent through {@code forwardHttpProxy}
      */
     public static void validateForwardTarget(Configuration configuration, HttpRequest request, @Nullable InetSocketAddress remoteAddress, boolean throughHttpProxy) {
-        if (!isEnabled(configuration) || request == null) {
+        if (request == null || !isActive(configuration)) {
             return;
         }
         if (remoteAddress != null) {
@@ -181,6 +219,36 @@ public final class InetAddressValidator {
         return configuration != null
             ? Boolean.TRUE.equals(configuration.forwardProxyBlockPrivateNetworks())
             : ConfigurationProperties.forwardProxyBlockPrivateNetworks();
+    }
+
+    /**
+     * @param configuration MockServer configuration (may be null to fall back to global properties)
+     * @return whether forward targets are checked at all: forwardProxyBlockPrivateNetworks is on, or
+     * forwardProxyAllowedHosts or forwardProxyDeniedHosts is set
+     */
+    public static boolean isActive(@Nullable Configuration configuration) {
+        return isEnabled(configuration) || hostPolicy(configuration) != null;
+    }
+
+    /**
+     * @param configuration MockServer configuration (may be null to fall back to global properties)
+     * @return forwardProxyAllowedHosts and forwardProxyDeniedHosts parsed, or null when neither is set
+     */
+    @Nullable
+    public static ForwardTargetHostPolicy hostPolicy(@Nullable Configuration configuration) {
+        if (configuration != null) {
+            return configuration.forwardTargetHostPolicy(configuration.forwardProxyAllowedHosts(), configuration.forwardProxyDeniedHosts());
+        }
+        return ForwardTargetHostPolicy.reuseOrParse(null, ConfigurationProperties.forwardProxyAllowedHosts(), ConfigurationProperties.forwardProxyDeniedHosts());
+    }
+
+    private static void reject(boolean blockPrivateNetworks, @Nullable ForwardTargetHostPolicy hostPolicy, String requestedHost, @Nullable InetAddress address) {
+        if (hostPolicy != null) {
+            hostPolicy.check(requestedHost, address);
+        }
+        if (blockPrivateNetworks) {
+            rejectIfBlocked(requestedHost, address);
+        }
     }
 
     private static void rejectIfBlocked(String requestedHost, InetAddress address) {

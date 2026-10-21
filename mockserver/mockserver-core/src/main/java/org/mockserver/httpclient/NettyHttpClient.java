@@ -223,8 +223,8 @@ public class NettyHttpClient {
                     remoteAddress = httpRequest.socketAddressFromHostHeader();
                 }
                 try {
-                    // forwardProxyBlockPrivateNetworks: the address checked is the address connected to, so a name
-                    // whose DNS answer changes after the caller's check cannot reach a blocked address
+                    // forwardProxyBlockPrivateNetworks and the host lists: the address checked is the address connected
+                    // to, so a name whose DNS answer changes after the caller's check cannot reach a refused address
                     connectAddress = forwardProxyClient ? InetAddressValidator.validateForwardTarget(configuration, remoteAddress) : remoteAddress;
                 } catch (ForwardTargetBlockedException blocked) {
                     CompletableFuture<HttpResponse> refused = new CompletableFuture<>();
@@ -645,13 +645,13 @@ public class NettyHttpClient {
      * Looks up the name of a binary relay's destination, which blocks, so it is called off the event loop for a
      * destination not yet resolved. The address returned is what {@link #connectBinaryRelay} is then given, and it
      * looks nothing up: a destination reached directly is resolved; one that {@code forwardProxyBlockPrivateNetworks}
-     * checks is resolved and checked; one tunnelled through an upstream proxy without that check is returned as
+     * or an address in {@code forwardProxyAllowedHosts} / {@code forwardProxyDeniedHosts} checks is resolved and checked; one tunnelled through an upstream proxy without that check is returned as
      * given, for the proxy to resolve. A resolved address keeps the name, for the tunnel, SNI and the certificate
      * check.
      *
      * @param secure whether the client's connection is TLS from its first byte
-     * @throws ForwardTargetBlockedException if forwardProxyBlockPrivateNetworks blocks the destination or cannot
-     *                                       resolve it
+     * @throws ForwardTargetBlockedException if forwardProxyBlockPrivateNetworks or the host lists refuse the
+     *                                       destination, or it cannot be resolved for them
      * @throws UnknownHostException          if a destination reached directly cannot be resolved
      */
     public InetSocketAddress lookUpBinaryRelayTarget(InetSocketAddress remoteAddress, boolean secure) throws UnknownHostException {
@@ -691,7 +691,7 @@ public class NettyHttpClient {
      * @param secure  whether the client's connection is TLS from its first byte
      * @param handler the upstream connection's only handler
      * @return the connect, whose channel is the upstream connection
-     * @throws IllegalArgumentException if forwardProxyBlockPrivateNetworks blocks the target
+     * @throws IllegalArgumentException if forwardProxyBlockPrivateNetworks or the host lists refuse the target
      */
     public ChannelFuture connectBinaryRelay(EventLoop eventLoop, InetSocketAddress remoteAddress, boolean secure, ChannelHandler handler) {
         ProxyConfiguration tunnel = binaryRelayTunnel(upstreamProxiesFor(remoteAddress.getHostString()), secure);

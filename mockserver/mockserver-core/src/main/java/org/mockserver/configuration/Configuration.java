@@ -7,10 +7,12 @@ import org.mockserver.model.BinaryProxyListener;
 import org.mockserver.model.Delay;
 import org.mockserver.model.Header;
 import org.mockserver.model.ProxyPassMapping;
+import org.mockserver.proxyconfiguration.ForwardTargetHostPolicy;
 import org.mockserver.responseheaders.DefaultResponseHeaders;
 import org.mockserver.socket.tls.ForwardProxyTLSX509CertificatesTrustManager;
 import org.slf4j.event.Level;
 
+import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
 import java.nio.ByteOrder;
 import java.util.Arrays;
@@ -452,6 +454,9 @@ public class Configuration {
 
     // outbound - SSRF protection
     private volatile Boolean forwardProxyBlockPrivateNetworks;
+    private volatile String forwardProxyAllowedHosts;
+    private volatile String forwardProxyDeniedHosts;
+    private volatile ForwardTargetHostPolicy forwardTargetHostPolicy;
 
     // outbound - fixed CA
     private volatile String forwardProxyTLSCustomTrustX509Certificates;
@@ -6556,6 +6561,69 @@ public class Configuration {
     public Configuration forwardProxyBlockPrivateNetworks(Boolean forwardProxyBlockPrivateNetworks) {
         this.forwardProxyBlockPrivateNetworks = forwardProxyBlockPrivateNetworks;
         return this;
+    }
+
+    public String forwardProxyAllowedHosts() {
+        if (forwardProxyAllowedHosts == null) {
+            return ConfigurationProperties.forwardProxyAllowedHosts();
+        }
+        return forwardProxyAllowedHosts;
+    }
+
+    /**
+     * <p>The only hosts forward actions, the proxy, replays and webhooks may send to, comma-separated: host names
+     * (api.example.com), domain suffixes (*.example.com, which also matches example.com), IP addresses and CIDR blocks
+     * (10.0.0.0/8). Addresses and CIDR blocks are also matched against the address a host name resolves to. Any other
+     * target is refused, as forwardProxyBlockPrivateNetworks refuses one. Fixed at startup: a request to the control
+     * plane cannot change it.</p>
+     * <p>The default is "", which allows any target</p>
+     *
+     * @param forwardProxyAllowedHosts the allowed hosts, comma-separated
+     * @throws IllegalArgumentException if an entry is not a host name, *.domain, IP address or CIDR block
+     */
+    public Configuration forwardProxyAllowedHosts(String forwardProxyAllowedHosts) {
+        ForwardTargetHostPolicy.validate("forwardProxyAllowedHosts", forwardProxyAllowedHosts);
+        this.forwardProxyAllowedHosts = forwardProxyAllowedHosts;
+        return this;
+    }
+
+    public String forwardProxyDeniedHosts() {
+        if (forwardProxyDeniedHosts == null) {
+            return ConfigurationProperties.forwardProxyDeniedHosts();
+        }
+        return forwardProxyDeniedHosts;
+    }
+
+    /**
+     * <p>Hosts forward actions, the proxy, replays and webhooks must not send to, comma-separated, in the same form as
+     * {@link #forwardProxyAllowedHosts(String)}. A target on this list is refused even when forwardProxyAllowedHosts
+     * allows it. Fixed at startup: a request to the control plane cannot change it.</p>
+     * <p>The default is "", which denies nothing</p>
+     *
+     * @param forwardProxyDeniedHosts the denied hosts, comma-separated
+     * @throws IllegalArgumentException if an entry is not a host name, *.domain, IP address or CIDR block
+     */
+    public Configuration forwardProxyDeniedHosts(String forwardProxyDeniedHosts) {
+        ForwardTargetHostPolicy.validate("forwardProxyDeniedHosts", forwardProxyDeniedHosts);
+        this.forwardProxyDeniedHosts = forwardProxyDeniedHosts;
+        return this;
+    }
+
+    /**
+     * Keeps the lists parsed on this instance, so they are parsed again only when either changes.
+     *
+     * @param forwardProxyAllowedHosts this instance's {@link #forwardProxyAllowedHosts()}
+     * @param forwardProxyDeniedHosts  this instance's {@link #forwardProxyDeniedHosts()}
+     * @return the lists parsed, or null when neither is set
+     */
+    @Nullable
+    public ForwardTargetHostPolicy forwardTargetHostPolicy(String forwardProxyAllowedHosts, String forwardProxyDeniedHosts) {
+        ForwardTargetHostPolicy previous = forwardTargetHostPolicy;
+        ForwardTargetHostPolicy policy = ForwardTargetHostPolicy.reuseOrParse(previous, forwardProxyAllowedHosts, forwardProxyDeniedHosts);
+        if (policy != null && policy != previous) {
+            forwardTargetHostPolicy = policy;
+        }
+        return policy;
     }
 
     public String forwardProxyTLSCustomTrustX509Certificates() {

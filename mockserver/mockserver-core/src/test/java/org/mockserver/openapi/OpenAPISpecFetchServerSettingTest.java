@@ -133,6 +133,45 @@ public class OpenAPISpecFetchServerSettingTest {
     }
 
     @Test
+    public void putExpectationIsRefusedASpecAtADeniedAddressAfterTheSameSpecLoadedWithoutTheList() {
+        HttpRequest put = request("/mockserver/expectation").withMethod("PUT").withBody(openAPIExpectationJson());
+        httpState(configuration().forwardProxyBlockPrivateNetworks(false)).handle(put, mock(ResponseWriter.class), false);
+        int fetchedWithoutTheList = specRequests.get();
+        HttpState denying = httpState(configuration().forwardProxyBlockPrivateNetworks(false).forwardProxyDeniedHosts("127.0.0.0/8"));
+
+        IllegalArgumentException refused = assertThrows(IllegalArgumentException.class,
+            () -> denying.handle(put, mock(ResponseWriter.class), false));
+
+        assertThat(refused.getMessage(), containsString("denied by forwardProxyDeniedHosts"));
+        assertThat(fetchedWithoutTheList > 0, is(true));
+        assertThat(specRequests.get(), is(fetchedWithoutTheList));
+        assertThat(denying.getRequestMatchers().retrieveActiveExpectations(null), is(empty()));
+    }
+
+    @Test
+    public void putExpectationIsRefusedASpecNotOnTheAllowList() {
+        HttpState allowing = httpState(configuration().forwardProxyBlockPrivateNetworks(false).forwardProxyAllowedHosts("*.example.com"));
+        HttpRequest put = request("/mockserver/expectation").withMethod("PUT").withBody(openAPIExpectationJson());
+
+        IllegalArgumentException refused = assertThrows(IllegalArgumentException.class,
+            () -> allowing.handle(put, mock(ResponseWriter.class), false));
+
+        assertThat(refused.getMessage(), containsString("not in forwardProxyAllowedHosts"));
+        assertThat(specRequests.get(), is(0));
+    }
+
+    @Test
+    public void putExpectationFetchesASpecOnTheAllowList() {
+        HttpState allowing = httpState(configuration().forwardProxyBlockPrivateNetworks(false).forwardProxyAllowedHosts("127.0.0.1"));
+        HttpRequest put = request("/mockserver/expectation").withMethod("PUT").withBody(openAPIExpectationJson());
+
+        allowing.handle(put, mock(ResponseWriter.class), false);
+
+        assertThat(specRequests.get() > 0, is(true));
+        assertThat(allowing.getRequestMatchers().retrieveActiveExpectations(null).size(), is(1));
+    }
+
+    @Test
     public void initializationJsonIsRefusedASpecAtAPrivateAddress() throws IOException {
         assertThat(loadInitializationJson(blocking()).length, is(0));
         assertThat(specRequests.get(), is(0));

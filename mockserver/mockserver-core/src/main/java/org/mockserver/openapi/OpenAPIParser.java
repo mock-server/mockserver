@@ -15,6 +15,7 @@ import org.mockserver.cache.LRUCache;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.proxyconfiguration.ForwardTargetHostPolicy;
 import org.mockserver.proxyconfiguration.InetAddressValidator;
 import org.slf4j.event.Level;
 
@@ -42,11 +43,12 @@ public class OpenAPIParser {
     private static final Pattern ABSOLUTE_URL = Pattern.compile("(?i)(https?|file):\\S+");
 
     /**
-     * A parse made with forwardProxyBlockPrivateNetworks off fetched without the check, so it must never answer a
-     * parse for a server with the setting on: the setting is part of the key. An inline JSON Schema parse logs its
-     * problems differently from a spec load, so that is part of the key too.
+     * A parse made without a check, or with other checks, must never answer a parse for a server whose checks differ:
+     * forwardProxyBlockPrivateNetworks and the forwardProxyAllowedHosts / forwardProxyDeniedHosts lists are part of
+     * the key. An inline JSON Schema parse logs its problems differently from a spec load, so that is part of the key
+     * too.
      */
-    private record CacheKey(String specUrlOrPayload, boolean fetchesChecked, boolean inlineJsonSchema) {
+    private record CacheKey(String specUrlOrPayload, boolean blockPrivateNetworks, @Nullable ForwardTargetHostPolicy hostPolicy, boolean inlineJsonSchema) {
     }
 
     /**
@@ -57,10 +59,7 @@ public class OpenAPIParser {
     }
 
     public static void clearCache(String specUrlOrPayload) {
-        for (boolean fetchesChecked : new boolean[]{false, true}) {
-            openAPILRUCache.delete(new CacheKey(specUrlOrPayload, fetchesChecked, false));
-            openAPILRUCache.delete(new CacheKey(specUrlOrPayload, fetchesChecked, true));
-        }
+        openAPILRUCache.deleteIf(key -> key.specUrlOrPayload().equals(specUrlOrPayload));
     }
 
     /**
@@ -101,15 +100,17 @@ public class OpenAPIParser {
     }
 
     private static LoadedSpec loadOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger, @Nullable Configuration configuration, boolean inlineJsonSchema) {
+        boolean blockPrivateNetworks = InetAddressValidator.isEnabled(configuration);
+        ForwardTargetHostPolicy hostPolicy = InetAddressValidator.hostPolicy(configuration);
         if (specUrlOrPayload == null) {
-            return SpecFetchGuard.whileParsing(InetAddressValidator.isEnabled(configuration), () -> parseOpenAPI(null, mockServerLogger, inlineJsonSchema));
+            return SpecFetchGuard.whileParsing(blockPrivateNetworks, hostPolicy, () -> parseOpenAPI(null, mockServerLogger, inlineJsonSchema));
         }
         // getOrCompute is atomic (ConcurrentHashMap.computeIfAbsent semantics): for an absent key the
         // parse + addMissingOperationIds runs at most once and the single resulting OpenAPI is shared by
         // all racing callers. A previous get-then-put allowed two threads to each parse and then mutate
         // (operationId dedup) their own copy and clobber the cache, racing on the shared instance.
-        CacheKey cacheKey = new CacheKey(specUrlOrPayload, InetAddressValidator.isEnabled(configuration), inlineJsonSchema);
-        return openAPILRUCache.getOrCompute(cacheKey, key -> SpecFetchGuard.whileParsing(key.fetchesChecked(), () -> parseOpenAPI(key.specUrlOrPayload(), mockServerLogger, key.inlineJsonSchema())));
+        CacheKey cacheKey = new CacheKey(specUrlOrPayload, blockPrivateNetworks, hostPolicy, inlineJsonSchema);
+        return openAPILRUCache.getOrCompute(cacheKey, key -> SpecFetchGuard.whileParsing(key.blockPrivateNetworks(), key.hostPolicy(), () -> parseOpenAPI(key.specUrlOrPayload(), mockServerLogger, key.inlineJsonSchema())));
     }
 
     private static LoadedSpec parseOpenAPI(String specUrlOrPayload, MockServerLogger mockServerLogger, boolean inlineJsonSchema) {

@@ -299,6 +299,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Boolean forwardAdjustHostHeader;
     private String forwardDefaultHostHeader;
     private Boolean forwardProxyBlockPrivateNetworks;
+    private String forwardProxyAllowedHosts;
+    private String forwardProxyDeniedHosts;
     private Boolean forwardProxyTLSHostnameVerificationEnabled;
     private Boolean tlsAllowInsecureProtocols;
     private String stateBackend;
@@ -678,6 +680,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.forwardAdjustHostHeader = configuration.forwardAdjustHostHeader();
             this.forwardDefaultHostHeader = configuration.forwardDefaultHostHeader();
             this.forwardProxyBlockPrivateNetworks = configuration.forwardProxyBlockPrivateNetworks();
+            this.forwardProxyAllowedHosts = configuration.forwardProxyAllowedHosts();
+            this.forwardProxyDeniedHosts = configuration.forwardProxyDeniedHosts();
             this.forwardProxyTLSHostnameVerificationEnabled = configuration.forwardProxyTLSHostnameVerificationEnabled();
             this.tlsAllowInsecureProtocols = configuration.tlsAllowInsecureProtocols();
             this.stateBackend = configuration.stateBackend();
@@ -1154,6 +1158,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.forwardAdjustHostHeader(forwardAdjustHostHeader);
         configuration.forwardDefaultHostHeader(forwardDefaultHostHeader);
         configuration.forwardProxyBlockPrivateNetworks(forwardProxyBlockPrivateNetworks);
+        configuration.forwardProxyAllowedHosts(forwardProxyAllowedHosts);
+        configuration.forwardProxyDeniedHosts(forwardProxyDeniedHosts);
         configuration.forwardProxyTLSHostnameVerificationEnabled(forwardProxyTLSHostnameVerificationEnabled);
         configuration.tlsAllowInsecureProtocols(tlsAllowInsecureProtocols);
         configuration.stateBackend(stateBackend);
@@ -2155,6 +2161,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (forwardProxyBlockPrivateNetworks != null) {
             target.forwardProxyBlockPrivateNetworks(forwardProxyBlockPrivateNetworks);
         }
+        // forwardProxyAllowedHosts and forwardProxyDeniedHosts are deliberately not applied: a runtime update could
+        // widen where the server sends requests, so they are fixed at startup (see HttpState.applyConfigurationUpdate)
         if (forwardProxyTLSHostnameVerificationEnabled != null) {
             target.forwardProxyTLSHostnameVerificationEnabled(forwardProxyTLSHostnameVerificationEnabled);
         }
@@ -4750,6 +4758,24 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setForwardProxyBlockPrivateNetworks(Boolean forwardProxyBlockPrivateNetworks) {
         this.forwardProxyBlockPrivateNetworks = forwardProxyBlockPrivateNetworks;
+        return this;
+    }
+
+    public String getForwardProxyAllowedHosts() {
+        return forwardProxyAllowedHosts;
+    }
+
+    public ConfigurationDTO setForwardProxyAllowedHosts(String forwardProxyAllowedHosts) {
+        this.forwardProxyAllowedHosts = forwardProxyAllowedHosts;
+        return this;
+    }
+
+    public String getForwardProxyDeniedHosts() {
+        return forwardProxyDeniedHosts;
+    }
+
+    public ConfigurationDTO setForwardProxyDeniedHosts(String forwardProxyDeniedHosts) {
+        this.forwardProxyDeniedHosts = forwardProxyDeniedHosts;
         return this;
     }
 

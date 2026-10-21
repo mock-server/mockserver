@@ -242,6 +242,8 @@ mockserver.enableCORSForAllResponses=false</code></pre>
         <tr><td><a href="#button_configuration_attach_mismatch_diagnostic_to_response">Attach Mismatch Diagnostic To Unmatched Response</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_closest_match_hint_enabled">Closest Match Hint On Unmatched Response</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_forward_proxy_block_private_networks">Block Forwarding To Private Networks (SSRF Protection)</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
+        <tr><td><a href="#button_configuration_forward_proxy_allowed_hosts">Hosts Forwarding Is Allowed To</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
+        <tr><td><a href="#button_configuration_forward_proxy_denied_hosts">Hosts Forwarding Is Denied To</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_tls_allow_insecure_protocols">Allow Insecure TLS Protocols</a></td><td><a href="#tls_configuration">TLS</a></td></tr>
         <tr><td><a href="#button_configuration_max_subject_alternative_names">Maximum Dynamic Subject Alternative Names</a></td><td><a href="#tls_configuration">TLS</a></td></tr>
         <tr><td><a href="#button_configuration_forward_proxy_hostname_verification">Outbound Host Name Verification</a></td><td><a href="#tls_configuration">TLS</a></td></tr>
@@ -1384,6 +1386,49 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.forwardProxyBlockPrivateNetworks=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyBlockPrivateNetworks="true"</code></pre>
+</div>
+
+<button id="button_configuration_forward_proxy_allowed_hosts" class="accordion title"><strong>Hosts Forwarding Is Allowed To</strong></button>
+<div class="panel title">
+    <p>The only hosts MockServer may send requests to. When set, a forward, a proxied request, a replayed request or a webhook to any other host is refused, exactly as <a href="#button_configuration_forward_proxy_block_private_networks"><span class="inline_code">forwardProxyBlockPrivateNetworks</span></a> refuses one: a refused HTTP request gets a <span class="inline_code">502 Bad Gateway</span> response, a refused webhook is not sent, a refused binary or WebSocket connection is closed, and a warning saying which host was refused is logged. It applies everywhere that setting does, including fetching an OpenAPI spec from a URL (and its remote <span class="inline_code">$ref</span>s and redirects); a spec read from a file or the classpath is not affected.</p>
+    <p>A comma-separated list in which each entry is one of:</p>
+    <ul>
+        <li>a host name, such as <span class="inline_code">api.example.com</span>, matched exactly (case and a trailing dot are ignored);</li>
+        <li>a domain, such as <span class="inline_code">*.example.com</span> (or <span class="inline_code">.example.com</span>), which matches <span class="inline_code">example.com</span> and every name under it;</li>
+        <li>an IP address, such as <span class="inline_code">203.0.113.7</span>, or a CIDR block, such as <span class="inline_code">10.0.0.0/8</span> or <span class="inline_code">fd00::/8</span>.</li>
+    </ul>
+    <p>IP addresses and CIDR blocks are matched against the address a host name resolves to as well as against a target given as an address. An IPv4 address written as IPv6 (<span class="inline_code">::ffff:10.1.2.3</span> or <span class="inline_code">::10.1.2.3</span>) is matched as the IPv4 address. When MockServer connects to the target itself (forwards, proxied requests, webhooks, binary and WebSocket proxying, HTTP/3 CONNECT-UDP) it connects to the address it checked, so a name whose DNS answer changes after the check (DNS rebinding) cannot reach an address outside the list. That does not hold in three cases: through an upstream proxy (<span class="inline_code">forwardHttpProxy</span>, <span class="inline_code">forwardHttpsProxy</span>, <span class="inline_code">forwardSocksProxy</span>), which resolves the name itself; for the MCP tools and OpenAPI spec fetches, which look the name up again to connect (normally answered by the JVM's DNS cache with the address checked); and when the lists hold only names, because MockServer then does not look names up to check them.</p>
+    <p>If <a href="#button_configuration_forward_proxy_denied_hosts"><span class="inline_code">forwardProxyDeniedHosts</span></a> is also set, a host on both lists is refused: the deny list wins. Both lists and <span class="inline_code">forwardProxyBlockPrivateNetworks</span> are applied together, so a host must pass all three.</p>
+    <p>This setting is fixed at startup: a <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot widen where MockServer sends requests. An entry that is not a host name, domain, IP address or CIDR block is rejected when it is set; if one reaches MockServer another way, every target is refused until it is fixed.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span> (any host)</p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.forwardProxyAllowedHosts(String forwardProxyAllowedHosts)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyAllowedHosts=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_FORWARD_PROXY_ALLOWED_HOSTS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.forwardProxyAllowedHosts=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyAllowedHosts="api.example.com,*.partner.example,203.0.113.0/24"</code></pre>
+</div>
+
+<button id="button_configuration_forward_proxy_denied_hosts" class="accordion title"><strong>Hosts Forwarding Is Denied To</strong></button>
+<div class="panel title">
+    <p>Hosts MockServer must not send requests to, in the same form as <a href="#button_configuration_forward_proxy_allowed_hosts"><span class="inline_code">forwardProxyAllowedHosts</span></a>: host names, domains (<span class="inline_code">*.example.com</span>), IP addresses and CIDR blocks. A forward, proxied request, replayed request or webhook to a listed host is refused in the same way, even when <span class="inline_code">forwardProxyAllowedHosts</span> allows it.</p>
+    <p>A CIDR block also refuses a host name that resolves into it, which is how to keep names that point at internal addresses out: for example <span class="inline_code">10.0.0.0/8,169.254.169.254</span>. Listing a name refuses only that name; the same server reached by its address is refused only if the address is listed too. A list that holds any loopback address (such as <span class="inline_code">127.0.0.0/8</span> or <span class="inline_code">::1</span>) refuses every address that reaches MockServer's own machine: all of <span class="inline_code">127.0.0.0/8</span>, <span class="inline_code">::1</span> and the wildcard addresses <span class="inline_code">0.0.0.0</span> and <span class="inline_code">::</span>. To refuse every private and metadata address at once, use <a href="#button_configuration_forward_proxy_block_private_networks"><span class="inline_code">forwardProxyBlockPrivateNetworks</span></a>.</p>
+    <p>This setting is fixed at startup: a <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span> (no host)</p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.forwardProxyDeniedHosts(String forwardProxyDeniedHosts)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyDeniedHosts=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_FORWARD_PROXY_DENIED_HOSTS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.forwardProxyDeniedHosts=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.forwardProxyDeniedHosts="admin.example.com,10.0.0.0/8"</code></pre>
 </div>
 
 <button id="button_configuration_treat_semicolon_as_query_parameter_separator" class="accordion title"><strong>Treat Semicolon As Query Parameter Separator</strong></button>

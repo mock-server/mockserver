@@ -81,6 +81,21 @@ public class ConfigurationDTOTest {
     }
 
     @Test
+    public void shouldNotApplyForwardProxyHostListsToARunningServer() {
+        Configuration target = configuration().forwardProxyAllowedHosts("api.example.com").forwardProxyDeniedHosts("10.0.0.0/8");
+
+        ConfigurationDTO dto = new ConfigurationDTO();
+        dto.setForwardProxyAllowedHosts("");
+        dto.setForwardProxyDeniedHosts("");
+        dto.applyTo(target);
+
+        assertThat(target.forwardProxyAllowedHosts(), is("api.example.com"));
+        assertThat(target.forwardProxyDeniedHosts(), is("10.0.0.0/8"));
+        assertThat(new ConfigurationDTO(target).getForwardProxyAllowedHosts(), is("api.example.com"));
+        assertThat(new ConfigurationDTO().setForwardProxyDeniedHosts("*.internal").buildObject().forwardProxyDeniedHosts(), is("*.internal"));
+    }
+
+    @Test
     public void shouldNotApplyRecordedBodyFilesDirectoryToARunningServer() {
         Configuration target = configuration().recordedBodyFilesDirectory("recorded-bodies");
 
@@ -507,7 +522,10 @@ public class ConfigurationDTOTest {
         // would let mTLS trust client certificates anyone can create with the bundled CA's published key
         "tlsMutualAuthenticationAllowBundledCa",
         // decides where the server writes recorded body files, so a control-plane request must not repoint it
-        "recordedBodyFilesDirectory"
+        "recordedBodyFilesDirectory",
+        // decide where the server may send requests, so a control-plane request must not widen them
+        "forwardProxyAllowedHosts",
+        "forwardProxyDeniedHosts"
     ));
 
     @Test

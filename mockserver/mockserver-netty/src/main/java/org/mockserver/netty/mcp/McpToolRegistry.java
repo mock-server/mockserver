@@ -3023,7 +3023,8 @@ public class McpToolRegistry {
     }
 
     /**
-     * Applies forwardProxyBlockPrivateNetworks to the host a tool sends to: null when it may be sent to, otherwise
+     * Applies forwardProxyBlockPrivateNetworks, forwardProxyAllowedHosts and forwardProxyDeniedHosts to the host a
+     * tool sends to: null when it may be sent to, otherwise
      * the error result the tool returns, the refusal logged once.
      */
     private ObjectNode blockedTargetResult(String toolName, String host) {
@@ -3099,8 +3100,8 @@ public class McpToolRegistry {
             java.net.URL url = new java.net.URL(urlString);
             connection = (java.net.HttpURLConnection) url.openConnection();
             connection.setRequestMethod(request.getMethod() != null ? request.getMethod().getValue() : "GET");
-            // a redirect would go to a host the private network check has not seen
-            connection.setInstanceFollowRedirects(!InetAddressValidator.isEnabled(httpState.getConfiguration()));
+            // a redirect would go to a host the forward target checks have not seen
+            connection.setInstanceFollowRedirects(!InetAddressValidator.isActive(httpState.getConfiguration()));
             connection.setConnectTimeout(timeoutMillis);
             connection.setReadTimeout(timeoutMillis);
 

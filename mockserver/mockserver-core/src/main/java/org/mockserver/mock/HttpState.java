@@ -7437,6 +7437,16 @@ public class HttpState {
             warnInitOnlyProperty("controlPlaneTrustedHostSuffixes", "\"" + suppliedControlPlaneTrustedHostSuffixes + "\"", "\"" + configuration.controlPlaneTrustedHostSuffixes() + "\"",
                 "it decides which web sites may use the control plane, so a request to the control plane cannot widen it");
         }
+        String suppliedForwardProxyAllowedHosts = suppliedConfiguration.getForwardProxyAllowedHosts();
+        if (suppliedForwardProxyAllowedHosts != null && !suppliedForwardProxyAllowedHosts.equals(configuration.forwardProxyAllowedHosts())) {
+            warnInitOnlyProperty("forwardProxyAllowedHosts", "\"" + suppliedForwardProxyAllowedHosts + "\"", "\"" + configuration.forwardProxyAllowedHosts() + "\"",
+                "it decides where the server may send requests, so a request to the control plane cannot widen it");
+        }
+        String suppliedForwardProxyDeniedHosts = suppliedConfiguration.getForwardProxyDeniedHosts();
+        if (suppliedForwardProxyDeniedHosts != null && !suppliedForwardProxyDeniedHosts.equals(configuration.forwardProxyDeniedHosts())) {
+            warnInitOnlyProperty("forwardProxyDeniedHosts", "\"" + suppliedForwardProxyDeniedHosts + "\"", "\"" + configuration.forwardProxyDeniedHosts() + "\"",
+                "it decides where the server may send requests, so a request to the control plane cannot widen it");
+        }
         Boolean suppliedTlsMutualAuthenticationAllowBundledCa = suppliedConfiguration.getTlsMutualAuthenticationAllowBundledCa();
         if (suppliedTlsMutualAuthenticationAllowBundledCa != null && !suppliedTlsMutualAuthenticationAllowBundledCa.equals(configuration.tlsMutualAuthenticationAllowBundledCa())) {
             warnInitOnlyProperty("tlsMutualAuthenticationAllowBundledCa", String.valueOf(suppliedTlsMutualAuthenticationAllowBundledCa), String.valueOf(configuration.tlsMutualAuthenticationAllowBundledCa()),

@@ -295,6 +295,23 @@ public class HttpStateConfigurationUpdateTest {
     }
 
     @Test
+    public void shouldNotLetAPutWidenTheForwardProxyHostLists() {
+        // given
+        configuration.forwardProxyAllowedHosts("api.example.com").forwardProxyDeniedHosts("10.0.0.0/8");
+
+        // when - a PUT tries to clear both lists
+        put(new ConfigurationDTO().setForwardProxyAllowedHosts("").setForwardProxyDeniedHosts(""));
+
+        // then - both stay in force, and each ignored value is reported
+        assertThat(configuration.forwardProxyAllowedHosts(), is("api.example.com"));
+        assertThat(configuration.forwardProxyDeniedHosts(), is("10.0.0.0/8"));
+        List<String> warnings = logger.warnings();
+        assertThat(warnings, hasSize(2));
+        assertThat(warnings.get(0), containsString("forwardProxyAllowedHosts is fixed at startup"));
+        assertThat(warnings.get(1), containsString("forwardProxyDeniedHosts is fixed at startup"));
+    }
+
+    @Test
     public void shouldNotWarnWhenInitOnlyPropertiesAreEchoedBackUnchanged() {
         // given - the whole-blob PUT case: a client GETs the configuration and PUTs it back
         // verbatim, including the init-only properties. That must not produce noise.

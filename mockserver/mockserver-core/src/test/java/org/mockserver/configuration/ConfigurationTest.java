@@ -34,6 +34,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -2444,6 +2446,64 @@ public class ConfigurationTest {
             assertThat(configuration.controlPlaneCorsAllowOrigin(), equalTo(""));
         } finally {
             ConfigurationProperties.controlPlaneTrustedHostSuffixes(original);
+        }
+    }
+
+    @Test
+    public void shouldSetAndGetForwardProxyAllowedHosts() {
+        String original = ConfigurationProperties.forwardProxyAllowedHosts();
+        try {
+            // then - default value
+            assertThat(configuration.forwardProxyAllowedHosts(), equalTo(""));
+            assertThat(org.mockserver.proxyconfiguration.InetAddressValidator.hostPolicy(configuration), nullValue());
+
+            // when - system property setter
+            ConfigurationProperties.forwardProxyAllowedHosts("*.example.com,10.0.0.0/8");
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.forwardProxyAllowedHosts(), equalTo("*.example.com,10.0.0.0/8"));
+            assertThat(System.getProperty("mockserver.forwardProxyAllowedHosts"), equalTo("*.example.com,10.0.0.0/8"));
+            assertThat(configuration.forwardProxyAllowedHosts(), equalTo("*.example.com,10.0.0.0/8"));
+            assertThat(org.mockserver.proxyconfiguration.InetAddressValidator.hostPolicy(configuration), notNullValue());
+
+            // when - setter
+            configuration.forwardProxyAllowedHosts("api.example.com");
+
+            // then - getter
+            assertThat(configuration.forwardProxyAllowedHosts(), equalTo("api.example.com"));
+
+            // then - an invalid list is refused when it is set
+            assertThrows(IllegalArgumentException.class, () -> ConfigurationProperties.forwardProxyAllowedHosts("10.0.0.0/33"));
+            assertThrows(IllegalArgumentException.class, () -> configuration.forwardProxyAllowedHosts("not a host"));
+            assertThat(configuration.forwardProxyAllowedHosts(), equalTo("api.example.com"));
+        } finally {
+            ConfigurationProperties.forwardProxyAllowedHosts(original);
+        }
+    }
+
+    @Test
+    public void shouldSetAndGetForwardProxyDeniedHosts() {
+        String original = ConfigurationProperties.forwardProxyDeniedHosts();
+        try {
+            // then - default value
+            assertThat(configuration.forwardProxyDeniedHosts(), equalTo(""));
+
+            // when - system property setter
+            ConfigurationProperties.forwardProxyDeniedHosts("admin.example.com");
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.forwardProxyDeniedHosts(), equalTo("admin.example.com"));
+            assertThat(System.getProperty("mockserver.forwardProxyDeniedHosts"), equalTo("admin.example.com"));
+            assertThat(configuration.forwardProxyDeniedHosts(), equalTo("admin.example.com"));
+
+            // when - setter
+            configuration.forwardProxyDeniedHosts("169.254.0.0/16");
+
+            // then - getter, independent of forwardProxyAllowedHosts
+            assertThat(configuration.forwardProxyDeniedHosts(), equalTo("169.254.0.0/16"));
+            assertThat(configuration.forwardProxyAllowedHosts(), equalTo(""));
+        } finally {
+            ConfigurationProperties.forwardProxyDeniedHosts(original);
         }
     }
 

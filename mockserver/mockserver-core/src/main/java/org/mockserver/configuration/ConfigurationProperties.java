@@ -476,6 +476,8 @@ public class ConfigurationProperties {
 
     // outbound - SSRF protection
     private static final String MOCKSERVER_FORWARD_PROXY_BLOCK_PRIVATE_NETWORKS = "mockserver.forwardProxyBlockPrivateNetworks";
+    private static final String MOCKSERVER_FORWARD_PROXY_ALLOWED_HOSTS = "mockserver.forwardProxyAllowedHosts";
+    private static final String MOCKSERVER_FORWARD_PROXY_DENIED_HOSTS = "mockserver.forwardProxyDeniedHosts";
 
     // outbound - fixed CA
     private static final String MOCKSERVER_FORWARD_PROXY_TLS_CUSTOM_TRUST_X509_CERTIFICATES = "mockserver.forwardProxyTLSCustomTrustX509Certificates";
@@ -6854,6 +6856,44 @@ public class ConfigurationProperties {
      */
     public static void forwardProxyBlockPrivateNetworks(boolean block) {
         setProperty(MOCKSERVER_FORWARD_PROXY_BLOCK_PRIVATE_NETWORKS, "" + block);
+    }
+
+    public static String forwardProxyAllowedHosts() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_PROXY_ALLOWED_HOSTS, "MOCKSERVER_FORWARD_PROXY_ALLOWED_HOSTS", "");
+    }
+
+    /**
+     * <p>The only hosts forward actions, the proxy, replays and webhooks may send to, comma-separated: host names
+     * (api.example.com), domain suffixes (*.example.com, which also matches example.com), IP addresses and CIDR blocks
+     * (10.0.0.0/8). Addresses and CIDR blocks are also matched against the address a host name resolves to. Any other
+     * target is refused, as forwardProxyBlockPrivateNetworks refuses one. Fixed at startup: a request to the control
+     * plane cannot change it.</p>
+     * <p>The default is "", which allows any target</p>
+     *
+     * @param forwardProxyAllowedHosts the allowed hosts, comma-separated
+     * @throws IllegalArgumentException if an entry is not a host name, *.domain, IP address or CIDR block
+     */
+    public static void forwardProxyAllowedHosts(String forwardProxyAllowedHosts) {
+        org.mockserver.proxyconfiguration.ForwardTargetHostPolicy.validate("forwardProxyAllowedHosts", forwardProxyAllowedHosts);
+        setProperty(MOCKSERVER_FORWARD_PROXY_ALLOWED_HOSTS, forwardProxyAllowedHosts);
+    }
+
+    public static String forwardProxyDeniedHosts() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_FORWARD_PROXY_DENIED_HOSTS, "MOCKSERVER_FORWARD_PROXY_DENIED_HOSTS", "");
+    }
+
+    /**
+     * <p>Hosts forward actions, the proxy, replays and webhooks must not send to, comma-separated, in the same form as
+     * {@link #forwardProxyAllowedHosts(String)}. A target on this list is refused even when forwardProxyAllowedHosts
+     * allows it. Fixed at startup: a request to the control plane cannot change it.</p>
+     * <p>The default is "", which denies nothing</p>
+     *
+     * @param forwardProxyDeniedHosts the denied hosts, comma-separated
+     * @throws IllegalArgumentException if an entry is not a host name, *.domain, IP address or CIDR block
+     */
+    public static void forwardProxyDeniedHosts(String forwardProxyDeniedHosts) {
+        org.mockserver.proxyconfiguration.ForwardTargetHostPolicy.validate("forwardProxyDeniedHosts", forwardProxyDeniedHosts);
+        setProperty(MOCKSERVER_FORWARD_PROXY_DENIED_HOSTS, forwardProxyDeniedHosts);
     }
 
     public static String forwardProxyTLSCustomTrustX509Certificates() {

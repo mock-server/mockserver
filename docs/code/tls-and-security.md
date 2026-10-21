@@ -307,6 +307,24 @@ swagger-parser's `ParseOptions.setSafelyResolveURL` (with `setRemoteRefAllowList
 
 The feature is opt-in because MockServer is most commonly used to mock services running on localhost, Docker bridge networks, or Kubernetes service IPs, where blocking private addresses would prevent normal usage.
 
+### Forward Target Allow and Deny Lists
+
+`forwardProxyAllowedHosts` and `forwardProxyDeniedHosts` are applied at the same choke point, in every `InetAddressValidator.validateForwardTarget` overload, so they reach every route listed above, with the same refusal (`ForwardTargetBlockedException`: `502`, a closed connection, an unsent webhook) and the same warnings. OpenAPI spec fetches are covered too: `OpenAPIParser` arms `SpecFetchGuard` when either check is on, fixing `forwardProxyBlockPrivateNetworks` and the parsed `ForwardTargetHostPolicy` when the parse starts (`InetAddressValidator.validateForwardTarget(boolean, ForwardTargetHostPolicy, String)`), and both are part of the parsed-spec cache key (the policy compares by its two source strings), so a spec parsed under other lists never answers this one. Only network fetches reach the `ProxySelector`, so a spec or `$ref` read from a file or the classpath (`initializationOpenAPIPath`, local multi-file specs) is never checked.
+
+| Rule | Behaviour |
+|---|---|
+| Entry forms | host name (exact), `*.domain` / `.domain` (the domain and every name under it, as `noProxyHosts`), IP address, CIDR block (IPv4 or IPv6; an IPv4-mapped block is folded to IPv4) |
+| Precedence | deny wins; with an allow list set, a target on neither its name nor its address part is refused |
+| Names | compared lower-case without a trailing dot, so `EVIL.example.` cannot slip past `evil.example`; an all-digit entry Netty does not parse as an address (`127.1`, `2130706433`) is rejected, because the JDK would resolve the target to an address the name entry never matches |
+| Addresses | IP and CIDR entries match the address the name resolved to as well as a literal target, in its own form and folded to IPv4 when it is IPv4-mapped (`::ffff:a.b.c.d`) or IPv4-compatible (`::a.b.c.d`) |
+| This host | a deny list holding any loopback address also refuses the loopback and unspecified addresses `127.0.0.0/8`, `::1`, `0.0.0.0` and `::` (`HostList.coversThisHost`); it does not refuse this machine's other interface addresses, which need their own deny entries. Allow lists get no such widening |
+| Rebinding | the resolved address is connected to on the direct routes (the forward client, binary relay, WebSocket relay, HTTP/3 CONNECT-UDP). It is not through an upstream proxy, which resolves the name itself, nor for the MCP tools and spec fetches, whose `HttpURLConnection` looks the name up again (normally answered by the JVM address cache) |
+| Lookups | a name is looked up only when `forwardProxyBlockPrivateNetworks` is on or a list holds an address or CIDR; name-only lists need no lookup and leave the connection's own resolution unchanged |
+| Invalid list | rejected by both setters; a value that bypasses them (environment variable, properties file) makes the policy refuse every target, rather than drop the entry and widen what is allowed |
+| Runtime changes | startup-only, as `controlPlaneCorsAllowOrigin`: `ConfigurationDTO.applyTo` never applies them and `HttpState.applyConfigurationUpdate` warns about a differing value, so a control-plane caller cannot widen them |
+
+`ForwardTargetHostPolicy` holds both lists parsed: a `HashSet` of names, an array of domain suffixes and an array of CIDR blocks. `InetAddressValidator.hostPolicy(Configuration)` reads both lists from the `Configuration` instance (the static store only when there is no instance) and returns `null` when both are empty, which is the only cost the forward path pays when they are unset (two cached property reads and two `isEmpty` checks, no allocation); otherwise `Configuration.forwardTargetHostPolicy(String, String)` returns the policy it parsed before, kept on the instance, while the two strings are unchanged, so a list is parsed once, never per request. A check is then a set lookup and a suffix scan for the name and a byte comparison per CIDR block for the address.
+
 ## Mutual TLS (mTLS)
 
 MockServer supports mTLS for both incoming connections and the control plane.

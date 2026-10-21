@@ -133,6 +133,14 @@ public class LRUCache<K, V> {
         }
     }
 
+    public void deleteIf(java.util.function.Predicate<K> matches) {
+        for (K key : map.keySet()) {
+            if (matches.test(key)) {
+                delete(key);
+            }
+        }
+    }
+
     private void clear() {
         map.clear();
         queue.clear();

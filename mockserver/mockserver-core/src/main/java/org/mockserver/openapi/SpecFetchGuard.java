@@ -1,7 +1,7 @@
 package org.mockserver.openapi;
 
-import org.mockserver.configuration.Configuration;
 import org.mockserver.proxyconfiguration.ForwardTargetBlockedException;
+import org.mockserver.proxyconfiguration.ForwardTargetHostPolicy;
 import org.mockserver.proxyconfiguration.InetAddressValidator;
 
 import javax.annotation.Nullable;
@@ -17,11 +17,13 @@ import java.util.function.Supplier;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
- * Applies {@code forwardProxyBlockPrivateNetworks} to every connection swagger-parser opens while it reads a spec:
+ * Applies {@code forwardProxyBlockPrivateNetworks}, {@code forwardProxyAllowedHosts} and {@code forwardProxyDeniedHosts}
+ * to every connection swagger-parser opens while it reads a spec:
  * the spec URL, each remote {@code $ref} and each redirect, for OpenAPI 3 and Swagger 2 alike. swagger-parser fetches
  * with {@code HttpURLConnection}, which asks the default {@link ProxySelector} where to connect before each of these
  * connections, redirects it follows itself included, so the check is made there: only on a thread parsing a spec
- * with the setting on. Every other connection is passed to the selector this one wraps, unchanged.
+ * with a check on. Every other connection is passed to the selector this one wraps, unchanged. A spec or {@code $ref}
+ * read from a file or the classpath opens no network connection, so it is never checked.
  * <p>
  * A name is checked by a lookup where MockServer runs, as a spec URL's host is checked elsewhere; the connection then
  * looks it up again, which the JVM's address cache normally answers with the address checked.
@@ -36,7 +38,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 final class SpecFetchGuard extends ProxySelector {
 
     private static final ThreadLocal<Parse> PARSING = new ThreadLocal<>();
-    private static final Configuration CHECK_ON = Configuration.configuration().forwardProxyBlockPrivateNetworks(true);
 
     private final ProxySelector wrapped;
 
@@ -45,24 +46,33 @@ final class SpecFetchGuard extends ProxySelector {
     }
 
     private static final class Parse {
+        private final boolean blockPrivateNetworks;
+        @Nullable
+        private final ForwardTargetHostPolicy hostPolicy;
         private ForwardTargetBlockedException refusal;
+
+        private Parse(boolean blockPrivateNetworks, @Nullable ForwardTargetHostPolicy hostPolicy) {
+            this.blockPrivateNetworks = blockPrivateNetworks;
+            this.hostPolicy = hostPolicy;
+        }
     }
 
     /**
      * Runs {@code parse} with every connection it opens on this thread checked, and refuses the spec if any was
      * blocked, whatever the parser made of the failed fetch.
      *
-     * @param fetchesChecked whether forwardProxyBlockPrivateNetworks was on when the parse began; a later change to the
-     *                       configuration does not change it for this parse, whose result is cached under it
+     * @param blockPrivateNetworks whether forwardProxyBlockPrivateNetworks was on when the parse began; a later change
+     *                             to the configuration does not change it for this parse, whose result is cached under it
+     * @param hostPolicy           forwardProxyAllowedHosts and forwardProxyDeniedHosts when the parse began, or null
      * @throws IllegalArgumentException naming the blocked target, when a fetch was blocked
      */
-    static <T> T whileParsing(boolean fetchesChecked, Supplier<T> parse) {
-        if (!fetchesChecked) {
+    static <T> T whileParsing(boolean blockPrivateNetworks, @Nullable ForwardTargetHostPolicy hostPolicy, Supplier<T> parse) {
+        if (!blockPrivateNetworks && hostPolicy == null) {
             return parse.get();
         }
         install();
         Parse outer = PARSING.get();
-        Parse current = new Parse();
+        Parse current = new Parse(blockPrivateNetworks, hostPolicy);
         PARSING.set(current);
         T parsed;
         try {
@@ -107,7 +117,7 @@ final class SpecFetchGuard extends ProxySelector {
                     // HttpURLConnection reads the host from the URL more leniently than URI does, so refuse rather than skip
                     throw new ForwardTargetBlockedException("OpenAPI spec fetch from \"" + uri + "\" names no host that can be checked");
                 }
-                InetAddressValidator.validateForwardTarget(CHECK_ON, host);
+                InetAddressValidator.validateForwardTarget(parse.blockPrivateNetworks, parse.hostPolicy, host);
             } catch (ForwardTargetBlockedException blocked) {
                 if (parse.refusal == null) {
                     parse.refusal = blocked;
