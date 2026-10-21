@@ -88,6 +88,22 @@ public class BodyWithContentTypeDTODeserializerTest {
     }
 
     @Test
+    public void shouldParseFileBodyWithTemplatedFilePath() throws IOException {
+        // given
+        String json = ("{\"httpResponse\":{\"body\":{\"type\":\"FILE\",\"filePath\":\"files/{{ request.pathParameters.id.0 }}.json\",\"templateType\":\"MUSTACHE\",\"templatedFilePath\":true}}}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertThat(expectationDTO, is(new ExpectationDTO()
+            .setHttpResponse(
+                new HttpResponseDTO().setBody(new FileBodyDTO(new FileBody("files/{{ request.pathParameters.id.0 }}.json", null, HttpTemplate.TemplateType.MUSTACHE).withTemplatedFilePath(true)))
+            )));
+        assertThat(((FileBodyDTO) expectationDTO.getHttpResponse().getBody()).buildObject().getTemplatedFilePath(), is(true));
+    }
+
+    @Test
     public void shouldParseFileBodyWithoutTemplateType() throws IOException {
         // given
         String json = ("{\"httpResponse\":{\"body\":{\"type\":\"FILE\",\"filePath\":\"some/path.json\"}}}");

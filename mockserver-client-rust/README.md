@@ -289,6 +289,15 @@ client.when(HttpRequest::new().path("/feed"))
     .respond(HttpResponse::new()
         .body_value(Body::xml("<feed/>").with_content_type("application/atom+xml")))?;
 
+// FILE: serve a file; render its path from the request with a template type.
+client.when(HttpRequest::new().path("/users/{name}").path_param("name", "[a-z]+"))
+    .respond(HttpResponse::new()
+        .status_code(200)
+        .body_value(Body::file("responses/{{ request.pathParameters.name.0 }}.json")
+            .with_content_type("application/json")
+            .with_template_type("MUSTACHE")
+            .with_templated_file_path(true)))?;
+
 // A raw (non-HTTP) message matcher, used with a binary response action.
 client.when(HttpRequest::new().binary_data(b"\x00\x01PING"))
     .respond_with_binary(BinaryResponse::from_bytes(b"\x00\x02PONG"))?;
@@ -303,6 +312,9 @@ an inline JSON object, and a JSON array comes back as a typed JSON body).
 `Body::with_content_type(..)` sets the content type on `FILE`, `JSON`,
 `BINARY`, `STRING` and `XML` bodies, and wraps an inline JSON object as a
 typed JSON body so the content type stays out of the payload.
+`Body::with_templated_file_path(true)` renders a `FILE` body's path against the
+request; the part of the path after its fixed directory must stay inside that
+directory. Such a body is held as a `Body::Object` with `"type": "FILE"`.
 
 ### Conditional (if/then/else) request matchers and load-step checks
 

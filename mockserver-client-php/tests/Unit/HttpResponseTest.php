@@ -197,6 +197,34 @@ class HttpResponseTest extends TestCase
         $this->assertSame($expected, $response->toArray());
     }
 
+    public function testFileBodyWithTemplatedFilePath(): void
+    {
+        $response = HttpResponse::response()
+            ->fileBody('responses/{{ request.pathParameters.name.0 }}.json', 'application/json', 'MUSTACHE', true);
+
+        $expected = [
+            'body' => [
+                'type' => 'FILE',
+                'filePath' => 'responses/{{ request.pathParameters.name.0 }}.json',
+                'contentType' => 'application/json',
+                'templateType' => 'MUSTACHE',
+                'templatedFilePath' => true,
+            ],
+        ];
+
+        $this->assertSame($expected, $response->toArray());
+        $json = json_encode($response, JSON_THROW_ON_ERROR);
+        $this->assertSame($expected, json_decode($json, true));
+    }
+
+    public function testFileBodyOmitsTemplatedFilePathWhenFalse(): void
+    {
+        $response = HttpResponse::response()
+            ->fileBody('/templates/response.vm', null, 'VELOCITY', false);
+
+        $this->assertArrayNotHasKey('templatedFilePath', $response->toArray()['body']);
+    }
+
     public function testJsonSerialize(): void
     {
         $response = HttpResponse::response()

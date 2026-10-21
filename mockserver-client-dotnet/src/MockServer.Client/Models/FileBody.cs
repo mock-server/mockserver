@@ -24,6 +24,14 @@ public sealed class FileBody
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public FileTemplateType? TemplateType { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, and <see cref="TemplateType"/> is set, <see cref="FilePath"/> is itself rendered
+    /// as a template against the request before the file is read. Omitted from the JSON when <c>false</c>.
+    /// </summary>
+    [JsonPropertyName("templatedFilePath")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool TemplatedFilePath { get; set; }
 }
 
 /// <summary>

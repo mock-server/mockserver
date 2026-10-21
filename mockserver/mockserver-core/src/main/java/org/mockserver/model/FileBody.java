@@ -9,6 +9,7 @@ public class FileBody extends BodyWithContentType<String> {
     private int hashCode;
     private final String filePath;
     private final HttpTemplate.TemplateType templateType;
+    private Boolean templatedFilePath;
 
     public FileBody(String filePath) {
         this(filePath, null);
@@ -52,6 +53,22 @@ public class FileBody extends BodyWithContentType<String> {
         return templateType;
     }
 
+    /**
+     * When {@code true}, and a supported {@link #getTemplateType() templateType} is set, the file PATH is
+     * also rendered as a template against the request (for example {@code files/{{ request.pathParameters.id.0 }}.json})
+     * before the file is read. Request-derived parts of the rendered path must stay inside the directory
+     * given by the path's literal prefix. When {@code null} or {@code false} the path is used literally.
+     */
+    public Boolean getTemplatedFilePath() {
+        return templatedFilePath;
+    }
+
+    public FileBody withTemplatedFilePath(Boolean templatedFilePath) {
+        this.templatedFilePath = templatedFilePath;
+        this.hashCode = 0;
+        return this;
+    }
+
     public String getValue() {
         return filePath;
     }
@@ -92,13 +109,14 @@ public class FileBody extends BodyWithContentType<String> {
         }
         FileBody fileBody = (FileBody) o;
         return Objects.equals(filePath, fileBody.filePath) &&
-            templateType == fileBody.templateType;
+            templateType == fileBody.templateType &&
+            Objects.equals(templatedFilePath, fileBody.templatedFilePath);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), filePath, templateType);
+            hashCode = Objects.hash(super.hashCode(), filePath, templateType, templatedFilePath);
         }
         return hashCode;
     }

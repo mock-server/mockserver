@@ -6464,6 +6464,11 @@ components:
             enum:
             - VELOCITY
             - MUSTACHE
+          templatedFilePath:
+            description: when true (and templateType is VELOCITY or MUSTACHE) filePath is itself rendered as a
+              template against the request; the rendered path must stay inside the directory given by the
+              literal part of filePath before the first template expression
+            type: boolean
           contentType:
             type: string
           optional:

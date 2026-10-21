@@ -1472,6 +1472,7 @@ function actionFromExpectation(item: JsonListItem): ActionPrefill | null {
         bodyFromFile: !!fileBody,
         filePath: fileBody && typeof fileBody['filePath'] === 'string' ? (fileBody['filePath'] as string) : '',
         fileTemplateType: fileTt === 'MUSTACHE' || fileTt === 'VELOCITY' ? fileTt : '',
+        templatedFilePath: fileBody?.['templatedFilePath'] === true ? true : undefined,
         // For a FILE body the content type is whatever the body declares (possibly none); don't
         // fall back to the application/json header default, which would silently add one on re-save.
         contentType: fileBody
@@ -1743,6 +1744,8 @@ interface StaticState {
   filePath: string;
   /** Optional template engine applied to the body file against the request ('' = serve verbatim). */
   fileTemplateType: '' | 'MUSTACHE' | 'VELOCITY';
+  /** When true (with a fileTemplateType) the file path is also rendered against the request. */
+  templatedFilePath?: boolean;
   /** Additional response headers as "Name: value" lines, beyond Content-Type. */
   headers: string;
   /** Connection-level response controls; undefined fields use the server default. */
@@ -1875,6 +1878,24 @@ function StaticHttpPanel({
             <MenuItem value="MUSTACHE">Mustache</MenuItem>
             <MenuItem value="VELOCITY">Velocity</MenuItem>
           </TextField>
+          {state.fileTemplateType && (
+            <FormControlLabel
+              sx={{ ml: 1 }}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={state.templatedFilePath === true}
+                  onChange={(e) => setState({ ...state, templatedFilePath: e.target.checked || undefined })}
+                  slotProps={{ input: { 'data-testid': 'file-templated-path' } as Record<string, unknown> }}
+                />
+              }
+              label={
+                <Typography variant="body2">
+                  Choose the file from the request (template the path, e.g. {'responses/{{ request.pathParameters.name.0 }}.json'})
+                </Typography>
+              }
+            />
+          )}
         </Box>
       ) : (
         <JsonEditor

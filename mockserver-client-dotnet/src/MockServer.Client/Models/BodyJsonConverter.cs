@@ -151,6 +151,9 @@ public sealed class BodyJsonConverter : JsonConverter<Body>
                 case "templateType":
                     body.TemplateType = prop.Value.GetString();
                     break;
+                case "templatedFilePath":
+                    body.TemplatedFilePath = prop.Value.GetBoolean();
+                    break;
                 case "moduleName":
                     body.ModuleName = prop.Value.GetString();
                     break;
@@ -228,6 +231,7 @@ public sealed class BodyJsonConverter : JsonConverter<Body>
 
         if (value.FilePath is not null) writer.WriteString("filePath", value.FilePath);
         if (value.TemplateType is not null) writer.WriteString("templateType", value.TemplateType);
+        if (value.TemplatedFilePath == true) writer.WriteBoolean("templatedFilePath", true);
         if (value.ModuleName is not null) writer.WriteString("moduleName", value.ModuleName);
 
         if (value.BodyAllOf is not null)

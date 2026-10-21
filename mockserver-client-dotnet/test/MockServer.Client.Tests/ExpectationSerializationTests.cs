@@ -294,5 +294,26 @@ public class ExpectationSerializationTests
         deserialized.FilePath.Should().Be("/templates/body.mustache");
         deserialized.ContentType.Should().Be("text/html");
         deserialized.TemplateType.Should().Be(FileTemplateType.MUSTACHE);
+        deserialized.TemplatedFilePath.Should().BeFalse();
+        json.Should().NotContain("templatedFilePath");
+    }
+
+    [Fact]
+    public void FileBody_WithTemplatedFilePath_RoundTrips()
+    {
+        var response = HttpResponse.Response()
+            .WithStatusCode(200)
+            .WithTemplatedFileBody("responses/{{ request.pathParameters.name.0 }}.json", FileTemplateType.MUSTACHE, "application/json")
+            .Build();
+
+        var json = JsonSerializer.Serialize(response.Body, JsonOptions);
+        var body = JsonDocument.Parse(json).RootElement;
+        body.GetProperty("type").GetString().Should().Be("FILE");
+        body.GetProperty("templateType").GetString().Should().Be("MUSTACHE");
+        body.GetProperty("templatedFilePath").GetBoolean().Should().BeTrue();
+
+        var deserialized = JsonSerializer.Deserialize<FileBody>(json, JsonOptions);
+        deserialized!.TemplatedFilePath.Should().BeTrue();
+        JsonSerializer.Serialize(deserialized, JsonOptions).Should().Be(json);
     }
 }

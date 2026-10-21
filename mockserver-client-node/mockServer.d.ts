@@ -500,6 +500,7 @@ export type BodyWithContentType =
   | { not?: boolean; type?: "STRING"; string?: string; contentType?: string }
   | string
   | { not?: boolean; type?: "XML"; xml?: string; contentType?: string }
+  | { not?: boolean; type?: "FILE"; filePath?: string; contentType?: string; templateType?: "VELOCITY" | "MUSTACHE"; templatedFilePath?: boolean }
   | ({ not?: boolean; type?: "BINARY"; base64Bytes?: string; contentType?: string } & {
       not?: boolean;
       type?: "JSON";

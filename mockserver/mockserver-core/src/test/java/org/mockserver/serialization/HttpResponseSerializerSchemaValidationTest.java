@@ -64,6 +64,23 @@ public class HttpResponseSerializerSchemaValidationTest {
     }
 
     @Test
+    public void shouldRoundTripFileBodyWithTemplatedFilePathThroughSchemaValidation() {
+        // given
+        HttpResponse httpResponse = HttpResponse.response().withBody(
+            org.mockserver.model.FileBody.file("files/{{ request.pathParameters.id.0 }}.json", org.mockserver.model.HttpTemplate.TemplateType.MUSTACHE).withTemplatedFilePath(true)
+        );
+        HttpResponseSerializer serializer = new HttpResponseSerializer(new MockServerLogger());
+
+        // when
+        String json = serializer.serialize(httpResponse);
+        HttpResponse roundTripped = serializer.deserialize(json);
+
+        // then
+        assertThat(json, containsString("\"templatedFilePath\" : true"));
+        assertThat(roundTripped, is(httpResponse));
+    }
+
+    @Test
     public void shouldDeserializeCompleteObject() {
         // given
         String requestBytes = "{" + NEW_LINE +

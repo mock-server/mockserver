@@ -107,9 +107,15 @@ class HttpResponse implements \JsonSerializable
      * @param string $filePath Path to the file to serve
      * @param string|null $contentType Optional content type for the response
      * @param string|null $templateType Optional template type ("VELOCITY" or "MUSTACHE") for templating the file
+     * @param bool $templatedFilePath When true (with a template type), the file path itself is rendered as a
+     *                                template against the request; omitted from the JSON when false
      */
-    public function fileBody(string $filePath, ?string $contentType = null, ?string $templateType = null): self
-    {
+    public function fileBody(
+        string $filePath,
+        ?string $contentType = null,
+        ?string $templateType = null,
+        bool $templatedFilePath = false
+    ): self {
         $body = [
             'type' => 'FILE',
             'filePath' => $filePath,
@@ -119,6 +125,9 @@ class HttpResponse implements \JsonSerializable
         }
         if ($templateType !== null) {
             $body['templateType'] = $templateType;
+        }
+        if ($templatedFilePath) {
+            $body['templatedFilePath'] = true;
         }
         $this->body = $body;
         return $this;

@@ -148,6 +148,9 @@
             "MUSTACHE"
           ]
         },
+        "templatedFilePath": {
+          "type": "boolean"
+        },
         "contentType": {
           "type": "string"
         }

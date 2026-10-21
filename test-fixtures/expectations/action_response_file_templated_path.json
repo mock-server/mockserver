@@ -1,0 +1,15 @@
+{
+  "httpRequest": {
+    "path": "/files"
+  },
+  "httpResponse": {
+    "statusCode": 200,
+    "body": {
+      "type": "FILE",
+      "filePath": "responses/{{ request.queryStringParameters.name.0 }}.json",
+      "contentType": "application/json",
+      "templateType": "MUSTACHE",
+      "templatedFilePath": true
+    }
+  }
+}

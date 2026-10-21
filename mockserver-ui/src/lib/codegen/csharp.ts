@@ -204,6 +204,7 @@ function renderBody(body: unknown, indent: number): string | null {
       if (typeof body['filePath'] === 'string') props.push(`FilePath = ${csStr(body['filePath'] as string)}`);
       if (typeof body['contentType'] === 'string') props.push(`ContentType = ${csStr(body['contentType'] as string)}`);
       if (typeof body['templateType'] === 'string') props.push(`TemplateType = FileTemplateType.${body['templateType']}`);
+      if (body['templatedFilePath'] === true) props.push('TemplatedFilePath = true');
       return csObjectInit('FileBody', props, indent);
     }
     case 'ALL_OF': {

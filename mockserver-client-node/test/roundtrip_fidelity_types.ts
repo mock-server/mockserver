@@ -421,6 +421,21 @@ export const bodyWasmLiteral: Expectation = {
     httpResponse: { body: 'ok' }
 };
 
+/* FILE response body with a templated path (action_response_file_templated_path.json). */
+export const responseFileTemplatedPathLiteral: Expectation = {
+    httpRequest: { path: '/files' },
+    httpResponse: {
+        statusCode: 200,
+        body: {
+            type: 'FILE',
+            filePath: 'responses/{{ request.queryStringParameters.name.0 }}.json',
+            contentType: 'application/json',
+            templateType: 'MUSTACHE',
+            templatedFilePath: true
+        }
+    }
+};
+
 export const bodyXpathLiteral: Expectation = {
     httpRequest: { path: '/xpath', body: { type: 'XPATH', xpath: '/bookstore/book[price>30]/price' } },
     httpResponse: { body: 'ok' }

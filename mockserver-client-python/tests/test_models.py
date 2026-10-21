@@ -3614,6 +3614,29 @@ class TestBodyFileType:
         assert restored.content_type == "text/plain"
         assert restored.template_type == "VELOCITY"
 
+    def test_file_body_templated_file_path_round_trip(self):
+        original = Body.file(
+            "responses/{{ request.pathParameters.name.0 }}.json",
+            content_type="application/json",
+            template_type="MUSTACHE",
+            templated_file_path=True,
+        )
+        assert original.to_dict() == {
+            "type": "FILE",
+            "contentType": "application/json",
+            "filePath": "responses/{{ request.pathParameters.name.0 }}.json",
+            "templateType": "MUSTACHE",
+            "templatedFilePath": True,
+        }
+        restored = Body.from_dict(original.to_dict())
+        assert restored.templated_file_path is True
+        assert restored.to_dict() == original.to_dict()
+
+    def test_file_body_templated_file_path_omitted_when_unset_or_false(self):
+        for flag in (None, False):
+            b = Body.file("/tpl/resp.vm", template_type="VELOCITY", templated_file_path=flag)
+            assert "templatedFilePath" not in b.to_dict()
+
     def test_file_body_deserialized_from_body_in_request(self):
         """FILE bodies in HTTP request/response are correctly deserialized."""
         from mockserver.models import _deserialize_body

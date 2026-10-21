@@ -477,6 +477,38 @@ RSpec.describe 'MockServer models' do
         expect(result).to be(body)
         expect(body.template_type).to eq('VELOCITY')
       end
+
+      it 'round-trips FILE body with templated_file_path' do
+        original = MockServer::Body.file(
+          'responses/{{ request.pathParameters.name.0 }}.json',
+          content_type: 'application/json',
+          template_type: 'MUSTACHE',
+          templated_file_path: true
+        )
+        expect(original.to_h).to eq(
+          'type' => 'FILE',
+          'contentType' => 'application/json',
+          'filePath' => 'responses/{{ request.pathParameters.name.0 }}.json',
+          'templateType' => 'MUSTACHE',
+          'templatedFilePath' => true
+        )
+        roundtrip = MockServer.deserialize_body(original.to_h)
+        expect(roundtrip.templated_file_path).to be(true)
+        expect(roundtrip.to_h).to eq(original.to_h)
+      end
+
+      it 'omits templatedFilePath when unset or false' do
+        [nil, false].each do |flag|
+          body = MockServer::Body.file('/tpl/resp.vm', template_type: 'VELOCITY', templated_file_path: flag)
+          expect(body.to_h).not_to have_key('templatedFilePath')
+        end
+      end
+
+      it '#with_templated_file_path sets the flag fluently' do
+        body = MockServer::Body.file('responses/$!request.path.vm', template_type: 'VELOCITY')
+        expect(body.with_templated_file_path).to be(body)
+        expect(body.to_h['templatedFilePath']).to be(true)
+      end
     end
   end
 

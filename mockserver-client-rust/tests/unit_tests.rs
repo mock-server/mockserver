@@ -1207,6 +1207,51 @@ fn test_body_file_roundtrip() {
     assert_eq!(req.body, Some(body));
 }
 
+#[test]
+fn test_body_file_templated_file_path_roundtrip() {
+    let body = Body::file("responses/{{ request.pathParameters.name.0 }}.json")
+        .with_content_type("application/json")
+        .with_template_type("MUSTACHE")
+        .with_templated_file_path(true);
+    let json = serde_json::to_value(&body).unwrap();
+    assert_eq!(
+        json,
+        serde_json::json!({
+            "type": "FILE",
+            "filePath": "responses/{{ request.pathParameters.name.0 }}.json",
+            "contentType": "application/json",
+            "templateType": "MUSTACHE",
+            "templatedFilePath": true
+        })
+    );
+
+    let resp = HttpResponse::new()
+        .status_code(200)
+        .body_value(body.clone());
+    let wire = serde_json::to_value(&resp).unwrap();
+    let decoded: HttpResponse = serde_json::from_value(wire.clone()).unwrap();
+    assert_eq!(decoded.typed_body(), Some(body));
+    assert_eq!(serde_json::to_value(&decoded).unwrap(), wire);
+}
+
+#[test]
+fn test_body_file_templated_file_path_omitted_when_false() {
+    let body = Body::file("/tpl/resp.vm")
+        .with_template_type("VELOCITY")
+        .with_templated_file_path(false);
+    assert!(matches!(body, Body::File { .. }));
+    let json = serde_json::to_value(&body).unwrap();
+    assert!(json.get("templatedFilePath").is_none());
+
+    let cleared = Body::file("/tpl/resp.vm")
+        .with_templated_file_path(true)
+        .with_templated_file_path(false);
+    assert!(serde_json::to_value(&cleared)
+        .unwrap()
+        .get("templatedFilePath")
+        .is_none());
+}
+
 // ---------------------------------------------------------------------------
 // Expectation with template actions
 // ---------------------------------------------------------------------------

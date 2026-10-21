@@ -91,7 +91,8 @@ function intArray(values: unknown): string {
 /** `Body` keyword arguments after the ones each body type renders first, in output order. */
 const BODY_KWARGS: [string, string, 'str' | 'bool'][] = [
   ['string', 'string', 'str'], ['base64Bytes', 'base64_bytes', 'str'], ['filePath', 'file_path', 'str'],
-  ['templateType', 'template_type', 'str'], ['contentType', 'content_type', 'str'], ['charset', 'charset', 'str'],
+  ['templateType', 'template_type', 'str'], ['templatedFilePath', 'templated_file_path', 'bool'],
+  ['contentType', 'content_type', 'str'], ['charset', 'charset', 'str'],
   ['matchType', 'match_type', 'str'], ['subString', 'sub_string', 'bool'],
   ['matchNumbersAsStrings', 'match_numbers_as_strings', 'bool'], ['not', 'not_body', 'bool'], ['optional', 'optional', 'bool'],
 ];
@@ -101,7 +102,7 @@ const BODY_FIRST: Record<string, string[]> = {
   JSON: ['json', 'matchType'],
   STRING: ['string', 'subString'],
   BINARY: ['base64Bytes'],
-  FILE: ['filePath', 'templateType', 'contentType'],
+  FILE: ['filePath', 'templateType', 'templatedFilePath', 'contentType'],
 };
 
 class PyBuilder {

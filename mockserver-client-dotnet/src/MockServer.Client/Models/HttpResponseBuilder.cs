@@ -53,6 +53,16 @@ public sealed class HttpResponseBuilder
         return this;
     }
 
+    /// <summary>
+    /// Sets a FILE body whose path is itself rendered as a template against the request, for example
+    /// <c>responses/{{ request.pathParameters.name.0 }}.json</c>, before the file is read.
+    /// </summary>
+    public HttpResponseBuilder WithTemplatedFileBody(string filePath, FileTemplateType templateType, string? contentType = null)
+    {
+        _response.Body = new FileBody { FilePath = filePath, ContentType = contentType, TemplateType = templateType, TemplatedFilePath = true };
+        return this;
+    }
+
     public HttpResponseBuilder WithDelay(TimeUnit timeUnit, long value)
     {
         _response.Delay = new Delay { TimeUnit = timeUnit, Value = value };

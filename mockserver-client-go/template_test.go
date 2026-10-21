@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -369,6 +370,47 @@ func TestFileBody_Unmarshal(t *testing.T) {
 	}
 	if fb.ContentType != "text/plain" {
 		t.Errorf("expected text/plain, got %s", fb.ContentType)
+	}
+}
+
+func TestFileBody_TemplatedFilePath_RoundTrip(t *testing.T) {
+	resp := Response().
+		StatusCode(200).
+		BodyFromTemplatedFile("responses/{{ request.pathParameters.name.0 }}.json", "MUSTACHE", "application/json").
+		Build()
+
+	data, err := json.Marshal(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `{"type":"FILE","filePath":"responses/{{ request.pathParameters.name.0 }}.json","templateType":"MUSTACHE","templatedFilePath":true,"contentType":"application/json"}`
+	if string(data) != want {
+		t.Errorf("unexpected JSON:\n got %s\nwant %s", data, want)
+	}
+
+	var fb FileBody
+	if err := json.Unmarshal(data, &fb); err != nil {
+		t.Fatal(err)
+	}
+	if !fb.TemplatedFilePath {
+		t.Error("templatedFilePath should survive unmarshal")
+	}
+	again, err := json.Marshal(fb)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(again) != want {
+		t.Errorf("round-trip changed JSON:\n got %s\nwant %s", again, want)
+	}
+}
+
+func TestFileBody_TemplatedFilePath_OmittedWhenFalse(t *testing.T) {
+	data, err := json.Marshal(FileBody{Type: "FILE", FilePath: "/tpl/resp.vm", TemplateType: "VELOCITY"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), "templatedFilePath") {
+		t.Errorf("templatedFilePath should be omitted when false: %s", data)
 	}
 }
 

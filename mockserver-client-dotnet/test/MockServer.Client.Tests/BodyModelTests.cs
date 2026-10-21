@@ -41,6 +41,7 @@ public class BodyModelTests
     [InlineData("{\"type\":\"WASM\",\"moduleName\":\"my-rule\"}")]
     [InlineData("{\"type\":\"JSON_RPC\",\"method\":\"ping\",\"paramsSchema\":\"{}\"}")]
     [InlineData("{\"type\":\"FILE\",\"filePath\":\"/x.vm\",\"templateType\":\"VELOCITY\",\"contentType\":\"application/json\"}")]
+    [InlineData("{\"type\":\"FILE\",\"filePath\":\"responses/{{ request.pathParameters.name.0 }}.json\",\"templateType\":\"MUSTACHE\",\"templatedFilePath\":true}")]
     [InlineData("{\"type\":\"FUZZY\",\"fuzzy\":\"colour\",\"threshold\":0.8,\"ignoreCase\":true}")]
     [InlineData("{\"type\":\"JSON\",\"json\":\"1\",\"not\":true,\"optional\":true}")]
     public void SingleVariant_RoundTrips(string json) => AssertBodyRoundTrips(json);

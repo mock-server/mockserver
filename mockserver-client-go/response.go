@@ -47,7 +47,10 @@ type FileBody struct {
 	Type         string `json:"type"`
 	FilePath     string `json:"filePath,omitempty"`
 	TemplateType string `json:"templateType,omitempty"`
-	ContentType  string `json:"contentType,omitempty"`
+	// TemplatedFilePath, with a TemplateType, renders FilePath itself as a template
+	// against the request before the file is read.
+	TemplatedFilePath bool   `json:"templatedFilePath,omitempty"`
+	ContentType       string `json:"contentType,omitempty"`
 }
 
 // ResponseBuilder provides a fluent API for building HttpResponse actions.
@@ -116,6 +119,16 @@ func (b *ResponseBuilder) BodyFromFile(filePath, templateType, contentType strin
 	if contentType != "" {
 		fb.ContentType = contentType
 	}
+	b.response.Body = fb
+	return b
+}
+
+// BodyFromTemplatedFile is BodyFromFile with the file path itself rendered as a
+// template against the request. templateType must be "VELOCITY" or "MUSTACHE".
+func (b *ResponseBuilder) BodyFromTemplatedFile(filePath, templateType, contentType string) *ResponseBuilder {
+	b.BodyFromFile(filePath, templateType, contentType)
+	fb := b.response.Body.(FileBody)
+	fb.TemplatedFilePath = true
 	b.response.Body = fb
 	return b
 }

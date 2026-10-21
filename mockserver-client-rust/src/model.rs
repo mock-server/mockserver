@@ -1236,14 +1236,65 @@ impl Body {
     /// Set the template type (e.g., "VELOCITY", "MUSTACHE") on a FILE body.
     /// No-op on other variants.
     pub fn with_template_type(mut self, template_type: impl Into<String>) -> Self {
-        if let Body::File {
-            template_type: ref mut tt,
-            ..
-        } = self
-        {
-            *tt = Some(template_type.into());
+        match self {
+            Body::File {
+                template_type: ref mut tt,
+                ..
+            } => *tt = Some(template_type.into()),
+            Body::Object(ref mut map) if is_file_object(map) => {
+                map.insert(
+                    "templateType".into(),
+                    serde_json::Value::from(template_type.into()),
+                );
+            }
+            _ => {}
         }
         self
+    }
+
+    /// When `true`, a FILE body's `filePath` is itself rendered as a template
+    /// against the request (set a template type too). No-op on other variants.
+    ///
+    /// [`Body::File`] has no field for this flag, so a templated FILE body is
+    /// held as a [`Body::Object`] with `"type": "FILE"`; `false` omits the key.
+    ///
+    /// # Example
+    /// ```
+    /// use mockserver_client::Body;
+    ///
+    /// let body = Body::file("responses/{{ request.pathParameters.name.0 }}.json")
+    ///     .with_template_type("MUSTACHE")
+    ///     .with_templated_file_path(true);
+    /// ```
+    pub fn with_templated_file_path(self, templated_file_path: bool) -> Self {
+        match self {
+            Body::File {
+                file_path,
+                content_type,
+                template_type,
+            } if templated_file_path => {
+                let mut map = serde_json::Map::new();
+                map.insert("type".into(), serde_json::Value::from("FILE"));
+                map.insert("filePath".into(), serde_json::Value::from(file_path));
+                if let Some(ct) = content_type {
+                    map.insert("contentType".into(), serde_json::Value::from(ct));
+                }
+                if let Some(tt) = template_type {
+                    map.insert("templateType".into(), serde_json::Value::from(tt));
+                }
+                map.insert("templatedFilePath".into(), serde_json::Value::Bool(true));
+                Body::Object(map)
+            }
+            Body::Object(mut map) if is_file_object(&map) => {
+                if templated_file_path {
+                    map.insert("templatedFilePath".into(), serde_json::Value::Bool(true));
+                } else {
+                    map.remove("templatedFilePath");
+                }
+                Body::Object(map)
+            }
+            other => other,
+        }
     }
 
     /// Create an `ALL_OF` composite body matcher — every nested body matcher
@@ -1470,6 +1521,10 @@ impl Serialize for Body {
     }
 }
 
+fn is_file_object(map: &serde_json::Map<String, serde_json::Value>) -> bool {
+    map.get("type").and_then(|t| t.as_str()) == Some("FILE")
+}
+
 /// Map a single-value matcher `body_type` to its wire value-key and extract the
 /// string value from the deserialised object (e.g. `JSON_PATH` → `jsonPath`).
 fn matcher_key_value(
@@ -1502,7 +1557,12 @@ impl<'de> Deserialize<'de> for Body {
                     .and_then(|v| v.as_str())
                     .unwrap_or("JSON")
                     .to_string();
-                if body_type == "FILE" {
+                let templated_file_path =
+                    map.get("templatedFilePath").and_then(|v| v.as_bool()) == Some(true);
+                if body_type == "FILE" && templated_file_path {
+                    // Body::File has no field for the flag; keep the object verbatim.
+                    Ok(Body::Object(map))
+                } else if body_type == "FILE" {
                     let file_path = map
                         .get("filePath")
                         .and_then(|v| v.as_str())

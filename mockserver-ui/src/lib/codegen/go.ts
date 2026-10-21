@@ -652,6 +652,7 @@ const FILE_BODY_SPEC: FieldSpec[] = [
   ['type', 'Type', 'string'],
   ['filePath', 'FilePath', 'string'],
   ['templateType', 'TemplateType', 'string'],
+  ['templatedFilePath', 'TemplatedFilePath', 'bool'],
   ['contentType', 'ContentType', 'string'],
 ];
 

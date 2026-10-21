@@ -152,6 +152,9 @@ public sealed class Body
     /// <summary>The template engine for a <c>FILE</c> body: <c>VELOCITY</c> or <c>MUSTACHE</c>.</summary>
     public string? TemplateType { get; set; }
 
+    /// <summary>Whether a <c>FILE</c> body's <see cref="FilePath"/> is itself rendered as a template; written only when <c>true</c>.</summary>
+    public bool? TemplatedFilePath { get; set; }
+
     // ---- ALL_OF ----
     /// <summary>Sub-matchers for an <c>ALL_OF</c> body — all must match (wire property <c>bodyAllOf</c>).</summary>
     public List<Body>? BodyAllOf { get; set; }

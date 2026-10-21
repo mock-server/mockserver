@@ -13,6 +13,12 @@ import {
   type StandardMatcher,
   type StandardActionPayload,
 } from '../lib/standardCodegen';
+import { standardToNode } from '../lib/codegen/node';
+import { standardToPython } from '../lib/codegen/python';
+import { standardToGo } from '../lib/codegen/go';
+import { standardToCsharp } from '../lib/codegen/csharp';
+import { standardToRuby } from '../lib/codegen/ruby';
+import { standardToRust } from '../lib/codegen/rust';
 
 function baseMatcher(overrides?: Partial<StandardMatcher>): StandardMatcher {
   return {
@@ -243,5 +249,60 @@ describe('standardToJava static response with templated FILE body', () => {
     });
     expect(java).toContain('.withBody(file("responses/static.json"))');
     expect(java).not.toContain('MediaType');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FILE body with a templated path (FileBodyDTO.templatedFilePath)
+// ---------------------------------------------------------------------------
+
+describe('a FILE body whose path is templated from the request', () => {
+  const URL = 'http://localhost:1080';
+  const templatedPath = 'responses/{{ request.pathParameters.name.0 }}.json';
+  const fileAction = (overrides: Record<string, unknown>): StandardActionPayload => ({
+    type: 'static',
+    static: {
+      statusCode: 200,
+      body: '',
+      contentType: 'application/json',
+      bodyFromFile: true,
+      filePath: templatedPath,
+      fileTemplateType: 'MUSTACHE',
+      ...overrides,
+    },
+  });
+  const carried = fileAction({ templatedFilePath: true });
+
+  it('is saved with templatedFilePath: true', () => {
+    const body = (buildExpectationJson(baseMatcher(), carried)['httpResponse'] as Record<string, unknown>)['body'];
+    expect(body).toEqual({
+      type: 'FILE', filePath: templatedPath, templateType: 'MUSTACHE', templatedFilePath: true, contentType: 'application/json',
+    });
+  });
+
+  it('omits the flag when unset, false, or when no template engine is selected', () => {
+    for (const overrides of [{}, { templatedFilePath: false }, { templatedFilePath: true, fileTemplateType: '' }]) {
+      const body = (buildExpectationJson(baseMatcher(), fileAction(overrides))['httpResponse'] as Record<string, unknown>)['body'];
+      expect(body).not.toHaveProperty('templatedFilePath');
+    }
+    expect(standardToJava(baseMatcher(), fileAction({}))).not.toContain('withTemplatedFilePath');
+  });
+
+  it('Java chains withTemplatedFilePath(true) onto the FILE body', () => {
+    expect(standardToJava(baseMatcher(), carried)).toContain(
+      `.withBody(file("${templatedPath}", MediaType.parse("application/json"), TemplateType.MUSTACHE).withTemplatedFilePath(true))`,
+    );
+    expect(standardToJava(baseMatcher(), fileAction({ templatedFilePath: true, contentType: '' }))).toContain(
+      `.withBody(file("${templatedPath}", TemplateType.MUSTACHE).withTemplatedFilePath(true))`,
+    );
+  });
+
+  it('every typed client emitter carries the flag', () => {
+    expect(standardToNode(baseMatcher(), carried, URL)).toContain('"templatedFilePath": true');
+    expect(standardToPython(baseMatcher(), carried, URL)).toContain('templated_file_path=True');
+    expect(standardToGo(baseMatcher(), carried, URL)).toMatch(/TemplatedFilePath:\s+true,/);
+    expect(standardToCsharp(baseMatcher(), carried, URL)).toContain('TemplatedFilePath = true');
+    expect(standardToRuby(baseMatcher(), carried, URL)).toContain('templated_file_path: true');
+    expect(standardToRust(baseMatcher(), carried, URL)).toContain('"templatedFilePath": true');
   });
 });

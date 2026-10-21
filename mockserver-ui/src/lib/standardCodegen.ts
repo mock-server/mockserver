@@ -102,6 +102,9 @@ export interface StandardStaticState {
   /** Optional template engine applied to the body file's contents against the request.
    *  Empty = serve the file verbatim. Only the text engines (MUSTACHE/VELOCITY) are supported. */
   fileTemplateType?: '' | 'MUSTACHE' | 'VELOCITY';
+  /** When true (and a fileTemplateType is set) the file PATH is also rendered against the request,
+   *  e.g. `responses/{{ request.pathParameters.name.0 }}.json`. Emitted only when true. */
+  templatedFilePath?: boolean;
   /** Additional response headers as "Name: value" lines, beyond Content-Type. */
   headers?: string;
   /** Connection-level response controls (keep-alive, close socket, Content-Length override, …). */
@@ -1301,6 +1304,7 @@ export function buildExpectationJson(
           // as a template against the request; the content type is carried on the FILE body itself.
           const fileBody: Record<string, unknown> = { type: 'FILE', filePath: action.static.filePath!.trim() };
           if (action.static.fileTemplateType) fileBody['templateType'] = action.static.fileTemplateType;
+          if (action.static.fileTemplateType && action.static.templatedFilePath) fileBody['templatedFilePath'] = true;
           if (action.static.contentType) fileBody['contentType'] = action.static.contentType;
           payload['body'] = fileBody;
         } else if (action.static.body) {
@@ -2641,10 +2645,11 @@ function actionToJava(action: StandardActionPayload, w: JavaWireAction): string 
       }
       if (fromFile) {
         const path = `"${escapeJava(s.filePath!.trim())}"`;
+        const templatedPath = s.fileTemplateType && s.templatedFilePath ? '.withTemplatedFilePath(true)' : '';
         if (s.fileTemplateType && s.contentType) {
-          lines.push(`        .withBody(file(${path}, MediaType.parse("${escapeJava(s.contentType)}"), TemplateType.${s.fileTemplateType}))`);
+          lines.push(`        .withBody(file(${path}, MediaType.parse("${escapeJava(s.contentType)}"), TemplateType.${s.fileTemplateType})${templatedPath})`);
         } else if (s.fileTemplateType) {
-          lines.push(`        .withBody(file(${path}, TemplateType.${s.fileTemplateType}))`);
+          lines.push(`        .withBody(file(${path}, TemplateType.${s.fileTemplateType})${templatedPath})`);
         } else if (s.contentType) {
           lines.push(`        .withBody(file(${path}, MediaType.parse("${escapeJava(s.contentType)}")))`);
         } else {

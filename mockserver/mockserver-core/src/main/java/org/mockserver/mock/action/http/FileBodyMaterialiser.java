@@ -3,6 +3,7 @@ package org.mockserver.mock.action.http;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.file.FileBodyException;
 import org.mockserver.file.FileReader;
+import org.mockserver.file.TemplatedFilePathGuard;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BinaryBody;
 import org.mockserver.model.BodyWithContentType;
@@ -15,6 +16,9 @@ import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.mustache.MustacheTemplateEngine;
 import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
 
+import java.io.IOException;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
@@ -29,7 +33,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
  * caller access to the request (for templating) and the {@link Configuration} (for template engines).
  * <ul>
  *   <li>A supported {@code templateType} ({@code VELOCITY}/{@code MUSTACHE}) with a request present -&gt;
- *       the file is rendered through that engine against the request, preserving the declared content type.</li>
+ *       the file is rendered through that engine against the request, preserving the declared content type.
+ *       When {@code templatedFilePath} is also {@code true} and the path contains template syntax, the path is
+ *       rendered first and must pass {@link TemplatedFilePathGuard} before the file is read.</li>
  *   <li>No {@code templateType}, an unsupported one (e.g. JavaScript), or no request available -&gt; the file
  *       is served verbatim: a text content type yields a {@link StringBody}; a binary or absent content type
  *       yields a {@link BinaryBody} of the raw bytes so binary files (images, PDFs, archives) are not
@@ -94,12 +100,34 @@ public class FileBodyMaterialiser {
                 // This branch is defensive - materialise() only routes supported template types here.
                 return materialiseFileBodyVerbatim(fileBody);
         }
-        String fileTemplate = readFileOrThrow(fileBody.getFilePath());
+        String fileTemplate = readFileTemplate(fileBody, templateEngine, httpRequest);
         String rendered = templateEngine.renderTemplate(fileTemplate, httpRequest);
         String contentType = fileBody.getContentType();
         return isNotBlank(contentType)
             ? new StringBody(rendered, MediaType.parse(contentType))
             : new StringBody(rendered);
+    }
+
+    /**
+     * Reads the literal {@code filePath}, unless the body opted in with {@code templatedFilePath} and the path
+     * contains template syntax: then the path is rendered, confined and read by {@link TemplatedFilePathGuard}.
+     * A path without template syntax never reaches the template engine.
+     */
+    private static String readFileTemplate(FileBody fileBody, TemplateEngine templateEngine, HttpRequest httpRequest) {
+        String filePath = fileBody.getFilePath();
+        if (!Boolean.TRUE.equals(fileBody.getTemplatedFilePath())) {
+            return readFileOrThrow(filePath);
+        }
+        int firstTemplateMarker = TemplatedFilePathGuard.firstTemplateMarker(filePath, fileBody.getTemplateType());
+        if (firstTemplateMarker < 0) {
+            return readFileOrThrow(filePath);
+        }
+        String renderedPath = templateEngine.renderTemplate(filePath, httpRequest);
+        try {
+            return new String(TemplatedFilePathGuard.readConfined(filePath, firstTemplateMarker, renderedPath), UTF_8);
+        } catch (IOException | RuntimeException failure) {
+            throw new FileBodyException(TemplatedFilePathGuard.printable(renderedPath), failure);
+        }
     }
 
     /**

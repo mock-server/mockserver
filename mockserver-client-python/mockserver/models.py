@@ -59,6 +59,7 @@ _FIELD_MAP = {
     "template_type": "templateType",
     "template_file": "templateFile",
     "file_path": "filePath",
+    "templated_file_path": "templatedFilePath",
     "base64_bytes": "base64Bytes",
     "not_body": "not",
     "content_type": "contentType",
@@ -579,6 +580,8 @@ class Body:
     charset: str | None = None
     file_path: str | None = None
     template_type: str | None = None
+    # FILE body: render file_path itself as a template against the request (needs template_type).
+    templated_file_path: bool | None = None
     optional: bool | None = None
     # STRING body matcher: treat ``string`` as a substring rather than an exact match.
     sub_string: bool | None = None
@@ -609,6 +612,8 @@ class Body:
             result["filePath"] = self.file_path
         if self.template_type is not None:
             result["templateType"] = self.template_type
+        if self.templated_file_path:
+            result["templatedFilePath"] = True
         if self.sub_string is not None:
             result["subString"] = self.sub_string
         if self.match_type is not None:
@@ -631,6 +636,7 @@ class Body:
             charset=data.get("charset"),
             file_path=data.get("filePath"),
             template_type=data.get("templateType"),
+            templated_file_path=data.get("templatedFilePath"),
             optional=data.get("optional"),
             sub_string=data.get("subString"),
             match_type=data.get("matchType"),
@@ -1077,8 +1083,19 @@ def _body_graphql(query: str, operation_name: str | None = None, variables_schem
     return GraphQLBody(query=query, operation_name=operation_name, variables_schema=variables_schema)
 
 
-def _body_file(file_path: str, content_type: str | None = None, template_type: str | None = None) -> Body:
-    return Body(type="FILE", file_path=file_path, content_type=content_type, template_type=template_type)
+def _body_file(
+    file_path: str,
+    content_type: str | None = None,
+    template_type: str | None = None,
+    templated_file_path: bool | None = None,
+) -> Body:
+    return Body(
+        type="FILE",
+        file_path=file_path,
+        content_type=content_type,
+        template_type=template_type,
+        templated_file_path=templated_file_path,
+    )
 
 
 Body.string = staticmethod(_body_string)

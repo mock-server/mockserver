@@ -17,7 +17,7 @@ sitemap:
 
 <p>A static mock always returns the same body regardless of what the client sent. Response templates let the mock <strong>react to the incoming request</strong> &mdash; echoing a request field back in the response, generating a unique ID, or returning different data depending on a query parameter. This makes a single expectation cover an entire family of requests without enumerating every combination.</p>
 
-<p>For example, a Mustache template can echo the requested user ID straight back in the response body:</p>
+<p>For example, a Mustache template can echo the requested user ID straight back in the response body. The <span class="inline_code">{id}</span> segment must also be declared under <span class="inline_code">pathParameters</span>, otherwise the path is matched literally and its value is not available to the template:</p>
 
 <button id="button_response_template_intro_echo" class="accordion">echo a request path parameter back in the response body</button>
 <div class="panel">
@@ -27,11 +27,12 @@ sitemap:
     .when(
         request()
             .withPath("/users/{id}")
+            .withPathParameter("id", "[0-9]+")
     )
     .respond(
         template(
             HttpTemplate.TemplateType.MUSTACHE,
-            "{\"id\": \"&lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\"}"
+            "{\"statusCode\": 200, \"body\": {\"id\": \"&lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\"}}"
         )
     );</code></pre>
     </div>
@@ -40,10 +41,13 @@ sitemap:
         <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 mockServerClient("localhost", 1080).mockAnyResponse({
     "httpRequest": {
-        "path": "/users/{id}"
+        "path": "/users/{id}",
+        "pathParameters": {
+            "id": [ "[0-9]+" ]
+        }
     },
     "httpResponseTemplate": {
-        "template": "{\"id\": \"&lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\"}",
+        "template": "{\"statusCode\": 200, \"body\": {\"id\": \"&lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\"}}",
         "templateType": "MUSTACHE"
     }
 }).then(
@@ -64,10 +68,13 @@ from mockserver.models import Expectation
 client = MockServerClient("localhost", 1080)
 client.upsert(Expectation.from_dict({
     "httpRequest": {
-        "path": "/users/{id}"
+        "path": "/users/{id}",
+        "pathParameters": {
+            "id": [ "[0-9]+" ]
+        }
     },
     "httpResponseTemplate": {
-        "template": "{\"id\": \"&lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\"}",
+        "template": "{\"statusCode\": 200, \"body\": {\"id\": \"&lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\"}}",
         "templateType": "MUSTACHE"
     }
 }))</code></pre>
@@ -79,10 +86,13 @@ client.upsert(Expectation.from_dict({
 client = MockServer::Client.new('localhost', 1080)
 client.upsert(MockServer::Expectation.from_hash({
     'httpRequest' =&gt; {
-        'path' =&gt; '/users/{id}'
+        'path' =&gt; '/users/{id}',
+        'pathParameters' =&gt; {
+            'id' =&gt; [ '[0-9]+' ]
+        }
     },
     'httpResponseTemplate' =&gt; {
-        'template' =&gt; "{\"id\": \"&lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\"}",
+        'template' =&gt; "{\"statusCode\": 200, \"body\": {\"id\": \"&lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\"}}",
         'templateType' =&gt; 'MUSTACHE'
     }
 }))</code></pre>
@@ -99,10 +109,13 @@ import (
 func main() {
     body := []byte(`{
     "httpRequest": {
-        "path": "/users/{id}"
+        "path": "/users/{id}",
+        "pathParameters": {
+            "id": [ "[0-9]+" ]
+        }
     },
     "httpResponseTemplate": {
-        "template": "{\"id\": \"&lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\"}",
+        "template": "{\"statusCode\": 200, \"body\": {\"id\": \"&lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\"}}",
         "templateType": "MUSTACHE"
     }
 }`)
@@ -121,10 +134,13 @@ using System.Text;
 using var httpClient = new HttpClient();
 var json = @"{
     ""httpRequest"": {
-        ""path"": ""/users/{id}""
+        ""path"": ""/users/{id}"",
+        ""pathParameters"": {
+            ""id"": [ ""[0-9]+"" ]
+        }
     },
     ""httpResponseTemplate"": {
-        ""template"": ""{\""id\"": \""&lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\"", \""name\"": \""User &lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\""}"",
+        ""template"": ""{\""statusCode\"": 200, \""body\"": {\""id\"": \""&lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\"", \""name\"": \""User &lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\""}}"",
         ""templateType"": ""MUSTACHE""
     }
 }";
@@ -140,10 +156,13 @@ await httpClient.PutAsync(
 let client = Client::new();
 let body = r#"{
     "httpRequest": {
-        "path": "/users/{id}"
+        "path": "/users/{id}",
+        "pathParameters": {
+            "id": [ "[0-9]+" ]
+        }
     },
     "httpResponseTemplate": {
-        "template": "{\"id\": \"&lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\"}",
+        "template": "{\"statusCode\": 200, \"body\": {\"id\": \"&lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\"}}",
         "templateType": "MUSTACHE"
     }
 }"#;
@@ -158,10 +177,13 @@ client.put("http://localhost:1080/mockserver/expectation")
         <pre class="prettyprint lang-php code"><code class="code">$json = &lt;&lt;&lt;'JSON'
 {
     "httpRequest": {
-        "path": "/users/{id}"
+        "path": "/users/{id}",
+        "pathParameters": {
+            "id": [ "[0-9]+" ]
+        }
     },
     "httpResponseTemplate": {
-        "template": "{\"id\": \"&lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\"}",
+        "template": "{\"statusCode\": 200, \"body\": {\"id\": \"&lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\"}}",
         "templateType": "MUSTACHE"
     }
 }
@@ -181,10 +203,13 @@ curl_close($ch);</code></pre>
     <div class="panel">
         <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
     "httpRequest": {
-        "path": "/users/{id}"
+        "path": "/users/{id}",
+        "pathParameters": {
+            "id": [ "[0-9]+" ]
+        }
     },
     "httpResponseTemplate": {
-        "template": "{\"id\": \"&lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.[0]&rbrace;&rbrace;\"}",
+        "template": "{\"statusCode\": 200, \"body\": {\"id\": \"&lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\", \"name\": \"User &lbrace;&lbrace;request.pathParameters.id.0&rbrace;&rbrace;\"}}",
         "templateType": "MUSTACHE"
     }
 }'</code></pre>
@@ -456,6 +481,45 @@ curl_close($ch);</code></pre>
 <p>With the body file <span class="inline_code">responses/order.json</span> containing template placeholders, for example:</p>
 
 <pre class="prettyprint lang-json code"><code class="code">{% raw %}{ "method": "{{ request.method }}", "path": "{{ request.path }}" }{% endraw %}</code></pre>
+
+<a id="templating_the_response_body_file_path" class="anchor" href="#templating_the_response_body_file_path">&nbsp;</a>
+
+<h3>Choosing The Body File From The Request</h3>
+
+<p>The file <strong>path</strong> can be a template too, so one expectation can serve a different file for each request (like WireMock's templated <span class="inline_code">bodyFileName</span>). Set <span class="inline_code">templatedFilePath</span> to <span class="inline_code">true</span> alongside a <span class="inline_code">templateType</span> of <span class="inline_code">MUSTACHE</span> or <span class="inline_code">VELOCITY</span>; the path is rendered against the request with the same engine, then that file is read (and its contents rendered as described above). For example, <span class="inline_code">GET /files/alice</span> returns <span class="inline_code">responses/alice.json</span>:</p>
+
+<pre class="prettyprint lang-json code"><code class="code">{% raw %}{
+  "httpRequest": {
+    "path": "/files/{name}",
+    "pathParameters": {
+      "name": [ "[a-z0-9_-]+" ]
+    }
+  },
+  "httpResponse": {
+    "body": {
+      "type": "FILE",
+      "filePath": "responses/{{ request.pathParameters.name.0 }}.json",
+      "templateType": "MUSTACHE",
+      "templatedFilePath": true,
+      "contentType": "application/json"
+    }
+  }
+}{% endraw %}</code></pre>
+
+<p>With Velocity, write the same path as <span class="inline_code">responses/$!{request.pathParameters['name'][0]}.json</span>. Use the braced <span class="inline_code">${...}</span> form so the <span class="inline_code">.json</span> suffix is not read as part of the expression. In Java, use <span class="inline_code">{% raw %}FileBody.file("responses/{{ request.pathParameters.name.0 }}.json", MediaType.APPLICATION_JSON, TemplateType.MUSTACHE).withTemplatedFilePath(true){% endraw %}</span>. The other clients take the same flag on their FILE body: Python <span class="inline_code">Body.file(..., templated_file_path=True)</span>, Ruby <span class="inline_code">Body.file(..., templated_file_path: true)</span>, Go <span class="inline_code">BodyFromTemplatedFile(...)</span>, .NET <span class="inline_code">WithTemplatedFileBody(...)</span>, Rust <span class="inline_code">Body::file(...).with_templated_file_path(true)</span>, PHP <span class="inline_code">fileBody($path, $contentType, 'MUSTACHE', true)</span>, and Node through the <span class="inline_code">templatedFilePath</span> JSON field. The dashboard composer offers it as an option once a template engine is chosen for a body file.</p>
+
+<p>Because part of the path now comes from the request, MockServer keeps it inside one directory. That directory is the fixed part of <span class="inline_code">filePath</span> before the first template expression, up to its last <span class="inline_code">/</span> (<span class="inline_code">responses/</span> in the example). It must name a directory: a path that starts with a template expression, or with only <span class="inline_code">/</span>, <span class="inline_code">./</span> or a drive such as <span class="inline_code">C:/</span> before it, is always refused, because it would let a request read any file in the working directory, on the classpath or on the disk. The request-supplied part of the rendered path is refused if it:</p>
+<ul>
+    <li>contains a <span class="inline_code">..</span> or <span class="inline_code">.</span> segment;</li>
+    <li>starts with <span class="inline_code">/</span>, or contains an empty segment (<span class="inline_code">//</span>);</li>
+    <li>contains <span class="inline_code">\</span>, <span class="inline_code">:</span> or <span class="inline_code">%</span>, which covers Windows paths and drive letters and URL-encoded traversal;</li>
+    <li>contains a control or line-separator character, including a null byte;</li>
+    <li>resolves through a symbolic link to a file outside the directory.</li>
+</ul>
+<p>Like a literal path, a relative path is looked up on the classpath first (for example in your test resources), then on the filesystem relative to the working directory; the same rules apply to both. A classpath resource is only served from a directory or a jar; one that comes from anywhere else, such as an application server's virtual file system, is refused because MockServer cannot check where it really is.</p>
+<p>A refused path gets the same <span class="inline_code">500</span> response as a file that cannot be read, and so does a rendered path whose file does not exist. The rejected path is logged on the server only.</p>
+
+<p>Choosing the file this way is <strong>opt-in</strong>. Without <span class="inline_code">templatedFilePath</span>, the path is used exactly as written, even when it contains <span class="inline_code">{% raw %}{{{% endraw %}</span> or <span class="inline_code">$</span>. A path with no template syntax is also used as written. Path templating needs a request, so it applies to response bodies and not to request-body matching. A templated path also templates the file's contents, so use it for text files, not binary ones such as images.</p>
 
 <p>Body-file templating uses the text-based engines (<span class="inline_code">MUSTACHE</span> and <span class="inline_code">VELOCITY</span>) because they render text directly. JavaScript templates build a full response object rather than a text fragment, so for JavaScript use an <span class="inline_code">httpResponseTemplate</span> (optionally with <span class="inline_code">templateFile</span>) instead.</p>
 

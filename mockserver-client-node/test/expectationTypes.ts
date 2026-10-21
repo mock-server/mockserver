@@ -13,6 +13,8 @@
 
 import {
     BinaryRequestDefinition,
+    Body,
+    BodyWithContentType,
     CaptureRule,
     ConditionalRequestDefinition,
     DnsRequestDefinition,
@@ -228,6 +230,33 @@ const webSocketResponse: HttpWebSocketResponse = {
     ]
 };
 
+// --- FILE response body with a templated path -------------------------------
+
+// BodyWithContentType includes Record<string, any>, which disables excess-property
+// checks; keep only explicitly declared members so a dropped field fails tsc.
+type ExplicitMember<U> = U extends object ? (string extends keyof U ? never : U) : never;
+type FileResponseBody = Extract<ExplicitMember<BodyWithContentType>, {type?: 'FILE'}>;
+
+const templatedFileBody: FileResponseBody = {
+    type: 'FILE',
+    filePath: 'responses/{{ request.pathParameters.name.0 }}.json',
+    contentType: 'application/json',
+    templateType: 'MUSTACHE',
+    templatedFilePath: true
+};
+
+const fileBodyResponse: HttpResponse = {statusCode: 200, body: templatedFileBody};
+
+// the request-matcher schema has no templatedFilePath, so the request FILE member must reject it
+type FileRequestBody = Extract<ExplicitMember<Body>, {type?: 'FILE'}>;
+
+const fileRequestBody: FileRequestBody = {
+    type: 'FILE',
+    filePath: 'requests/expected.json',
+    // @ts-expect-error templatedFilePath applies only to response bodies
+    templatedFilePath: true
+};
+
 // --- kitchen-sink Expectation: every new member present --------------------
 
 const kitchenSink: Expectation = {
@@ -258,10 +287,14 @@ export const expectationTypeCoverage: {
     binaryRequest: BinaryRequestDefinition;
     conditionalRequest: ConditionalRequestDefinition;
     expectation: Expectation;
+    fileBodyResponse: HttpResponse;
+    fileRequestBody: FileRequestBody;
 } = {
     requestDefinitions,
     tokenBucketLimit,
     binaryRequest,
     conditionalRequest,
-    expectation: kitchenSink
+    expectation: kitchenSink,
+    fileBodyResponse,
+    fileRequestBody
 };

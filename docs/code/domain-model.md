@@ -382,8 +382,10 @@ Static factories: `AllOfBody.allOf(Body...)`, `AllOfBody.allOf(List<Body>)`. Eac
 |-------|------|-------------|
 | `filePath` | `String` | Path to the file to load (absolute or relative to working directory) |
 | `contentType` | `String` | MIME type of the file content (optional) |
+| `templateType` | `TemplateType` | `VELOCITY` or `MUSTACHE` renders the file contents against the request (optional) |
+| `templatedFilePath` | `Boolean` | With a supported `templateType`, also renders `filePath` against the request before reading; the result is confined by `TemplatedFilePathGuard` (optional, default off) |
 
-Static factory: `FileBody.fileBody(filePath)`, `FileBody.fileBody(filePath, contentType)`. Convenience: `HttpResponse.withBodyFromFile(filePath)`.
+Static factory: `FileBody.file(filePath)`, `FileBody.file(filePath, contentType)`. Convenience: `HttpResponse.withBodyFromFile(filePath)`.
 
 #### GraphQL Body Matcher
 

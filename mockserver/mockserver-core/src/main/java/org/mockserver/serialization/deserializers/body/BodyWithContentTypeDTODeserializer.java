@@ -62,6 +62,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
         MediaType contentType = null;
         Charset charset = null;
         org.mockserver.model.HttpTemplate.TemplateType templateType = null;
+        Boolean templatedFilePath = null;
         if (currentToken == JsonToken.START_OBJECT) {
             @SuppressWarnings("unchecked") Map<Object, Object> body = (Map<Object, Object>) ctxt.readValue(jsonParser, Map.class);
             for (Map.Entry<Object, Object> entry : body.entrySet()) {
@@ -152,6 +153,9 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                             }
                         }
                     }
+                    if (key.equalsIgnoreCase("templatedFilePath")) {
+                        templatedFilePath = Boolean.parseBoolean(String.valueOf(entry.getValue()));
+                    }
                     if (key.equalsIgnoreCase("charset")) {
                         try {
                             charset = Charset.forName(String.valueOf(entry.getValue()));
@@ -221,7 +225,7 @@ public class BodyWithContentTypeDTODeserializer extends StdDeserializer<BodyWith
                             break;
                         }
                     case FILE:
-                        result = new FileBodyDTO(new FileBody(valueJsonValue, contentType, templateType), not);
+                        result = new FileBodyDTO(new FileBody(valueJsonValue, contentType, templateType).withTemplatedFilePath(templatedFilePath), not);
                         break;
                 }
             } else if (body.size() > 0) {

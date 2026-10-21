@@ -48,6 +48,7 @@ module MockServer
     'template_type'                  => 'templateType',
     'template_file'                  => 'templateFile',
     'file_path'                      => 'filePath',
+    'templated_file_path'            => 'templatedFilePath',
     'base64_bytes'                   => 'base64Bytes',
     'not_body'                       => 'not',
     'content_type'                   => 'contentType',
@@ -540,13 +541,13 @@ module MockServer
     # from +string+: the legacy Body.xml(...) factory populates +string+ (pinned by a
     # test), whereas a server-produced XML body serialises its content under +xml+.
     attr_accessor :type, :string, :xml, :json, :regex, :json_path, :xpath, :base64_bytes,
-                  :not_body, :content_type, :charset, :file_path, :template_type, :body_all_of,
+                  :not_body, :content_type, :charset, :file_path, :template_type, :templated_file_path, :body_all_of,
                   :sub_string, :match_type, :match_numbers_as_strings, :json_schema,
                   :parameter_styles, :xml_schema, :parameters, :module_name, :optional
 
     def initialize(type: nil, string: nil, xml: nil, json: nil, regex: nil, json_path: nil, xpath: nil,
                    base64_bytes: nil, not_body: nil, content_type: nil, charset: nil,
-                   file_path: nil, template_type: nil, body_all_of: nil,
+                   file_path: nil, template_type: nil, templated_file_path: nil, body_all_of: nil,
                    sub_string: nil, match_type: nil, match_numbers_as_strings: nil,
                    json_schema: nil, parameter_styles: nil, xml_schema: nil,
                    parameters: nil, module_name: nil, optional: nil)
@@ -563,6 +564,7 @@ module MockServer
       @charset = charset
       @file_path = file_path
       @template_type = template_type
+      @templated_file_path = templated_file_path
       @body_all_of = body_all_of
       @sub_string = sub_string
       @match_type = match_type
@@ -590,6 +592,8 @@ module MockServer
       result['charset']      = @charset       unless @charset.nil?
       result['filePath']     = @file_path     unless @file_path.nil?
       result['templateType'] = @template_type unless @template_type.nil?
+      # FILE body: render filePath as a template; omitted unless true.
+      result['templatedFilePath'] = true if @templated_file_path == true
       result['subString']    = @sub_string    unless @sub_string.nil?
       result['matchType']    = @match_type    unless @match_type.nil?
       result['matchNumbersAsStrings'] = @match_numbers_as_strings unless @match_numbers_as_strings.nil?
@@ -623,6 +627,7 @@ module MockServer
         charset:       data['charset'],
         file_path:     data['filePath'],
         template_type: data['templateType'],
+        templated_file_path:      data['templatedFilePath'],
         sub_string:               data['subString'],
         match_type:               data['matchType'],
         match_numbers_as_strings: data['matchNumbersAsStrings'],
@@ -700,8 +705,11 @@ module MockServer
       new(type: 'WASM', module_name: module_name)
     end
 
-    def self.file(file_path, content_type: nil, template_type: nil)
-      new(type: 'FILE', file_path: file_path, content_type: content_type, template_type: template_type)
+    # A FILE body. +templated_file_path: true+ (with a +template_type+) also renders
+    # +file_path+ as a template against the request before the file is read.
+    def self.file(file_path, content_type: nil, template_type: nil, templated_file_path: nil)
+      new(type: 'FILE', file_path: file_path, content_type: content_type, template_type: template_type,
+          templated_file_path: templated_file_path)
     end
 
     def self.json_rpc(method_name, params_schema: nil)
@@ -714,6 +722,11 @@ module MockServer
 
     def with_template_type(template_type)
       @template_type = template_type
+      self
+    end
+
+    def with_templated_file_path(templated_file_path = true)
+      @templated_file_path = templated_file_path
       self
     end
   end

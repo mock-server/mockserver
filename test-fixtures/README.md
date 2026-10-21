@@ -14,7 +14,7 @@ is dropped **silently**. This harness turns every such silent drop into a visibl
 
 ```
 test-fixtures/expectations/
-  *.json               44 single-Expectation fixtures, each validated 2xx by PUT /mockserver/expectation
+  *.json               58 single-Expectation fixtures, each validated 2xx by PUT /mockserver/expectation
   known-gaps.json      language -> [dropped/mutated JSON paths] ledger (the model-completion backlog)
 ```
 
@@ -41,11 +41,12 @@ headers/query/trailers/cookies canonicalized across both valid encodings) → as
 `known-gaps.json` for that language. A **ratchet** also fails the test if a listed gap no longer matches any
 diff (i.e. the model was fixed) — forcing the stale entry to be removed.
 
-## Fixture inventory (44)
+## Fixture inventory (58)
 
 - Body matchers: STRING(+subString), JSON(+matchType STRICT), JSON_SCHEMA, JSON_PATH, XML, XML_SCHEMA, XPATH,
   REGEX(+not/optional), PARAMETERS, BINARY, GRAPHQL, WASM, ALL_OF; plus JWT request matcher and pathParameters.
-- Actions: static response (delay+connectionOptions+cookies+trailers+reasonPhrase), forward, override (+primary),
+- Actions: static response (delay+connectionOptions+cookies+trailers+reasonPhrase), FILE response body
+  (+templateType+templatedFilePath), forward, override (+primary),
   forward with fallback, forward validate, forward template (+delay+primary), forward class/object callback,
   response template (JS; MUSTACHE+delay+primary), response class/object callback, error, websocket, sse, binary (+upstream), dns, grpc stream, grpc bidi, llm
   (completion+conversationPredicates+normalization+streamingPhysics; embedding+rerank+moderation+contentFilter+chaos).

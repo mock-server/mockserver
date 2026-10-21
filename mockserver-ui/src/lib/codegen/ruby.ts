@@ -223,6 +223,7 @@ const BODY_FIELDS: Record<string, { arg: string; opaque?: boolean }> = {
   contentType: { arg: 'content_type' },
   filePath: { arg: 'file_path' },
   templateType: { arg: 'template_type' },
+  templatedFilePath: { arg: 'templated_file_path' },
   charset: { arg: 'charset' },
   not: { arg: 'not_body' },
   optional: { arg: 'optional' },
