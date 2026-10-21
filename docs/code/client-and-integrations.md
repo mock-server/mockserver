@@ -411,6 +411,53 @@ class MyTest {
 4. `MockServerTestExecutionListener` injects the `ClientAndServer` into `MockServerClient` fields
 5. After each test, `reset()` clears state
 
+#### Named instances (`@MockServerInstance`)
+
+`@MockServerInstance` (repeatable, container `@MockServerInstances`) starts one extra MockServer per declared
+name, in addition to the default server, which `MockServerTestCustomizerFactory` always starts for every Spring test
+class. It is additive: `@MockServerTest` behaviour is unchanged.
+
+```java
+@MockServerInstance(name = "payment", baseUrlProperties = "payment.url", initializationJsonPath = "src/test/resources/payment")
+@MockServerInstance(name = "inventory", portProperties = "inventory.port", properties = "mockserver.logLevel=WARN")
+class MyTest {
+    @InjectMockServer("payment") MockServerClient paymentMock;
+    @InjectMockServer("inventory") ClientAndServer inventoryMock;
+}
+```
+
+| Piece | Role |
+|-------|------|
+| `MockServerInstancesCustomizerFactory` | Second `ContextCustomizerFactory` in `spring.factories`; returns `null` when a class declares no instances, so other tests are untouched |
+| `NamedMockServers` | Reads declarations with `MergedAnnotations` `TYPE_HIERARCHY` (falling back to the enclosing class per `@NestedTestConfiguration`), validates them, and holds one reference-counted `ClientAndServer` per distinct `Definition` |
+| `MockServerInstancesCustomizer` | Acquires each instance, adds a `mockServerInstances` `MapPropertySource` **first** with `mockserver.<name>.port`, `mockserver.<name>.baseUrl` and the user's `portProperties` / `baseUrlProperties`, and registers a `ContextClosedEvent` listener that releases them; its equality is the definition list, so classes with the same declarations share a cached context |
+| `MockServerTestExecutionListener` | Injects `@InjectMockServer` fields (excluded from the default `MockServerClient` field injection) and resets each named instance after every test method |
+
+- **Lifetime.** Each server is reference-counted by the Spring contexts that use it and stops when the last one
+  closes (its own `ContextClosedEvent`, not a child's). Spring's context cache closes a context on LRU eviction,
+  `@DirtiesContext` or JVM exit, so a cached context never outlives its server and the number of running instances
+  is bounded by the cache. Stopping after the class instead would leave a later class sharing the cached context
+  pointing at a dead port. One JVM shutdown hook stops anything left, such as an instance acquired by a context
+  whose refresh failed. Unlike `@MockServerTest` (one static server per JVM), there is one server per distinct
+  declaration while a context uses it.
+- **Stopped instances.** If an injected instance is stopped while its context is cached, the next acquisition starts a
+  new server for new contexts, and injecting into a class whose context still holds the old port throws
+  `IllegalStateException` rather than handing the test a client for a different port.
+- **Reset baseline.** At startup the registry records the instance's active expectations (from
+  `initializationJsonPath` or any `mockserver.initialization*` property) and re-upserts them after each reset, with
+  each time-to-live restarted, so an initialization file applies to every test. It is a startup snapshot: file
+  changes picked up by `watchInitializationJson` are not restored. The `@MockServerTest` instance keeps its existing
+  reset behaviour.
+- **Directory initialization.** A bare directory passed to `initializationJsonPath` is rewritten to `<dir>/*.json`,
+  because `FilePath.expandFilePathGlobs` reads files, classpath resources and globs but not directories.
+- **Validation.** Names must match `[A-Za-z0-9_-]+`; a name declared twice anywhere in the class and its
+  superclasses, two instances setting the same Spring property, an instance setting `mockServerPort` or
+  `mockServerDnsPort`, a `properties` entry that is not `mockserver.<property>=<value>`, and an `@InjectMockServer`
+  name with no matching instance all throw `IllegalStateException`.
+- **Shared and parallel state.** Classes with equal declarations share a server, so they must not run in parallel in
+  one JVM. `HttpState.reset()` also clears JVM-wide registries (for example the chaos and quota registries), so
+  resetting one instance clears that shared state for every server in the JVM, including the `@MockServerTest` one.
+
 ### Spring Boot Starter
 
 The `mockserver-spring-boot-starter` module provides **Spring Boot auto-configuration** for main-application
@@ -807,6 +854,10 @@ graph TB
 | `MockServerTestExecutionListener` | spring-test-listener | Spring test lifecycle |
 | `MockServerPort` | spring-test-listener | Port injection annotation |
 | `MockServerDnsPort` | spring-test-listener | DNS port injection annotation (-1 while DNS mocking is off) |
+| `MockServerInstance` / `MockServerInstances` | spring-test-listener | Repeatable annotation for named instances |
+| `InjectMockServer` | spring-test-listener | Injects a named instance's client into a field |
+| `MockServerInstancesCustomizerFactory` / `MockServerInstancesCustomizer` | spring-test-listener | Starts named instances and adds their properties |
+| `NamedMockServers` | spring-test-listener | Named-instance declarations, validation and reference-counted registry |
 | `MockServerAutoConfiguration` | spring-boot-starter | Spring Boot auto-configuration (main app) |
 | `MockServerProperties` | spring-boot-starter | `mockserver.*` `@ConfigurationProperties` |
 | `WebSocketClient` | core | Client-side WebSocket connector |

@@ -1,0 +1,12 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/payment/status"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "payment-from-file"
+    }
+  }
+]

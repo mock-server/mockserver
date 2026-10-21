@@ -516,6 +516,66 @@ public class ExampleSpringTestListenerTestWithDnsPortInjection {
     }
 
 }</code></pre>
+
+<a id="spring_test_named_instances" class="anchor" href="#spring_test_named_instances">&nbsp;</a>
+
+<h3>Several Named MockServer Instances</h3>
+
+<p>When the code under test calls more than one service, start one MockServer per service with <strong><code>@MockServerInstance</code></strong>. Repeat the annotation once per service; each instance gets its own free port.</p>
+
+<p>Each instance adds these properties to the Spring <code>Environment</code>:</p>
+
+<ul>
+    <li><code>mockserver.&lt;name&gt;.port</code>, the instance's port</li>
+    <li><code>mockserver.&lt;name&gt;.baseUrl</code>, <code>http://localhost:&lt;port&gt;</code></li>
+    <li>every name in <code>portProperties</code> (set to the port) and <code>baseUrlProperties</code> (set to the base URL), so your application's own properties, such as <code>payment.url</code>, point at the mock. These override values from <code>application.properties</code> or <code>@TestPropertySource</code></li>
+</ul>
+
+<p>A <code>MockServerClient</code> (or <code>ClientAndServer</code>) field annotated with <strong><code>@InjectMockServer("&lt;name&gt;")</code></strong> receives the client for that instance. <code>initializationJsonPath</code> loads expectations into one instance only. It accepts a JSON file, a classpath resource, a glob such as <code>src/test/resources/payment/*.json</code>, or a file-system directory (every <code>*.json</code> file directly in it; a classpath directory is not expanded). <code>properties</code> takes the same <code>mockserver.*</code> settings as <code>@MockServerTest</code>, for that instance only.</p>
+
+<pre><code class="prettyprint lang-java code">@RunWith(SpringRunner.class)
+@SpringBootTest
+@MockServerInstance(
+    name = "payment",
+    baseUrlProperties = "payment.url",
+    initializationJsonPath = "src/test/resources/payment"
+)
+@MockServerInstance(
+    name = "inventory",
+    portProperties = "inventory.port",
+    properties = "mockserver.logLevel=WARN"
+)
+public class ExampleSpringTestListenerTestWithNamedInstances {
+
+    @InjectMockServer("payment")
+    private MockServerClient paymentMock;
+
+    @InjectMockServer("inventory")
+    private MockServerClient inventoryMock;
+
+    @Value("${mockserver.inventory.baseUrl}")
+    private String inventoryBaseUrl;
+
+    @Test
+    public void testSomething() {
+        inventoryMock
+            .when(request().withPath("/stock/42"))
+            .respond(response().withBody("{\"available\": 3}"));
+
+        // test code that calls ${payment.url} and ${inventory.port}
+
+        paymentMock.verify(request().withPath("/payments"), once());
+    }
+
+}</code></pre>
+
+<p>Each instance is reset after every test method. After a reset it restores the expectations it had when it started, so an initialization file applies to every test, not only the first; each time-to-live starts again from the reset. Changes to an initialization file during the run (with <code>mockserver.watchInitializationJson=true</code>) are not part of what is restored.</p>
+
+<p>An instance stops when the last Spring context using it closes. Spring caches test contexts, so this is usually when the JVM exits, but an instance stops earlier when its context is marked with <code>@DirtiesContext</code> or is evicted from Spring's context cache. Test classes that declare an instance with the same name and settings share that instance and its Spring context; don't call <code>stop()</code> on an injected instance, because a later test class sharing the context would fail with an error naming the instance.</p>
+
+<p><strong>Parallel tests:</strong> don't run test classes that share an instance in parallel in the same JVM, because one class's reset clears the other's expectations and recorded requests. Some state, such as chaos and quota settings, is shared by every MockServer in the JVM, and any instance's reset clears it, including for the <code>@MockServerTest</code> server.</p>
+
+<p>Instance names may contain letters, digits, <code>-</code> and <code>_</code>, and each name can be declared once in a test class and its superclasses. <code>@MockServerInstance</code> can be used alone or with <code>@MockServerTest</code>; un-annotated <code>MockServerClient</code> fields still receive the <code>@MockServerTest</code> instance.</p>
 <a id="running_from_command_line" class="anchor" href="#running_from_command_line">&nbsp;</a>
 
 <h2>Running From Command Line</h2>

@@ -1,0 +1,12 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/inventory/stock"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "inventory-from-directory"
+    }
+  }
+]
