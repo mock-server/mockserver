@@ -325,6 +325,8 @@ Scenario and capture state is accessed via a different syntax per engine because
 
 All three engines delegate to the same `ScenarioTemplateHelper.get(...)` call; only the invocation form differs.
 
+**Derived request fields are lazy.** `HttpRequestTemplateObject` keeps a reference to the source `HttpRequest` and computes `formData`, `parts`, `host`, `port`, `scheme`, `baseUrl`, `bodyAsBase64` and `id` (the log correlation id) on first read, memoised per render. They are `@JsonIgnore`, so `toString()` — which the JavaScript engine `JSON.parse`s into its `request` object — neither computes them nor changes shape; `PolyglotRunner` instead adds each one to the parsed object as a non-enumerable getter that calls `derivedFieldAsJson(name)` on first read. For `parts` that JSON carries no content (`MultipartPartTemplateObject.describeWithoutBody`); each part's `body` and `bodyAsBase64` are further getters calling `partField(name, index, field)`, which returns the Java string directly, so in every engine a part's content is copied only when read. Multipart decoding reuses `MultipartFormDataDecoder.decodeParts` (Netty's decoder, capped at 100 parts; about 3x the body in transient copies) and is skipped for bodies over 10 MiB, a segmented body's size being checked before its segments are joined; form decoding uses Netty's `QueryStringDecoder` capped at 1,000 fields. Hitting a cap logs a WARN entry through the engine's `MockServerLogger`, which `TemplateDryRun` reports as a template warning; any other decoding failure yields an empty map, logged at DEBUG. Do not add these fields to `equals`/`hashCode` or the JSON form: either would compute them on every render.
+
 ### Body Types
 
 ```mermaid

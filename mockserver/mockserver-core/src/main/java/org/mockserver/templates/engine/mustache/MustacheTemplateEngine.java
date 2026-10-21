@@ -323,7 +323,7 @@ public class MustacheTemplateEngine implements TemplateEngine {
 
     private Map<String, Object> renderData(HttpRequest request, HttpResponse response, org.mockserver.load.IterationContext iteration) {
         Map<String, Object> data = new RenderContextMap(baseBindings);
-        data.put("request", new HttpRequestTemplateObject(request));
+        data.put("request", new HttpRequestTemplateObject(request, mockServerLogger));
         if (response != null) {
             data.put("response", new HttpResponseTemplateObject(response));
         }

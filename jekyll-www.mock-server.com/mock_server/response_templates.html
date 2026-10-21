@@ -329,7 +329,7 @@ curl_close($ch);</code></pre>
         </tr>
         <tr>
             <td>Request Model Variables</td>
-            <td>Access method, path, headers, cookies, body, remoteAddress, and more</td>
+            <td>Access method, path, headers, cookies, body, form fields, multipart parts, host, remoteAddress, and more</td>
             <td><a href="#request_model_variables">Request Model Variables</a></td>
         </tr>
         <tr>
@@ -931,7 +931,689 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
             </tr>
         </table>
     </li>
+    <li><strong>request id</strong>
+        <p>A unique id for this request; the same id MockServer records on the request&#8217;s log entries, so a response can be traced back to the log.</p>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.id &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.id</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.id</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>scheme</strong>
+        <p><code class="inline code">https</code> when the request arrived over TLS, otherwise <code class="inline code">http</code>.</p>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.scheme &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.scheme</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.scheme</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>host</strong>
+        <p>The host the client addressed, taken from the <code class="inline code">Host</code> header (for HTTP/2 and HTTP/3, the <code class="inline code">:authority</code>); when there is no <code class="inline code">Host</code> header, the local address the request arrived on.</p>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.host &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.host</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.host</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>port</strong>
+        <p>The port the client addressed: the <code class="inline code">Host</code> header&#8217;s port, or 443 / 80 for https / http when the header has no port; when there is no <code class="inline code">Host</code> header, the local port the request arrived on.</p>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.port &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.port</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.port</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>base url</strong>
+        <p>The scheme and authority the client used, such as <code class="inline code">https://api.example.com:8443</code>, handy for building absolute <code class="inline code">Location</code> headers or links. <code class="inline code">host</code>, <code class="inline code">port</code> and <code class="inline code">baseUrl</code> come from the <code class="inline code">Host</code> header, which the client sets, so treat them as client input and do not rely on them for anything security-sensitive. Forwarding headers such as <code class="inline code">X-Forwarded-Host</code> and <code class="inline code">X-Forwarded-Proto</code> are not used, so behind a TLS-terminating proxy <code class="inline code">scheme</code> is <code class="inline code">http</code>.</p>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.baseUrl &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.baseUrl</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.baseUrl</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>body as base64</strong>
+        <p>The raw request body bytes, base64 encoded; useful for echoing a binary body. Empty when there is no body.</p>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.bodyAsBase64 &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.bodyAsBase64</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.bodyAsBase64</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>form data</strong>
+        <p>The fields of an <code class="inline code">application/x-www-form-urlencoded</code> body, as a multi-value map (see below for access patterns). Empty for any other body. Up to 1,000 fields are read, and a body larger than 10&nbsp;MiB is not read; either logs a warning, which a <a href="#template_dry_run">dry run</a> reports. A body that cannot be decoded gives an empty map.</p>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.formData.&lt;name&gt;.&lt;index&gt; &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.formData[&lt;name&gt;][&lt;index&gt;]</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.formData[&lt;name&gt;][&lt;index&gt;]</code></td>
+            </tr>
+        </table>
+    </li>
+    <li><strong>multipart parts</strong>
+        <p>The parts of a <code class="inline code">multipart/form-data</code> body, as a map from part name to a list of parts (a name can repeat, for example several files). Each part has <code class="inline code">name</code>, <code class="inline code">filename</code>, <code class="inline code">contentType</code>, <code class="inline code">headers</code> (its <code class="inline code">Content-Disposition</code> and <code class="inline code">Content-Type</code>), <code class="inline code">body</code> and <code class="inline code">bodyAsBase64</code>. Empty for any other body. A part&#8217;s <code class="inline code">body</code> and <code class="inline code">bodyAsBase64</code> are only built when read, so reading just the <code class="inline code">filename</code> of a large upload does not keep a copy of each part's content (the body is still decoded once, temporarily, to find the parts). A body larger than 10&nbsp;MiB (a fixed limit, separate from <code class="inline code">mockserver.maxRequestBodySize</code>) or with more than 100 parts gives an empty map and logs a warning, which a <a href="#template_dry_run">dry run</a> reports; a body that cannot be decoded gives an empty map.</p>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px">mustache:</td>
+                <td><code class="inline code">&lbrace;&lbrace; request.parts.&lt;name&gt;.&lt;index&gt;.body &rbrace;&rbrace;</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">velocity:</td>
+                <td><code class="inline code">$!request.parts[&lt;name&gt;][&lt;index&gt;].body</code></td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td style="padding-left: 20px; width: 100px;">javascript:</td>
+                <td><code class="inline code">request.parts[&lt;name&gt;][&lt;index&gt;].body</code></td>
+            </tr>
+        </table>
+    </li>
 </ul>
+
+<p>MockServer works out these fields only when a template reads them, so templates that do not use them, and responses that are not templated, cost nothing extra. In JavaScript they are not listed by <code class="inline code">Object.keys(request)</code> or included in <code class="inline code">JSON.stringify(request)</code>, but can be read directly.</p>
+
+<p>The examples below answer a <code class="inline code">multipart/form-data</code> upload that has a <code class="inline code">title</code> field and a <code class="inline code">file</code> part, with a <code class="inline code">Location</code> header built from the request&#8217;s base URL and the uploaded filename, an <code class="inline code">X-Request-Id</code> header and a body such as <code class="inline code">stored notes.txt titled hello</code>:</p>
+
+<button id="button_request_model_upload_mustache" class="accordion">Mustache: Location header and body from a multipart upload</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080)
+    .when(request().withPath("/upload"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.MUSTACHE,
+            "{ 'statusCode': 201, 'headers': { 'Location': [ '&lbrace;&lbrace; request.baseUrl &rbrace;&rbrace;/uploads/&lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace;' ], 'X-Request-Id': [ '&lbrace;&lbrace; request.id &rbrace;&rbrace;' ] }, 'body': 'stored &lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace; titled &lbrace;&lbrace; request.parts.title.0.body &rbrace;&rbrace;' }"
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 201, 'headers': { 'Location': [ '&lbrace;&lbrace; request.baseUrl &rbrace;&rbrace;/uploads/&lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace;' ], 'X-Request-Id': [ '&lbrace;&lbrace; request.id &rbrace;&rbrace;' ] }, 'body': 'stored &lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace; titled &lbrace;&lbrace; request.parts.title.0.body &rbrace;&rbrace;' }",
+        "templateType": "MUSTACHE"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver.client import MockServerClient
+from mockserver.models import Expectation
+
+client = MockServerClient("localhost", 1080)
+client.upsert(Expectation.from_dict({
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 201, 'headers': { 'Location': [ '&lbrace;&lbrace; request.baseUrl &rbrace;&rbrace;/uploads/&lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace;' ], 'X-Request-Id': [ '&lbrace;&lbrace; request.id &rbrace;&rbrace;' ] }, 'body': 'stored &lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace; titled &lbrace;&lbrace; request.parts.title.0.body &rbrace;&rbrace;' }",
+        "templateType": "MUSTACHE"
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+client.upsert(MockServer::Expectation.from_hash({
+    'httpRequest' =&gt; {
+        'path' =&gt; '/upload'
+    },
+    'httpResponseTemplate' =&gt; {
+        'template' =&gt; "{ 'statusCode': 201, 'headers': { 'Location': [ '&lbrace;&lbrace; request.baseUrl &rbrace;&rbrace;/uploads/&lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace;' ], 'X-Request-Id': [ '&lbrace;&lbrace; request.id &rbrace;&rbrace;' ] }, 'body': 'stored &lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace; titled &lbrace;&lbrace; request.parts.title.0.body &rbrace;&rbrace;' }",
+        'templateType' =&gt; 'MUSTACHE'
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`{
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 201, 'headers': { 'Location': [ '&lbrace;&lbrace; request.baseUrl &rbrace;&rbrace;/uploads/&lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace;' ], 'X-Request-Id': [ '&lbrace;&lbrace; request.id &rbrace;&rbrace;' ] }, 'body': 'stored &lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace; titled &lbrace;&lbrace; request.parts.title.0.body &rbrace;&rbrace;' }",
+        "templateType": "MUSTACHE"
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"{
+    ""httpRequest"": {
+        ""path"": ""/upload""
+    },
+    ""httpResponseTemplate"": {
+        ""template"": ""{ 'statusCode': 201, 'headers': { 'Location': [ '&lbrace;&lbrace; request.baseUrl &rbrace;&rbrace;/uploads/&lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace;' ], 'X-Request-Id': [ '&lbrace;&lbrace; request.id &rbrace;&rbrace;' ] }, 'body': 'stored &lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace; titled &lbrace;&lbrace; request.parts.title.0.body &rbrace;&rbrace;' }"",
+        ""templateType"": ""MUSTACHE""
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+
+let client = Client::new();
+let body = r#"{
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 201, 'headers': { 'Location': [ '&lbrace;&lbrace; request.baseUrl &rbrace;&rbrace;/uploads/&lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace;' ], 'X-Request-Id': [ '&lbrace;&lbrace; request.id &rbrace;&rbrace;' ] }, 'body': 'stored &lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace; titled &lbrace;&lbrace; request.parts.title.0.body &rbrace;&rbrace;' }",
+        "templateType": "MUSTACHE"
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 201, 'headers': { 'Location': [ '&lbrace;&lbrace; request.baseUrl &rbrace;&rbrace;/uploads/&lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace;' ], 'X-Request-Id': [ '&lbrace;&lbrace; request.id &rbrace;&rbrace;' ] }, 'body': 'stored &lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace; titled &lbrace;&lbrace; request.parts.title.0.body &rbrace;&rbrace;' }",
+        "templateType": "MUSTACHE"
+    }
+}
+JSON;
+
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "{ '\''statusCode'\'': 201, '\''headers'\'': { '\''Location'\'': [ '\''&lbrace;&lbrace; request.baseUrl &rbrace;&rbrace;/uploads/&lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace;'\'' ], '\''X-Request-Id'\'': [ '\''&lbrace;&lbrace; request.id &rbrace;&rbrace;'\'' ] }, '\''body'\'': '\''stored &lbrace;&lbrace; request.parts.file.0.filename &rbrace;&rbrace; titled &lbrace;&lbrace; request.parts.title.0.body &rbrace;&rbrace;'\'' }",
+        "templateType": "MUSTACHE"
+    }
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+
+<button id="button_request_model_upload_velocity" class="accordion">Velocity: Location header and body from a multipart upload</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080)
+    .when(request().withPath("/upload"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.VELOCITY,
+            "{ 'statusCode': 201, 'headers': { 'Location': [ '$!request.baseUrl/uploads/$!request.parts.file[0].filename' ], 'X-Request-Id': [ '$!request.id' ] }, 'body': 'stored $!request.parts.file[0].filename titled $!request.parts.title[0].body' }"
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 201, 'headers': { 'Location': [ '$!request.baseUrl/uploads/$!request.parts.file[0].filename' ], 'X-Request-Id': [ '$!request.id' ] }, 'body': 'stored $!request.parts.file[0].filename titled $!request.parts.title[0].body' }",
+        "templateType": "VELOCITY"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver.client import MockServerClient
+from mockserver.models import Expectation
+
+client = MockServerClient("localhost", 1080)
+client.upsert(Expectation.from_dict({
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 201, 'headers': { 'Location': [ '$!request.baseUrl/uploads/$!request.parts.file[0].filename' ], 'X-Request-Id': [ '$!request.id' ] }, 'body': 'stored $!request.parts.file[0].filename titled $!request.parts.title[0].body' }",
+        "templateType": "VELOCITY"
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+client.upsert(MockServer::Expectation.from_hash({
+    'httpRequest' =&gt; {
+        'path' =&gt; '/upload'
+    },
+    'httpResponseTemplate' =&gt; {
+        'template' =&gt; "{ 'statusCode': 201, 'headers': { 'Location': [ '$!request.baseUrl/uploads/$!request.parts.file[0].filename' ], 'X-Request-Id': [ '$!request.id' ] }, 'body': 'stored $!request.parts.file[0].filename titled $!request.parts.title[0].body' }",
+        'templateType' =&gt; 'VELOCITY'
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`{
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 201, 'headers': { 'Location': [ '$!request.baseUrl/uploads/$!request.parts.file[0].filename' ], 'X-Request-Id': [ '$!request.id' ] }, 'body': 'stored $!request.parts.file[0].filename titled $!request.parts.title[0].body' }",
+        "templateType": "VELOCITY"
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"{
+    ""httpRequest"": {
+        ""path"": ""/upload""
+    },
+    ""httpResponseTemplate"": {
+        ""template"": ""{ 'statusCode': 201, 'headers': { 'Location': [ '$!request.baseUrl/uploads/$!request.parts.file[0].filename' ], 'X-Request-Id': [ '$!request.id' ] }, 'body': 'stored $!request.parts.file[0].filename titled $!request.parts.title[0].body' }"",
+        ""templateType"": ""VELOCITY""
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+
+let client = Client::new();
+let body = r#"{
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 201, 'headers': { 'Location': [ '$!request.baseUrl/uploads/$!request.parts.file[0].filename' ], 'X-Request-Id': [ '$!request.id' ] }, 'body': 'stored $!request.parts.file[0].filename titled $!request.parts.title[0].body' }",
+        "templateType": "VELOCITY"
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 201, 'headers': { 'Location': [ '$!request.baseUrl/uploads/$!request.parts.file[0].filename' ], 'X-Request-Id': [ '$!request.id' ] }, 'body': 'stored $!request.parts.file[0].filename titled $!request.parts.title[0].body' }",
+        "templateType": "VELOCITY"
+    }
+}
+JSON;
+
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "{ '\''statusCode'\'': 201, '\''headers'\'': { '\''Location'\'': [ '\''$!request.baseUrl/uploads/$!request.parts.file[0].filename'\'' ], '\''X-Request-Id'\'': [ '\''$!request.id'\'' ] }, '\''body'\'': '\''stored $!request.parts.file[0].filename titled $!request.parts.title[0].body'\'' }",
+        "templateType": "VELOCITY"
+    }
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+
+<button id="button_request_model_upload_javascript" class="accordion">JavaScript: Location header and body from a multipart upload</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new ClientAndServer(1080)
+    .when(request().withPath("/upload"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.JAVASCRIPT,
+            "return { 'statusCode': 201, 'headers': { 'Location': [ request.baseUrl + '/uploads/' + request.parts.file[0].filename ], 'X-Request-Id': [ request.id ] }, 'body': 'stored ' + request.parts.file[0].filename + ' titled ' + request.parts.title[0].body };"
+        )
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 201, 'headers': { 'Location': [ request.baseUrl + '/uploads/' + request.parts.file[0].filename ], 'X-Request-Id': [ request.id ] }, 'body': 'stored ' + request.parts.file[0].filename + ' titled ' + request.parts.title[0].body };",
+        "templateType": "JAVASCRIPT"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver.client import MockServerClient
+from mockserver.models import Expectation
+
+client = MockServerClient("localhost", 1080)
+client.upsert(Expectation.from_dict({
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 201, 'headers': { 'Location': [ request.baseUrl + '/uploads/' + request.parts.file[0].filename ], 'X-Request-Id': [ request.id ] }, 'body': 'stored ' + request.parts.file[0].filename + ' titled ' + request.parts.title[0].body };",
+        "templateType": "JAVASCRIPT"
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+client.upsert(MockServer::Expectation.from_hash({
+    'httpRequest' =&gt; {
+        'path' =&gt; '/upload'
+    },
+    'httpResponseTemplate' =&gt; {
+        'template' =&gt; "return { 'statusCode': 201, 'headers': { 'Location': [ request.baseUrl + '/uploads/' + request.parts.file[0].filename ], 'X-Request-Id': [ request.id ] }, 'body': 'stored ' + request.parts.file[0].filename + ' titled ' + request.parts.title[0].body };",
+        'templateType' =&gt; 'JAVASCRIPT'
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`{
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 201, 'headers': { 'Location': [ request.baseUrl + '/uploads/' + request.parts.file[0].filename ], 'X-Request-Id': [ request.id ] }, 'body': 'stored ' + request.parts.file[0].filename + ' titled ' + request.parts.title[0].body };",
+        "templateType": "JAVASCRIPT"
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"{
+    ""httpRequest"": {
+        ""path"": ""/upload""
+    },
+    ""httpResponseTemplate"": {
+        ""template"": ""return { 'statusCode': 201, 'headers': { 'Location': [ request.baseUrl + '/uploads/' + request.parts.file[0].filename ], 'X-Request-Id': [ request.id ] }, 'body': 'stored ' + request.parts.file[0].filename + ' titled ' + request.parts.title[0].body };"",
+        ""templateType"": ""JAVASCRIPT""
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+
+let client = Client::new();
+let body = r#"{
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 201, 'headers': { 'Location': [ request.baseUrl + '/uploads/' + request.parts.file[0].filename ], 'X-Request-Id': [ request.id ] }, 'body': 'stored ' + request.parts.file[0].filename + ' titled ' + request.parts.title[0].body };",
+        "templateType": "JAVASCRIPT"
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 201, 'headers': { 'Location': [ request.baseUrl + '/uploads/' + request.parts.file[0].filename ], 'X-Request-Id': [ request.id ] }, 'body': 'stored ' + request.parts.file[0].filename + ' titled ' + request.parts.title[0].body };",
+        "templateType": "JAVASCRIPT"
+    }
+}
+JSON;
+
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/upload"
+    },
+    "httpResponseTemplate": {
+        "template": "return { '\''statusCode'\'': 201, '\''headers'\'': { '\''Location'\'': [ request.baseUrl + '\''/uploads/'\'' + request.parts.file[0].filename ], '\''X-Request-Id'\'': [ request.id ] }, '\''body'\'': '\''stored '\'' + request.parts.file[0].filename + '\'' titled '\'' + request.parts.title[0].body };",
+        "templateType": "JAVASCRIPT"
+    }
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 
 <a id="request_multi_value_maps" class="anchor" href="#request_multi_value_maps">&nbsp;</a>
 
@@ -942,6 +1624,7 @@ System.out.println("httpResponse = " + httpResponse);</code></pre>
     <li><code class="inline_code">request.headers</code></li>
     <li><code class="inline_code">request.pathParameters</code></li>
     <li><code class="inline_code">request.queryStringParameters</code></li>
+    <li><code class="inline_code">request.formData</code></li>
 </ul>
 <p>The <code class="inline_code">request</code> variable contains the follow single-value maps fields:</p>
 <ul>

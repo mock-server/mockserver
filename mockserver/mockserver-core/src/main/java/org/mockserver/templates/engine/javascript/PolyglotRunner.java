@@ -222,11 +222,11 @@ final class PolyglotRunner {
         // no-response (single-argument) template shape.
         String serialiseFunction;
         if (rawText) {
-            serialiseFunction = " function serialise(request) { var r = handle(__mockserverCaseInsensitiveHeaders(JSON.parse(request))); return (r === null || r === undefined) ? '' : ((typeof r === 'string') ? r : JSON.stringify(r)); }";
+            serialiseFunction = " function serialise(request) { var r = handle(__mockserverDerivedFields(__mockserverCaseInsensitiveHeaders(JSON.parse(request)), request)); return (r === null || r === undefined) ? '' : ((typeof r === 'string') ? r : JSON.stringify(r)); }";
         } else if (includeResponse) {
-            serialiseFunction = " function serialise(request, response) { return JSON.stringify(handle(__mockserverCaseInsensitiveHeaders(JSON.parse(request)), JSON.parse(response)), null, 2); }";
+            serialiseFunction = " function serialise(request, response) { return JSON.stringify(handle(__mockserverDerivedFields(__mockserverCaseInsensitiveHeaders(JSON.parse(request)), request), JSON.parse(response)), null, 2); }";
         } else {
-            serialiseFunction = " function serialise(request) { return JSON.stringify(handle(__mockserverCaseInsensitiveHeaders(JSON.parse(request))), null, 2); }";
+            serialiseFunction = " function serialise(request) { return JSON.stringify(handle(__mockserverDerivedFields(__mockserverCaseInsensitiveHeaders(JSON.parse(request)), request)), null, 2); }";
         }
         // HTTP field names are case-insensitive (RFC 9110), but request is a JSON.parse'd plain JS
         // object, so request.headers.host is a native property lookup that misses a header the client
@@ -252,7 +252,25 @@ final class PolyglotRunner {
             + " for (var i = 0; i < keys.length; i++) { if (keys[i].toLowerCase() === lower) { return true; } } }"
             + " return prop in target; } }); }"
             + " return request; }";
-        String fullScript = script + serialiseFunction + headerAccessorFunction;
+        // formData, parts, host, port, scheme, baseUrl, bodyAsBase64 and id are not in the request JSON (computing
+        // them for every render would parse every form and multipart body), so each is a non-enumerable getter that
+        // asks the host object on first read and then replaces itself with the value. Each part arrives without its
+        // content: body and bodyAsBase64 are getters too, so reading a filename never copies an upload.
+        String derivedFieldsFunction = " function __mockserverLazy(target, name, enumerable, read) {"
+            + " var define = function(value) { Object.defineProperty(target, name, { value: value, writable: true, configurable: true, enumerable: enumerable }); return value; };"
+            + " Object.defineProperty(target, name, { configurable: true, enumerable: enumerable,"
+            + " get: function() { return define(read()); }, set: function(value) { define(value); } }); }"
+            + " function __mockserverDerivedFields(request, source) {"
+            + " if (request && typeof request === 'object') {"
+            + " ['formData', 'parts', 'host', 'port', 'scheme', 'baseUrl', 'bodyAsBase64', 'id'].forEach(function(name) {"
+            + " __mockserverLazy(request, name, false, function() {"
+            + " var value = JSON.parse(source.derivedFieldAsJson(name));"
+            + " if (name === 'parts' && value) { Object.keys(value).forEach(function(partName) {"
+            + " value[partName].forEach(function(part, index) { ['body', 'bodyAsBase64'].forEach(function(field) {"
+            + " __mockserverLazy(part, field, true, function() { return source.partField(partName, index, field); }); }); }); }); }"
+            + " return value; }); }); }"
+            + " return request; }";
+        String fullScript = script + serialiseFunction + headerAccessorFunction + derivedFieldsFunction;
 
         // HOST_ACCESS is HostAccess.ALL (equivalent to the previous JSR-223 polyglot.js.allowHostAccess=true)
         // minus every member of java.lang.Class and java.lang.ClassLoader — see HOST_ACCESS below. Together
@@ -393,12 +411,12 @@ final class PolyglotRunner {
             Value stringifiedResult;
             if (includeResponse) {
                 stringifiedResult = serialiseFunc.execute(
-                    new HttpRequestTemplateObject(request),
+                    new HttpRequestTemplateObject(request, mockServerLogger),
                     new HttpResponseTemplateObject(response)
                 );
             } else {
                 stringifiedResult = serialiseFunc.execute(
-                    new HttpRequestTemplateObject(request)
+                    new HttpRequestTemplateObject(request, mockServerLogger)
                 );
             }
 

@@ -606,7 +606,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
         // fresh per render: $json/$xml are request-scoped and hold per-request parse state
         VelocityContext functionsLayer = new VelocityContext(sharedFunctionsAndHelpers, holder.toolManager.createContext());
         VelocityContext context = new MacroCallCheckingContext(functionsLayer);
-        context.put("request", new HttpRequestTemplateObject(request));
+        context.put("request", new HttpRequestTemplateObject(request, mockServerLogger));
         return context;
     }
 
