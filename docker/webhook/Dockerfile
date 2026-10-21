@@ -15,7 +15,7 @@
 #
 
 # runtime image — distroless java25 (nonroot, ~180 MB)
-FROM gcr.io/distroless/java25:nonroot@sha256:a26596c2d590343eda0ab66e67f089fd612ef3a3b972acf9e57c39f99f7a88c6
+FROM gcr.io/distroless/java25:nonroot@sha256:69514ce1edfe8759f5169870e8f9d4c9f2b831fb0b305a6809a269a25c515a2f
 
 LABEL maintainer="James Bloom <jamesdbloom@gmail.com>"
 LABEL description="MockServer Kubernetes Admission Webhook for automatic sidecar injection"
