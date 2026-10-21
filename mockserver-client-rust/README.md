@@ -269,6 +269,36 @@ optional `with_actual_format`, `with_truncate_expected`, `with_truncate_actual`,
 `with_apply_truncation_last`, `with_zone` and `with_not` each return a new
 value. A plain string such as `"before:2026-01-01"` is still matched literally.
 
+### Expectation metadata, unused mocks and paging
+
+Label expectations with free-form `metadata` (any JSON values, including
+`null`), then retrieve or clear them by label, find mocks that have never
+matched, or page through long lists:
+
+```rust
+use mockserver_client::*;
+use serde_json::json;
+
+client.upsert(&[Expectation::new(HttpRequest::new().path("/checkout"))
+    .respond(HttpResponse::new().status_code(200))
+    .metadata_entry("owner", "team-a")
+    .metadata_entry("tags", json!(["smoke"]))])?;
+
+let mine = client.retrieve_active_expectations_by_metadata("owner", "team-a")?;
+let unused = client.retrieve_unmatched_expectations()?;
+let page = client.retrieve_active_expectations_with_filter(
+    None,
+    &ExpectationFilter::new().metadata_key("owner").offset(0).limit(20),
+)?;
+
+client.clear_by_metadata("owner", "team-a")?;
+client.clear_unmatched_expectations()?;
+```
+
+A string value is matched as text and any other value as JSON (`42`, `true`,
+`serde_json::Value::Null`). A clear must select something and cannot page; a
+blank key or JSONPath is rejected before any request is sent.
+
 ### JWT and composite (ALL_OF) body matchers
 
 Match requests by the claims in a JSON Web Token, and combine several body

@@ -887,3 +887,154 @@ $client-&gt;reset();</code></pre>
 </div>
 
 <p>To create an expectation scoped to a namespace in the first place, see <a href="/mock_server/creating_expectations.html#namespace"><code class="inline code">withNamespace(...)</code></a> on the Java client.</p>
+
+<a id="clear_by_metadata" class="anchor" href="#clear_by_metadata">&nbsp;</a>
+
+<h2>Clearing by metadata or unused expectations</h2>
+
+<p>You can clear only the expectations whose <a href="/mock_server/creating_expectations.html#metadata">metadata</a> matches, or only the expectations that have <strong>never matched a request</strong>, for example to remove mocks a test suite no longer uses. Like a namespace clear, these remove expectations only and leave the event log untouched, even with <code class="inline code">type=all</code>.</p>
+
+<p>Add these query parameters to <code class="inline code">PUT /mockserver/clear</code>:</p>
+
+<ul>
+    <li><code class="inline code">metadataKey=&lt;key&gt;</code>: the expectation's metadata has this key. Add <code class="inline code">metadataValue=&lt;value&gt;</code> to also require the value. The value matches a stored text equal to it, or a stored JSON value equal to it read as JSON: <code class="inline code">metadataValue=42</code> matches both the number 42 and the text "42", and <code class="inline code">metadataValue=%22team-a%22</code> also matches the text team-a.</li>
+    <li><code class="inline code">metadataJsonPath=&lt;JSONPath&gt;</code>: the JSONPath, applied to the metadata object, selects something, for example <code class="inline code">$.tags[?(@ == 'smoke')]</code>.</li>
+    <li><code class="inline code">unmatched=true</code>: the expectation has not matched any request since it was created or last changed. Each MockServer instance keeps its own count.</li>
+</ul>
+
+<p>When you combine these with each other, with <code class="inline code">namespace</code>, or with a request matcher or expectation id in the body, an expectation is cleared only if it matches all of them.</p>
+
+<p>To protect you from clearing everything by mistake, an empty value (for example <code class="inline code">metadataKey=</code> when a script variable is unset), or <code class="inline code">unmatched=false</code> on its own, is rejected with <code class="inline code">400 Bad Request</code> and nothing is cleared. Parameter names are not case-sensitive. A parameter given twice, or one whose name starts with <code class="inline code">metadata</code> or <code class="inline code">unmatched</code> but is not one of the parameters above (such as <code class="inline code">metadata_key</code>), is also rejected. Any other unknown parameter is ignored, as on every MockServer endpoint, so check the spelling before you clear: a misspelling such as <code class="inline code">metaKey=owner</code> is ignored and the clear is not filtered. Values are used exactly as given, so a value starting with <code class="inline code">!</code> or <code class="inline code">?</code> is not treated as a "not" or "optional" matcher.</p>
+
+<p>URL-encode every value: send <code class="inline code">%</code> as <code class="inline code">%25</code>, <code class="inline code">+</code> as <code class="inline code">%2B</code> (a plain <code class="inline code">+</code> means a space), <code class="inline code">&amp;</code> as <code class="inline code">%26</code> and <code class="inline code">#</code> as <code class="inline code">%23</code> (HTTP clients drop everything from a plain <code class="inline code">#</code>, so <code class="inline code">metadataKey=env#prod</code> would be sent as <code class="inline code">metadataKey=env</code>). With curl, <code class="inline code">-G --data-urlencode</code> does this for you. A query string that cannot be decoded, such as <code class="inline code">metadataValue=100%</code>, is rejected with <code class="inline code">400</code> and nothing is cleared. So is an empty <code class="inline code">namespace=</code> on clear.</p>
+
+<button id="button_client_clear_by_metadata" class="accordion">clear expectations by metadata</button>
+<div class="panel">
+    <button class="accordion inner">Java: MockServerClient</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clearByMetadata("owner", "team-checkout");</code></pre>
+        <p>To clear every expectation that has a key, whatever its value, use <code class="inline code">clearByMetadataKey("owner")</code>. A null value is refused rather than read as "any value".</p>
+        <p>Or with a JSONPath on the metadata:</p>
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clear(
+    null,
+    ExpectationFilter.expectationFilter().withMetadataJsonPath("$.tags[?(@ == 'smoke')]")
+);</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).clearByMetadata("owner", "team-checkout");
+// any value for the key: clearByMetadataKey("owner")</code></pre>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver.client import MockServerClient
+
+client = MockServerClient("localhost", 1080)
+client.clear_by_metadata("owner", "team-checkout")
+# any value for the key: client.clear_by_metadata_key("owner")</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+client.clear_by_metadata('owner', 'team-checkout')
+# any value for the key: client.clear_by_metadata_key('owner')</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
+
+client := mockserver.New("localhost", 1080)
+err := client.ClearByMetadata("owner", "team-checkout")
+// any value for the key: client.ClearByMetadataKey("owner")</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using MockServer.Client;
+
+using var client = new MockServerClient("localhost", 1080);
+client.ClearByMetadata("owner", "team-checkout");
+// any value for the key: client.ClearByMetadataKey("owner");</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use mockserver_client::ClientBuilder;
+
+let client = ClientBuilder::new("localhost", 1080).build().unwrap();
+client.clear_by_metadata("owner", "team-checkout").unwrap();
+// any value for the key: client.clear_by_metadata_key("owner")</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">use MockServer\MockServerClient;
+
+$client = new MockServerClient('localhost', 1080);
+$client-&gt;clearByMetadata('owner', 'team-checkout');
+// any value for the key: $client-&gt;clearByMetadataKey('owner');</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/clear?type=expectations&amp;metadataKey=owner&amp;metadataValue=team-checkout"</code></pre>
+        <p>With a JSONPath, let curl encode it:</p>
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT -G "http://localhost:1080/mockserver/clear" \
+  --data-urlencode "type=expectations" \
+  --data-urlencode "metadataJsonPath=$.tags[?(@ == 'smoke')]"</code></pre>
+    </div>
+</div>
+
+<button id="button_client_clear_unmatched" class="accordion">clear expectations that have never matched</button>
+<div class="panel">
+    <button class="accordion inner">Java: MockServerClient</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080).clearUnmatchedExpectations();</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).clearUnmatchedExpectations();</code></pre>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver.client import MockServerClient
+
+MockServerClient("localhost", 1080).clear_unmatched_expectations()</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+MockServer::Client.new('localhost', 1080).clear_unmatched_expectations</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
+
+err := mockserver.New("localhost", 1080).ClearUnmatchedExpectations()</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using MockServer.Client;
+
+using var client = new MockServerClient("localhost", 1080);
+client.ClearUnmatchedExpectations();</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use mockserver_client::ClientBuilder;
+
+let client = ClientBuilder::new("localhost", 1080).build().unwrap();
+client.clear_unmatched_expectations().unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">use MockServer\MockServerClient;
+
+(new MockServerClient('localhost', 1080))-&gt;clearUnmatchedExpectations();</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/clear?type=expectations&amp;unmatched=true"</code></pre>
+    </div>
+</div>

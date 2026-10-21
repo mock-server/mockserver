@@ -1237,6 +1237,7 @@ const KNOWN_TOP_LEVEL_KEYS = new Set([
   'crossProtocolScenarios',
   'percentage',
   'timestamp',
+  'metadata',
 ]);
 
 // ---------------------------------------------------------------------------
@@ -1343,6 +1344,9 @@ export function standardToRust(matcher: StandardMatcher, action: StandardActionP
 
   // Namespace / id / priority / times / ttl.
   if (typeof exp['namespace'] === 'string') expCalls.push(`.namespace(${rustStr(exp['namespace'])})`);
+  if (isObjR(exp['metadata'])) {
+    for (const [k, v] of Object.entries(exp['metadata'])) expCalls.push(`.metadata_entry(${rustStr(k)}, ${jsonMacro(v, 8)})`);
+  }
   if (typeof exp['id'] === 'string') expCalls.push(`.id(${rustStr(exp['id'])})`);
   if (typeof exp['priority'] === 'number') expCalls.push(`.priority(${numLit(exp['priority'])})`);
   if (exp['times'] && typeof exp['times'] === 'object') expCalls.push(`.times(${timesExpr(exp['times'] as Record<string, unknown>)})`);

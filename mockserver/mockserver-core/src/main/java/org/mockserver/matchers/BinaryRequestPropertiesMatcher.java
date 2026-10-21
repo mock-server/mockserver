@@ -59,7 +59,7 @@ public class BinaryRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                                 .setHttpRequest(requestDefinition)
                                 .setExpectation(this.expectation)
                                 .setMessageFormat(this.expectation == null ? REQUEST_DID_MATCH : EXPECTATION_DID_MATCH)
-                                .setArguments(request, (this.expectation == null ? this : this.expectation.clone()))
+                                .setArguments(request, (this.expectation == null ? this : this.expectation.cloneWithoutMetadata()))
                         );
                     }
                 } else if (context != null && !context.mayWriteNotMatchedEntry()) {
@@ -79,7 +79,7 @@ public class BinaryRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                                 .setHttpRequest(requestDefinition)
                                 .setExpectation(this.expectation)
                                 .setMessageFormat(this.expectation == null ? didNotMatchRequestBecause : didNotMatchExpectationWithoutBecause)
-                                .setArguments(request, (this.expectation == null ? this : this.expectation.clone()))
+                                .setArguments(request, (this.expectation == null ? this : this.expectation.cloneWithoutMetadata()))
                         );
                     }
                 }

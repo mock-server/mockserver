@@ -271,6 +271,20 @@ function extractChaosSummary(value: Record<string, unknown>): string | null {
 }
 
 
+/**
+ * The expectation's free-form `metadata` object as display rows, or null when absent.
+ * Metadata never affects matching; strings render verbatim, every other JSON value
+ * (number, boolean, null, array, object) as compact JSON.
+ */
+function extractMetadataEntries(value: Record<string, unknown>): Array<[string, string]> | null {
+  const raw = value['metadata'];
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const entries = Object.entries(raw as Record<string, unknown>).map(
+    ([k, v]): [string, string] => [k, typeof v === 'string' ? v : JSON.stringify(v)],
+  );
+  return entries.length > 0 ? entries : null;
+}
+
 function JsonListItem({ item, index, turnPosition, expanded: expandedProp, onToggleExpand, onEdit, onDuplicate, onDelete, onTest, onSelectToggle, selected }: JsonListItemProps) {
   const [internalExpanded, setInternalExpanded] = useState(false);
   const loadFullRow = useLoadFullRow();
@@ -291,6 +305,7 @@ function JsonListItem({ item, index, turnPosition, expanded: expandedProp, onTog
   );
   const chaosSummary = useMemo(() => extractChaosSummary(item.value), [item.value]);
   const priority = useMemo(() => extractPriority(item.value), [item.value]);
+  const metadataEntries = useMemo(() => extractMetadataEntries(item.value), [item.value]);
 
   return (
     <Box
@@ -686,6 +701,29 @@ function JsonListItem({ item, index, turnPosition, expanded: expandedProp, onTog
                 loadable: false,
               }}
             />
+          )}
+          {metadataEntries && (
+            <Box sx={{ mb: 1, fontSize: (t) => t.typography.caption.fontSize }}>
+              <Box sx={{ fontWeight: 600, color: 'text.secondary' }}>Metadata</Box>
+              <Box
+                component="dl"
+                aria-label="Metadata"
+                sx={{ display: 'grid', gridTemplateColumns: 'max-content minmax(0, 1fr)', columnGap: 1, rowGap: 0.25, m: 0 }}
+              >
+                {metadataEntries.map(([k, v]) => (
+                  <Fragment key={k}>
+                    <Box component="dt" sx={{ fontFamily: monospaceFontFamily, fontWeight: 600 }}>{k}</Box>
+                    <Box
+                      component="dd"
+                      title={v}
+                      sx={{ m: 0, fontFamily: monospaceFontFamily, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >
+                      {v}
+                    </Box>
+                  </Fragment>
+                ))}
+              </Box>
+            </Box>
           )}
           {/* a shortened expectation is not offered for copying: the copy would be pasted or saved shortened */}
           <JsonViewer data={item.value} collapsed={1} enableClipboard={!item.truncatedExpectation} />

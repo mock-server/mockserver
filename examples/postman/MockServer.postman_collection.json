@@ -351,6 +351,26 @@
                   "key": "namespace",
                   "value": "",
                   "disabled": true
+                },
+                {
+                  "key": "metadataKey",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "metadataValue",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "metadataJsonPath",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "unmatched",
+                  "value": "false",
+                  "disabled": true
                 }
               ]
             },
@@ -421,6 +441,36 @@
                 },
                 {
                   "key": "namespace",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "metadataKey",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "metadataValue",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "metadataJsonPath",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "unmatched",
+                  "value": "false",
+                  "disabled": true
+                },
+                {
+                  "key": "offset",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
                   "value": "",
                   "disabled": true
                 },

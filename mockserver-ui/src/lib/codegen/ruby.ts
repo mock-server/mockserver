@@ -765,6 +765,7 @@ const EXPECTATION_FIELDS: [string, string, Renderer][] = [
   ['id', 'id', (v) => rb(String(v))],
   ['priority', 'priority', (v) => scalar(v)],
   ['namespace', 'namespace', (v) => rb(String(v))],
+  ['metadata', 'metadata', (v, i) => rbValue(v, i)],
   ['scenarioName', 'scenario_name', (v) => rb(String(v))],
   ['scenarioState', 'scenario_state', (v) => rb(String(v))],
   ['newScenarioState', 'new_scenario_state', (v) => rb(String(v))],

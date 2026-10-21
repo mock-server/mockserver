@@ -326,6 +326,36 @@ expectations = client.retrieve_active_expectations()
 logs = client.retrieve_log_messages()
 ```
 
+### Expectation metadata, unmatched expectations and paging
+
+Label expectations with metadata (string keys, any JSON value). Metadata never
+affects matching; it is returned on retrieve and lets you retrieve or clear
+just your own expectations.
+
+```python
+from mockserver import ExpectationFilter, JSON_NULL
+
+client.when(HttpRequest.request("/api/users")).with_metadata("owner", "team-a").with_metadata(
+    "ticket", 4211
+).respond(HttpResponse(status_code=200))
+
+mine = client.retrieve_active_expectations_by_metadata("owner", "team-a")
+labelled = client.retrieve_active_expectations_by_metadata_key("owner")
+never_matched = client.retrieve_unmatched_expectations()
+page = client.retrieve_active_expectations(
+    expectation_filter=ExpectationFilter().with_metadata_json_path("$.tags[?(@ == 'smoke')]").with_offset(0).with_limit(20)
+)
+recorded_page = client.retrieve_recorded_expectations(offset=0, limit=50)
+
+client.clear_by_metadata("owner", "team-a")      # str compared as text, other values as JSON
+client.clear_by_metadata_key("ticket")           # any value
+client.clear_unmatched_expectations()
+```
+
+These calls raise `ValueError` before sending anything for a blank key or JSONPath,
+a `None` value (use `..._by_metadata_key` for any value, or `JSON_NULL` for a JSON
+null), a negative offset or limit, or a clear whose filter selects nothing or pages.
+
 ## Control
 
 ```python

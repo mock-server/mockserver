@@ -295,7 +295,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                                 .setHttpRequest(request)
                                 .setExpectation(this.expectation)
                                 .setMessageFormat(this.expectation == null ? REQUEST_DID_MATCH : EXPECTATION_DID_MATCH)
-                                .setArguments(request, (this.expectation == null ? this : this.expectation.clone()))
+                                .setArguments(request, (this.expectation == null ? this : this.expectation.cloneWithoutMetadata()))
                         );
                     }
                 } else if (becauseBuilder != null) {
@@ -325,7 +325,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                                 .setHttpRequest(request)
                                 .setExpectation(this.expectation)
                                 .setMessageFormat(messageFormat)
-                                .setArguments(request, (this.expectation == null ? this : this.expectation.clone()), because)
+                                .setArguments(request, (this.expectation == null ? this : this.expectation.cloneWithoutMetadata()), because)
                                 .setBecause(because)
                         );
                     }

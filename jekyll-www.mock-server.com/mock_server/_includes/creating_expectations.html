@@ -257,6 +257,35 @@ $client-&gt;when(
 
 <p>A request only matches a namespaced expectation if it carries the configured namespace header (<span class="inline_code">matchNamespaceHeader</span>, default <span class="inline_code">X-MockServer-Namespace</span>) with that exact value. An expectation with no namespace (the default) is <strong>global</strong> and matches regardless of any request namespace; a request with no namespace header matches only global expectations. A blank or whitespace-only namespace is normalised to <span class="inline_code">null</span> (global). See <a href="/mock_server/clearing_and_resetting.html#clear_by_namespace">Clearing by namespace</a> for tearing down one tenant's expectations with <span class="inline_code">clearByNamespace(...)</span>.</p>
 
+<a id="metadata" class="anchor" href="#metadata">&nbsp;</a>
+
+<h4>Metadata</h4>
+
+<p>An expectation can carry <strong>metadata</strong>: any labels you want to attach to it, such as an owner, a ticket number or a list of tags. Metadata is returned when you retrieve the expectation, and you can <a href="/mock_server/debugging_issues.html#retrieving_active_expectations">retrieve</a> or <a href="/mock_server/clearing_and_resetting.html#clear_by_metadata">clear</a> expectations by it. It never changes which requests an expectation matches.</p>
+
+<p>Each key is a string and each value can be any JSON value. In Java, use <span class="inline_code">withMetadata(String key, Object value)</span> or <span class="inline_code">withMetadata(Map&lt;String, ?&gt; metadata)</span>:</p>
+
+<pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(request().withMethod("GET").withPath("/account"))
+    .withMetadata("owner", "team-checkout")
+    .withMetadata("ticket", 4211)
+    .withMetadata("tags", Arrays.asList("smoke", "checkout"))
+    .respond(response().withStatusCode(200));</code></pre>
+
+<p>In JSON, add a <span class="inline_code">metadata</span> object:</p>
+
+<pre class="prettyprint lang-json code"><code class="code">{
+  "httpRequest": { "method": "GET", "path": "/account" },
+  "httpResponse": { "statusCode": 200 },
+  "metadata": { "owner": "team-checkout", "ticket": 4211, "tags": [ "smoke", "checkout" ] }
+}</code></pre>
+
+<p>The other clients set it the same way: JavaScript <span class="inline_code">.withMetadata(key, value)</span>, Python and Ruby <span class="inline_code">.with_metadata(...)</span>, Go <span class="inline_code">.WithMetadataEntry(key, value)</span>, .NET <span class="inline_code">.WithMetadata(key, value)</span>, Rust <span class="inline_code">.metadata_entry(key, value)</span> and PHP <span class="inline_code">-&gt;withMetadata([...])</span>. The dashboard shows an expectation's metadata when you expand it, and keeps it when you edit the expectation.</p>
+
+<p>Changing only the metadata of an existing expectation (same <span class="inline_code">id</span>) updates it in place.</p>
+
+<p>Metadata is stored and returned with the expectation, including in persisted expectation files and the dashboard's list of active expectations, and it counts towards the memory MockServer allows for expectations. Keep it small, and never put secrets in it.</p>
+
 <a id="stateful_scenarios" class="anchor" href="#stateful_scenarios">&nbsp;</a>
 
 <h4>Stateful Scenarios</h4>

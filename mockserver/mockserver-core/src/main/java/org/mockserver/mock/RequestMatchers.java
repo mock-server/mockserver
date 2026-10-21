@@ -1151,7 +1151,7 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     .setMessageFormat("closest expectation:{}matched " + matchedFields + "/" + totalFields + " fields for request:{}"
                         + (entriesNotLogged > 0 ? entriesNotLogged + " further did-not-match entries were not logged (maxLoggedMatchFailures)" + (expectationsNotChecked > 0 ? "; " : "") : "")
                         + (expectationsNotChecked > 0 ? "only " + expectationsChecked + " of " + expectationsConsidered + " expectations were checked, so a closer one may exist" : ""))
-                    .setArguments(closestMatchExpectation.clone(), requestDefinition)
+                    .setArguments(closestMatchExpectation.cloneWithoutMetadata(), requestDefinition)
             );
         }
 
@@ -1562,6 +1562,55 @@ public class RequestMatchers extends MockServerMatcherNotifier {
                     .setArguments(namespace)
             );
         }
+    }
+
+    /**
+     * Clears the expectations selected by an optional request matcher or expectation id AND a predicate,
+     * for the control-plane metadata and unmatched filters. A linear scan of the store, made only when
+     * this is called: nothing it reads is indexed or maintained per mutation, and the match loop never
+     * calls it. With neither a request matcher nor an id, every expectation the predicate accepts is cleared.
+     *
+     * @param requestDefinition reverse-matched against each expectation's request, as {@link #clear(RequestDefinition)}, or null
+     * @param expectationId     restricts the clear to this one expectation, or null
+     * @param filter            must accept an expectation for it to be cleared
+     * @param description       what was filtered on, for the CLEARED log entry
+     * @param logCorrelationId  correlation id for the CLEARED log entry
+     * @return the number of expectations cleared
+     */
+    public int clear(RequestDefinition requestDefinition, ExpectationId expectationId, java.util.function.Predicate<Expectation> filter, Object description, String logCorrelationId) {
+        Stream<HttpRequestMatcher> candidates;
+        HttpRequestMatcher clearHttpRequestMatcher = null;
+        if (expectationId != null) {
+            candidates = httpRequestMatchers.getByKey(expectationId.getId()).map(Stream::of).orElseGet(Stream::empty);
+        } else {
+            candidates = getHttpRequestMatchersCopy();
+            if (!isUnfiltered(requestDefinition)) {
+                clearHttpRequestMatcher = matcherBuilder.transformsToMatcher(requestDefinition);
+            }
+        }
+        final HttpRequestMatcher requestMatcher = clearHttpRequestMatcher;
+        AtomicInteger cleared = new AtomicInteger();
+        candidates.forEach(httpRequestMatcher -> {
+            Expectation expectation = httpRequestMatcher.getExpectation();
+            if (expectation != null
+                && filter.test(expectation)
+                && (requestMatcher == null || requestMatcher.matches(expectation.getHttpRequest()))) {
+                removeHttpRequestMatcher(httpRequestMatcher, logCorrelationId);
+                cleared.incrementAndGet();
+            }
+        });
+        if (cleared.get() > 0 && mockServerLogger.isEnabledForInstance(Level.INFO)) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(CLEARED)
+                    .setLogLevel(Level.INFO)
+                    .setCorrelationId(logCorrelationId)
+                    .setHttpRequest(requestDefinition)
+                    .setMessageFormat("cleared{}expectations that match filter:{}")
+                    .setArguments(cleared.get(), description)
+            );
+        }
+        return cleared.get();
     }
 
     public void clear(ExpectationId expectationId, String logCorrelationId) {

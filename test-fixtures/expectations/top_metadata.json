@@ -1,0 +1,28 @@
+{
+  "id": "metadata-1",
+  "httpRequest": {
+    "path": "/metadata"
+  },
+  "httpResponse": {
+    "body": "ok"
+  },
+  "metadata": {
+    "owner": "team-a",
+    "ticket": 4211,
+    "ratio": 0.5,
+    "flaky": false,
+    "note": null,
+    "tags": [
+      "smoke",
+      "checkout"
+    ],
+    "contact": {
+      "team": "checkout",
+      "oncall": [
+        "ann",
+        "bob"
+      ]
+    },
+    "literal": "!not?optional 100%+a b"
+  }
+}

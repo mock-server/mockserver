@@ -35,6 +35,24 @@ public sealed class ForwardChainExpectation
     }
 
     /// <summary>
+    /// Set the expectation's metadata (string keys, any JSON value), replacing any set before.
+    /// </summary>
+    public ForwardChainExpectation WithMetadata(IDictionary<string, object?> metadata)
+    {
+        _expectation.Metadata = new Dictionary<string, object?>(metadata);
+        return this;
+    }
+
+    /// <summary>
+    /// Add one metadata entry to the expectation.
+    /// </summary>
+    public ForwardChainExpectation WithMetadata(string key, object? value)
+    {
+        (_expectation.Metadata ??= new Dictionary<string, object?>())[key] = value;
+        return this;
+    }
+
+    /// <summary>
     /// Set the scenario name this expectation participates in.
     /// </summary>
     public ForwardChainExpectation WithScenarioName(string scenarioName)

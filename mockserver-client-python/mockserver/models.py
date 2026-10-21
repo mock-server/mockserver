@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import copy
+import json
 from dataclasses import dataclass, field, replace
 from typing import Any, Union
 
@@ -3101,6 +3103,158 @@ class CaptureRule:
         )
 
 
+class _JsonNull:
+    """An explicit JSON ``null``; Python ``None`` cannot be told apart from "no value"."""
+
+    _instance: _JsonNull | None = None
+
+    def __new__(cls) -> _JsonNull:
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __repr__(self) -> str:
+        return "JSON_NULL"
+
+
+JSON_NULL = _JsonNull()
+
+
+def _replace_json_null(value: Any) -> Any:
+    if value is JSON_NULL:
+        return None
+    if isinstance(value, dict):
+        return {k: _replace_json_null(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_replace_json_null(v) for v in value]
+    return value
+
+
+def _metadata_to_dict(metadata: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not metadata:
+        return None
+    return {k: _replace_json_null(v) for k, v in metadata.items()}
+
+
+def _require_not_blank(value: Any, description: str) -> str:
+    # a blank selection must fail rather than read as "no filter": on clear, no filter clears everything
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"the {description} must be a non-blank string")
+    return value
+
+
+def _require_non_negative_int(value: Any, name: str) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"{name} must be an integer zero or more, got {value!r}")
+    return value
+
+
+class ExpectationFilter:
+    """Select expectations by metadata, by never having matched a request, and page the result.
+
+    Sent as query string parameters on retrieve and clear. Every selection that is
+    set must hold; an expectation without metadata matches no metadata selection.
+    ``offset`` and ``limit`` page retrieved expectations and are refused on clear.
+    """
+
+    def __init__(self) -> None:
+        self.metadata_key: str | None = None
+        self.metadata_value: str | None = None
+        self.metadata_json_path: str | None = None
+        self.unmatched: bool = False
+        self.offset: int | None = None
+        self.limit: int | None = None
+
+    def with_metadata_key(self, key: str) -> ExpectationFilter:
+        """Select expectations whose metadata has ``key``, whatever its value."""
+        self.metadata_key = _require_not_blank(key, "metadata key")
+        self.metadata_value = None
+        return self
+
+    def with_metadata(self, key: str, value: Any) -> ExpectationFilter:
+        """Select expectations whose metadata has ``key`` with a value equal to ``value``.
+
+        A ``str`` is sent as text; any other value is sent as its compact JSON, so
+        ``42``, ``True`` or ``["a", "b"]`` match that number, boolean or array. ``None``
+        is refused: use :meth:`with_metadata_key` for any value, or ``JSON_NULL`` for a null.
+        """
+        if value is None:
+            raise ValueError(
+                "the metadata value must not be None; use with_metadata_key(key) to select "
+                "any value, or JSON_NULL to select a JSON null"
+            )
+        key = _require_not_blank(key, "metadata key")
+        if isinstance(value, str):
+            text = value
+        else:
+            try:
+                text = json.dumps(_replace_json_null(value), separators=(",", ":"), allow_nan=False)
+            except (TypeError, ValueError) as e:
+                raise ValueError(f"the metadata value {value!r} cannot be sent as JSON: {e}") from e
+        self.metadata_key = key
+        self.metadata_value = text
+        return self
+
+    def with_metadata_json_path(self, json_path: str) -> ExpectationFilter:
+        """Select expectations whose metadata object the JSONPath selects at least one value from."""
+        self.metadata_json_path = _require_not_blank(json_path, "metadata JSONPath")
+        return self
+
+    def with_unmatched(self, unmatched: bool = True) -> ExpectationFilter:
+        """Select only expectations that have not matched any request."""
+        if not isinstance(unmatched, bool):
+            raise ValueError(f"unmatched must be True or False, got {unmatched!r}")
+        self.unmatched = unmatched
+        return self
+
+    def with_offset(self, offset: int | None) -> ExpectationFilter:
+        self.offset = _require_non_negative_int(offset, "offset")
+        return self
+
+    def with_limit(self, limit: int | None) -> ExpectationFilter:
+        self.limit = _require_non_negative_int(limit, "limit")
+        return self
+
+    def has_selection(self) -> bool:
+        return bool(self.metadata_key) or bool(self.metadata_json_path) or self.unmatched
+
+    def has_paging(self) -> bool:
+        return self.offset is not None or self.limit is not None
+
+    def to_query_params(self) -> dict[str, str]:
+        """The query string parameters for this filter, as literal (not yet URL-encoded) text.
+
+        Re-validates the attributes, which are public and so may have been set directly.
+        """
+        params: dict[str, str] = {}
+        if self.metadata_key is not None:
+            params["metadataKey"] = _require_not_blank(self.metadata_key, "metadata key")
+            if self.metadata_value is not None:
+                if not isinstance(self.metadata_value, str):
+                    raise ValueError("metadata_value must be text; set it with with_metadata(key, value)")
+                params["metadataValue"] = self.metadata_value
+        elif self.metadata_value is not None:
+            raise ValueError("a metadata value requires a metadata key")
+        if self.metadata_json_path is not None:
+            params["metadataJsonPath"] = _require_not_blank(self.metadata_json_path, "metadata JSONPath")
+        if not isinstance(self.unmatched, bool):
+            raise ValueError(f"unmatched must be True or False, got {self.unmatched!r}")
+        _require_non_negative_int(self.limit, "limit")
+        _require_non_negative_int(self.offset, "offset")
+        if self.unmatched:
+            params["unmatched"] = "true"
+        if self.limit is not None:
+            params["limit"] = str(self.limit)
+        if self.offset is not None:
+            params["offset"] = str(self.offset)
+        return params
+
+    def __repr__(self) -> str:
+        return f"ExpectationFilter({self.to_query_params()!r})"
+
+
 @dataclass
 class Expectation:
     id: str | None = None
@@ -3147,6 +3301,9 @@ class Expectation:
     new_scenario_state: str | None = None
     # Server-assigned creation timestamp (ISO-8601), echoed back on retrieval.
     timestamp: str | None = None
+    # Free-form labels (string keys, any JSON value) used to retrieve or clear
+    # expectations; never affects matching. Omitted from the JSON when empty.
+    metadata: dict[str, Any] | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
@@ -3191,6 +3348,7 @@ class Expectation:
             "scenarioState": self.scenario_state,
             "newScenarioState": self.new_scenario_state,
             "timestamp": self.timestamp,
+            "metadata": _metadata_to_dict(self.metadata),
         })
 
     @classmethod
@@ -3245,6 +3403,7 @@ class Expectation:
             scenario_state=data.get("scenarioState"),
             new_scenario_state=data.get("newScenarioState"),
             timestamp=data.get("timestamp"),
+            metadata=copy.deepcopy(data["metadata"]) if isinstance(data.get("metadata"), dict) and data["metadata"] else None,
         )
 
 

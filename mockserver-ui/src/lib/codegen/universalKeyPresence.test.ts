@@ -63,6 +63,7 @@ const MARKERS: Record<string, Partial<Record<Lang, Marker>>> = {
   times: { python: 'times=', go: 'Times:', csharp: 'Times =', ruby: 'times:', rust: '.times(', java: 'Times.exactly' },
   timeToLive: { python: 'time_to_live=', go: 'TimeToLive:', csharp: 'TimeToLive =', ruby: 'time_to_live:', rust: '.time_to_live(', java: 'TimeToLive.exactly' },
   namespace: { python: 'namespace=', go: 'Namespace:', csharp: 'Namespace =', ruby: 'namespace:', rust: '.namespace(', java: '.withNamespace(' },
+  metadata: { python: 'metadata=', go: 'Metadata:', csharp: 'Metadata =', ruby: 'metadata:', rust: '.metadata_entry(', java: '.withMetadata(' },
   // --- edit-preserved actions / siblings (the regression surface) ---
   httpLlmResponse: { python: 'http_llm_response=', go: 'HttpLlmResponse:', csharp: 'HttpLlmResponse =', ruby: 'http_llm_response:', rust: '.respond_llm(', java: '.respondWithLlm(' },
   httpResponses: { python: 'http_responses=', go: 'HttpResponses:', csharp: 'HttpResponses =', ruby: 'http_responses:', rust: '.http_responses(', java: '.respond(Arrays.asList(' },

@@ -97,6 +97,10 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     private transient Body bodyAsReceived;
     @JsonIgnore
     private transient List<String> contentEncodingAsReceived;
+    // The query string a transport could not decode; its parameters are then absent. Kept so the control plane
+    // can refuse such a request rather than read it as having no parameters. In-process only, like the above.
+    @JsonIgnore
+    private transient String undecodableQueryString;
 
     /**
      * Identifies a memoizable body-conversion target. The conversion result depends only on the
@@ -140,6 +144,20 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     @JsonIgnore
     public boolean isLoadGenerated() {
         return loadGenerated;
+    }
+
+    /**
+     * @return the raw query string when the transport that received this request could not decode it (so it has no
+     * query string parameters), otherwise null
+     */
+    @JsonIgnore
+    public String getUndecodableQueryString() {
+        return undecodableQueryString;
+    }
+
+    public HttpRequest withUndecodableQueryString(String undecodableQueryString) {
+        this.undecodableQueryString = undecodableQueryString;
+        return this;
     }
 
     /**
@@ -1691,6 +1709,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         clone.withReceivedTimestamp(getReceivedTimestamp());
         clone.bodyAsReceived = bodyAsReceived;
         clone.contentEncodingAsReceived = contentEncodingAsReceived;
+        clone.undecodableQueryString = undecodableQueryString;
         return clone;
     }
 
@@ -1720,6 +1739,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         clone.withReceivedTimestamp(getReceivedTimestamp());
         clone.bodyAsReceived = bodyAsReceived;
         clone.contentEncodingAsReceived = contentEncodingAsReceived;
+        clone.undecodableQueryString = undecodableQueryString;
         return clone;
     }
 

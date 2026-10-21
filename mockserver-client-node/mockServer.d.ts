@@ -71,6 +71,8 @@ export type Expectation = {
   capture?: CaptureRule[];
   /** added to allow request and response log output to be used to create expectations */
   timestamp?: string;
+  /** optional arbitrary metadata (string keys, any JSON values) returned on retrieve and usable to retrieve or clear expectations by metadata; never affects request matching */
+  metadata?: { [key: string]: any };
 };
 
 /**

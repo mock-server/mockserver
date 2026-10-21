@@ -497,6 +497,7 @@ const EXPECTATION_SPEC: FieldSpec[] = [
   ['steps', 'Steps', 'structSlice:ExpectationStep'],
   ['capture', 'Capture', 'structSlice:CaptureRule'],
   ['namespace', 'Namespace', 'string'],
+  ['metadata', 'Metadata', 'metadata'],
   ['times', 'Times', 'struct:Times'],
   ['timeToLive', 'TimeToLive', 'struct:TimeToLive'],
   ['timestamp', 'Timestamp', 'string'],
@@ -739,6 +740,8 @@ function renderValue(kind: string, v: unknown, ctx: Ctx, d: number): string {
     case 'intSlice': return renderIntSlice((v as unknown[]) ?? []);
     case 'body': return renderBody(v, ctx, d);
     case 'raw': return renderRaw(v, d);
+    // `mockserver.Metadata` is a named `map[string]any`, so the raw map literal is retyped to it.
+    case 'metadata': return renderRaw(v, d).replace(/^map\[string\]interface\{\}/, 'mockserver.Metadata');
     case 'httpRequestPtr': return renderRequestPtr(v as Record<string, unknown>, ctx, d);
     default: return renderRaw(v, d);
   }

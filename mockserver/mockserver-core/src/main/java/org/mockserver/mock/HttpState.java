@@ -823,6 +823,8 @@ public class HttpState {
         // global expectations intact. Takes precedence over request-matcher / id
         // clearing for expectations; logs are not namespaced so are left untouched.
         String namespaceFilter = resolveNamespaceFilter(request);
+        // decided from the raw query: a request naming any filter, or one that cannot be decoded, is never an unfiltered clear
+        ExpectationFilter expectationFilter = ExpectationFilter.fromControlPlaneRequest(request).requireComplete(true);
         RequestDefinition requestDefinition = null;
         ExpectationId expectationId = null;
         if (isNotBlank(request.getBodyAsString())) {
@@ -834,6 +836,26 @@ public class HttpState {
         }
         if (requestDefinition != null) {
             requestDefinition.withLogCorrelationId(logCorrelationId);
+        }
+        if (expectationFilter.isFiltered()) {
+            if (isNotBlank(request.getBodyAsString()) && expectationId == null && requestDefinition == null) {
+                throw new IllegalArgumentException("the request body is neither a request matcher nor an expectation id");
+            }
+            // Like a namespace clear, a metadata or unmatched clear removes expectations only, because the
+            // event log carries neither; every filter present (namespace, body, metadata, unmatched) must hold.
+            String typeParameter = request.getFirstQueryStringParameter("type");
+            if (isNotBlank(typeParameter) && !"expectations".equalsIgnoreCase(typeParameter) && !"all".equalsIgnoreCase(typeParameter)) {
+                throw new IllegalArgumentException("metadata and unmatched filters only apply to type=expectations or type=all, not type=" + typeParameter);
+            }
+            final String namespace = namespaceFilter;
+            requestMatchers.clear(
+                requestDefinition,
+                expectationId,
+                expectation -> (isBlank(namespace) || namespace.equals(expectation.getNamespace())) && expectationFilter.matches(expectation),
+                expectationFilter,
+                logCorrelationId
+            );
+            return;
         }
         try {
             ClearType type = ClearType.valueOf(defaultIfEmpty(request.getFirstQueryStringParameter("type").toUpperCase(), "ALL"));
@@ -1849,6 +1871,13 @@ public class HttpState {
                 // ?namespace=T (or the configured namespace header) returns only that
                 // tenant's expectations plus global (no-namespace) expectations.
                 final String namespaceFilter = resolveNamespaceFilter(request);
+                final ExpectationFilter expectationFilter = ExpectationFilter.fromControlPlaneRequest(request).requireComplete(false);
+                if (expectationFilter.hasSelection() && type != RetrieveType.ACTIVE_EXPECTATIONS) {
+                    throw new IllegalArgumentException("metadata and unmatched filters only apply to active_expectations retrieval");
+                }
+                if (expectationFilter.hasPaging() && type != RetrieveType.ACTIVE_EXPECTATIONS && type != RetrieveType.RECORDED_EXPECTATIONS) {
+                    throw new IllegalArgumentException("limit and offset only apply to active_expectations and recorded_expectations retrieval");
+                }
 
                 // T1.9 cluster verify/retrieve fan-in. When ?fanInLocalOnly=true the caller is a peer
                 // fan-in query — serve ONLY this node's log (infinite-recursion guard). Otherwise, when
@@ -2273,10 +2302,10 @@ public class HttpState {
                                 break;
                             }
                             case LOG_ENTRIES: {
-                                List<LogEntry> logEntries = awaitRetrieve(
+                                List<LogEntry> logEntries = expectationFilter.page(awaitRetrieve(
                                     consumer -> mockServerLog.retrieveRecordedExpectationLogEntries(requestDefinition, consumer),
                                     logCorrelationId, request
-                                );
+                                ));
                                 response.withBody(writtenBody(MediaType.JSON_UTF_8, writer -> getLogEntrySerializer().serialize(logEntries, writer)));
                                 if (logEntry != null) {
                                     mockServerLogger.logEvent(logEntry);
@@ -2371,6 +2400,12 @@ public class HttpState {
                                 .filter(expectation -> isBlank(expectation.getNamespace()) || namespaceFilter.equals(expectation.getNamespace()))
                                 .collect(Collectors.toList());
                         }
+                        if (expectationFilter.hasSelection()) {
+                            expectations = expectations.stream()
+                                .filter(expectationFilter::matches)
+                                .collect(Collectors.toList());
+                        }
+                        expectations = expectationFilter.page(expectations);
                         final List<Expectation> selected = expectations;
                         switch (format) {
                             case JAVA:
@@ -8702,6 +8737,8 @@ public class HttpState {
                 );
             }
         }
+        // paged before extraction, which changes bodies but never membership, so only the returned page writes files
+        processed = ExpectationFilter.fromControlPlaneRequest(request).page(processed);
         if (bodyFileExtractor != null) {
             processed = bodyFileExtractor.extract(processed);
         }

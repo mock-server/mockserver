@@ -716,3 +716,46 @@ describe('mergeUnmodeledFields — jwt (jwtModeled)', () => {
     expect((withFlag['httpRequest'] as Record<string, unknown>)['jwt']).toEqual({ claims: { sub: 'user-1' } });
   });
 });
+
+describe('metadata — preserved verbatim on edit (never matched, never modeled by the form)', () => {
+  // Mirrors test-fixtures/expectations/top_metadata.json: every JSON value kind, including null.
+  const metadata = {
+    owner: 'team-a',
+    ticket: 4211,
+    ratio: 0.5,
+    flaky: false,
+    note: null,
+    tags: ['smoke', 'checkout'],
+    contact: { team: 'checkout', oncall: ['ann', 'bob'] },
+    literal: '!not?optional 100%+a b',
+  };
+  const original = {
+    id: 'metadata-1',
+    httpRequest: { method: 'GET', path: '/metadata' },
+    httpResponse: { statusCode: 200, body: 'ok' },
+    metadata,
+  };
+
+  it('an Advanced edit of the status code saves metadata intact', () => {
+    const wire = buildExpectationJson(
+      baseMatcher({ id: 'metadata-1', path: '/metadata' }),
+      staticAction({ editOriginal: original, editActionModeled: true, scenarioModeled: true, jwtModeled: true }, 201),
+    );
+    expect((wire['httpResponse'] as Record<string, unknown>)['statusCode']).toBe(201);
+    expect(wire['metadata']).toEqual(metadata);
+    expect(wire['metadata']).not.toBe(metadata);
+  });
+
+  it('a Quick-path edit with an unmodeled action saves metadata intact', () => {
+    const wire = buildExpectationJson(
+      baseMatcher({ id: 'metadata-1', path: '/metadata-moved' }),
+      staticAction({ editOriginal: original, editActionModeled: false }),
+    );
+    expect((wire['httpRequest'] as Record<string, unknown>)['path']).toBe('/metadata-moved');
+    expect(wire['metadata']).toEqual(metadata);
+  });
+
+  it('is listed among the preserved fields the editor shows', () => {
+    expect(unmodeledFieldNames(original)).toContain('metadata');
+  });
+});

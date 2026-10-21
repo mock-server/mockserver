@@ -25,6 +25,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.ExpectationFilter;
 import org.mockserver.mock.MockMode;
 import org.mockserver.mock.OpenAPIExpectation;
 import org.mockserver.mock.breakpoint.BreakpointPhase;
@@ -1227,7 +1228,15 @@ public class MockServerClient implements Stoppable {
      * @param expectationId the expectation id that is used to clear expectations and logs
      */
     public MockServerClient clear(String expectationId) {
-        return clear(expectationId(expectationId));
+        return clear(expectationId(requireExpectationId(expectationId)));
+    }
+
+    // a missing id would be sent as an empty body, which clears every expectation
+    private static String requireExpectationId(String expectationId) {
+        if (isBlank(expectationId)) {
+            throw new IllegalArgumentException("the expectation id must not be null or blank; use clear((RequestDefinition) null) to clear everything");
+        }
+        return expectationId;
     }
 
     /**
@@ -1236,6 +1245,7 @@ public class MockServerClient implements Stoppable {
      * @param expectationId the expectation id that is used to clear expectations and logs
      */
     public MockServerClient clear(ExpectationId expectationId) {
+        requireExpectationId(expectationId != null ? expectationId.getId() : null);
         sendRequest(
             request()
                 .withMethod("PUT")
@@ -1278,6 +1288,9 @@ public class MockServerClient implements Stoppable {
      * @param namespace the namespace (tenant) whose expectations to clear
      */
     public MockServerClient clearByNamespace(String namespace) {
+        if (isBlank(namespace)) {
+            throw new IllegalArgumentException("the namespace must not be null or blank; a blank namespace would clear every namespace");
+        }
         sendRequest(
             request()
                 .withMethod("PUT")
@@ -1291,13 +1304,73 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
+     * Clear only the expectations that match both the request matcher and the filter, for example by
+     * metadata or because they have never matched a request. The event log is left untouched.
+     *
+     * @param requestDefinition the http request matched against each expectation, or null for all expectations
+     * @param filter            the metadata and unmatched selection (limit and offset are not supported for clear)
+     * @throws IllegalArgumentException if the filter is null, selects nothing, or pages
+     */
+    public MockServerClient clear(RequestDefinition requestDefinition, ExpectationFilter filter) {
+        // fail closed: a filter that selects nothing would otherwise be sent as a plain clear of every expectation
+        if (filter == null || !filter.hasSelection()) {
+            throw new IllegalArgumentException("clear with a filter requires a metadata or unmatched selection; use clear(RequestDefinition) to clear without one");
+        }
+        if (filter.hasPaging()) {
+            throw new IllegalArgumentException("limit and offset are not supported for clear");
+        }
+        sendRequest(
+            filter.applyTo(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("clear"))
+                    .withQueryStringParameter("type", ClearType.EXPECTATIONS.name().toLowerCase())
+                    .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
+            ),
+            true
+        );
+        return clientClass.cast(this);
+    }
+
+    /**
+     * Clear the expectations whose metadata has {@code key} with a value equal to {@code value}. The event log is
+     * left untouched.
+     *
+     * @param key   the metadata key, must not be blank
+     * @param value the metadata value, must not be null (use {@link #clearByMetadataKey(String)} for any value, or
+     *              {@code NullNode.getInstance()} for a JSON null); matched as described on {@link ExpectationFilter#withMetadata(String, Object)}
+     * @throws IllegalArgumentException if the key is blank or the value is null
+     */
+    public MockServerClient clearByMetadata(String key, Object value) {
+        return clear(null, ExpectationFilter.expectationFilter().withMetadata(key, value));
+    }
+
+    /**
+     * Clear the expectations whose metadata has {@code key}, whatever its value. The event log is left untouched.
+     *
+     * @param key the metadata key, must not be blank
+     */
+    public MockServerClient clearByMetadataKey(String key) {
+        return clear(null, ExpectationFilter.expectationFilter().withMetadataKey(key));
+    }
+
+    /**
+     * Clear the active expectations that have never matched a request ("remove unused mocks"). The event log is
+     * left untouched.
+     */
+    public MockServerClient clearUnmatchedExpectations() {
+        return clear(null, ExpectationFilter.expectationFilter().withUnmatched(true));
+    }
+
+    /**
      * Clear expectations, logs or both that match the expectation id
      *
      * @param expectationId the expectation id that is used to clear expectations and logs
      * @param type          the type to clear, EXPECTATION, LOG or BOTH
      */
     public MockServerClient clear(String expectationId, ClearType type) {
-        return clear(expectationId(expectationId), type);
+        return clear(expectationId(requireExpectationId(expectationId)), type);
     }
 
     /**
@@ -1307,6 +1380,7 @@ public class MockServerClient implements Stoppable {
      * @param type          the type to clear, EXPECTATION, LOG or BOTH
      */
     public MockServerClient clear(ExpectationId expectationId, ClearType type) {
+        requireExpectationId(expectationId != null ? expectationId.getId() : null);
         sendRequest(
             request()
                 .withMethod("PUT")
@@ -2218,6 +2292,36 @@ public class MockServerClient implements Stoppable {
     }
 
     /**
+     * Retrieve one page of the recorded expectations that match the request matcher, in the order the requests were
+     * received.
+     *
+     * @param requestDefinition the http request matched against each recorded request, or null for all
+     * @param offset            the number of recorded expectations to skip, zero or more
+     * @param limit             the maximum number to return, zero or more
+     * @return the page of recorded expectations
+     */
+    public Expectation[] retrieveRecordedExpectations(RequestDefinition requestDefinition, int offset, int limit) {
+        HttpResponse httpResponse = sendRequest(
+            ExpectationFilter.expectationFilter().withOffset(offset).withLimit(limit).applyTo(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("retrieve"))
+                    .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                    .withQueryStringParameter("format", Format.JSON.name())
+                    .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
+            ),
+            true
+        );
+        String recordedExpectations = httpResponse.getBodyAsString();
+        if (isNotBlank(recordedExpectations) && !recordedExpectations.equals("[]")) {
+            return expectationSerializer.deserializeArray(recordedExpectations, true);
+        } else {
+            return new Expectation[0];
+        }
+    }
+
+    /**
      * Retrieve the request-response combinations that have been recorded as a list of expectations, only those that match the httpRequest parameter are returned, use null to retrieve all requests
      *
      * @param requestDefinition the http request that is matched against when deciding whether to return each request, use null for the parameter to retrieve for all requests
@@ -2910,6 +3014,79 @@ public class MockServerClient implements Stoppable {
         } else {
             return new Expectation[0];
         }
+    }
+
+    /**
+     * Retrieve the active expectations that match both the request matcher and the filter, for example by metadata,
+     * because they have never matched a request, or one page of them ({@code limit} and {@code offset}). Pages are
+     * taken in the order expectations are matched (highest priority first, then oldest first).
+     *
+     * @param requestDefinition the http request matched against each expectation, or null for all expectations
+     * @param filter            the metadata, unmatched and paging options
+     * @return the selected active expectations
+     */
+    public Expectation[] retrieveActiveExpectations(RequestDefinition requestDefinition, ExpectationFilter filter) {
+        String activeExpectations = retrieveActiveExpectations(requestDefinition, filter, Format.JSON);
+        if (isNotBlank(activeExpectations) && !activeExpectations.equals("[]")) {
+            return expectationSerializer.deserializeArray(activeExpectations, true);
+        } else {
+            return new Expectation[0];
+        }
+    }
+
+    /**
+     * As {@link #retrieveActiveExpectations(RequestDefinition, ExpectationFilter)}, in the requested format.
+     *
+     * @param requestDefinition the http request matched against each expectation, or null for all expectations
+     * @param filter            the metadata, unmatched and paging options
+     * @param format            the format to retrieve the expectations in
+     * @return the selected active expectations in the requested format
+     */
+    public String retrieveActiveExpectations(RequestDefinition requestDefinition, ExpectationFilter filter, Format format) {
+        HttpResponse httpResponse = sendRequest(
+            (filter != null ? filter : ExpectationFilter.expectationFilter()).applyTo(
+                request()
+                    .withMethod("PUT")
+                    .withContentType(APPLICATION_JSON_UTF_8)
+                    .withPath(calculatePath("retrieve"))
+                    .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                    .withQueryStringParameter("format", format.name())
+                    .withBody(requestDefinition != null ? requestDefinitionSerializer.serialize(requestDefinition) : "", StandardCharsets.UTF_8)
+            ),
+            true
+        );
+        return httpResponse.getBodyAsString();
+    }
+
+    /**
+     * Retrieve the active expectations whose metadata has {@code key} with a value equal to {@code value}.
+     *
+     * @param key   the metadata key
+     * @param value the metadata value: a String is compared as text, any other value as JSON
+     * @return the matching active expectations
+     */
+    public Expectation[] retrieveActiveExpectationsByMetadata(String key, Object value) {
+        return retrieveActiveExpectations(null, ExpectationFilter.expectationFilter().withMetadata(key, value));
+    }
+
+    /**
+     * Retrieve the active expectations whose metadata has {@code key}, whatever its value.
+     *
+     * @param key the metadata key, must not be blank
+     * @return the matching active expectations
+     */
+    public Expectation[] retrieveActiveExpectationsByMetadataKey(String key) {
+        return retrieveActiveExpectations(null, ExpectationFilter.expectationFilter().withMetadataKey(key));
+    }
+
+    /**
+     * Retrieve the active expectations that have never matched a request, for example to find mocks a test suite
+     * no longer uses. The count is per MockServer instance, and resets when an expectation is changed.
+     *
+     * @return the active expectations that have not matched any request
+     */
+    public Expectation[] retrieveUnmatchedExpectations() {
+        return retrieveActiveExpectations(null, ExpectationFilter.expectationFilter().withUnmatched(true));
     }
 
     /**

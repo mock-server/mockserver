@@ -56,6 +56,8 @@ class Expectation implements \JsonSerializable
     private array $crossProtocolScenarios = [];
     private ?Times $times = null;
     private ?TimeToLive $timeToLive = null;
+    /** @var array<string, mixed> */
+    private array $metadata = [];
 
     public function id(string $id): self
     {
@@ -324,6 +326,44 @@ class Expectation implements \JsonSerializable
         return $this;
     }
 
+    /**
+     * Set the expectation's metadata (replaces any previously set metadata).
+     *
+     * Metadata is free-form data (owner, ticket, tags, ...) stored with the
+     * expectation and returned on retrieve; it never affects matching but can
+     * select expectations to retrieve or clear (see {@see ExpectationFilter}).
+     * Values may be any JSON value, including null. Use {@code new \stdClass()}
+     * for a nested empty JSON object, since PHP's {@code []} encodes as a list.
+     *
+     * @param array<string, mixed> $metadata
+     */
+    public function metadata(array $metadata): self
+    {
+        $this->metadata = $metadata;
+        return $this;
+    }
+
+    /**
+     * Add (or replace) a single metadata entry.
+     */
+    public function addMetadata(string $key, mixed $value): self
+    {
+        $this->metadata[$key] = $value;
+        return $this;
+    }
+
+    /**
+     * @return array<string, mixed> the metadata (empty when none is set)
+     */
+    public function getMetadata(): array
+    {
+        if ($this->rawData !== null) {
+            $metadata = $this->rawData['metadata'] ?? [];
+            return is_array($metadata) ? $metadata : (array) $metadata;
+        }
+        return $this->metadata;
+    }
+
     public function getId(): ?string
     {
         return $this->id;
@@ -487,6 +527,9 @@ class Expectation implements \JsonSerializable
         if ($this->timeToLive !== null) {
             $data['timeToLive'] = $this->timeToLive->toArray();
         }
+        if ($this->metadata !== []) {
+            $data['metadata'] = self::metadataObject($this->metadata);
+        }
 
         return $data;
     }
@@ -515,10 +558,26 @@ class Expectation implements \JsonSerializable
     public static function fromArray(array $data): self
     {
         $expectation = new self();
+        if (array_key_exists('metadata', $data) && is_array($data['metadata'])) {
+            $data['metadata'] = self::metadataObject($data['metadata']);
+        }
         $expectation->rawData = $data;
         if (isset($data['httpRequest']) && is_array($data['httpRequest'])) {
             $expectation->httpRequest = HttpRequest::fromArray($data['httpRequest']);
         }
         return $expectation;
+    }
+
+    /**
+     * Metadata is always a JSON object, but a PHP list (including an empty
+     * array, or {@code {"0": ...}} decoded with {@code json_decode(..., true)})
+     * would encode as a JSON array, so encode those as an object.
+     *
+     * @param array<array-key, mixed> $metadata
+     * @return array<array-key, mixed>|\stdClass
+     */
+    private static function metadataObject(array $metadata): array|\stdClass
+    {
+        return array_is_list($metadata) ? (object) $metadata : $metadata;
     }
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import JsonListItem from '../components/JsonListItem';
 import type { Description } from '../types';
@@ -562,5 +562,44 @@ describe('JsonListItem', () => {
       />,
     );
     expect(screen.queryByText(/^P\d+$/)).not.toBeInTheDocument();
+  });
+
+  it('shows expectation metadata as a key/value list when expanded', async () => {
+    const user = userEvent.setup();
+    render(
+      <JsonListItem
+        item={{
+          key: 'e1',
+          description: 'GET /metadata',
+          value: {
+            id: 'metadata-1',
+            httpRequest: { method: 'GET', path: '/metadata' },
+            httpResponse: { body: 'ok' },
+            metadata: { owner: 'team-a', ticket: 4211, note: null, tags: ['smoke', 'checkout'], contact: { team: 'checkout' } },
+          },
+        }}
+        index={1}
+      />,
+    );
+    expect(screen.queryByLabelText('Metadata')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Expand' }));
+    const list = await screen.findByLabelText('Metadata');
+    expect(list.tagName).toBe('DL');
+    const terms = within(list).getAllByRole('term').map((t) => t.textContent);
+    expect(terms).toEqual(['owner', 'ticket', 'note', 'tags', 'contact']);
+    const values = within(list).getAllByRole('definition').map((d) => d.textContent);
+    expect(values).toEqual(['team-a', '4211', 'null', '["smoke","checkout"]', '{"team":"checkout"}']);
+  });
+
+  it('renders no metadata section when the expectation has none', async () => {
+    const user = userEvent.setup();
+    render(
+      <JsonListItem
+        item={{ key: 'e2', description: 'GET /plain', value: { httpRequest: { method: 'GET', path: '/plain' } } }}
+        index={1}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: 'Expand' }));
+    expect(screen.queryByLabelText('Metadata')).not.toBeInTheDocument();
   });
 });

@@ -1156,6 +1156,41 @@ function wireResponseToJava(resp: Record<string, unknown>, notes: Set<string>): 
   return parts.join('\n');
 }
 
+/** The expectation's `metadata` object, or undefined when absent / not an object. */
+function metadataObject(json: Record<string, unknown>): Record<string, unknown> | undefined {
+  const m = json['metadata'];
+  return m && typeof m === 'object' && !Array.isArray(m) ? (m as Record<string, unknown>) : undefined;
+}
+
+/** True when a metadata value has no Java literal and must be carried as JSON text. */
+function metadataNeedsJson(v: unknown): boolean {
+  return v !== null && typeof v === 'object';
+}
+
+/** A Java literal for a scalar metadata value, typed as the server's Java generator types it. */
+function metadataScalarJava(v: unknown): string {
+  if (v === null || v === undefined) return '(Object) null';
+  if (typeof v === 'string') return `"${escapeJava(v)}"`;
+  if (typeof v === 'boolean') return String(v);
+  const n = Number(v);
+  if (!Number.isInteger(n)) return String(n);
+  if (Math.abs(n) <= 2147483647) return String(n);
+  if (Math.abs(n) < 9.2e18 && !String(n).includes('e')) return `${n}L`;
+  return String(n).includes('e') ? String(n) : `${n}.0`;
+}
+
+/**
+ * `.withMetadata(key, value)` per metadata entry. Objects and arrays have no Java
+ * literal, so they are carried as their JSON text through `withMetadataJson`.
+ */
+function metadataToJava(json: Record<string, unknown>): string[] {
+  const metadata = metadataObject(json);
+  if (!metadata) return [];
+  return Object.entries(metadata).map(([k, v]) => metadataNeedsJson(v)
+    ? `  .withMetadataJson("${escapeJava(k)}", "${escapeJava(JSON.stringify(v))}")`
+    : `  .withMetadata("${escapeJava(k)}", ${metadataScalarJava(v)})`);
+}
+
 /**
  * Fluent modifier lines that sit on the ForwardChainExpectation returned by
  * `when(...)`, before the terminal action: namespace, percentage, scenario
@@ -1169,6 +1204,7 @@ function chainModifierLines(json: Record<string, unknown>): string[] {
   if (typeof json['namespace'] === 'string' && (json['namespace'] as string).trim()) {
     out.push(`  .withNamespace("${escapeJava(json['namespace'] as string)}")`);
   }
+  out.push(...metadataToJava(json));
   if (typeof json['percentage'] === 'number') {
     out.push(`  .withPercentage(${json['percentage']})`);
   }

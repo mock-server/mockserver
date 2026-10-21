@@ -21,10 +21,13 @@ from mockserver.models import (
     HttpSseResponse,
     HttpTemplate,
     HttpWebSocketResponse,
+    _require_not_blank,
 )
 
 if TYPE_CHECKING:
     from mockserver.async_client import AsyncMockServerClient
+
+_UNSET = object()
 
 
 class ForwardChainExpectation:
@@ -42,6 +45,32 @@ class ForwardChainExpectation:
 
     def with_priority(self, priority: int) -> ForwardChainExpectation:
         self._expectation.priority = priority
+        return self
+
+    def with_metadata(self, key_or_metadata, value=_UNSET) -> ForwardChainExpectation:
+        """Label this expectation, for example with an owner or a ticket number.
+
+        ``with_metadata("owner", "team-a")`` adds (or replaces) one entry, whose value
+        may be any JSON value; ``with_metadata({...})`` replaces all metadata, and an
+        empty dict or ``None`` removes it. Metadata is returned on retrieve and can be
+        used to retrieve or clear expectations, but never affects matching.
+        """
+        if key_or_metadata is None or isinstance(key_or_metadata, dict):
+            if value is not _UNSET:
+                raise ValueError("with_metadata(mapping) takes no value")
+            if not key_or_metadata:
+                self._expectation.metadata = None
+            else:
+                for key in key_or_metadata:
+                    _require_not_blank(key, "metadata key")
+                self._expectation.metadata = dict(key_or_metadata)
+            return self
+        if value is _UNSET:
+            raise ValueError("with_metadata(key, value) requires a value")
+        key = _require_not_blank(key_or_metadata, "metadata key")
+        metadata = dict(self._expectation.metadata or {})
+        metadata[key] = value
+        self._expectation.metadata = metadata
         return self
 
     def with_chaos(self, chaos: HttpChaosProfile) -> ForwardChainExpectation:

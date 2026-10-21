@@ -53,7 +53,7 @@ diff (i.e. the model was fixed) — forcing the stale entry to be removed.
   response template (JS; MUSTACHE+delay+primary+parameters), response class/object callback, error, websocket, sse, binary (+upstream), dns, grpc stream, grpc bidi, llm
   (completion+conversationPredicates+normalization+streamingPhysics; embedding+rerank+moderation+contentFilter+chaos).
 - Response sequences: httpResponses with responseMode SEQUENTIAL / WEIGHTED(+responseWeights) / SWITCH(+switchAfter) / RANDOM.
-- Top-level: chaos, rateLimit, percentage, beforeActions, afterActions, capture, namespace, steps, scenario
+- Top-level: chaos, rateLimit, percentage, beforeActions, afterActions, capture, namespace, metadata (`top_metadata.json`: nested values, a null, and `!`/`?`/`%`/`+`/space characters), steps, scenario
   bindings + crossProtocolScenarios, explicit priority / times / timeToLive.
 
 Every fixture is a single Expectation object and is validated against a live MockServer (201 on PUT). Adding a

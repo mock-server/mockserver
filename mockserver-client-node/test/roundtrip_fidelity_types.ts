@@ -511,6 +511,23 @@ export const dateTimeWithValue: DateTimeMatcher = { after: 'now', value: 'x' };
 // @ts-expect-error applyTruncationLast is a boolean
 export const dateTimeStringFlag: DateTimeMatcher = { after: 'now', applyTruncationLast: 'true' };
 
+/* Mirrors top_metadata.json: metadata carries any JSON value. */
+export const topMetadataLiteral: Expectation = {
+    id: 'metadata-1',
+    httpRequest: { path: '/metadata' },
+    httpResponse: { body: 'ok' },
+    metadata: {
+        owner: 'team-a',
+        ticket: 4211,
+        ratio: 0.5,
+        flaky: false,
+        note: null,
+        tags: ['smoke', 'checkout'],
+        contact: { team: 'checkout', oncall: ['ann', 'bob'] },
+        literal: '!not?optional 100%+a b'
+    }
+};
+
 /* ================================================================== *
  * SECTION 2 — KNOWN-GAP REGISTER
  *

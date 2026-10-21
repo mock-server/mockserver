@@ -5534,6 +5534,40 @@ impl Expectation {
         self.steps = Some(steps);
         self
     }
+
+    /// Replace the expectation's `metadata`: free-form labels (owner, ticket,
+    /// tags, …) that MockServer stores and returns but never matches requests on.
+    /// Values may be any JSON, including `null`. An empty map removes the field.
+    ///
+    /// Select or clear expectations by metadata with [`ExpectationFilter`].
+    pub fn metadata(mut self, metadata: serde_json::Map<String, serde_json::Value>) -> Self {
+        if metadata.is_empty() {
+            self.extra.remove("metadata");
+        } else {
+            self.extra
+                .insert("metadata".into(), serde_json::Value::Object(metadata));
+        }
+        self
+    }
+
+    /// Add or replace one `metadata` entry, keeping the others. The value converts as
+    /// `serde_json` converts it, so a NaN or infinite `f64` is stored as `null`.
+    pub fn metadata_entry(
+        mut self,
+        key: impl Into<String>,
+        value: impl Into<serde_json::Value>,
+    ) -> Self {
+        let mut metadata = self.metadata_map().cloned().unwrap_or_default();
+        metadata.insert(key.into(), value.into());
+        self.extra
+            .insert("metadata".into(), serde_json::Value::Object(metadata));
+        self
+    }
+
+    /// The expectation's `metadata` object, or `None` when it has none.
+    pub fn metadata_map(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
+        self.extra.get("metadata").and_then(serde_json::Value::as_object)
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -5698,6 +5732,191 @@ impl ClearType {
             ClearType::Log => "LOG",
             ClearType::Expectations => "EXPECTATIONS",
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Expectation filter (metadata, unmatched, paging)
+// ---------------------------------------------------------------------------
+
+/// A metadata value to select on. A string is sent as its text; any other value
+/// as its compact JSON (`42`, `true`, `["a","b"]`, `null`).
+///
+/// Deliberately not implemented for `Option`, so `None` cannot be mistaken for
+/// "any value": use [`ExpectationFilter::metadata_key`] for that, or
+/// `serde_json::Value::Null` to select a JSON `null`.
+pub trait IntoMetadataValue {
+    /// The value as JSON, or why it has none. A NaN or infinite `f64` has no JSON form;
+    /// `serde_json` would turn it into `null`, which would select a different expectation.
+    fn into_metadata_value(self) -> Result<serde_json::Value, String>;
+}
+
+impl IntoMetadataValue for serde_json::Value {
+    fn into_metadata_value(self) -> Result<serde_json::Value, String> {
+        Ok(self)
+    }
+}
+
+impl IntoMetadataValue for serde_json::Map<String, serde_json::Value> {
+    fn into_metadata_value(self) -> Result<serde_json::Value, String> {
+        Ok(serde_json::Value::Object(self))
+    }
+}
+
+impl<T: IntoMetadataValue> IntoMetadataValue for Vec<T> {
+    fn into_metadata_value(self) -> Result<serde_json::Value, String> {
+        self.into_iter()
+            .map(IntoMetadataValue::into_metadata_value)
+            .collect::<Result<Vec<_>, _>>()
+            .map(serde_json::Value::Array)
+    }
+}
+
+macro_rules! into_metadata_value_via_json {
+    ($($t:ty),*) => {$(
+        impl IntoMetadataValue for $t {
+            fn into_metadata_value(self) -> Result<serde_json::Value, String> {
+                Ok(serde_json::Value::from(self))
+            }
+        }
+    )*};
+}
+
+into_metadata_value_via_json!(&str, String, bool, i32, i64, u32, u64);
+
+impl IntoMetadataValue for f64 {
+    fn into_metadata_value(self) -> Result<serde_json::Value, String> {
+        serde_json::Number::from_f64(self)
+            .map(serde_json::Value::Number)
+            .ok_or_else(|| format!("the metadata value {self} is not a finite number"))
+    }
+}
+
+impl IntoMetadataValue for &String {
+    fn into_metadata_value(self) -> Result<serde_json::Value, String> {
+        Ok(serde_json::Value::String(self.clone()))
+    }
+}
+
+/// Selects expectations by metadata or by whether they have ever matched a
+/// request, and pages the retrieved list. Sent as query parameters on
+/// `PUT /mockserver/retrieve` and `PUT /mockserver/clear`.
+///
+/// Every selection that is set must hold. Blank keys and JSONPaths are rejected
+/// before anything is sent, and a clear must select something and must not
+/// page, so a mistaken filter can never widen into "clear every expectation".
+///
+/// ```
+/// use mockserver_client::ExpectationFilter;
+///
+/// let filter = ExpectationFilter::new().metadata("owner", "team-a").limit(10);
+/// ```
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ExpectationFilter {
+    metadata_key: Option<String>,
+    metadata_value: Option<String>,
+    metadata_json_path: Option<String>,
+    unmatched: bool,
+    offset: Option<u32>,
+    limit: Option<u32>,
+    invalid: Option<String>,
+}
+
+impl ExpectationFilter {
+    /// An empty filter.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Select expectations whose metadata has `key` with a value equal to
+    /// `value` (see [`IntoMetadataValue`] for how the value is sent).
+    pub fn metadata(mut self, key: impl Into<String>, value: impl IntoMetadataValue) -> Self {
+        self.metadata_key = Some(key.into());
+        match value.into_metadata_value() {
+            Ok(serde_json::Value::String(text)) => self.metadata_value = Some(text),
+            Ok(other) => self.metadata_value = Some(other.to_string()),
+            // kept and returned by query_pairs, so nothing is sent
+            Err(reason) => self.invalid = Some(reason),
+        }
+        self
+    }
+
+    /// Select expectations whose metadata has `key`, whatever its value.
+    pub fn metadata_key(mut self, key: impl Into<String>) -> Self {
+        self.metadata_key = Some(key.into());
+        self.metadata_value = None;
+        self
+    }
+
+    /// Select expectations whose metadata object the JSONPath selects at least
+    /// one value from, for example `$[?(@.owner == 'team-a')]`.
+    pub fn metadata_json_path(mut self, json_path: impl Into<String>) -> Self {
+        self.metadata_json_path = Some(json_path.into());
+        self
+    }
+
+    /// Select only expectations that have not matched any request.
+    pub fn unmatched(mut self, unmatched: bool) -> Self {
+        self.unmatched = unmatched;
+        self
+    }
+
+    /// Skip this many expectations (retrieve only).
+    pub fn offset(mut self, offset: u32) -> Self {
+        self.offset = Some(offset);
+        self
+    }
+
+    /// Return at most this many expectations (retrieve only).
+    pub fn limit(mut self, limit: u32) -> Self {
+        self.limit = Some(limit);
+        self
+    }
+
+    /// `true` when the filter selects a subset (metadata or unmatched).
+    pub fn has_selection(&self) -> bool {
+        self.metadata_key.is_some() || self.metadata_json_path.is_some() || self.unmatched
+    }
+
+    /// `true` when the filter pages the result.
+    pub fn has_paging(&self) -> bool {
+        self.offset.is_some() || self.limit.is_some()
+    }
+
+    /// Validate the filter and return its query parameters, in the order the
+    /// other MockServer clients send them. Values are raw; the caller encodes them.
+    pub(crate) fn query_pairs(&self) -> Result<Vec<(&'static str, String)>, String> {
+        if let Some(reason) = &self.invalid {
+            return Err(reason.clone());
+        }
+        let mut pairs = Vec::new();
+        if let Some(key) = &self.metadata_key {
+            if key.trim().is_empty() {
+                return Err("the metadata key must not be blank".into());
+            }
+            pairs.push(("metadataKey", key.clone()));
+            if let Some(value) = &self.metadata_value {
+                pairs.push(("metadataValue", value.clone()));
+            }
+        }
+        if let Some(path) = &self.metadata_json_path {
+            if path.trim().is_empty() {
+                return Err("the metadata JSONPath must not be blank".into());
+            }
+            pairs.push(("metadataJsonPath", path.clone()));
+        }
+        if self.unmatched {
+            pairs.push(("unmatched", "true".into()));
+        }
+        for (name, value) in [("limit", self.limit), ("offset", self.offset)] {
+            if let Some(value) = value {
+                if value > i32::MAX as u32 {
+                    return Err(format!("{name} must not be greater than {}", i32::MAX));
+                }
+                pairs.push((name, value.to_string()));
+            }
+        }
+        Ok(pairs)
     }
 }
 

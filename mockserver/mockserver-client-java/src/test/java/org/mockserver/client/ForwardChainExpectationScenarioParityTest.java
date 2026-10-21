@@ -44,6 +44,19 @@ public class ForwardChainExpectationScenarioParityTest {
     }
 
     @Test
+    public void shouldSetMetadataIncludingJsonValues() {
+        // when
+        forwardChainExpectation
+            .withMetadata("owner", "team-a")
+            .withMetadataJson("tags", "[\"smoke\",{\"n\":2}]");
+
+        // then
+        assertThat(expectation.getMetadata().get("owner"), is("team-a"));
+        assertThat(expectation.getMetadata().get("tags"), is(Arrays.asList("smoke", java.util.Collections.singletonMap("n", 2))));
+        org.junit.Assert.assertThrows(IllegalArgumentException.class, () -> forwardChainExpectation.withMetadataJson("tags", "[not json"));
+    }
+
+    @Test
     public void shouldSetHttpResponsesResponseModeWeightsAndSwitchAfter() {
         // given
         List<HttpResponse> responses = Arrays.asList(response().withBody("one"), response().withBody("two"));

@@ -65,6 +65,32 @@ export interface MockServerClientOptions {
 export type KeysToMultiValues = KeyToMultiValue;
 
 export type ClearType = 'EXPECTATIONS' | 'LOG' | 'ALL';
+
+/** A metadata value to select by: a string is compared as text, any other value as its JSON. */
+export type ExpectationMetadataValue = string | number | boolean | any[] | { [key: string]: any };
+
+/**
+ * Selects expectations to retrieve or clear. Every property is optional, but an invalid filter, a
+ * filtered clear that selects nothing, and a clear with limit or offset are all rejected before
+ * anything is sent.
+ */
+export interface ExpectationFilter {
+    /** select expectations whose metadata has this key (non-blank) */
+    metadataKey?: string;
+    /** with metadataKey, select only that key with this value; must not be null, pass the string 'null' to select a JSON null */
+    metadataValue?: ExpectationMetadataValue;
+    /** select expectations whose metadata object this JSONPath selects at least one value from */
+    metadataJsonPath?: string;
+    /** select only expectations that have never matched a request */
+    unmatched?: boolean;
+    /** retrieve only: the maximum number of expectations to return, an integer zero or more */
+    limit?: number;
+    /** retrieve only: the number of expectations to skip, an integer zero or more */
+    offset?: number;
+}
+
+/** An ExpectationFilter for a clear: no paging. */
+export type ClearExpectationFilter = Omit<ExpectationFilter, 'limit' | 'offset'>;
 export type CodeFormat = 'java' | 'javascript' | 'python' | 'go' | 'csharp' | 'ruby' | 'rust' | 'php'
     | 'JAVA' | 'JAVASCRIPT' | 'PYTHON' | 'GO' | 'CSHARP' | 'RUBY' | 'RUST' | 'PHP';
 
@@ -291,6 +317,12 @@ export interface ForwardChainExpectation {
 
     withId(id: string): ForwardChainExpectation;
 
+    /** Add (or replace) one metadata entry on the expectation, for example an owner or a ticket number. */
+    withMetadata(key: string, value: any): ForwardChainExpectation;
+
+    /** Set all metadata on the expectation, replacing any already set; null or {} removes it. */
+    withMetadata(metadata: { [key: string]: any } | null): ForwardChainExpectation;
+
     /**
      * Respond with the given response when the expectation is matched. Accepts a
      * plain httpResponse object, a response template (HttpTemplate), or a
@@ -344,9 +376,9 @@ export interface MockServerClient {
      */
     mockWithLLM(expectationOrBuilder: Expectation | Expectation[] | LlmMockBuilder | LlmConversationBuilder | LlmFailoverBuilder): Promise<RequestResponse>;
 
-    mockWithCallback(requestMatcher: RequestDefinition, requestHandler: (request: HttpRequest) => HttpResponse, times?: Times | number, priority?: number, timeToLive?: TimeToLive, id?: string): Promise<RequestResponse>;
+    mockWithCallback(requestMatcher: RequestDefinition, requestHandler: (request: HttpRequest) => HttpResponse, times?: Times | number, priority?: number, timeToLive?: TimeToLive, id?: string, metadata?: { [key: string]: any }): Promise<RequestResponse>;
 
-    mockWithForwardCallback(requestMatcher: RequestDefinition, forwardHandler: (request: HttpRequest) => HttpRequest, times?: Times | number, priority?: number, timeToLive?: TimeToLive, id?: string): Promise<RequestResponse>;
+    mockWithForwardCallback(requestMatcher: RequestDefinition, forwardHandler: (request: HttpRequest) => HttpRequest, times?: Times | number, priority?: number, timeToLive?: TimeToLive, id?: string, metadata?: { [key: string]: any }): Promise<RequestResponse>;
 
     mockWithForwardAndResponseCallback(requestMatcher: RequestDefinition, forwardHandler: (request: HttpRequest) => HttpRequest, responseHandler: (request: HttpRequest, response: HttpResponse) => HttpResponse, times?: Times | number, priority?: number, timeToLive?: TimeToLive, id?: string): Promise<RequestResponse>;
 
@@ -432,6 +464,28 @@ export interface MockServerClient {
     close(): Promise<void>;
 
     clear(pathOrRequestDefinition: PathOrRequestDefinition, type: ClearType): Promise<RequestResponse>;
+
+    /**
+     * Clear only the expectations that match both the request matcher and the filter (PUT
+     * /mockserver/clear?type=expectations). The event log is left untouched. Throws, sending nothing,
+     * if the filter selects nothing (no metadataKey, metadataJsonPath or unmatched: true) or pages.
+     */
+    clear(pathOrRequestDefinition: PathOrRequestDefinition, filter: ClearExpectationFilter): Promise<RequestResponse>;
+
+    /**
+     * As clear(pathOrRequestDefinition, filter), but a null, undefined or non-object filter throws before
+     * anything is sent, so a missing filter can never clear everything.
+     */
+    clearWithFilter(pathOrRequestDefinition: PathOrRequestDefinition, filter: ClearExpectationFilter): Promise<RequestResponse>;
+
+    /** Clear the expectations whose metadata has key with a value equal to value. Throws on a blank key or a null value. */
+    clearByMetadata(key: string, value: ExpectationMetadataValue): Promise<RequestResponse>;
+
+    /** Clear the expectations whose metadata has key, whatever its value. Throws on a blank key. */
+    clearByMetadataKey(key: string): Promise<RequestResponse>;
+
+    /** Clear the expectations that have never matched a request. */
+    clearUnmatchedExpectations(): Promise<RequestResponse>;
 
     clearById(expectationId: string, type: ClearType): Promise<RequestResponse>;
 
@@ -647,7 +701,26 @@ export interface MockServerClient {
 
     retrieveActiveExpectations(pathOrRequestDefinition: PathOrRequestDefinition): Promise<Expectation[]>;
 
+    /**
+     * Retrieve the active expectations that match both the request matcher and the filter, for example by
+     * metadata, because they have never matched a request, or one page of them. Throws, sending nothing,
+     * on an invalid filter.
+     */
+    retrieveActiveExpectations(pathOrRequestDefinition: PathOrRequestDefinition, filter: ExpectationFilter): Promise<Expectation[]>;
+
+    /** Retrieve the active expectations whose metadata has key with a value equal to value. Throws on a blank key or a null value. */
+    retrieveActiveExpectationsByMetadata(key: string, value: ExpectationMetadataValue): Promise<Expectation[]>;
+
+    /** Retrieve the active expectations whose metadata has key, whatever its value. Throws on a blank key. */
+    retrieveActiveExpectationsByMetadataKey(key: string): Promise<Expectation[]>;
+
+    /** Retrieve the active expectations that have never matched a request. */
+    retrieveUnmatchedExpectations(): Promise<Expectation[]>;
+
     retrieveRecordedExpectations(pathOrRequestDefinition: PathOrRequestDefinition): Promise<Expectation[]>;
+
+    /** Retrieve one page of the recorded expectations: skip offset, return at most limit (integers zero or more). */
+    retrieveRecordedExpectations(pathOrRequestDefinition: PathOrRequestDefinition, offset: number | undefined, limit?: number): Promise<Expectation[]>;
 
     retrieveExpectationsAsCode(format: CodeFormat, pathOrRequestDefinition?: PathOrRequestDefinition): Promise<string>;
 

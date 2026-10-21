@@ -334,6 +334,34 @@ JSON-RPC task response to the caller *and* POSTs the completed task to the
 webhook URL. As with MCP mocking, `build` returns the raw expectation Hashes if
 you prefer to register them yourself.
 
+## Expectation Metadata
+
+Label expectations with `metadata` (String keys, any JSON value), then retrieve or clear them by
+metadata, find the ones that never matched a request, and page large lists:
+
+```ruby
+client.when(MockServer::HttpRequest.new(path: '/checkout'))
+      .with_metadata('owner' => 'team-a', 'ticket' => 4211, 'tags' => ['smoke'])
+      .respond(MockServer::HttpResponse.new(status_code: 200))
+
+client.retrieve_active_expectations_by_metadata('owner', 'team-a')
+client.retrieve_active_expectations_by_metadata_key('ticket')
+client.retrieve_unmatched_expectations
+client.retrieve_active_expectations(
+  filter: MockServer::ExpectationFilter.new.with_metadata_json_path("$.tags[?(@ == 'smoke')]").with_limit(10)
+)
+client.retrieve_recorded_expectations(offset: 0, limit: 50)
+
+client.clear_by_metadata('owner', 'team-a')
+client.clear_by_metadata_key('ticket')
+client.clear_unmatched_expectations
+```
+
+A String value is matched as text; any other value (`42`, `true`, an Array or Hash) is matched as
+JSON, and `MockServer::ExpectationFilter::JSON_NULL` selects a stored JSON null. A blank key or
+JSONPath, a `nil` value, negative paging, paging on clear, or a clear with no selection raises
+`ArgumentError` before anything is sent, so a mistake can never clear every expectation.
+
 ## SRE Control Plane (SLO + Chaos)
 
 Verify service-level objectives and drive scheduled chaos experiments against

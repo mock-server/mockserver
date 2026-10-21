@@ -136,6 +136,31 @@ public class MockServerServletTest {
     }
 
     @Test
+    public void shouldClearByMetadataWithALiteralQuestionMarkAndRefuseAMalformedQuery() {
+        // given
+        httpStateHandler.add(new Expectation(request("question")).withId("question").withMetadata("owner", "what?x").thenRespond(response("one")));
+        httpStateHandler.add(new Expectation(request("other")).withId("other").withMetadata("owner", "team-a").thenRespond(response("two")));
+        MockHttpServletRequest clearRequest = buildHttpServletRequest("PUT", "/mockserver/clear", "");
+        clearRequest.setQueryString("type=expectations&metadataKey=owner&metadataValue=what?x");
+
+        // when
+        mockServerServlet.service(clearRequest, response);
+
+        // then
+        assertThat(response.getStatus(), is(200));
+        assertThat(httpStateHandler.firstMatchingExpectation(request("question")), is(nullValue()));
+        assertThat(httpStateHandler.firstMatchingExpectation(request("other")).getId(), is("other"));
+
+        // and - a query that cannot be decoded is refused and clears nothing
+        MockHttpServletResponse malformedResponse = new MockHttpServletResponse();
+        MockHttpServletRequest malformed = buildHttpServletRequest("PUT", "/mockserver/clear", "");
+        malformed.setQueryString("type=expectations&metadataKey=owner&metadataValue=100%");
+        mockServerServlet.service(malformed, malformedResponse);
+        assertThat(malformedResponse.getStatus(), is(400));
+        assertThat(httpStateHandler.firstMatchingExpectation(request("other")).getId(), is("other"));
+    }
+
+    @Test
     public void shouldClear() {
         // given
         httpStateHandler.add(new Expectation(request("request_one")).thenRespond(response("response_one")));

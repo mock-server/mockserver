@@ -462,6 +462,7 @@ flowchart TD
 - `PUT /mockserver/clear?type=expectations&namespace=T` (and `?type=all&namespace=T`) removes **only** namespace `T`'s expectations via `RequestMatchers.clearByNamespace(...)`, leaving other tenants' and global expectations intact. A blank namespace is a no-op (it never clears global expectations). Because the event log is not namespaced, a namespace-scoped `all` clear deliberately leaves the request log untouched.
 - `PUT /mockserver/retrieve?type=active_expectations&namespace=T` returns only namespace `T`'s expectations plus global ones (other tenants hidden).
 - `PUT /mockserver/reset` with no namespace stays a full reset (unchanged semantics).
+- The metadata, `unmatched` and paging filters (`ExpectationFilter`) combine with the namespace filter. On clear, when one of them is present, the namespace is ANDed with the body and the other filters instead of taking precedence. See [domain-model.md](domain-model.md#metadata-metadata-and-control-plane-housekeeping-filters).
 
 All of the matching/clearing logic lives in `mockserver-core` (`Expectation`, `ExpectationDTO`, `RequestMatchers`, `HttpState`, `Configuration`/`ConfigurationProperties`); the Netty layer needs no change because it already passes all request headers through. The `namespace` field round-trips through `ExpectationDTO`, the expectation JSON Schema (`expectation.json`), the embedded OpenAPI model, and the Java-code serializer.
 

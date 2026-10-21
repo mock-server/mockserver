@@ -580,6 +580,62 @@ impl MockServerClient {
         }
     }
 
+    /// Clear only the active expectations that match both the optional request
+    /// matcher and `filter` (metadata and/or unmatched). The event log is left
+    /// untouched.
+    ///
+    /// Fails closed with [`Error::InvalidRequest`], sending nothing, when the
+    /// filter selects nothing, pages (`offset`/`limit`), or has a blank key or
+    /// JSONPath, because any of those could otherwise clear every expectation.
+    pub fn clear_with_filter(
+        &self,
+        request: Option<&HttpRequest>,
+        filter: &ExpectationFilter,
+    ) -> Result<()> {
+        if !filter.has_selection() {
+            return Err(Error::InvalidRequest(
+                "clear with a filter requires a metadata or unmatched selection; use clear(...) to clear without one".into(),
+            ));
+        }
+        if filter.has_paging() {
+            return Err(Error::InvalidRequest(
+                "limit and offset are not supported for clear".into(),
+            ));
+        }
+        let pairs = filter.query_pairs().map_err(Error::InvalidRequest)?;
+        let url = format!(
+            "{}?type={}",
+            self.url("/mockserver/clear"),
+            ClearType::Expectations.as_str()
+        );
+        let resp = self.filtered_put(&url, &pairs, request)?;
+        let status = resp.status().as_u16();
+        match status {
+            200 => Ok(()),
+            400 => Err(Error::InvalidRequest(resp.text()?)),
+            _ => Err(Error::UnexpectedStatus {
+                status,
+                body: resp.text().unwrap_or_default(),
+            }),
+        }
+    }
+
+    /// Clear the expectations whose metadata has `key` with a value equal to
+    /// `value`. See [`IntoMetadataValue`] for how the value is matched.
+    pub fn clear_by_metadata(&self, key: &str, value: impl IntoMetadataValue) -> Result<()> {
+        self.clear_with_filter(None, &ExpectationFilter::new().metadata(key, value))
+    }
+
+    /// Clear the expectations whose metadata has `key`, whatever its value.
+    pub fn clear_by_metadata_key(&self, key: &str) -> Result<()> {
+        self.clear_with_filter(None, &ExpectationFilter::new().metadata_key(key))
+    }
+
+    /// Clear the active expectations that have never matched a request.
+    pub fn clear_unmatched_expectations(&self) -> Result<()> {
+        self.clear_with_filter(None, &ExpectationFilter::new().unmatched(true))
+    }
+
     /// Reset all expectations and recorded requests.
     pub fn reset(&self) -> Result<()> {
         let resp = self
@@ -793,6 +849,69 @@ impl MockServerClient {
             .map(|s| s.to_string())
             .filter(|s| !s.is_empty())
             .collect())
+    }
+
+    /// Retrieve the active expectations that match both the optional request
+    /// matcher and `filter`: by metadata, never matched, and/or one page
+    /// (`offset`/`limit`, in match order).
+    ///
+    /// A blank key or JSONPath is rejected with [`Error::InvalidRequest`]
+    /// before anything is sent.
+    pub fn retrieve_active_expectations_with_filter(
+        &self,
+        request: Option<&HttpRequest>,
+        filter: &ExpectationFilter,
+    ) -> Result<Vec<Expectation>> {
+        let pairs = filter.query_pairs().map_err(Error::InvalidRequest)?;
+        self.retrieve_expectations_filtered(request, RetrieveType::ActiveExpectations, &pairs)
+    }
+
+    /// Retrieve the active expectations whose metadata has `key` with a value
+    /// equal to `value`. See [`IntoMetadataValue`] for how the value is matched.
+    pub fn retrieve_active_expectations_by_metadata(
+        &self,
+        key: &str,
+        value: impl IntoMetadataValue,
+    ) -> Result<Vec<Expectation>> {
+        self.retrieve_active_expectations_with_filter(
+            None,
+            &ExpectationFilter::new().metadata(key, value),
+        )
+    }
+
+    /// Retrieve the active expectations whose metadata has `key`, whatever its value.
+    pub fn retrieve_active_expectations_by_metadata_key(
+        &self,
+        key: &str,
+    ) -> Result<Vec<Expectation>> {
+        self.retrieve_active_expectations_with_filter(
+            None,
+            &ExpectationFilter::new().metadata_key(key),
+        )
+    }
+
+    /// Retrieve the active expectations that have never matched a request.
+    pub fn retrieve_unmatched_expectations(&self) -> Result<Vec<Expectation>> {
+        self.retrieve_active_expectations_with_filter(
+            None,
+            &ExpectationFilter::new().unmatched(true),
+        )
+    }
+
+    /// Retrieve one page of the recorded expectations matching the optional
+    /// request matcher, in the order the requests were received.
+    pub fn retrieve_recorded_expectations_page(
+        &self,
+        request: Option<&HttpRequest>,
+        offset: u32,
+        limit: u32,
+    ) -> Result<Vec<Expectation>> {
+        let pairs = ExpectationFilter::new()
+            .offset(offset)
+            .limit(limit)
+            .query_pairs()
+            .map_err(Error::InvalidRequest)?;
+        self.retrieve_expectations_filtered(request, RetrieveType::RecordedExpectations, &pairs)
     }
 
     // ------------------------------------------------------------------
@@ -2416,6 +2535,57 @@ impl MockServerClient {
         let status = resp.status().as_u16();
         match status {
             200 => Ok(resp.text()?),
+            400 => Err(Error::InvalidRequest(resp.text()?)),
+            _ => Err(Error::UnexpectedStatus {
+                status,
+                body: resp.text().unwrap_or_default(),
+            }),
+        }
+    }
+
+    /// `PUT` to `url` with the filter pairs appended as percent-encoded query
+    /// parameters, each name and value sent literally.
+    fn filtered_put(
+        &self,
+        url: &str,
+        pairs: &[(&'static str, String)],
+        request: Option<&HttpRequest>,
+    ) -> Result<reqwest::blocking::Response> {
+        let mut builder = self
+            .http
+            .put(url)
+            .query(pairs)
+            .header("Content-Type", "application/json");
+        builder = match request {
+            Some(req) => builder.json(req),
+            None => builder.body(""),
+        };
+        Ok(builder.send()?)
+    }
+
+    fn retrieve_expectations_filtered(
+        &self,
+        request: Option<&HttpRequest>,
+        retrieve_type: RetrieveType,
+        pairs: &[(&'static str, String)],
+    ) -> Result<Vec<Expectation>> {
+        let url = format!(
+            "{}?type={}&format={}",
+            self.url("/mockserver/retrieve"),
+            retrieve_type.as_str(),
+            RetrieveFormat::Json.as_str(),
+        );
+        let resp = self.filtered_put(&url, pairs, request)?;
+        let status = resp.status().as_u16();
+        match status {
+            200 => {
+                let text = resp.text()?;
+                if text.trim().is_empty() {
+                    Ok(vec![])
+                } else {
+                    Ok(serde_json::from_str(&text)?)
+                }
+            }
             400 => Err(Error::InvalidRequest(resp.text()?)),
             _ => Err(Error::UnexpectedStatus {
                 status,

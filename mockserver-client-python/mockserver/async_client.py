@@ -22,6 +22,7 @@ from mockserver.models import (
     DebugMismatchResult,
     DnsRequestDefinition,
     Expectation,
+    ExpectationFilter,
     ExplainUnmatchedResult,
     HttpChaosProfile,
     HttpObjectCallback,
@@ -58,6 +59,10 @@ def _log_import_warnings(format: str | None, warnings: object) -> None:
         len(warnings),
         lines,
     )
+
+
+# Default for clear()'s expectation_filter: only an omitted argument means "no filter".
+NO_FILTER: Any = object()
 
 
 class AsyncScenarioHandle:
@@ -242,7 +247,21 @@ class AsyncMockServerClient:
         self,
         request: HttpRequest | None = None,
         clear_type: str | None = None,
+        expectation_filter: ExpectationFilter = NO_FILTER,  # type: ignore[assignment]
     ) -> None:
+        """Clear state matching ``request`` (everything when omitted).
+
+        With ``expectation_filter``, only the expectations that match both the
+        request and the filter's metadata or unmatched selection are cleared and
+        the event log is left untouched. A filter that selects nothing, that pages,
+        or a ``clear_type`` other than ``expectations`` raises ``ValueError``
+        before anything is sent. Passing ``expectation_filter=None`` explicitly
+        raises too: only omitting it means a clear without a filter.
+        """
+        if expectation_filter is not NO_FILTER:
+            # fail closed: an explicit None (e.g. from a helper that returned nothing) must not
+            # become a clear of every expectation and the whole log
+            return await self._clear_with_filter(request, clear_type, expectation_filter)
         query_params = {}
         if clear_type:
             query_params["type"] = clear_type
@@ -254,6 +273,53 @@ class AsyncMockServerClient:
             raise MockServerError(
                 f"Failed to clear (status={status}): {response_body}"
             )
+
+    async def _clear_with_filter(
+        self,
+        request: HttpRequest | None,
+        clear_type: str | None,
+        expectation_filter: ExpectationFilter,
+    ) -> None:
+        # fail closed: a filter that selects nothing would otherwise clear every expectation
+        if not isinstance(expectation_filter, ExpectationFilter):
+            raise ValueError("expectation_filter must be an ExpectationFilter")
+        if not expectation_filter.has_selection():
+            raise ValueError(
+                "clear with a filter requires a metadata or unmatched selection; "
+                "use clear(request) to clear without one"
+            )
+        if expectation_filter.has_paging():
+            raise ValueError("offset and limit are not supported for clear")
+        if clear_type is not None and clear_type.lower() != "expectations":
+            raise ValueError(
+                f"clear with a filter only clears expectations, not clear_type={clear_type!r}"
+            )
+        query_params = {"type": "expectations"}
+        query_params.update(expectation_filter.to_query_params())
+        body = json.dumps(request.to_dict()) if request else ""
+        status, response_body = await self._request(
+            "PUT", "/mockserver/clear", body, query_params
+        )
+        if status >= 400:
+            raise MockServerError(
+                f"Failed to clear (status={status}): {response_body}"
+            )
+
+    async def clear_by_metadata(self, key: str, value: Any) -> None:
+        """Clear the expectations whose metadata has ``key`` with a value equal to ``value``.
+
+        ``value`` must not be ``None``: use :meth:`clear_by_metadata_key` for any
+        value, or ``JSON_NULL`` for a JSON null.
+        """
+        await self.clear(expectation_filter=ExpectationFilter().with_metadata(key, value))
+
+    async def clear_by_metadata_key(self, key: str) -> None:
+        """Clear the expectations whose metadata has ``key``, whatever its value."""
+        await self.clear(expectation_filter=ExpectationFilter().with_metadata_key(key))
+
+    async def clear_unmatched_expectations(self) -> None:
+        """Clear the expectations that have not matched any request."""
+        await self.clear(expectation_filter=ExpectationFilter().with_unmatched(True))
 
     async def clear_by_id(
         self,
@@ -1231,14 +1297,23 @@ class AsyncMockServerClient:
         return []
 
     async def retrieve_active_expectations(
-        self, request: HttpRequest | None = None
+        self,
+        request: HttpRequest | None = None,
+        expectation_filter: ExpectationFilter | None = None,
     ) -> list[Expectation]:
+        """Retrieve the active expectations matching ``request`` (all when omitted)
+        and, when given, ``expectation_filter`` (metadata, unmatched, offset, limit)."""
+        query_params = {"type": "ACTIVE_EXPECTATIONS", "format": "JSON"}
+        if expectation_filter is not None:
+            if not isinstance(expectation_filter, ExpectationFilter):
+                raise ValueError("expectation_filter must be an ExpectationFilter")
+            query_params.update(expectation_filter.to_query_params())
         body = json.dumps(request.to_dict()) if request else ""
         status, response_body = await self._request(
             "PUT",
             "/mockserver/retrieve",
             body,
-            {"type": "ACTIVE_EXPECTATIONS", "format": "JSON"},
+            query_params,
         )
         if status >= 400:
             raise MockServerError(
@@ -1250,15 +1325,47 @@ class AsyncMockServerClient:
                 return [Expectation.from_dict(e) for e in parsed]
         return []
 
-    async def retrieve_recorded_expectations(
-        self, request: HttpRequest | None = None
+    async def retrieve_active_expectations_by_metadata(
+        self, key: str, value: Any
     ) -> list[Expectation]:
+        """Retrieve the active expectations whose metadata has ``key`` with a value
+        equal to ``value``: a ``str`` is compared as text, any other value as JSON."""
+        return await self.retrieve_active_expectations(
+            None, ExpectationFilter().with_metadata(key, value)
+        )
+
+    async def retrieve_active_expectations_by_metadata_key(
+        self, key: str
+    ) -> list[Expectation]:
+        """Retrieve the active expectations whose metadata has ``key``, whatever its value."""
+        return await self.retrieve_active_expectations(
+            None, ExpectationFilter().with_metadata_key(key)
+        )
+
+    async def retrieve_unmatched_expectations(self) -> list[Expectation]:
+        """Retrieve the active expectations that have not matched any request."""
+        return await self.retrieve_active_expectations(
+            None, ExpectationFilter().with_unmatched(True)
+        )
+
+    async def retrieve_recorded_expectations(
+        self,
+        request: HttpRequest | None = None,
+        offset: int | None = None,
+        limit: int | None = None,
+    ) -> list[Expectation]:
+        """Retrieve the recorded expectations matching ``request`` (all when omitted),
+        optionally one page of them, in the order the requests were received."""
+        query_params = {"type": "RECORDED_EXPECTATIONS", "format": "JSON"}
+        query_params.update(
+            ExpectationFilter().with_offset(offset).with_limit(limit).to_query_params()
+        )
         body = json.dumps(request.to_dict()) if request else ""
         status, response_body = await self._request(
             "PUT",
             "/mockserver/retrieve",
             body,
-            {"type": "RECORDED_EXPECTATIONS", "format": "JSON"},
+            query_params,
         )
         if status >= 400:
             raise MockServerError(

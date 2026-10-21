@@ -124,7 +124,7 @@ public class FullHttpRequestToMockServerHttpRequest {
         httpRequest.withProtocol(protocol == null ? Protocol.HTTP_1_1 : protocol);
         httpRequest.withPath(URLParser.returnPath(nettyHttpRequest.uri()));
         if (nettyHttpRequest.uri().contains("?")) {
-            httpRequest.withQueryStringParameters(formParameterParser.retrieveQueryParameters(nettyHttpRequest.uri(), true));
+            formParameterParser.applyQueryParameters(httpRequest, nettyHttpRequest.uri(), true);
         }
         setHeadersFromNettyRequest(httpRequest, nettyHttpRequest, preservedHeaders);
         setCookiesFromNettyRequest(httpRequest, nettyHttpRequest);

@@ -393,6 +393,66 @@ public sealed class MockServerClient : IDisposable
     }
 
     /// <summary>
+    /// Clear only the expectations that match both the optional request matcher and the filter, for example by
+    /// metadata or because they have never matched a request. The event log is left untouched.
+    /// </summary>
+    /// <param name="request">Optional request matcher; null for all expectations.</param>
+    /// <param name="filter">The metadata and/or unmatched selection (offset and limit are not supported for clear).</param>
+    /// <exception cref="ArgumentException">the filter is null, selects nothing, or pages; nothing is sent.</exception>
+    public void ClearByFilter(HttpRequest? request, ExpectationFilter filter)
+        => ClearByFilterAsync(request, filter).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Clear the expectations matching the request matcher and the filter (async). See <see cref="ClearByFilter"/>.
+    /// </summary>
+    public async Task ClearByFilterAsync(HttpRequest? request, ExpectationFilter filter)
+    {
+        // fail closed: a filter selecting nothing would otherwise be sent as a clear of every expectation
+        if (filter is null || !filter.HasSelection)
+            throw new ArgumentException(
+                "clear with a filter requires a metadata or unmatched selection; use Clear(request, \"expectations\") to clear without one",
+                nameof(filter));
+        if (filter.HasPaging)
+            throw new ArgumentException("offset and limit are not supported for clear", nameof(filter));
+
+        var json = request != null ? JsonSerializer.Serialize(request, JsonOptions) : "";
+        var (statusCode, body) = await PutAsync("/mockserver/clear?type=expectations" + filter.ToQueryString(), json)
+            .ConfigureAwait(false);
+
+        if (statusCode >= 400)
+            throw new MockServerClientException($"Failed to clear by filter (HTTP {statusCode}): {body}");
+    }
+
+    /// <summary>
+    /// Clear the expectations whose metadata has <paramref name="key"/> with a value equal to
+    /// <paramref name="value"/> (a string is compared as text, any other value as JSON). The event log is untouched.
+    /// </summary>
+    /// <exception cref="ArgumentException">the key is blank or the value is null (use <see cref="ClearByMetadataKey"/>
+    /// for any value, or <see cref="ExpectationFilter.JsonNull"/> for a JSON null); nothing is sent.</exception>
+    public void ClearByMetadata(string key, object value)
+        => ClearByMetadataAsync(key, value).GetAwaiter().GetResult();
+
+    /// <summary>Clear the expectations by metadata key and value (async). See <see cref="ClearByMetadata"/>.</summary>
+    public Task ClearByMetadataAsync(string key, object value)
+        => ClearByFilterAsync(null, ExpectationFilter.Filter().WithMetadata(key, value));
+
+    /// <summary>Clear the expectations whose metadata has <paramref name="key"/>, whatever its value.</summary>
+    public void ClearByMetadataKey(string key)
+        => ClearByMetadataKeyAsync(key).GetAwaiter().GetResult();
+
+    /// <summary>Clear the expectations by metadata key (async). See <see cref="ClearByMetadataKey"/>.</summary>
+    public Task ClearByMetadataKeyAsync(string key)
+        => ClearByFilterAsync(null, ExpectationFilter.Filter().WithMetadataKey(key));
+
+    /// <summary>Clear the active expectations that have never matched a request. The event log is untouched.</summary>
+    public void ClearUnmatchedExpectations()
+        => ClearUnmatchedExpectationsAsync().GetAwaiter().GetResult();
+
+    /// <summary>Clear the active expectations that have never matched a request (async).</summary>
+    public Task ClearUnmatchedExpectationsAsync()
+        => ClearByFilterAsync(null, ExpectationFilter.Filter().WithUnmatched(true));
+
+    /// <summary>
     /// Reset all expectations and recorded requests.
     /// </summary>
     public void Reset() => ResetAsync().GetAwaiter().GetResult();
@@ -474,6 +534,81 @@ public sealed class MockServerClient : IDisposable
 
         if (statusCode >= 400)
             throw new MockServerClientException($"Failed to retrieve recorded expectations (HTTP {statusCode}): {body}");
+
+        if (!string.IsNullOrEmpty(body))
+        {
+            var result = JsonSerializer.Deserialize<List<Expectation>>(body, JsonOptions);
+            if (result != null) return result;
+        }
+        return new List<Expectation>();
+    }
+
+    /// <summary>
+    /// Retrieve one page of the recorded expectations matching the optional request matcher, in the order the
+    /// requests were received.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">offset or limit is negative; nothing is sent.</exception>
+    public List<Expectation> RetrieveRecordedExpectations(HttpRequest? request, int offset, int limit)
+        => RetrieveRecordedExpectationsAsync(request, offset, limit).GetAwaiter().GetResult();
+
+    /// <summary>Retrieve one page of the recorded expectations (async).</summary>
+    public Task<List<Expectation>> RetrieveRecordedExpectationsAsync(HttpRequest? request, int offset, int limit)
+        => RetrieveExpectationsWithFilterAsync("RECORDED_EXPECTATIONS", request,
+            ExpectationFilter.Filter().WithOffset(offset).WithLimit(limit), "recorded expectations");
+
+    /// <summary>
+    /// Retrieve the active expectations matching both the optional request matcher and the filter, for example by
+    /// metadata, because they have never matched a request, or one page of them (offset and limit). Pages are
+    /// taken in match order (highest priority first, then oldest first).
+    /// </summary>
+    /// <param name="request">Optional request matcher; null for all expectations.</param>
+    /// <param name="filter">The metadata, unmatched and paging options; null for no filter.</param>
+    public List<Expectation> RetrieveActiveExpectations(HttpRequest? request, ExpectationFilter? filter)
+        => RetrieveActiveExpectationsAsync(request, filter).GetAwaiter().GetResult();
+
+    /// <summary>Retrieve the active expectations matching the request matcher and the filter (async).</summary>
+    public Task<List<Expectation>> RetrieveActiveExpectationsAsync(HttpRequest? request, ExpectationFilter? filter)
+        => RetrieveExpectationsWithFilterAsync("ACTIVE_EXPECTATIONS", request, filter, "active expectations");
+
+    /// <summary>
+    /// Retrieve the active expectations whose metadata has <paramref name="key"/> with a value equal to
+    /// <paramref name="value"/> (a string is compared as text, any other value as JSON).
+    /// </summary>
+    public List<Expectation> RetrieveActiveExpectationsByMetadata(string key, object value)
+        => RetrieveActiveExpectationsByMetadataAsync(key, value).GetAwaiter().GetResult();
+
+    /// <summary>Retrieve the active expectations by metadata key and value (async).</summary>
+    public Task<List<Expectation>> RetrieveActiveExpectationsByMetadataAsync(string key, object value)
+        => RetrieveActiveExpectationsAsync(null, ExpectationFilter.Filter().WithMetadata(key, value));
+
+    /// <summary>Retrieve the active expectations whose metadata has <paramref name="key"/>, whatever its value.</summary>
+    public List<Expectation> RetrieveActiveExpectationsByMetadataKey(string key)
+        => RetrieveActiveExpectationsByMetadataKeyAsync(key).GetAwaiter().GetResult();
+
+    /// <summary>Retrieve the active expectations by metadata key (async).</summary>
+    public Task<List<Expectation>> RetrieveActiveExpectationsByMetadataKeyAsync(string key)
+        => RetrieveActiveExpectationsAsync(null, ExpectationFilter.Filter().WithMetadataKey(key));
+
+    /// <summary>
+    /// Retrieve the active expectations that have never matched a request, for example to find mocks a test
+    /// suite no longer uses. The count is per MockServer instance and resets when an expectation is changed.
+    /// </summary>
+    public List<Expectation> RetrieveUnmatchedExpectations()
+        => RetrieveUnmatchedExpectationsAsync().GetAwaiter().GetResult();
+
+    /// <summary>Retrieve the active expectations that have never matched a request (async).</summary>
+    public Task<List<Expectation>> RetrieveUnmatchedExpectationsAsync()
+        => RetrieveActiveExpectationsAsync(null, ExpectationFilter.Filter().WithUnmatched(true));
+
+    private async Task<List<Expectation>> RetrieveExpectationsWithFilterAsync(
+        string type, HttpRequest? request, ExpectationFilter? filter, string description)
+    {
+        var json = request != null ? JsonSerializer.Serialize(request, JsonOptions) : "";
+        var path = $"/mockserver/retrieve?type={type}&format=JSON" + (filter?.ToQueryString() ?? "");
+        var (statusCode, body) = await PutAsync(path, json).ConfigureAwait(false);
+
+        if (statusCode >= 400)
+            throw new MockServerClientException($"Failed to retrieve {description} (HTTP {statusCode}): {body}");
 
         if (!string.IsNullOrEmpty(body))
         {

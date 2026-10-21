@@ -28,6 +28,11 @@ module MockServer
   class Client
     HTTP_TIMEOUT = 60 # seconds, matching Python client
 
+    # Default for clear's +filter:+ so an explicit nil filter is rejected
+    # instead of silently clearing everything.
+    NO_FILTER = Object.new.freeze
+    private_constant :NO_FILTER
+
     # @param host [String]
     # @param port [Integer]
     # @param context_path [String]
@@ -100,10 +105,19 @@ module MockServer
     end
 
     # Clear expectations and/or logs.
+    #
+    # With +filter:+ only the expectations matching both +request+ (when
+    # given) and the filter's metadata / unmatched selection are cleared; the
+    # event log is left untouched. A filter must select something and must not
+    # page, otherwise ArgumentError is raised and nothing is sent.
+    #
     # @param request [HttpRequest, nil]
     # @param type [String, nil] "EXPECTATIONS", "LOG", or "ALL"
+    # @param filter [ExpectationFilter] selection of expectations to clear
     # @return [nil]
-    def clear(request = nil, type: nil)
+    def clear(request = nil, type: nil, filter: NO_FILTER)
+      return clear_with_filter(request, type, filter) unless filter.equal?(NO_FILTER)
+
       query_params = {}
       query_params['type'] = type if type
       body = request ? JSON.generate(request.to_h) : ''
@@ -115,6 +129,25 @@ module MockServer
       end
 
       nil
+    end
+
+    # Clear the expectations whose metadata has +key+ with a value equal to
+    # +value+ (see {ExpectationFilter#with_metadata}).
+    # @return [nil]
+    def clear_by_metadata(key, value)
+      clear(filter: ExpectationFilter.new.with_metadata(key, value))
+    end
+
+    # Clear the expectations whose metadata has +key+, with any value.
+    # @return [nil]
+    def clear_by_metadata_key(key)
+      clear(filter: ExpectationFilter.new.with_metadata_key(key))
+    end
+
+    # Clear the expectations that have not matched any request.
+    # @return [nil]
+    def clear_unmatched_expectations
+      clear(filter: ExpectationFilter.new.with_unmatched(true))
     end
 
     # Clear by expectation ID.
@@ -1174,13 +1207,17 @@ module MockServer
 
     # Retrieve active expectations.
     # @param request [HttpRequest, nil]
+    # @param filter [ExpectationFilter, nil] metadata / unmatched selection and paging
     # @return [Array<Expectation>]
-    def retrieve_active_expectations(request: nil)
+    def retrieve_active_expectations(request: nil, filter: nil)
+      unless filter.nil? || filter.is_a?(ExpectationFilter)
+        raise ArgumentError, "filter must be a MockServer::ExpectationFilter, got #{filter.class}"
+      end
+
       body = request ? JSON.generate(request.to_h) : ''
-      status, response_body = do_request(
-        'PUT', '/mockserver/retrieve', body,
-        { 'type' => 'ACTIVE_EXPECTATIONS', 'format' => 'JSON' }
-      )
+      query_params = { 'type' => 'ACTIVE_EXPECTATIONS', 'format' => 'JSON' }
+      query_params.merge!(filter.to_query_params) if filter
+      status, response_body = do_request('PUT', '/mockserver/retrieve', body, query_params)
       if status >= 400
         raise Error, "Failed to retrieve active expectations (status=#{status}): #{response_body}"
       end
@@ -1192,14 +1229,39 @@ module MockServer
       []
     end
 
-    # Retrieve recorded expectations.
-    # @param request [HttpRequest, nil]
+    # Retrieve active expectations whose metadata has +key+ with a value
+    # equal to +value+ (see {ExpectationFilter#with_metadata}).
     # @return [Array<Expectation>]
-    def retrieve_recorded_expectations(request: nil)
+    def retrieve_active_expectations_by_metadata(key, value)
+      retrieve_active_expectations(filter: ExpectationFilter.new.with_metadata(key, value))
+    end
+
+    # Retrieve active expectations whose metadata has +key+, with any value.
+    # @return [Array<Expectation>]
+    def retrieve_active_expectations_by_metadata_key(key)
+      retrieve_active_expectations(filter: ExpectationFilter.new.with_metadata_key(key))
+    end
+
+    # Retrieve the active expectations that have not matched any request.
+    # @return [Array<Expectation>]
+    def retrieve_unmatched_expectations
+      retrieve_active_expectations(filter: ExpectationFilter.new.with_unmatched(true))
+    end
+
+    # Retrieve recorded expectations, optionally one page of them in the
+    # order the requests were received.
+    # @param request [HttpRequest, nil]
+    # @param offset [Integer, nil] number to skip, zero or more
+    # @param limit [Integer, nil] maximum number to return, zero or more
+    # @return [Array<Expectation>]
+    def retrieve_recorded_expectations(request: nil, offset: nil, limit: nil)
+      paging = ExpectationFilter.new
+      paging.with_offset(offset) unless offset.nil?
+      paging.with_limit(limit) unless limit.nil?
       body = request ? JSON.generate(request.to_h) : ''
       status, response_body = do_request(
         'PUT', '/mockserver/retrieve', body,
-        { 'type' => 'RECORDED_EXPECTATIONS', 'format' => 'JSON' }
+        { 'type' => 'RECORDED_EXPECTATIONS', 'format' => 'JSON' }.merge(paging.to_query_params)
       )
       if status >= 400
         raise Error, "Failed to retrieve recorded expectations (status=#{status}): #{response_body}"
@@ -1686,6 +1748,26 @@ module MockServer
       ws_client.listen
       @websocket_mutex.synchronize { @websocket_clients << ws_client }
       ws_client.client_id
+    end
+
+    # @api private
+    def clear_with_filter(request, type, filter)
+      unless filter.is_a?(ExpectationFilter) && filter.selection?
+        raise ArgumentError, 'clear with a filter requires a metadata or unmatched selection; ' \
+                             'use clear(request) to clear without one'
+      end
+      raise ArgumentError, 'offset and limit are not supported for clear' if filter.paging?
+      unless type.nil? || type.to_s.casecmp?('expectations')
+        raise ArgumentError, "clear with a filter only clears expectations, not type #{type.inspect}"
+      end
+
+      body = request ? JSON.generate(request.to_h) : ''
+      status, response_body = do_request(
+        'PUT', '/mockserver/clear', body, { 'type' => 'expectations' }.merge(filter.to_query_params)
+      )
+      raise Error, "Failed to clear (status=#{status}): #{response_body}" if status >= 400
+
+      nil
     end
 
     # Perform an HTTP request with optional query parameters.

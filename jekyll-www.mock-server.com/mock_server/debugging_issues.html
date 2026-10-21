@@ -114,7 +114,120 @@ lastmod: 2019-11-10T08:00:00+01:00
 
 <p>It is possible to retrieve the active expectations, as show below in the code examples.</p>
 
-<p>Expectations are returned in the order they have been added. The expectations are returned can be filter using a <a href="/mock_server/creating_expectations.html#request_matchers">request matcher</a>, or narrowed to a single expectation using its <strong>expectation id</strong>.</p>
+<p>Expectations are returned in the order they are matched: highest priority first, then in the order they were added. The expectations returned can be filtered using a <a href="/mock_server/creating_expectations.html#request_matchers">request matcher</a>, or narrowed to a single expectation using its <strong>expectation id</strong>.</p>
+
+<p>You can also narrow the result with these query parameters on <code class="inline code">PUT /mockserver/retrieve?type=ACTIVE_EXPECTATIONS</code>. An expectation is returned only if it matches all of the filters you give:</p>
+
+<ul>
+    <li><code class="inline code">metadataKey</code>, optionally with <code class="inline code">metadataValue</code>, or <code class="inline code">metadataJsonPath</code>: only expectations whose <a href="/mock_server/creating_expectations.html#metadata">metadata</a> matches. A text value is compared as text; any other value as JSON.</li>
+    <li><code class="inline code">unmatched=true</code>: only expectations that have never matched a request since they were created or last changed. This is a quick way to find mocks your tests no longer use. Each MockServer instance keeps its own count.</li>
+    <li><code class="inline code">offset</code> and <code class="inline code">limit</code>: return one page of the result. Expectations are listed highest priority first, then oldest first, so the pages stay stable while the expectations do not change. <code class="inline code">offset</code> and <code class="inline code">limit</code> also work for <code class="inline code">type=RECORDED_EXPECTATIONS</code>, which lists in the order requests were received.</li>
+</ul>
+
+<button id="button_retrieve_active_expectations_by_metadata" class="accordion">retrieve active expectations by metadata, unused expectations, or one page</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">MockServerClient client = new MockServerClient("localhost", 1080);
+
+// by metadata
+Expectation[] owned = client.retrieveActiveExpectationsByMetadata("owner", "team-checkout");
+Expectation[] smoke = client.retrieveActiveExpectations(
+    null,
+    ExpectationFilter.expectationFilter().withMetadataJsonPath("$.tags[?(@ == 'smoke')]")
+);
+
+// expectations that have never matched a request
+Expectation[] unused = client.retrieveUnmatchedExpectations();
+
+// the second page of 50 active expectations, and of recorded expectations
+Expectation[] page = client.retrieveActiveExpectations(null, ExpectationFilter.expectationFilter().withOffset(50).withLimit(50));
+Expectation[] recorded = client.retrieveRecordedExpectations(null, 50, 50);</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var client = require('mockserver-client').mockServerClient("localhost", 1080);
+
+client.retrieveActiveExpectationsByMetadata("owner", "team-checkout").then(console.log);
+client.retrieveUnmatchedExpectations().then(console.log);
+client.retrieveActiveExpectations({}, {offset: 50, limit: 50}).then(console.log);
+client.retrieveRecordedExpectations({}, 50, 50).then(console.log);</code></pre>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver.client import MockServerClient
+from mockserver.models import ExpectationFilter
+
+client = MockServerClient("localhost", 1080)
+owned = client.retrieve_active_expectations_by_metadata("owner", "team-checkout")
+unused = client.retrieve_unmatched_expectations()
+page = client.retrieve_active_expectations(None, ExpectationFilter().with_offset(50).with_limit(50))
+recorded = client.retrieve_recorded_expectations(None, offset=50, limit=50)</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+owned = client.retrieve_active_expectations_by_metadata('owner', 'team-checkout')
+unused = client.retrieve_unmatched_expectations
+page = client.retrieve_active_expectations(filter: MockServer::ExpectationFilter.new.with_offset(50).with_limit(50))
+recorded = client.retrieve_recorded_expectations(offset: 50, limit: 50)</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
+
+client := mockserver.New("localhost", 1080)
+owned, err := client.RetrieveActiveExpectationsByMetadata("owner", "team-checkout")
+unused, err := client.RetrieveUnmatchedExpectations()
+page, err := client.RetrieveActiveExpectationsWithFilter(nil, mockserver.NewExpectationFilter().WithOffset(50).WithLimit(50))
+recorded, err := client.RetrieveRecordedExpectationsPage(nil, 50, 50)</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using MockServer.Client;
+using MockServer.Client.Models;
+
+using var client = new MockServerClient("localhost", 1080);
+var owned = client.RetrieveActiveExpectationsByMetadata("owner", "team-checkout");
+var unused = client.RetrieveUnmatchedExpectations();
+var page = client.RetrieveActiveExpectations(null, ExpectationFilter.Filter().WithOffset(50).WithLimit(50));
+var recorded = client.RetrieveRecordedExpectations(null, 50, 50);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use mockserver_client::{ClientBuilder, ExpectationFilter};
+
+let client = ClientBuilder::new("localhost", 1080).build().unwrap();
+let owned = client.retrieve_active_expectations_by_metadata("owner", "team-checkout").unwrap();
+let unused = client.retrieve_unmatched_expectations().unwrap();
+let page = client.retrieve_active_expectations_with_filter(None, &amp;ExpectationFilter::new().offset(50).limit(50)).unwrap();
+let recorded = client.retrieve_recorded_expectations_page(None, 50, 50).unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">use MockServer\MockServerClient;
+use MockServer\ExpectationFilter;
+
+$client = new MockServerClient('localhost', 1080);
+$owned = $client-&gt;retrieveActiveExpectationsByMetadata('owner', 'team-checkout');
+$unused = $client-&gt;retrieveUnmatchedExpectations();
+$page = $client-&gt;retrieveActiveExpectationsWithFilter(null, ExpectationFilter::expectationFilter()-&gt;withOffset(50)-&gt;withLimit(50));
+$recorded = $client-&gt;retrieveRecordedExpectationsPage(null, 50, 50);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS&amp;metadataKey=owner&amp;metadataValue=team-checkout"
+
+curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS&amp;unmatched=true"
+
+curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=ACTIVE_EXPECTATIONS&amp;offset=50&amp;limit=50"
+
+curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&amp;offset=50&amp;limit=50"</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/control/put_retrieve" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 
 <button id="button_active_expectations" class="accordion title"><strong>Retrieving Active Expectations Code Examples</strong></button>
 <div class="panel title">

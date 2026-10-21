@@ -37,6 +37,126 @@ var mockServerClient;
     ];
 
     // ------------------------------------------------------------------
+    // Expectation filter: metadata, unmatched and paging query parameters
+    // ------------------------------------------------------------------
+    // Every rejection is thrown BEFORE a request is sent: a filter that silently selected
+    // nothing would turn a filtered clear into a clear of every expectation.
+
+    var EXPECTATION_FILTER_PROPERTIES = ['metadataKey', 'metadataValue', 'metadataJsonPath', 'unmatched', 'limit', 'offset'];
+
+    // encodeURIComponent leaves ! ' ( ) * raw; encode them too so every value arrives literally
+    var _encodeQueryValue = function (value) {
+        return encodeURIComponent(value).replace(/[!'()*]/g, function (c) {
+            return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+        });
+    };
+
+    var _isBlankString = function (value) {
+        return typeof value !== 'string' || value.trim() === '';
+    };
+
+    // A string is sent as its text, any other value as its compact JSON.
+    var _metadataValueText = function (value) {
+        if (value === undefined || value === null) {
+            throw new Error("the metadata value must not be null or undefined; select by the metadata key alone for any value, or pass the string 'null' to select a JSON null");
+        }
+        if (typeof value === 'string') {
+            return value;
+        }
+        if (typeof value === 'number' && !isFinite(value)) {
+            throw new Error("the metadata value must be a finite number but found: " + value);
+        }
+        var json;
+        try {
+            json = JSON.stringify(value);
+        } catch (e) {
+            throw new Error("the metadata value must be JSON serialisable: " + e.message);
+        }
+        if (json === undefined) {
+            throw new Error("the metadata value must be JSON serialisable but found a " + typeof value);
+        }
+        return json;
+    };
+
+    /**
+     * Build the query string suffix (starting with "&", or empty) for an expectation filter:
+     * { metadataKey, metadataValue, metadataJsonPath, unmatched, limit, offset }.
+     * For a clear the filter must select something and must not page.
+     */
+    var _expectationFilterQuery = function (filter, forClear) {
+        if (filter === null || typeof filter !== 'object' || Array.isArray(filter)) {
+            throw new Error("the expectation filter must be an object with any of: " + EXPECTATION_FILTER_PROPERTIES.join(', '));
+        }
+        var has = function (name) {
+            return Object.prototype.hasOwnProperty.call(filter, name);
+        };
+        Object.keys(filter).forEach(function (name) {
+            if (EXPECTATION_FILTER_PROPERTIES.indexOf(name) === -1) {
+                throw new Error("\"" + name + "\" is not a supported expectation filter property, only " + EXPECTATION_FILTER_PROPERTIES.join(', ') + " are allowed");
+            }
+        });
+        var params = [];
+        if (has('metadataKey')) {
+            if (_isBlankString(filter.metadataKey)) {
+                throw new Error("the metadata key must be a non-blank string");
+            }
+            params.push('metadataKey=' + _encodeQueryValue(filter.metadataKey));
+            if (has('metadataValue')) {
+                params.push('metadataValue=' + _encodeQueryValue(_metadataValueText(filter.metadataValue)));
+            }
+        } else if (has('metadataValue')) {
+            throw new Error("metadataValue requires metadataKey");
+        }
+        if (has('metadataJsonPath')) {
+            if (_isBlankString(filter.metadataJsonPath)) {
+                throw new Error("the metadata JSONPath must be a non-blank string");
+            }
+            params.push('metadataJsonPath=' + _encodeQueryValue(filter.metadataJsonPath));
+        }
+        var unmatched = false;
+        if (filter.unmatched !== undefined && filter.unmatched !== null) {
+            if (typeof filter.unmatched !== 'boolean') {
+                throw new Error("unmatched must be a boolean but found: " + JSON.stringify(filter.unmatched));
+            }
+            unmatched = filter.unmatched;
+            if (unmatched) {
+                params.push('unmatched=true');
+            }
+        }
+        ['limit', 'offset'].forEach(function (name) {
+            var value = filter[name];
+            if (value !== undefined && value !== null) {
+                if (forClear) {
+                    throw new Error("limit and offset are not supported for clear");
+                }
+                if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 2147483647) {
+                    throw new Error("the " + name + " must be an integer, zero or more, but found: " + JSON.stringify(value));
+                }
+                params.push(name + '=' + value);
+            }
+        });
+        if (forClear && !has('metadataKey') && !has('metadataJsonPath') && !unmatched) {
+            throw new Error("clear with a filter requires a metadataKey, metadataJsonPath or unmatched: true selection; use clear(pathOrRequestMatcher, 'EXPECTATIONS') to clear without one");
+        }
+        return params.length > 0 ? '&' + params.join('&') : '';
+    };
+
+    // Validate the metadata object of an expectation (string keys, any JSON value).
+    var _requireMetadataObject = function (metadata) {
+        if (typeof metadata !== 'object' || Array.isArray(metadata)) {
+            throw new Error("metadata must be an object of string keys to JSON values but found: " + JSON.stringify(metadata));
+        }
+        return metadata;
+    };
+
+    var _withExpectationMetadata = function (expectation, metadata) {
+        if (metadata) {
+            expectation.metadata = metadata;
+        }
+        return expectation;
+    };
+
+    // ------------------------------------------------------------------
     // Inline breakpoint/callback message routing (browser-safe, no deps)
     // ------------------------------------------------------------------
     // These are pure functions duplicated from webSocketClient.js so they
@@ -433,7 +553,7 @@ var mockServerClient;
                 }
             };
         };
-        var createExpectationWithCallback = function (requestMatcher, clientId, times, priority, timeToLive, id) {
+        var createExpectationWithCallback = function (requestMatcher, clientId, times, priority, timeToLive, id, metadata) {
             var timesObject;
             if (typeof times === 'number') {
                 timesObject = {
@@ -444,7 +564,7 @@ var mockServerClient;
                 timesObject = times;
             }
             requestMatcher.headers = headersUniqueConcatenate(requestMatcher.headers, defaultRequestHeaders);
-            return {
+            return _withExpectationMetadata({
                 id: typeof id === 'string' ? id : undefined,
                 priority: typeof priority === 'number' ? priority : undefined,
                 httpRequest: requestMatcher,
@@ -458,10 +578,10 @@ var mockServerClient;
                 timeToLive: typeof timeToLive === 'object' ? timeToLive : {
                     unlimited: true
                 }
-            };
+            }, metadata);
         };
 
-        var createExpectationWithForwardCallback = function (requestMatcher, clientId, times, priority, timeToLive, id) {
+        var createExpectationWithForwardCallback = function (requestMatcher, clientId, times, priority, timeToLive, id, metadata) {
             var timesObject;
             if (typeof times === 'number') {
                 timesObject = {
@@ -472,7 +592,7 @@ var mockServerClient;
                 timesObject = times;
             }
             requestMatcher.headers = headersUniqueConcatenate(requestMatcher.headers, defaultRequestHeaders);
-            return {
+            return _withExpectationMetadata({
                 id: typeof id === 'string' ? id : undefined,
                 priority: typeof priority === 'number' ? priority : undefined,
                 httpRequest: requestMatcher,
@@ -486,7 +606,7 @@ var mockServerClient;
                 timeToLive: typeof timeToLive === 'object' ? timeToLive : {
                     unlimited: true
                 }
-            };
+            }, metadata);
         };
         var createExpectationWithForwardAndResponseCallback = function (requestMatcher, clientId, times, priority, timeToLive, id) {
             var timesObject;
@@ -976,7 +1096,7 @@ var mockServerClient;
          * @param timeToLive the time this expectation should be used to match requests
          * @param id the unique expectation id
          */
-        var mockWithCallback = function (requestMatcher, requestHandler, times, priority, timeToLive, id) {
+        var mockWithCallback = function (requestMatcher, requestHandler, times, priority, timeToLive, id, metadata) {
             return {
                 then: function (sucess, error) {
                     try {
@@ -996,7 +1116,7 @@ var mockServerClient;
                                 };
                             });
                             registerCallbackExpectation(webSocketClient, function (clientId) {
-                                return createExpectationWithCallback(requestMatcher, clientId, times, priority, timeToLive, id);
+                                return createExpectationWithCallback(requestMatcher, clientId, times, priority, timeToLive, id, metadata);
                             }, sucess, error);
                         }, error);
                     } catch (e) {
@@ -1007,7 +1127,7 @@ var mockServerClient;
                 }
             };
         };
-        var mockWithForwardCallback = function (requestMatcher, forwardHandler, times, priority, timeToLive, id) {
+        var mockWithForwardCallback = function (requestMatcher, forwardHandler, times, priority, timeToLive, id, metadata) {
             return {
                 then: function (sucess, error) {
                     try {
@@ -1027,7 +1147,7 @@ var mockServerClient;
                                 };
                             });
                             registerCallbackExpectation(webSocketClient, function (clientId) {
-                                return createExpectationWithForwardCallback(requestMatcher, clientId, times, priority, timeToLive, id);
+                                return createExpectationWithForwardCallback(requestMatcher, clientId, times, priority, timeToLive, id, metadata);
                             }, sucess, error);
                         }, error);
                     } catch (e) {
@@ -1242,7 +1362,8 @@ var mockServerClient;
                 times: times,
                 timeToLive: timeToLive,
                 priority: priority,
-                id: undefined
+                id: undefined,
+                metadata: undefined
             };
             // Detect which top-level action property a respond/forward action maps
             // to, mirroring the overloads of ForwardChainExpectation.respond/forward.
@@ -1274,7 +1395,7 @@ var mockServerClient;
                 return "httpForward";
             };
             var send = function (actionProperty, action) {
-                return mockAnyResponse(createAdvancedResponseExpectation(actionProperty, state.requestMatcher, action, state.times, state.priority, state.timeToLive, state.id));
+                return mockAnyResponse(_withExpectationMetadata(createAdvancedResponseExpectation(actionProperty, state.requestMatcher, action, state.times, state.priority, state.timeToLive, state.id), state.metadata));
             };
             var chain = {
                 withTimes: function (times) {
@@ -1291,6 +1412,28 @@ var mockServerClient;
                 },
                 withId: function (id) {
                     state.id = id;
+                    return chain;
+                },
+                /**
+                 * withMetadata(key, value) adds (or replaces) one metadata entry; withMetadata(object)
+                 * sets all metadata, replacing any already set, and null or {} removes it.
+                 */
+                withMetadata: function (keyOrMetadata, value) {
+                    if (typeof keyOrMetadata === "string") {
+                        if (_isBlankString(keyOrMetadata)) {
+                            throw new Error("the metadata key must be a non-blank string");
+                        }
+                        if (value === undefined) {
+                            throw new Error("the metadata value for \"" + keyOrMetadata + "\" must not be undefined, use null for a JSON null");
+                        }
+                        state.metadata = Object.assign({}, state.metadata);
+                        state.metadata[keyOrMetadata] = value;
+                    } else if (keyOrMetadata === null || keyOrMetadata === undefined) {
+                        state.metadata = undefined;
+                    } else {
+                        var metadata = _requireMetadataObject(keyOrMetadata);
+                        state.metadata = Object.keys(metadata).length > 0 ? Object.assign({}, metadata) : undefined;
+                    }
                     return chain;
                 },
                 /**
@@ -1323,10 +1466,10 @@ var mockServerClient;
                     return send("httpError", error);
                 },
                 callback: function (requestHandler) {
-                    return mockWithCallback(state.requestMatcher, requestHandler, state.times, state.priority, state.timeToLive, state.id);
+                    return mockWithCallback(state.requestMatcher, requestHandler, state.times, state.priority, state.timeToLive, state.id, state.metadata);
                 },
                 forwardCallback: function (forwardHandler) {
-                    return mockWithForwardCallback(state.requestMatcher, forwardHandler, state.times, state.priority, state.timeToLive, state.id);
+                    return mockWithForwardCallback(state.requestMatcher, forwardHandler, state.times, state.priority, state.timeToLive, state.id, state.metadata);
                 }
             };
             return chain;
@@ -1728,9 +1871,18 @@ var mockServerClient;
          * @param pathOrRequestMatcher  if a string is passed in the value will be treated as the path to
          *                              decide what to clear, however if an object is passed
          *                              in the value will be treated as a full request matcher object
-         * @param type                  the type to clear 'EXPECTATIONS', 'LOG' or 'ALL', defaults to 'ALL' if not specified
+         * @param type                  the type to clear 'EXPECTATIONS', 'LOG' or 'ALL', defaults to 'ALL' if not specified,
+         *                              or an expectation filter object ({ metadataKey, metadataValue, metadataJsonPath,
+         *                              unmatched }) to clear only the expectations it selects, leaving the log untouched;
+         *                              a filter that selects nothing, or pages, is rejected before anything is sent.
+         *                              A null or undefined type clears everything, as it always has; to clear with a
+         *                              filter use clearWithFilter, which refuses a missing filter
          */
         var clear = function (pathOrRequestMatcher, type) {
+            if (type !== null && typeof type === "object") {
+                var filterQuery = _expectationFilterQuery(type, true);
+                return makeRequest(host, port, "/mockserver/clear?type=expectations" + filterQuery, addDefaultRequestMatcherHeaders(pathOrRequestMatcher));
+            }
             if (type) {
                 var typeEnum = ['EXPECTATIONS', 'LOG', 'ALL'];
                 if (typeEnum.indexOf(type) === -1) {
@@ -1738,6 +1890,18 @@ var mockServerClient;
                 }
             }
             return makeRequest(host, port, "/mockserver/clear" + (type ? "?type=" + type : ""), addDefaultRequestMatcherHeaders(pathOrRequestMatcher));
+        };
+        /**
+         * Clear only the expectations that match both the request matcher and the filter ({ metadataKey,
+         * metadataValue, metadataJsonPath, unmatched }); the event log is left untouched. Unlike clear, a null,
+         * undefined or non-object filter throws before anything is sent, so it can never become a clear of
+         * everything.
+         */
+        var clearWithFilter = function (pathOrRequestMatcher, filter) {
+            if (filter === null || typeof filter !== "object" || Array.isArray(filter)) {
+                throw new Error("clearWithFilter requires an expectation filter object, but found: " + (filter === undefined ? "undefined" : JSON.stringify(filter)));
+            }
+            return clear(pathOrRequestMatcher, filter);
         };
         /**
          * Clear expectations, logs or both that match the expectation id
@@ -1753,6 +1917,25 @@ var mockServerClient;
                 }
             }
             return makeRequest(host, port, "/mockserver/clear" + (type ? "?type=" + type : ""), { id: expectationId});
+        };
+        /**
+         * Clear the expectations whose metadata has key with a value equal to value (a string is compared as
+         * text, any other value as JSON). The event log is left untouched.
+         */
+        var clearByMetadata = function (key, value) {
+            return clearWithFilter(undefined, {metadataKey: key, metadataValue: value});
+        };
+        /**
+         * Clear the expectations whose metadata has key, whatever its value. The event log is left untouched.
+         */
+        var clearByMetadataKey = function (key) {
+            return clearWithFilter(undefined, {metadataKey: key});
+        };
+        /**
+         * Clear the expectations that have never matched a request. The event log is left untouched.
+         */
+        var clearUnmatchedExpectations = function () {
+            return clearWithFilter(undefined, {unmatched: true});
         };
         /**
          * Add new ports the server is bound to and listening on
@@ -1832,11 +2015,14 @@ var mockServerClient;
          * @param pathOrRequestMatcher  if a string is passed in the value will be treated as the path, however
          *                              if an object is passed in the value will be treated as a full request
          *                              matcher object, if null is passed in it will be treated as match all
+         * @param filter                optional expectation filter object ({ metadataKey, metadataValue, metadataJsonPath,
+         *                              unmatched, limit, offset }); an invalid filter is rejected before anything is sent
          */
-        var retrieveActiveExpectations = function (pathOrRequestMatcher) {
+        var retrieveActiveExpectations = function (pathOrRequestMatcher, filter) {
+            var filterQuery = (filter === undefined || filter === null) ? "" : _expectationFilterQuery(filter, false);
             return {
                 then: function (sucess, error) {
-                    return makeRequest(host, port, "/mockserver/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON", addDefaultRequestMatcherHeaders(pathOrRequestMatcher))
+                    return makeRequest(host, port, "/mockserver/retrieve?type=ACTIVE_EXPECTATIONS&format=JSON" + filterQuery, addDefaultRequestMatcherHeaders(pathOrRequestMatcher))
                         .then(function (result) {
                             sucess(result.body && JSON.parse(result.body));
                         }, function (err) {
@@ -1856,11 +2042,14 @@ var mockServerClient;
          * @param pathOrRequestMatcher  if a string is passed in the value will be treated as the path, however
          *                              if an object is passed in the value will be treated as a full request
          *                              matcher object, if null is passed in it will be treated as match all
+         * @param offset                optional number of recorded expectations to skip, an integer zero or more
+         * @param limit                 optional maximum number to return, an integer zero or more
          */
-        var retrieveRecordedExpectations = function (pathOrRequestMatcher) {
+        var retrieveRecordedExpectations = function (pathOrRequestMatcher, offset, limit) {
+            var pagingQuery = _expectationFilterQuery({offset: offset, limit: limit}, false);
             return {
                 then: function (sucess, error) {
-                    return makeRequest(host, port, "/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JSON", addDefaultRequestMatcherHeaders(pathOrRequestMatcher))
+                    return makeRequest(host, port, "/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" + pagingQuery, addDefaultRequestMatcherHeaders(pathOrRequestMatcher))
                         .then(function (result) {
                             sucess(result.body && JSON.parse(result.body));
                         }, function (err) {
@@ -1868,6 +2057,25 @@ var mockServerClient;
                         });
                 }
             };
+        };
+        /**
+         * Retrieve the active expectations whose metadata has key with a value equal to value (a string is
+         * compared as text, any other value as JSON).
+         */
+        var retrieveActiveExpectationsByMetadata = function (key, value) {
+            return retrieveActiveExpectations(undefined, {metadataKey: key, metadataValue: value});
+        };
+        /**
+         * Retrieve the active expectations whose metadata has key, whatever its value.
+         */
+        var retrieveActiveExpectationsByMetadataKey = function (key) {
+            return retrieveActiveExpectations(undefined, {metadataKey: key});
+        };
+        /**
+         * Retrieve the active expectations that have never matched a request.
+         */
+        var retrieveUnmatchedExpectations = function () {
+            return retrieveActiveExpectations(undefined, {unmatched: true});
         };
         /**
          * Retrieve the active expectations as MockServer SDK setup code (the
@@ -3549,7 +3757,11 @@ var mockServerClient;
             reset: reset,
             close: close,
             clear: clear,
+            clearWithFilter: clearWithFilter,
             clearById: clearById,
+            clearByMetadata: clearByMetadata,
+            clearByMetadataKey: clearByMetadataKey,
+            clearUnmatchedExpectations: clearUnmatchedExpectations,
             freezeClock: freezeClock,
             advanceClock: advanceClock,
             resetClock: resetClock,
@@ -3599,6 +3811,9 @@ var mockServerClient;
             retrieveRecordedRequestsAndResponsesAsHar: retrieveRecordedRequestsAndResponsesAsHar,
             retrieveActiveExpectations: retrieveActiveExpectations,
             retrieveRecordedExpectations: retrieveRecordedExpectations,
+            retrieveActiveExpectationsByMetadata: retrieveActiveExpectationsByMetadata,
+            retrieveActiveExpectationsByMetadataKey: retrieveActiveExpectationsByMetadataKey,
+            retrieveUnmatchedExpectations: retrieveUnmatchedExpectations,
             retrieveExpectationsAsCode: retrieveExpectationsAsCode,
             retrieveRecordedExpectationsAsCode: retrieveRecordedExpectationsAsCode,
             retrieveLogMessages: retrieveLogMessages,

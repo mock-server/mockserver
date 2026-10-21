@@ -118,6 +118,39 @@ client.When(
 )
 ```
 
+### Expectation Metadata
+
+Attach free-form metadata (any JSON values) to an expectation, then retrieve or
+clear expectations by it. Invalid selections (blank key, nil value, a clear that
+selects nothing, paging on clear, negative offset/limit) return an error and
+send nothing.
+
+```go
+client.When(mockserver.Request().Path("/checkout")).
+    WithMetadataEntry("owner", "team-a").
+    WithMetadataEntry("tags", []string{"smoke"}).
+    Respond(mockserver.Response().StatusCode(200))
+
+mine, _ := client.RetrieveActiveExpectationsByMetadata("owner", "team-a")
+tagged, _ := client.RetrieveActiveExpectationsByMetadataKey("tags")
+unused, _ := client.RetrieveUnmatchedExpectations()
+
+// filter: metadata value, JSONPath, unmatched and paging (offset/limit)
+page, _ := client.RetrieveActiveExpectationsWithFilter(nil,
+    mockserver.NewExpectationFilter().WithMetadataJSONPath("$.tags[?(@ == 'smoke')]").WithOffset(0).WithLimit(20))
+recorded, _ := client.RetrieveRecordedExpectationsPage(nil, 0, 50)
+
+// clear only the matching expectations (the event log is kept)
+_ = client.ClearByMetadata("owner", "team-a")
+_ = client.ClearByMetadataKey("tags")
+_ = client.ClearUnmatchedExpectations()
+_ = client.ClearWithFilter(mockserver.Request().Path("/checkout"),
+    mockserver.NewExpectationFilter().WithMetadata("ticket", 4211))
+```
+
+A string value is matched as text; any other value is sent as compact JSON. Use
+`mockserver.MetadataJSONNull` to select a JSON null value.
+
 ### Request Matchers
 
 #### Header, query-string, cookie and path-parameter values

@@ -60,7 +60,10 @@ type Expectation struct {
 	Capture []CaptureRule `json:"capture,omitempty"`
 	// Namespace (tenant) isolates this expectation: when set it only matches
 	// requests carrying the configured matchNamespaceHeader with this value.
-	Namespace  string      `json:"namespace,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	// Metadata is free-form information (owner, ticket, tags, ...) used to
+	// retrieve or clear expectations by metadata; omitted when empty.
+	Metadata   Metadata    `json:"metadata,omitempty"`
 	Times      *Times      `json:"times,omitempty"`
 	TimeToLive *TimeToLive `json:"timeToLive,omitempty"`
 	// Timestamp is the server-assigned creation time of the expectation (echoed

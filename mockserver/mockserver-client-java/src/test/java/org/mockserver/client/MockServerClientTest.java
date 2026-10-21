@@ -18,6 +18,7 @@ import org.mockserver.load.RampCurve;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.ExpectationFilter;
 import org.mockserver.mock.MockMode;
 import org.mockserver.model.*;
 import org.mockserver.serialization.*;
@@ -957,6 +958,153 @@ public class MockServerClientTest {
                 .withPath("/mockserver/clear")
                 .withQueryStringParameter("type", "log")
                 .withBody(someRequestMatcher.toString(), StandardCharsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS,
+            false
+        );
+    }
+
+    @Test
+    public void shouldSendClearByMetadataRequest() {
+        // when
+        mockServerClient.clearByMetadata("ticket", 42);
+
+        // then
+        verify(mockHttpClient).sendRequest(
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1090)
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath("/mockserver/clear")
+                .withQueryStringParameter("type", ClearType.EXPECTATIONS.name().toLowerCase())
+                .withQueryStringParameter("metadataKey", "ticket")
+                .withQueryStringParameter("metadataValue", "42")
+                .withBody("", StandardCharsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS,
+            false
+        );
+    }
+
+    @Test
+    public void shouldRefuseAClearWithABlankOrNonSelectingFilterAndSendNothing() {
+        for (String blank : java.util.Arrays.asList(null, "", " ")) {
+            assertThrows(IllegalArgumentException.class, () -> mockServerClient.clearByMetadata(blank, "x"));
+        }
+        assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(null, (ExpectationFilter) null));
+        assertThrows(IllegalArgumentException.class, () -> mockServerClient.clearByMetadata("owner", null));
+        assertThrows(IllegalArgumentException.class, () -> mockServerClient.clearByMetadataKey(" "));
+        for (String blank : java.util.Arrays.asList(null, "", " ")) {
+            assertThrows(IllegalArgumentException.class, () -> mockServerClient.clearByNamespace(blank));
+            assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(blank));
+            assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(blank, ClearType.EXPECTATIONS));
+            assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(org.mockserver.model.ExpectationId.expectationId(blank)));
+        }
+        assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear((org.mockserver.model.ExpectationId) null));
+        assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear((org.mockserver.model.ExpectationId) null, ClearType.ALL));
+        assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(null, ExpectationFilter.expectationFilter()));
+        assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(null, ExpectationFilter.expectationFilter().withUnmatched(false)));
+        assertThrows(IllegalArgumentException.class, () -> mockServerClient.clear(null, ExpectationFilter.expectationFilter().withUnmatched(true).withLimit(1)));
+
+        verify(mockHttpClient, never()).sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean());
+    }
+
+    @Test
+    public void shouldSendClearByMetadataKeyRequest() {
+        // when
+        mockServerClient.clearByMetadataKey("owner");
+
+        // then
+        verify(mockHttpClient).sendRequest(
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1090)
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath("/mockserver/clear")
+                .withQueryStringParameter("type", ClearType.EXPECTATIONS.name().toLowerCase())
+                .withQueryStringParameter("metadataKey", "owner")
+                .withBody("", StandardCharsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS,
+            false
+        );
+    }
+
+    @Test
+    public void shouldSendClearUnmatchedExpectationsRequest() {
+        // when
+        mockServerClient.clearUnmatchedExpectations();
+
+        // then
+        verify(mockHttpClient).sendRequest(
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1090)
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath("/mockserver/clear")
+                .withQueryStringParameter("type", ClearType.EXPECTATIONS.name().toLowerCase())
+                .withQueryStringParameter("unmatched", "true")
+                .withBody("", StandardCharsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS,
+            false
+        );
+    }
+
+    @Test
+    public void shouldSendRetrieveActiveExpectationsWithFilterRequest() {
+        // given
+        Expectation[] expectations = {};
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("body"));
+        when(mockExpectationSerializer.deserializeArray("body", true)).thenReturn(expectations);
+
+        // when
+        assertThat(mockServerClient.retrieveActiveExpectations(null, ExpectationFilter.expectationFilter()
+            .withMetadataJsonPath("$.tags[?(@ == 'smoke')]")
+            .withUnmatched(true)
+            .withOffset(10)
+            .withLimit(5)), sameInstance(expectations));
+
+        // then
+        verify(mockHttpClient).sendRequest(
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1090)
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath("/mockserver/retrieve")
+                .withQueryStringParameter("type", RetrieveType.ACTIVE_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withQueryStringParameter("metadataJsonPath", "$.tags[?(@ == 'smoke')]")
+                .withQueryStringParameter("unmatched", "true")
+                .withQueryStringParameter("limit", "5")
+                .withQueryStringParameter("offset", "10")
+                .withBody("", StandardCharsets.UTF_8),
+            20000,
+            TimeUnit.MILLISECONDS,
+            false
+        );
+    }
+
+    @Test
+    public void shouldSendRetrieveRecordedExpectationsPageRequest() {
+        // given
+        when(mockHttpClient.sendRequest(any(HttpRequest.class), anyLong(), any(TimeUnit.class), anyBoolean())).thenReturn(response().withBody("[]"));
+
+        // when
+        assertThat(mockServerClient.retrieveRecordedExpectations(null, 20, 10).length, is(0));
+
+        // then
+        verify(mockHttpClient).sendRequest(
+            request()
+                .withHeader(HOST.toString(), "localhost:" + 1090)
+                .withMethod("PUT")
+                .withContentType(APPLICATION_JSON_UTF_8)
+                .withPath("/mockserver/retrieve")
+                .withQueryStringParameter("type", RetrieveType.RECORDED_EXPECTATIONS.name())
+                .withQueryStringParameter("format", Format.JSON.name())
+                .withQueryStringParameter("limit", "10")
+                .withQueryStringParameter("offset", "20")
+                .withBody("", StandardCharsets.UTF_8),
             20000,
             TimeUnit.MILLISECONDS,
             false

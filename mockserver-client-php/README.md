@@ -281,6 +281,38 @@ $expectations = $client->retrieveActiveExpectations();
 $logs = $client->retrieveLogMessages();
 ```
 
+### Expectation Metadata
+
+```php
+use MockServer\ExpectationFilter;
+
+// Attach metadata (any JSON values) to an expectation
+$client->when(HttpRequest::request()->path('/checkout'))
+    ->withMetadata(['owner' => 'team-a', 'ticket' => 4211, 'tags' => ['smoke']])
+    ->respond(HttpResponse::response()->statusCode(200));
+
+// Retrieve by metadata, by key only, or the expectations that never matched
+$mine = $client->retrieveActiveExpectationsByMetadata('owner', 'team-a');
+$tagged = $client->retrieveActiveExpectationsByMetadataKey('ticket');
+$unused = $client->retrieveUnmatchedExpectations();
+
+// Combine a JSONPath, unmatched and paging
+$page = $client->retrieveActiveExpectationsWithFilter(null, ExpectationFilter::expectationFilter()
+    ->withMetadataJsonPath('$.tags[?(@ == \'smoke\')]')
+    ->withLimit(10)
+    ->withOffset(0));
+$recorded = $client->retrieveRecordedExpectationsPage(null, 0, 50);
+
+// Clear only the matching expectations (the event log is kept)
+$client->clearByMetadata('owner', 'team-a');
+$client->clearByMetadataKey('ticket');
+$client->clearUnmatchedExpectations();
+```
+
+A blank key or JSONPath, a `null` value (use the key-only method instead), a
+clear that selects nothing, paging on clear, and a negative offset or limit
+all throw `InvalidArgumentException` before anything is sent.
+
 ### Debugging Why a Request Did Not Match
 
 ```php

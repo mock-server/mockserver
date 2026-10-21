@@ -41,6 +41,17 @@ class ForwardChainExpectation
     }
 
     /**
+     * Set the expectation metadata (see {@see Expectation::metadata()}).
+     *
+     * @param array<string, mixed> $metadata
+     */
+    public function withMetadata(array $metadata): self
+    {
+        $this->expectation->metadata($metadata);
+        return $this;
+    }
+
+    /**
      * Respond with the given HTTP response.
      *
      * @return array The created expectation(s) as returned by the server.

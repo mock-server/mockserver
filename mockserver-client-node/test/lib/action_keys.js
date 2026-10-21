@@ -39,7 +39,7 @@ var NON_ACTION_KEYS = [
     'namespace', 'scenarioName', 'scenarioState', 'newScenarioState',
     'httpResponses', 'responseMode', 'responseWeights', 'switchAfter',
     'crossProtocolScenarios',
-    'times', 'timeToLive', 'steps', 'timestamp'
+    'times', 'timeToLive', 'steps', 'timestamp', 'metadata'
 ];
 
 var NON_ACTION_KEY_SET = new Set(NON_ACTION_KEYS);

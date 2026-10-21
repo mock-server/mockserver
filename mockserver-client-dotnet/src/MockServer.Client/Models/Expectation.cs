@@ -193,6 +193,15 @@ public sealed class Expectation
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Namespace { get; set; }
 
+    /// <summary>
+    /// Optional free-form metadata (string keys, any JSON value) used to group expectations, for example by
+    /// owning team or ticket, and to retrieve or clear them by it with <see cref="ExpectationFilter"/>. It is not
+    /// used for request matching. Values read back from the server are <see cref="System.Text.Json.JsonElement"/>.
+    /// </summary>
+    [JsonPropertyName("metadata")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<string, object?>? Metadata { get; set; }
+
     [JsonPropertyName("scenarioName")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ScenarioName { get; set; }

@@ -1,4 +1,4 @@
-import {mockServerClient, ClockStatus, GrpcService, Har, MockServerClient, ScenarioHandle, ScenarioList, ScenarioState, llm as llmFactory, mcpMock, a2aMock} from '../index';
+import {mockServerClient, ClockStatus, ExpectationFilter, GrpcService, Har, MockServerClient, ScenarioHandle, ScenarioList, ScenarioState, llm as llmFactory, mcpMock, a2aMock} from '../index';
 import {RequestResponse} from '../mockServerClient';
 import {ChaosExperiment, CrossProtocolScenario, Expectation, ExpectationStep, GenerateLoadScenarioFromOpenAPIRequest, GenerateLoadScenarioFromRecordingRequest, HttpChaosProfile, HttpOverrideForwardedRequest, HttpRequest, HttpResponse, LoadScenario, LoadScenarioEntry, LoadScenarioGenerationResult, LoadScenarioList, LoadScenarioRegistration, LoadScenarioReport, LoadScenarioStartResult, LoadScenarioStopResult, RequestDefinition, SloCriteria, SloVerdict, RequestExplanation, ExplainedExpectation, DebugMismatchResult, ExplainUnmatchedResult, ArrivalForwardFailure} from '../mockServer';
 
@@ -303,6 +303,25 @@ async function test() {
     requestResponse = await client.clear('some/path', 'ALL');
     requestResponse = await client.clear('some/path', 'LOG');
     requestResponse = await client.clear('some/path', 'EXPECTATIONS');
+
+    // expectation metadata, unmatched and paging
+    const metadataFilter: ExpectationFilter = {metadataKey: 'owner', metadataValue: 'team-a', limit: 10, offset: 0};
+    let filtered: Expectation[] = await client.retrieveActiveExpectations(null, metadataFilter);
+    filtered = await client.retrieveActiveExpectations('/some/path', {metadataJsonPath: '$.tags[?(@ == "smoke")]', unmatched: true});
+    filtered = await client.retrieveActiveExpectationsByMetadata('ticket', 4211);
+    filtered = await client.retrieveActiveExpectationsByMetadataKey('owner');
+    filtered = await client.retrieveUnmatchedExpectations();
+    filtered = await client.retrieveRecordedExpectations(null, 0, 25);
+    requestResponse = await client.clear(null, {metadataKey: 'owner', metadataValue: 'team-a'});
+    requestResponse = await client.clearWithFilter('some/path', {metadataJsonPath: '$.owner'});
+    requestResponse = await client.clearByMetadata('tags', ['smoke', 'checkout']);
+    requestResponse = await client.clearByMetadataKey('owner');
+    requestResponse = await client.clearUnmatchedExpectations();
+    // @ts-expect-error a clear filter cannot page
+    requestResponse = await client.clear(null, {unmatched: true, limit: 10});
+    // @ts-expect-error a metadata value cannot be null
+    requestResponse = await client.clearByMetadata('owner', null);
+    requestResponse = await client.when('/some/path').withMetadata('owner', 'team-a').withMetadata({ticket: 4211, note: null}).respond(httpResponse);
 
     requestResponse = await client.bind([1, 2, 3, 4]);
 

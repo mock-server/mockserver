@@ -49,17 +49,25 @@ public class ExpandedParameterDecoder {
 
     public Parameters retrieveQueryParameters(String parameterString, boolean hasPath) {
         if (isNotBlank(parameterString)) {
-            String rawParameterString = parameterString.contains("?") ? StringUtils.substringAfter(parameterString, "?") : parameterString;
-            Map<String, List<String>> parameterMap = Collections.emptyMap();
-            try {
-                hasPath = parameterString.startsWith("/") || parameterString.contains("?") || hasPath;
-                parameterMap = new QueryStringDecoder(parameterString, HttpConstants.DEFAULT_CHARSET, parameterString.contains("/") || hasPath, Integer.MAX_VALUE, true).parameters();
-            } catch (IllegalArgumentException iae) {
-                logUndecodable(parameterString, hasPath, iae);
-            }
-            return new Parameters().withEntries(parameterMap).withRawParameterString(rawParameterString);
+            Map<String, List<String>> parameterMap = decodeQuery(parameterString, hasPath);
+            return new Parameters().withEntries(parameterMap != null ? parameterMap : Collections.emptyMap()).withRawParameterString(rawQuery(parameterString));
         }
         return null;
+    }
+
+    private static String rawQuery(String parameterString) {
+        return parameterString.contains("?") ? StringUtils.substringAfter(parameterString, "?") : parameterString;
+    }
+
+    // null when the query cannot be decoded (logged)
+    private Map<String, List<String>> decodeQuery(String parameterString, boolean hasPath) {
+        try {
+            hasPath = parameterString.startsWith("/") || parameterString.contains("?") || hasPath;
+            return new QueryStringDecoder(parameterString, HttpConstants.DEFAULT_CHARSET, parameterString.contains("/") || hasPath, Integer.MAX_VALUE, true).parameters();
+        } catch (IllegalArgumentException iae) {
+            logUndecodable(parameterString, hasPath, iae);
+            return null;
+        }
     }
 
     /**
@@ -77,6 +85,24 @@ public class ExpandedParameterDecoder {
                 .setArguments(parameterString, iae.getMessage())
                 .setThrowable(iae)
         );
+    }
+
+    /**
+     * Sets the request's query string parameters from {@code parameterString}. When the query cannot be decoded
+     * the request has no parameters, as before, and also records the raw query, so the control plane can tell
+     * "undecodable" from "none".
+     */
+    public void applyQueryParameters(org.mockserver.model.HttpRequest httpRequest, String parameterString, boolean hasPath) {
+        if (isNotBlank(parameterString)) {
+            Map<String, List<String>> parameterMap = decodeQuery(parameterString, hasPath);
+            String rawQuery = rawQuery(parameterString);
+            httpRequest.withQueryStringParameters(new Parameters().withEntries(parameterMap != null ? parameterMap : Collections.emptyMap()).withRawParameterString(rawQuery));
+            if (parameterMap == null) {
+                httpRequest.withUndecodableQueryString(rawQuery);
+            }
+        } else {
+            httpRequest.withQueryStringParameters((Parameters) null);
+        }
     }
 
     public static Parameters undecodedParameters(String parameterString, boolean hasPath) {

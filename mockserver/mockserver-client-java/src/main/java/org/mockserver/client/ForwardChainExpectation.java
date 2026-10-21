@@ -145,6 +145,41 @@ public class ForwardChainExpectation {
     }
 
     /**
+     * Add (or replace) one metadata entry on this expectation, for example an owner or a ticket number. Metadata is
+     * returned on retrieve and can be used to retrieve or clear expectations, but never affects matching.
+     *
+     * @param key   the metadata key, must not be blank
+     * @param value any JSON value: a String, Number, Boolean, List, Map or JsonNode
+     */
+    public ForwardChainExpectation withMetadata(String key, Object value) {
+        expectation.withMetadata(key, value);
+        return this;
+    }
+
+    /**
+     * Add (or replace) one metadata entry whose value is given as JSON text, for example
+     * {@code withMetadataJson("tags", "[\"smoke\",\"checkout\"]")}.
+     *
+     * @param key       the metadata key, must not be blank
+     * @param jsonValue any JSON value as text
+     * @throws IllegalArgumentException if {@code jsonValue} is not valid JSON
+     */
+    public ForwardChainExpectation withMetadataJson(String key, String jsonValue) {
+        expectation.withMetadataJson(key, jsonValue);
+        return this;
+    }
+
+    /**
+     * Set all metadata on this expectation, replacing any already set; null or empty removes it.
+     *
+     * @param metadata the metadata, string keys to any JSON value
+     */
+    public ForwardChainExpectation withMetadata(java.util.Map<String, ?> metadata) {
+        expectation.withMetadata(metadata);
+        return this;
+    }
+
+    /**
      * Set the capture rules that extract values from the matched request into
      * scenario state, so later template responses can read them via the
      * {@code scenario} helper.

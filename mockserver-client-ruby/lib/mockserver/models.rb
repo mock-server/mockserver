@@ -2908,6 +2908,7 @@ module MockServer
                   :http_responses, :response_mode, :response_weights, :switch_after,
                   :cross_protocol_scenarios, :steps, :capture, :namespace,
                   :scenario_name, :scenario_state, :new_scenario_state, :timestamp
+    attr_reader :metadata
 
     def initialize(id: nil, priority: nil, percentage: nil, http_request: nil, http_response: nil,
                    http_response_template: nil, http_response_class_callback: nil,
@@ -2924,7 +2925,7 @@ module MockServer
                    switch_after: nil, cross_protocol_scenarios: nil, steps: nil,
                    capture: nil, namespace: nil,
                    scenario_name: nil, scenario_state: nil, new_scenario_state: nil,
-                   timestamp: nil)
+                   timestamp: nil, metadata: nil)
       @id = id
       @priority = priority
       @percentage = percentage
@@ -2969,6 +2970,18 @@ module MockServer
       @scenario_state = scenario_state
       @new_scenario_state = new_scenario_state
       @timestamp = timestamp
+      self.metadata = metadata
+    end
+
+    # Free-form labels (owner, ticket, tags, ...) used to retrieve or clear
+    # expectations by metadata. Keys are stored as Strings (Symbol keys are
+    # converted, at any depth); values may be any JSON value, including nil.
+    def metadata=(value)
+      unless value.nil? || value.is_a?(Hash)
+        raise ArgumentError, "metadata must be a Hash, got #{value.class}"
+      end
+
+      @metadata = value.nil? ? nil : MockServer.stringify_keys(value)
     end
 
     # Set the response class-callback action. Accepts either a fully-qualified
@@ -3043,7 +3056,8 @@ module MockServer
         'scenarioName'                 => @scenario_name,
         'scenarioState'                => @scenario_state,
         'newScenarioState'             => @new_scenario_state,
-        'timestamp'                    => @timestamp
+        'timestamp'                    => @timestamp,
+        'metadata'                     => @metadata.nil? || @metadata.empty? ? nil : @metadata
       })
     end
 
@@ -3105,8 +3119,145 @@ module MockServer
         scenario_name:                   data['scenarioName'],
         scenario_state:                  data['scenarioState'],
         new_scenario_state:              data['newScenarioState'],
-        timestamp:                       data['timestamp']
+        timestamp:                       data['timestamp'],
+        metadata:                        data['metadata']
       )
+    end
+  end
+
+  # Selects expectations to retrieve or clear by metadata, by whether they have
+  # ever matched a request, and pages a retrieved list. Sent as query parameters
+  # on +PUT /mockserver/retrieve+ and +PUT /mockserver/clear+; every selection
+  # that is set must hold. Invalid arguments raise ArgumentError immediately, so
+  # a broken filter can never be sent as "no filter" (which, on clear, clears
+  # every expectation).
+  #
+  #   MockServer::ExpectationFilter.new.with_metadata('owner', 'team-a').with_limit(10)
+  class ExpectationFilter
+    # Pass as the value to {#with_metadata} to select a stored JSON null; Ruby
+    # +nil+ is rejected so it can never read as "any value".
+    JSON_NULL = Object.new.tap do |null|
+      def null.inspect
+        'MockServer::ExpectationFilter::JSON_NULL'
+      end
+    end.freeze
+
+    attr_reader :metadata_key, :metadata_value, :metadata_json_path, :unmatched, :offset, :limit
+
+    def initialize
+      @metadata_key = nil
+      @metadata_value = nil
+      @metadata_json_path = nil
+      @unmatched = false
+      @offset = nil
+      @limit = nil
+    end
+
+    # Select expectations whose metadata has +key+ with a value equal to
+    # +value+. A String is sent as text; any other value (number, boolean,
+    # Array, Hash, {JSON_NULL}) is sent as its compact JSON.
+    # @raise [ArgumentError] if +key+ is blank or +value+ is nil
+    def with_metadata(key, value)
+      if value.nil?
+        raise ArgumentError, 'the metadata value must not be nil; use with_metadata_key(key) to select any value, ' \
+                             'or ExpectationFilter::JSON_NULL to select a JSON null'
+      end
+
+      @metadata_key = ExpectationFilter.require_not_blank(key, 'metadata key')
+      @metadata_value = ExpectationFilter.encode_value(value)
+      self
+    end
+
+    # Select expectations whose metadata has +key+, with any value.
+    # @raise [ArgumentError] if +key+ is blank
+    def with_metadata_key(key)
+      @metadata_key = ExpectationFilter.require_not_blank(key, 'metadata key')
+      @metadata_value = nil
+      self
+    end
+
+    # Select expectations whose metadata object the JSONPath selects at least
+    # one value from, e.g. <tt>$[?(@.owner == 'team-a')]</tt>.
+    # @raise [ArgumentError] if +json_path+ is blank
+    def with_metadata_json_path(json_path)
+      @metadata_json_path = ExpectationFilter.require_not_blank(json_path, 'metadata JSONPath')
+      self
+    end
+
+    # Select only expectations that have not matched any request.
+    def with_unmatched(unmatched = true)
+      unless [true, false].include?(unmatched)
+        raise ArgumentError, "unmatched must be true or false, got #{unmatched.inspect}"
+      end
+
+      @unmatched = unmatched
+      self
+    end
+
+    # Skip this many results (retrieve only).
+    def with_offset(offset)
+      @offset = ExpectationFilter.require_non_negative(offset, 'offset')
+      self
+    end
+
+    # Return at most this many results (retrieve only).
+    def with_limit(limit)
+      @limit = ExpectationFilter.require_non_negative(limit, 'limit')
+      self
+    end
+
+    # @return [Boolean] true when a metadata or unmatched selection is set
+    def selection?
+      !@metadata_key.nil? || !@metadata_json_path.nil? || @unmatched
+    end
+
+    # @return [Boolean] true when offset or limit is set
+    def paging?
+      !@offset.nil? || !@limit.nil?
+    end
+
+    # The query parameters for this filter, names and values exactly as sent.
+    # @return [Hash{String => String}]
+    def to_query_params
+      params = {}
+      unless @metadata_key.nil?
+        params['metadataKey'] = @metadata_key
+        params['metadataValue'] = @metadata_value unless @metadata_value.nil?
+      end
+      params['metadataJsonPath'] = @metadata_json_path unless @metadata_json_path.nil?
+      params['unmatched'] = 'true' if @unmatched
+      params['offset'] = @offset.to_s unless @offset.nil?
+      params['limit'] = @limit.to_s unless @limit.nil?
+      params
+    end
+
+    # @api private
+    def self.require_not_blank(value, description)
+      unless value.is_a?(String) || value.is_a?(Symbol)
+        raise ArgumentError, "the #{description} must be a String, got #{value.inspect}"
+      end
+      raise ArgumentError, "the #{description} must not be blank" if value.to_s.strip.empty?
+
+      value.to_s
+    end
+
+    # @api private
+    def self.require_non_negative(value, description)
+      unless value.is_a?(Integer) && value >= 0
+        raise ArgumentError, "#{description} must be an Integer of zero or more, got #{value.inspect}"
+      end
+
+      value
+    end
+
+    # @api private
+    def self.encode_value(value)
+      return 'null' if value.equal?(JSON_NULL)
+      return value if value.is_a?(String)
+
+      JSON.generate(MockServer.stringify_keys(value))
+    rescue JSON::GeneratorError => e
+      raise ArgumentError, "the metadata value #{value.inspect} cannot be sent as JSON: #{e.message}"
     end
   end
 

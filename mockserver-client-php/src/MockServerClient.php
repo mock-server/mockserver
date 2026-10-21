@@ -569,6 +569,68 @@ class MockServerClient
     }
 
     /**
+     * Clear only the expectations that match both the request matcher and the
+     * filter, e.g. by metadata or because they have never matched a request.
+     * The event log is left untouched.
+     *
+     * @param HttpRequest|null $request Matcher (null = every expectation)
+     * @param ExpectationFilter $filter Metadata and/or unmatched selection (no paging)
+     * @throws \InvalidArgumentException If the filter selects nothing or pages;
+     *         nothing is sent, because a filter that selects nothing would clear
+     *         every expectation
+     */
+    public function clearWithFilter(?HttpRequest $request, ExpectationFilter $filter): void
+    {
+        if (!$filter->hasSelection()) {
+            throw new \InvalidArgumentException(
+                'clear with a filter requires a metadata or unmatched selection; use clear() to clear without one'
+            );
+        }
+        if ($filter->hasPaging()) {
+            throw new \InvalidArgumentException('limit and offset are not supported for clear');
+        }
+
+        $path = '/mockserver/clear?type=expectations&' . $filter->toQueryString();
+        $body = $request !== null ? json_encode($request->toArray() ?: new \stdClass(), JSON_THROW_ON_ERROR) : '';
+        $response = $this->put($path, $body);
+
+        $status = $response->getStatusCode();
+        if ($status >= 400) {
+            $responseBody = (string) $response->getBody();
+            throw new MockServerException("Clear failed (HTTP {$status}): {$responseBody}");
+        }
+    }
+
+    /**
+     * Clear the expectations whose metadata has {@code $key} with a value
+     * equal to {@code $value} (see {@see ExpectationFilter::withMetadata()}).
+     *
+     * @throws \InvalidArgumentException If the key is blank or the value is null
+     */
+    public function clearByMetadata(string $key, mixed $value): void
+    {
+        $this->clearWithFilter(null, ExpectationFilter::expectationFilter()->withMetadata($key, $value));
+    }
+
+    /**
+     * Clear the expectations whose metadata has {@code $key}, with any value.
+     *
+     * @throws \InvalidArgumentException If the key is blank
+     */
+    public function clearByMetadataKey(string $key): void
+    {
+        $this->clearWithFilter(null, ExpectationFilter::expectationFilter()->withMetadataKey($key));
+    }
+
+    /**
+     * Clear the expectations that have never matched a request.
+     */
+    public function clearUnmatchedExpectations(): void
+    {
+        $this->clearWithFilter(null, ExpectationFilter::expectationFilter()->withUnmatched(true));
+    }
+
+    /**
      * Reset MockServer: remove all expectations and clear all recorded requests.
      */
     public function reset(): void
@@ -613,6 +675,80 @@ class MockServerClient
     public function retrieveRecordedExpectations(?HttpRequest $request = null): array
     {
         return $this->retrieve($request, 'RECORDED_EXPECTATIONS', 'JSON');
+    }
+
+    /**
+     * Retrieve the active expectations matching the request matcher and the
+     * filter: by metadata, only those never matched, and/or one page
+     * ({@code limit} / {@code offset}).
+     *
+     * Each metadata object is returned exactly as sent (empty or list-like JSON
+     * objects as {@code \stdClass}), so passing an entry to
+     * {@see Expectation::fromArray()} re-submits it unchanged.
+     *
+     * @param HttpRequest|null $request Matcher (null = all)
+     * @param ExpectationFilter $filter The selection and paging
+     * @return array List of expectation arrays
+     */
+    public function retrieveActiveExpectationsWithFilter(?HttpRequest $request, ExpectationFilter $filter): array
+    {
+        return $this->retrieveFiltered($request, 'ACTIVE_EXPECTATIONS', $filter);
+    }
+
+    /**
+     * Retrieve the active expectations whose metadata has {@code $key} with a
+     * value equal to {@code $value} (see {@see ExpectationFilter::withMetadata()}).
+     *
+     * @throws \InvalidArgumentException If the key is blank or the value is null
+     */
+    public function retrieveActiveExpectationsByMetadata(string $key, mixed $value): array
+    {
+        return $this->retrieveActiveExpectationsWithFilter(
+            null,
+            ExpectationFilter::expectationFilter()->withMetadata($key, $value),
+        );
+    }
+
+    /**
+     * Retrieve the active expectations whose metadata has {@code $key}, with any value.
+     *
+     * @throws \InvalidArgumentException If the key is blank
+     */
+    public function retrieveActiveExpectationsByMetadataKey(string $key): array
+    {
+        return $this->retrieveActiveExpectationsWithFilter(
+            null,
+            ExpectationFilter::expectationFilter()->withMetadataKey($key),
+        );
+    }
+
+    /**
+     * Retrieve the active expectations that have never matched a request.
+     */
+    public function retrieveUnmatchedExpectations(): array
+    {
+        return $this->retrieveActiveExpectationsWithFilter(
+            null,
+            ExpectationFilter::expectationFilter()->withUnmatched(true),
+        );
+    }
+
+    /**
+     * Retrieve one page of the recorded expectations matching the request
+     * matcher, in the order the requests were received.
+     *
+     * @param HttpRequest|null $request Matcher (null = all)
+     * @param int $offset Number of recorded expectations to skip, zero or more
+     * @param int $limit Maximum number to return, zero or more
+     * @throws \InvalidArgumentException If the offset or limit is negative
+     */
+    public function retrieveRecordedExpectationsPage(?HttpRequest $request, int $offset, int $limit): array
+    {
+        return $this->retrieveFiltered(
+            $request,
+            'RECORDED_EXPECTATIONS',
+            ExpectationFilter::expectationFilter()->withOffset($offset)->withLimit($limit),
+        );
     }
 
     /**
@@ -2501,6 +2637,74 @@ class MockServerClient
         }
 
         return [];
+    }
+
+    /**
+     * Retrieve expectations with an {@see ExpectationFilter} applied as query
+     * string parameters, preserving each expectation's metadata JSON shape.
+     */
+    private function retrieveFiltered(?HttpRequest $request, string $type, ExpectationFilter $filter): array
+    {
+        $path = '/mockserver/retrieve?type=' . urlencode($type) . '&format=JSON';
+        $query = $filter->toQueryString();
+        if ($query !== '') {
+            $path .= '&' . $query;
+        }
+        $body = $request !== null ? json_encode($request->toArray() ?: new \stdClass(), JSON_THROW_ON_ERROR) : '';
+
+        $response = $this->put($path, $body);
+
+        $status = $response->getStatusCode();
+        $responseBody = (string) $response->getBody();
+
+        if ($status >= 400) {
+            throw new MockServerException("Retrieve ({$type}) failed (HTTP {$status}): {$responseBody}");
+        }
+
+        return $responseBody !== '' ? self::decodeExpectations($responseBody) : [];
+    }
+
+    /**
+     * Decode an expectation list as {@code json_decode(..., true)} does, except
+     * that each {@code metadata} keeps its JSON shape: an associative decode
+     * turns {@code {}} into {@code []}, which would re-encode as a JSON array.
+     */
+    private static function decodeExpectations(string $json): array
+    {
+        $assoc = json_decode($json, true);
+        if (!is_array($assoc)) {
+            return [];
+        }
+        $objects = json_decode($json, false);
+        if (!is_array($objects) || !array_is_list($assoc)) {
+            return $assoc;
+        }
+        foreach ($objects as $index => $expectation) {
+            if ($expectation instanceof \stdClass && property_exists($expectation, 'metadata')
+                && is_array($assoc[$index] ?? null)) {
+                $assoc[$index]['metadata'] = self::preserveJsonShape($expectation->metadata);
+            }
+        }
+        return $assoc;
+    }
+
+    /**
+     * Convert an object-decoded JSON value to arrays, keeping a JSON object as
+     * {@code \stdClass} only where an array would re-encode as a JSON list.
+     */
+    private static function preserveJsonShape(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            return array_map(static fn(mixed $item): mixed => self::preserveJsonShape($item), $value);
+        }
+        if ($value instanceof \stdClass) {
+            $converted = array_map(
+                static fn(mixed $item): mixed => self::preserveJsonShape($item),
+                get_object_vars($value),
+            );
+            return array_is_list($converted) ? (object) $converted : $converted;
+        }
+        return $value;
     }
 
     /**

@@ -1057,6 +1057,7 @@ class PyBuilder {
     emit('times', 'times', (x) => this.times(x));
     emit('timeToLive', 'time_to_live', (x) => this.ttl(x));
     emit('namespace', 'namespace', (x) => pyStr(x));
+    emit('metadata', 'metadata', (x, i) => toPythonLiteral(x, i));
     emit('timestamp', 'timestamp', (x) => pyStr(x));
     return kw;
   }

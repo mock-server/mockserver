@@ -102,6 +102,10 @@
       "description": "optional namespace (tenant) this expectation belongs to; when set, the expectation only matches requests carrying the configured matchNamespaceHeader with this value, plus it remains isolated from other namespaces",
       "type": "string"
     },
+    "metadata": {
+      "description": "optional arbitrary metadata (string keys, any JSON values) returned on retrieve and usable to retrieve or clear expectations by metadata; never affects request matching",
+      "type": "object"
+    },
     "scenarioName": {
       "type": "string"
     },

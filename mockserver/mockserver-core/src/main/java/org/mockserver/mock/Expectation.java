@@ -10,7 +10,9 @@ import org.mockserver.uuid.UUIDService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -81,6 +83,10 @@ public class Expectation extends ObjectWithJsonToString {
     private List<CrossProtocolScenario> crossProtocolScenarios;
     private List<CaptureRule> capture;
     private String namespace;
+    // read only by control-plane filters and serialisation, never by matching; always null or unmodifiable
+    private Map<String, Object> metadata;
+    // metadata serialised once per change, so writing the expectation again (persistence) copies it rather than re-serialising
+    private transient String metadataJson;
     private String scenarioName;
     private String scenarioState;
     private String newScenarioState;
@@ -121,6 +127,8 @@ public class Expectation extends ObjectWithJsonToString {
     // from the STABLE raw bytes so the weight does not change if/when the tree is later materialised;
     // the multiplier errs to the high end so the estimate over-counts (evicts early) rather than under.
     private static final long JSON_MATCHER_TREE_EXPANSION = 20;
+    // metadata is held as a Map/List/boxed-value graph; over-count its JSON text as for a parsed JSON body
+    private static final long METADATA_EXPANSION = JSON_MATCHER_TREE_EXPANSION;
 
     /**
      * Specify the OpenAPI and operationId to match against by URL or payload and string as follows:
@@ -715,6 +723,9 @@ public class Expectation extends ObjectWithJsonToString {
             if (httpForwardTemplate != null && httpForwardTemplate.getTemplate() != null) {
                 size += httpForwardTemplate.getTemplate().length();
             }
+            if (metadata != null) {
+                size += metadataJsonLength() * METADATA_EXPANSION;
+            }
             estimatedHeapSize = size;
         }
         return estimatedHeapSize;
@@ -981,6 +992,117 @@ public class Expectation extends ObjectWithJsonToString {
 
     public String getNamespace() {
         return namespace;
+    }
+
+    /**
+     * <p>
+     * Set arbitrary metadata on this expectation, for example an owner, a ticket number or a set of tags.
+     * Each value may be any JSON value: a {@code String}, {@code Number}, {@code Boolean}, {@code List},
+     * {@code Map} or Jackson {@code JsonNode}. Metadata is returned when the expectation is retrieved and can
+     * be used to retrieve or clear expectations, but it never affects how requests are matched.
+     * </p>
+     * <p>
+     * The map is copied; a {@code null} or empty map removes all metadata. The copy is shallow, so do not change a
+     * nested {@code List} or {@code Map} value after setting it: the serialised form is cached when first written.
+     * </p>
+     *
+     * @param metadata the metadata for this expectation, or null for none
+     */
+    public Expectation withMetadata(Map<String, ?> metadata) {
+        if (metadata == null || metadata.isEmpty()) {
+            this.metadata = null;
+        } else {
+            Map<String, Object> copy = new LinkedHashMap<>();
+            for (Map.Entry<String, ?> entry : metadata.entrySet()) {
+                copy.put(requireMetadataKey(entry.getKey()), entry.getValue());
+            }
+            this.metadata = Collections.unmodifiableMap(copy);
+        }
+        metadataChanged();
+        return this;
+    }
+
+    /**
+     * Add (or replace) one metadata entry, see {@link #withMetadata(Map)}.
+     *
+     * @param key   the metadata key, must not be blank
+     * @param value any JSON value
+     */
+    public Expectation withMetadata(String key, Object value) {
+        Map<String, Object> copy = metadata != null ? new LinkedHashMap<>(metadata) : new LinkedHashMap<>();
+        copy.put(requireMetadataKey(key), value);
+        this.metadata = Collections.unmodifiableMap(copy);
+        metadataChanged();
+        return this;
+    }
+
+    private void metadataChanged() {
+        this.metadataJson = null;
+        this.hashCode = 0;
+        this.estimatedHeapSize = -1;
+    }
+
+    /**
+     * Add (or replace) one metadata entry whose value is given as JSON text, for example
+     * {@code withMetadataJson("tags", "[\"smoke\",\"checkout\"]")}; see {@link #withMetadata(Map)}.
+     *
+     * @param key       the metadata key, must not be blank
+     * @param jsonValue any JSON value as text
+     * @throws IllegalArgumentException if {@code jsonValue} is not valid JSON
+     */
+    public Expectation withMetadataJson(String key, String jsonValue) {
+        return withMetadata(key, MetadataJson.fromJson(jsonValue));
+    }
+
+    private static String requireMetadataKey(String key) {
+        if (key == null || key.trim().isEmpty()) {
+            throw new IllegalArgumentException("expectation metadata keys must not be blank");
+        }
+        return key;
+    }
+
+    /**
+     * @return this expectation's metadata (unmodifiable), or null when it has none
+     */
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    /**
+     * @return this expectation's metadata as compact JSON, serialised once per change, or null when it has none
+     * @throws IllegalArgumentException if a metadata value cannot be serialised as JSON
+     */
+    @JsonIgnore
+    public String getMetadataJson() {
+        if (metadata == null) {
+            return null;
+        }
+        String json = metadataJson;
+        if (json == null) {
+            json = MetadataJson.toJson(metadata);
+            metadataJson = json;
+        }
+        return json;
+    }
+
+    private long metadataJsonLength() {
+        try {
+            return getMetadataJson().length();
+        } catch (IllegalArgumentException notJson) {
+            // an in-process caller's value Jackson cannot write: the budget must not fail the add
+            return (long) metadata.size() * PER_HTTP_MESSAGE_OVERHEAD_BYTES;
+        }
+    }
+
+    /**
+     * As {@link #clone()} without the metadata: for the per-request match log entries, so a matched request
+     * never serialises metadata. The full expectation, metadata included, is returned on retrieve.
+     */
+    public Expectation cloneWithoutMetadata() {
+        Expectation clone = clone();
+        clone.metadata = null;
+        clone.metadataJson = null;
+        return clone;
     }
 
     public Expectation withScenarioName(String scenarioName) {
@@ -1910,6 +2032,9 @@ public class Expectation extends ObjectWithJsonToString {
         if (capture != null) {
             clone.capture = new ArrayList<>(capture);
         }
+        // shared rather than copied: the map is unmodifiable, so the clone costs no allocation
+        clone.metadata = metadata;
+        clone.metadataJson = metadataJson;
         return clone;
     }
 
@@ -1964,6 +2089,7 @@ public class Expectation extends ObjectWithJsonToString {
             Objects.equals(responseWeights, that.responseWeights) &&
             Objects.equals(switchAfter, that.switchAfter) &&
             Objects.equals(namespace, that.namespace) &&
+            Objects.equals(metadata, that.metadata) &&
             Objects.equals(scenarioName, that.scenarioName) &&
             Objects.equals(scenarioState, that.scenarioState) &&
             Objects.equals(newScenarioState, that.newScenarioState) &&
@@ -1974,7 +2100,7 @@ public class Expectation extends ObjectWithJsonToString {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(priority, percentage, chaos, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpForwardValidateAction, httpForwardWithFallback, httpSseResponse, httpLlmResponse, httpWebSocketResponse, grpcStreamResponse, grpcBidiResponse, binaryResponse, dnsResponse, httpError, beforeActions, afterActions, steps, httpResponses, responseMode, responseWeights, switchAfter, namespace, scenarioName, scenarioState, newScenarioState, crossProtocolScenarios, capture);
+            hashCode = Objects.hash(priority, percentage, chaos, httpRequest, times, timeToLive, httpResponse, httpResponseTemplate, httpResponseClassCallback, httpResponseObjectCallback, httpForward, httpForwardTemplate, httpForwardClassCallback, httpForwardObjectCallback, httpOverrideForwardedRequest, httpForwardValidateAction, httpForwardWithFallback, httpSseResponse, httpLlmResponse, httpWebSocketResponse, grpcStreamResponse, grpcBidiResponse, binaryResponse, dnsResponse, httpError, beforeActions, afterActions, steps, httpResponses, responseMode, responseWeights, switchAfter, namespace, metadata, scenarioName, scenarioState, newScenarioState, crossProtocolScenarios, capture);
         }
         return hashCode;
     }

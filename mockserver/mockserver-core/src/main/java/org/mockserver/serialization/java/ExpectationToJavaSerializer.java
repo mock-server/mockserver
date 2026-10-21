@@ -17,6 +17,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -116,6 +117,11 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
             }
             if (isNotBlank(expectation.getNamespace())) {
                 appendNewLineAndIndent(indent * INDENT_SIZE, output).append(".withNamespace(\"").appendEscaped(expectation.getNamespace()).append("\")");
+            }
+            if (expectation.getMetadata() != null) {
+                for (Map.Entry<String, Object> entry : expectation.getMetadata().entrySet()) {
+                    appendNewLineAndIndent(indent * INDENT_SIZE, output).append(metadataToJava(entry.getKey(), entry.getValue()));
+                }
             }
             if (isNotBlank(expectation.getScenarioName())) {
                 appendNewLineAndIndent(indent * INDENT_SIZE, output).append(".withScenarioName(\"").appendEscaped(expectation.getScenarioName()).append("\")");
@@ -366,5 +372,17 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
 
     private JavaCode appendNewLineAndIndent(int numberOfSpacesToIndent, JavaCode output) {
         return output.newLineAndIndent(numberOfSpacesToIndent);
+    }
+
+    private static String metadataToJava(String key, Object value) {
+        if (value == null || value instanceof String || value instanceof Integer || value instanceof Long || value instanceof Double || value instanceof Boolean) {
+            return ".withMetadata(" + FluentJavaBuilder.literal(key) + ", " + (value == null ? "(Object) null" : FluentJavaBuilder.literal(value)) + ")";
+        }
+        try {
+            String json = org.mockserver.serialization.ObjectMapperFactory.createObjectMapper().writeValueAsString(value);
+            return ".withMetadataJson(" + FluentJavaBuilder.literal(key) + ", " + FluentJavaBuilder.literal(json) + ")";
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalArgumentException("metadata value for \"" + key + "\" is not serialisable as JSON", e);
+        }
     }
 }

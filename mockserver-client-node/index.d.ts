@@ -8,7 +8,7 @@
 
 import * as llmTypes from './llmTypes';
 
-export { mockServerClient, MockMode, ModeStatus, StoredFile, PactVerificationReport, ClockStatus, GrpcMethod, GrpcService, KeysToMultiValues, MockServerClient, MockServerClientOptions, ScenarioHandle, ScenarioList, ScenarioSetOptions, ScenarioState, Har, HarContent, HarCookie, HarCreator, HarEntry, HarLog, HarNameValuePair, HarPostData, HarRequest, HarResponse, HarTimings } from './mockServerClient';
+export { mockServerClient, ExpectationFilter, ClearExpectationFilter, ExpectationMetadataValue, MockMode, ModeStatus, StoredFile, PactVerificationReport, ClockStatus, GrpcMethod, GrpcService, KeysToMultiValues, MockServerClient, MockServerClientOptions, ScenarioHandle, ScenarioList, ScenarioSetOptions, ScenarioState, Har, HarContent, HarCookie, HarCreator, HarEntry, HarLog, HarNameValuePair, HarPostData, HarRequest, HarResponse, HarTimings } from './mockServerClient';
 export { setupMockServer, SetupMockServerOptions, MockServerHandle } from './setupMockServer';
 export { Llm, LlmMockBuilder, LlmConversationBuilder, LlmFailoverBuilder, TurnBuilder, Completion, ToolUse, Usage, StreamingPhysics, EmbeddingResponse, IsolationSource, Provider, Role } from './llmTypes';
 /** The object `require('mockserver-client/llm')` returns. Its members can be assigned. */

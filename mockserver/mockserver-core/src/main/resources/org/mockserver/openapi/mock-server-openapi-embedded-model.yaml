@@ -377,6 +377,50 @@ paths:
             request header named by the matchNamespaceHeader configuration property, if set; when
             neither is present the clear is unscoped (all namespaces, and type=all clears the event
             log too).
+        - in: query
+          name: metadataKey
+          schema:
+            type: string
+          required: false
+          description: >-
+            clear only expectations whose metadata has this key (with any value, unless metadataValue is
+            also given). Like the namespace filter, a metadata or unmatched clear removes expectations only
+            and leaves the event log untouched, and is rejected for type=log. Every filter present
+            (namespace, request matcher or expectation id body, metadataKey/metadataValue, metadataJsonPath,
+            unmatched) must hold for an expectation to be cleared. A blank metadataKey, metadataJsonPath or
+            unmatched, and unmatched=false on its own, are rejected with 400 rather than clearing everything.
+            Filter names are matched ignoring case; a parameter given twice, or a metadata or unmatched name
+            that is not one of these (such as metadata_key), is also rejected with 400, as is a query string
+            that cannot be decoded (URL-encode values: % as %25, + as %2B, & as %26, # as %23, because clients end the query at #) and, on clear, a blank
+            namespace. Other unknown parameters are ignored. A value matches a stored text equal to it, or a
+            stored JSON value equal to it parsed as JSON.
+        - in: query
+          name: metadataValue
+          schema:
+            type: string
+          required: false
+          description: >-
+            with metadataKey, clear only expectations whose metadata value for that key equals this value. A
+            string metadata value is compared as text; any other value is compared as JSON, so 42, true or
+            ["a","b"] match the number, boolean or array. Requires metadataKey.
+        - in: query
+          name: metadataJsonPath
+          schema:
+            type: string
+          required: false
+          description: >-
+            clear only expectations whose metadata object this JSONPath selects at least one value from, for
+            example $[?(@.owner == 'team-a')] or $.tags[?(@ == 'smoke')]. Expectations with no metadata never
+            match.
+        - in: query
+          name: unmatched
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: >-
+            when true, clear only expectations that have not matched any request since they were created or
+            last changed ("remove unused mocks"). The count is kept per MockServer instance.
       requestBody:
         content:
           application/json:
@@ -438,6 +482,63 @@ paths:
             expectations plus global (no-namespace) expectations. When omitted the namespace is taken
             from the request header named by the matchNamespaceHeader configuration property, if set;
             when neither is present the retrieval spans all namespaces.
+        - in: query
+          name: metadataKey
+          schema:
+            type: string
+          required: false
+          description: >-
+            only applies to "active_expectations" retrieval (rejected for other types) - return only
+            expectations whose metadata has this key, with any value unless metadataValue is also given.
+            Combines with every other filter (all must hold).
+        - in: query
+          name: metadataValue
+          schema:
+            type: string
+          required: false
+          description: >-
+            with metadataKey, return only expectations whose metadata value for that key equals this value. A
+            string metadata value is compared as text; any other value is compared as JSON, so 42, true or
+            ["a","b"] match the number, boolean or array. Requires metadataKey.
+        - in: query
+          name: metadataJsonPath
+          schema:
+            type: string
+          required: false
+          description: >-
+            only applies to "active_expectations" retrieval - return only expectations whose metadata object
+            this JSONPath selects at least one value from, for example $[?(@.owner == 'team-a')] or
+            $.tags[?(@ == 'smoke')]. Expectations with no metadata never match.
+        - in: query
+          name: unmatched
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: >-
+            only applies to "active_expectations" retrieval - when true, return only expectations that have
+            not matched any request since they were created or last changed, for example to find mocks a
+            test suite no longer uses. The count is kept per MockServer instance.
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            minimum: 0
+          required: false
+          description: >-
+            only applies to "active_expectations" and "recorded_expectations" retrieval - skip this many
+            results, after every other filter. Active expectations are returned in match order (highest
+            priority first, then oldest first) and recorded expectations in the order received, so pages are
+            stable while the expectations do not change.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 0
+          required: false
+          description: >-
+            only applies to "active_expectations" and "recorded_expectations" retrieval - return at most this
+            many results, after offset is applied.
         - in: query
           name: fanInLocalOnly
           schema:
@@ -5383,6 +5484,12 @@ components:
           description: optional namespace (tenant) this expectation belongs to; when set, the expectation
             only matches requests carrying the configured matchNamespaceHeader with this value, isolated from
             other namespaces
+        metadata:
+          type: object
+          additionalProperties: true
+          description: optional arbitrary metadata, string keys to any JSON value (for example an owner, a
+            ticket or tags), returned on retrieve and usable to retrieve or clear expectations by metadata; it
+            never affects request matching
         scenarioName:
           type: string
         scenarioState:

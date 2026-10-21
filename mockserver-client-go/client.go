@@ -282,6 +282,21 @@ func (f *ForwardChainExpectation) WithSwitchAfter(requests int) *ForwardChainExp
 	return f
 }
 
+// WithMetadata sets the expectation's metadata, replacing any already set.
+func (f *ForwardChainExpectation) WithMetadata(metadata map[string]any) *ForwardChainExpectation {
+	f.expectation.Metadata = metadata
+	return f
+}
+
+// WithMetadataEntry adds one metadata entry to the expectation.
+func (f *ForwardChainExpectation) WithMetadataEntry(key string, value any) *ForwardChainExpectation {
+	if f.expectation.Metadata == nil {
+		f.expectation.Metadata = Metadata{}
+	}
+	f.expectation.Metadata[key] = value
+	return f
+}
+
 // WithCrossProtocolScenario registers a cross-protocol scenario transition on
 // the expectation.
 func (f *ForwardChainExpectation) WithCrossProtocolScenario(scenarios ...CrossProtocolScenario) *ForwardChainExpectation {
@@ -399,6 +414,13 @@ func WithTimes(t *Times) ExpectationOption {
 func WithTimeToLive(ttl *TimeToLive) ExpectationOption {
 	return func(e *Expectation) {
 		e.TimeToLive = ttl
+	}
+}
+
+// WithExpectationMetadata sets the metadata on an expectation created via When().
+func WithExpectationMetadata(metadata map[string]any) ExpectationOption {
+	return func(e *Expectation) {
+		e.Metadata = metadata
 	}
 }
 

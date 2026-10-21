@@ -73,6 +73,45 @@ public class HttpServletRequestToMockServerHttpRequestDecoderTest {
     }
 
     @Test
+    public void shouldKeepEveryQueryParameterWhenTheQueryContainsALiteralQuestionMarkExactlyAsNettyDoes() {
+        for (String query : Arrays.asList(
+            "type=expectations&metadataKey=owner&metadataValue=what?x",
+            "metadataKey=owner&metadataValue=team-a?",
+            "metadataKey=a?b",
+            "q=why?&page=2",
+            "a=1&b=%3F&c=?d=e"
+        )) {
+            MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/mockserver/clear");
+            httpServletRequest.setContextPath(null);
+            httpServletRequest.setQueryString(query);
+
+            HttpRequest servlet = new HttpServletRequestToMockServerHttpRequestDecoder(configuration(), new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
+            // what the Netty mapper does with the request URI
+            HttpRequest netty = HttpRequest.request();
+            new org.mockserver.codec.ExpandedParameterDecoder(configuration(), new MockServerLogger()).applyQueryParameters(netty, "/mockserver/clear?" + query, true);
+
+            assertThat(query, servlet.getQueryStringParameterList(), is(netty.getQueryStringParameterList()));
+            assertThat(query, servlet.getQueryStringParameters().getRawParameterString(), is(query));
+            assertThat(query, netty.getQueryStringParameters().getRawParameterString(), is(query));
+        }
+        MockHttpServletRequest withQuestionMark = new MockHttpServletRequest("PUT", "/mockserver/clear");
+        withQuestionMark.setQueryString("type=expectations&metadataKey=owner&metadataValue=what?x");
+        HttpRequest decoded = new HttpServletRequestToMockServerHttpRequestDecoder(configuration(), new MockServerLogger()).mapHttpServletRequestToMockServerRequest(withQuestionMark);
+        assertThat(decoded.getFirstQueryStringParameter("type"), is("expectations"));
+        assertThat(decoded.getFirstQueryStringParameter("metadataValue"), is("what?x"));
+    }
+
+    @Test
+    public void shouldRecordAnUndecodableQueryOnTheServletPathToo() {
+        MockHttpServletRequest httpServletRequest = new MockHttpServletRequest("PUT", "/mockserver/clear");
+        httpServletRequest.setQueryString("type=expectations&metadataKey=owner&metadataValue=100%");
+
+        HttpRequest httpRequest = new HttpServletRequestToMockServerHttpRequestDecoder(configuration(), new MockServerLogger()).mapHttpServletRequestToMockServerRequest(httpServletRequest);
+
+        assertThat(httpRequest.getUndecodableQueryString(), is("type=expectations&metadataKey=owner&metadataValue=100%"));
+    }
+
+    @Test
     public void shouldForwardAContentEncodedBodyAsTheContainerReceivedIt() throws IOException {
         // given - a servlet container does not decompress a request body, so it is still gzip
         java.io.ByteArrayOutputStream gzipped = new java.io.ByteArrayOutputStream();

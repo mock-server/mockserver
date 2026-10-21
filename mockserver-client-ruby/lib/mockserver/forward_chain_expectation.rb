@@ -37,6 +37,14 @@ module MockServer
       self
     end
 
+    # Set the expectation metadata, used to retrieve or clear it by metadata.
+    # @param metadata [Hash] String (or Symbol) keys to any JSON value
+    # @return [self]
+    def with_metadata(metadata)
+      @expectation.metadata = metadata
+      self
+    end
+
     # Set the response action. Accepts an HttpResponse, HttpTemplate, or
     # a Proc/lambda callback.
     # @param response_or_callback [HttpResponse, HttpTemplate, Proc]

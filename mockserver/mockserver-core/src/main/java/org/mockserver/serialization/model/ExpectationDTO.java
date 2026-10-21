@@ -2,6 +2,8 @@ package org.mockserver.serialization.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
@@ -11,6 +13,7 @@ import org.mockserver.mock.CrossProtocolEventBus;
 import org.mockserver.model.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -18,7 +21,7 @@ import java.util.stream.Collectors;
  */
 public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expectation> {
 
-    private static final String[] excludedFields = {"id"};
+    private static final String[] excludedFields = {"id", "metadataJson"};
     private String id;
     private Integer priority;
     private Integer percentage;
@@ -59,6 +62,9 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
     private org.mockserver.serialization.model.TimesDTO times;
     private TimeToLiveDTO timeToLive;
     private String namespace;
+    private Map<String, Object> metadata;
+    // the expectation's cached serialised metadata, written raw so writing an expectation never re-serialises it
+    private String metadataJson;
     private String scenarioName;
     private String scenarioState;
     private String newScenarioState;
@@ -198,6 +204,8 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             if (expectation.getNamespace() != null) {
                 this.namespace = expectation.getNamespace();
             }
+            this.metadata = expectation.getMetadata();
+            this.metadataJson = expectation.getMetadataJson();
             if (expectation.getScenarioName() != null) {
                 this.scenarioName = expectation.getScenarioName();
             }
@@ -333,6 +341,7 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
             .withChaos(this.chaos != null ? this.chaos.buildObject() : null)
             .withRateLimit(this.rateLimit != null ? this.rateLimit.buildObject() : null)
             .withNamespace(this.namespace)
+            .withMetadata(this.metadata)
             .withScenarioName(this.scenarioName)
             .withScenarioState(this.scenarioState)
             .withNewScenarioState(this.newScenarioState)
@@ -691,6 +700,26 @@ public class ExpectationDTO extends ObjectWithJsonToString implements DTO<Expect
         this.namespace = namespace;
         return this;
     }
+
+    @JsonProperty("metadata")
+    @JsonRawValue
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public String getMetadataJson() {
+        if (metadataJson == null && metadata != null && !metadata.isEmpty()) {
+            metadataJson = org.mockserver.mock.MetadataJson.toJson(metadata);
+        }
+        return metadataJson;
+    }
+
+    @JsonSetter("metadata")
+    public ExpectationDTO setMetadata(Map<String, Object> metadata) {
+        this.metadataJson = null;
+        // MockServer's ObjectMapper reads JSON arrays as Object[], which has identity equality; plain JSON
+        // types (List, Map, String, Number, Boolean) keep an upsert of identical metadata equal
+        this.metadata = org.mockserver.mock.MetadataJson.toPlainJson(metadata);
+        return this;
+    }
+
 
     public String getScenarioName() {
         return scenarioName;

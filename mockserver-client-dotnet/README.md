@@ -83,6 +83,29 @@ var requests = client.RetrieveRecordedRequests(
 );
 ```
 
+### Expectation Metadata, Unmatched Expectations and Paging
+
+Tag expectations with metadata (string keys, any JSON value), then retrieve or clear them by it. Metadata is
+never used for request matching. A clear whose selection is missing, blank or paged throws before anything is
+sent, so it can never fall back to clearing every expectation.
+
+```csharp
+client.When(HttpRequest.Request().WithPath("/orders").Build())
+    .WithMetadata("owner", "team-a")
+    .WithMetadata("ticket", 4211)
+    .Respond(HttpResponse.Response().WithStatusCode(200).Build());
+
+var mine = client.RetrieveActiveExpectationsByMetadata("owner", "team-a");
+var unused = client.RetrieveUnmatchedExpectations();
+var page = client.RetrieveActiveExpectations(null, ExpectationFilter.Filter().WithOffset(0).WithLimit(50));
+var recorded = client.RetrieveRecordedExpectations(null, offset: 0, limit: 50);
+
+client.ClearByMetadata("owner", "team-a");      // a string is compared as text, any other value as JSON
+client.ClearByMetadataKey("ticket");            // any value
+client.ClearUnmatchedExpectations();
+client.ClearByFilter(null, ExpectationFilter.Filter().WithMetadataJsonPath("$[?(@.owner == 'team-a')]"));
+```
+
 ### Debugging Why a Request Did Not Match
 
 ```csharp

@@ -2,15 +2,17 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from typing import Callable
+from typing import Any, Callable
 
-from mockserver.async_client import AsyncMockServerClient
+from mockserver.async_client import NO_FILTER, AsyncMockServerClient
+from mockserver.fluent import _UNSET
 from mockserver.models import (
     ConditionalRequestDefinition,
     DebugMismatchResult,
     Delay,
     DnsRequestDefinition,
     Expectation,
+    ExpectationFilter,
     ExplainUnmatchedResult,
     HttpChaosProfile,
     HttpError,
@@ -40,6 +42,10 @@ class SyncForwardChainExpectation:
 
     def with_priority(self, priority: int) -> SyncForwardChainExpectation:
         self._async_chain.with_priority(priority)
+        return self
+
+    def with_metadata(self, key_or_metadata, value=_UNSET) -> SyncForwardChainExpectation:
+        self._async_chain.with_metadata(key_or_metadata, value)
         return self
 
     def with_chaos(self, chaos) -> SyncForwardChainExpectation:
@@ -183,8 +189,20 @@ class MockServerClient:
         self,
         request: HttpRequest | None = None,
         clear_type: str | None = None,
+        expectation_filter: ExpectationFilter = NO_FILTER,  # type: ignore[assignment]
     ) -> None:
-        return self._run(self._async_client.clear(request, clear_type))
+        return self._run(
+            self._async_client.clear(request, clear_type, expectation_filter)
+        )
+
+    def clear_by_metadata(self, key: str, value: Any) -> None:
+        return self._run(self._async_client.clear_by_metadata(key, value))
+
+    def clear_by_metadata_key(self, key: str) -> None:
+        return self._run(self._async_client.clear_by_metadata_key(key))
+
+    def clear_unmatched_expectations(self) -> None:
+        return self._run(self._async_client.clear_unmatched_expectations())
 
     def clear_by_id(
         self,
@@ -563,14 +581,40 @@ class MockServerClient:
         return self._run(self._async_client.retrieve_recorded_requests(request))
 
     def retrieve_active_expectations(
-        self, request: HttpRequest | None = None
+        self,
+        request: HttpRequest | None = None,
+        expectation_filter: ExpectationFilter | None = None,
     ) -> list[Expectation]:
-        return self._run(self._async_client.retrieve_active_expectations(request))
+        return self._run(
+            self._async_client.retrieve_active_expectations(request, expectation_filter)
+        )
+
+    def retrieve_active_expectations_by_metadata(
+        self, key: str, value: Any
+    ) -> list[Expectation]:
+        return self._run(
+            self._async_client.retrieve_active_expectations_by_metadata(key, value)
+        )
+
+    def retrieve_active_expectations_by_metadata_key(
+        self, key: str
+    ) -> list[Expectation]:
+        return self._run(
+            self._async_client.retrieve_active_expectations_by_metadata_key(key)
+        )
+
+    def retrieve_unmatched_expectations(self) -> list[Expectation]:
+        return self._run(self._async_client.retrieve_unmatched_expectations())
 
     def retrieve_recorded_expectations(
-        self, request: HttpRequest | None = None
+        self,
+        request: HttpRequest | None = None,
+        offset: int | None = None,
+        limit: int | None = None,
     ) -> list[Expectation]:
-        return self._run(self._async_client.retrieve_recorded_expectations(request))
+        return self._run(
+            self._async_client.retrieve_recorded_expectations(request, offset, limit)
+        )
 
     def retrieve_recorded_requests_by_id(
         self, expectation_id: str

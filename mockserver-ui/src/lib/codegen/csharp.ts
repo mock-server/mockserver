@@ -276,6 +276,23 @@ function renderAllOfSub(sub: unknown): string | null {
   }
 }
 
+/**
+ * `Dictionary<string, object?>` metadata: scalars as C# literals, objects and arrays as a
+ * `JsonElement` parsed from their JSON text (System.Text.Json writes a JsonElement verbatim).
+ */
+function renderMetadata(metadata: Record<string, unknown>, indent: number, ctx: Ctx): string {
+  const entries = Object.entries(metadata).map(([k, v]) => {
+    let value: string;
+    if (v === null || v === undefined) value = 'null';
+    else if (typeof v === 'string') value = csStr(v);
+    else if (typeof v === 'boolean') value = v ? 'true' : 'false';
+    else if (typeof v === 'number') value = csNumber(v);
+    else value = rawTyped('JsonElement', v, ctx);
+    return `[${csStr(k)}] = ${value}`;
+  });
+  return csDict('Dictionary<string, object?>', entries, indent);
+}
+
 /** Deserialize a fragment into a typed model (fidelity fallback for shapes not modelled inline). */
 function rawTyped(type: string, value: unknown, ctx: Ctx): string {
   ctx.usings.add('System.Text.Json');
@@ -965,6 +982,7 @@ function renderExpectation(json: Record<string, unknown>, ctx: Ctx): string {
   if (typeof json['scenarioState'] === 'string') props.push(`ScenarioState = ${csStr(json['scenarioState'] as string)}`);
   if (typeof json['newScenarioState'] === 'string') props.push(`NewScenarioState = ${csStr(json['newScenarioState'] as string)}`);
   if (typeof json['timestamp'] === 'string') props.push(`Timestamp = ${csStr(json['timestamp'] as string)}`);
+  if (isObject(json['metadata'])) props.push(`Metadata = ${renderMetadata(json['metadata'] as Record<string, unknown>, I, ctx)}`);
 
   props.push(...renderTimes(json['times']));
   props.push(...renderTtl(json['timeToLive']));

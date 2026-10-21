@@ -117,7 +117,9 @@ public class HttpServletRequestToMockServerHttpRequestDecoder {
 
     private void setQueryString(HttpRequest httpRequest, HttpServletRequest httpServletRequest) {
         if (isNotBlank(httpServletRequest.getQueryString())) {
-            httpRequest.withQueryStringParameters(formParameterParser.retrieveQueryParameters(httpServletRequest.getQueryString(), false));
+            // getQueryString() is the query alone, so a "?" in it is data: decode it as Netty decodes the query of a URI,
+            // not with the no-path heuristic, which takes the first "?" as the end of a path and drops what precedes it
+            formParameterParser.applyQueryParameters(httpRequest, "?" + httpServletRequest.getQueryString(), true);
         }
     }
 
