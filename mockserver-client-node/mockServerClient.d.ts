@@ -42,6 +42,21 @@ export interface MockServerClientOptions {
     bearerTokenSupplier?: () => string;
 
     /**
+     * Control-plane HTTP Basic username, sent with `basicAuthPassword` as an
+     * `Authorization: Basic` header on every control-plane request and, in
+     * Node, on the callback/breakpoint WebSocket upgrade. Use this when the
+     * server is started with `controlPlaneBasicAuthenticationRequired=true`;
+     * MockServer refuses Basic credentials without TLS, so also pass `tls`.
+     * A bearer token, when also configured, is sent instead.
+     */
+    basicAuthUsername?: string;
+
+    /**
+     * Control-plane HTTP Basic password, paired with `basicAuthUsername`.
+     */
+    basicAuthPassword?: string;
+
+    /**
      * Path to a PEM client certificate presented for mutual TLS, for when the
      * server requires `controlPlaneTLSMutualAuthenticationRequired=true`, on
      * control-plane requests and the callback WebSocket.

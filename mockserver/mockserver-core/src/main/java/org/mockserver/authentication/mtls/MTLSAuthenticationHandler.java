@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.authentication.AuthenticationResult;
+import org.mockserver.authentication.CredentialRedaction;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -109,7 +110,7 @@ public class MTLSAuthenticationHandler implements AuthenticationHandler {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.DEBUG)
-                        .setHttpRequest(request)
+                        .setHttpRequest(CredentialRedaction.withoutCredentials(request))
                         .setMessageFormat("control plane request passed authentication with validated client certificate:{}")
                         .setArguments(describe(leaf))
                 );
@@ -120,7 +121,7 @@ public class MTLSAuthenticationHandler implements AuthenticationHandler {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.TRACE)
-                        .setHttpRequest(request)
+                        .setHttpRequest(CredentialRedaction.withoutCredentials(request))
                         .setMessageFormat("exception validating client certificate:{}against control plane trust store certificates:{}")
                         .setArguments(
                             presentedLeaf == null ? "" : describe(presentedLeaf.getSerialNumber(), presentedLeaf.getIssuerDistinguishedName(), presentedLeaf.getSubjectDistinguishedName()),

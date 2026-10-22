@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
@@ -325,6 +326,31 @@ public class HttpStateConfigurationUpdateTest {
         assertThat(warnings, hasSize(1));
         assertThat(warnings.get(0), containsString("forwardProxyBlockPrivateNetworks is fixed at startup"));
         assertThat(warnings.get(0), containsString("the supplied value false has been IGNORED"));
+    }
+
+    @Test
+    public void shouldNotLetAPutChangeControlPlaneBasicAuthentication() {
+        // given
+        String hash = org.mockserver.authentication.basic.PasswordHash.pbkdf2Sha256("in-force", 10_000);
+        configuration.controlPlaneBasicAuthenticationRequired(true).controlPlaneBasicAuthenticationCredentials("admin:" + hash);
+
+        // when - a PUT tries to switch Basic off, allow it without TLS and replace the users
+        String replacement = "mallory:" + org.mockserver.authentication.basic.PasswordHash.pbkdf2Sha256("taken-over", 10_000);
+        put(new ConfigurationDTO()
+            .setControlPlaneBasicAuthenticationRequired(false)
+            .setControlPlaneBasicAuthenticationAllowInsecure(true)
+            .setControlPlaneBasicAuthenticationCredentials(replacement));
+
+        // then - nothing changes, each ignored value is reported, and no password hash is logged
+        assertThat(configuration.controlPlaneBasicAuthenticationRequired(), is(true));
+        assertThat(configuration.controlPlaneBasicAuthenticationAllowInsecure(), is(false));
+        assertThat(configuration.controlPlaneBasicAuthenticationCredentials(), is("admin:" + hash));
+        List<String> warnings = logger.warnings();
+        assertThat(warnings, hasSize(3));
+        assertThat(warnings.get(0), containsString("controlPlaneBasicAuthenticationRequired is fixed at startup"));
+        assertThat(warnings.get(1), containsString("controlPlaneBasicAuthenticationAllowInsecure is fixed at startup"));
+        assertThat(warnings.get(2), containsString("controlPlaneBasicAuthenticationCredentials is fixed at startup"));
+        assertThat(String.join("\n", warnings), not(containsString("pbkdf2")));
     }
 
     @Test

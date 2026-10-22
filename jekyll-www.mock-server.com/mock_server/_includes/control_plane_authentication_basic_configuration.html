@@ -1,0 +1,76 @@
+<button id="button_configuration_control_plane_basic_authentication_required" class="accordion title"><strong>Enabled Control Plane Basic Authentication</strong></button>
+<div class="panel title">
+    <p>Accept HTTP Basic credentials (a username and password) for control plane interactions (i.e. create expectations, clear, reset, verify, retrieve, stop, etc). The users are configured with <a href="#button_configuration_control_plane_basic_authentication_credentials">controlPlaneBasicAuthenticationCredentials</a> or <a href="#button_configuration_control_plane_basic_authentication_users_file">controlPlaneBasicAuthenticationUsersFile</a>.</p>
+    <p>Basic credentials are only accepted over HTTPS: a request that sends them over plain HTTP is refused with a <span class="keyword">401</span>, because anyone on the network path could read the password, and a plain-HTTP <span class="keyword">401</span> never asks a browser for a password. After 5 wrong passwords from one address, that address must wait (1 second, then 2, 4, ... up to 60 seconds) before new credentials are checked again. A user who already logged in successfully is not locked out. Clients that reach MockServer through one shared address, such as a NAT gateway or a load balancer that hides client addresses, share that wait, so one client guessing passwords slows down new logins for all of them.</p>
+    <p>Basic is an <strong>alternative</strong> to the other control plane authentication methods: when it is enabled alongside <a href="#button_configuration_control_plane_mtls_authentication_required">mTLS</a>, <a href="#button_configuration_control_plane_jwt_authentication_required">JWT</a> or <a href="#button_configuration_control_plane_oidc_authentication_required">OIDC</a>, a request is accepted if it has valid Basic credentials <strong>or</strong> it passes the other enabled methods. The user name is recorded as the principal in the control plane audit log.</p>
+    <p>This setting is fixed at startup: <span class="keyword">PUT /mockserver/configuration</span> cannot change it.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneBasicAuthenticationRequired(boolean controlPlaneBasicAuthenticationRequired)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneBasicAuthenticationRequired=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_REQUIRED=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneBasicAuthenticationRequired=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneBasicAuthenticationRequired="true"</code></pre>
+</div>
+
+<button id="button_configuration_control_plane_basic_authentication_credentials" class="accordion title"><strong>Control Plane Basic Authentication Credentials</strong></button>
+<div class="panel title">
+    <p>The users allowed to use the control plane with Basic authentication, each as <span class="keyword">username:passwordHash</span> or <span class="keyword">username:passwordHash:scopes</span>, separated by <span class="keyword">;</span> or new lines.</p>
+    <p><strong>Plain text passwords are refused.</strong> The password must be given as a hash in one of these formats:</p>
+    <ul>
+        <li><strong>bcrypt</strong> (<span class="keyword">$2y$</span>, <span class="keyword">$2b$</span>, <span class="keyword">$2a$</span>) &mdash; for example from <span class="keyword">htpasswd -nbB -C 12 admin 'my password'</span>, whose output line can be used as it is</li>
+        <li><strong>argon2</strong> (<span class="keyword">$argon2id$</span>, <span class="keyword">$argon2i$</span>, <span class="keyword">$argon2d$</span>) &mdash; for example from <span class="keyword">echo -n 'my password' | argon2 "$(openssl rand -hex 8)" -id -e</span></li>
+        <li><strong>PBKDF2</strong> (<span class="keyword">$pbkdf2-sha256$</span>, <span class="keyword">$pbkdf2-sha512$</span>) &mdash; for example from Python's passlib: <span class="keyword">pbkdf2_sha256.hash('my password')</span>. PBKDF2 needs no extra libraries, so use it when MockServer runs with BouncyCastle FIPS instead of the standard BouncyCastle library.</li>
+    </ul>
+    <p>The optional scopes (separated by spaces or commas) give the user roles when <a href="/mock_server/control_plane_authorisation.html#control_plane_authorization">control plane authorization</a> is enabled: they are mapped to roles by <span class="keyword">controlPlaneScopeMapping</span>, just like OIDC scopes.</p>
+    <p>Work factors must be sensible: bcrypt cost 4 to 16, PBKDF2 10,000 to 10,000,000 iterations, and argon2 at most 256 MiB of memory, 16 passes and 16 lanes, because every password check runs while requests wait. MockServer warns at startup about a hash below current OWASP guidance (bcrypt cost 10, PBKDF2-SHA256 600,000 iterations, argon2id 19 MiB with 2 passes) &mdash; <span class="keyword">htpasswd -B</span> defaults to cost 5, so pass <span class="keyword">-C 12</span>.</p>
+    <p>MockServer refuses to start if Basic authentication is enabled and no users are configured, or any entry is not in one of these formats or outside these limits. The value is hidden in the printed configuration and is never returned by <span class="keyword">GET /mockserver/configuration</span>. It is fixed at startup.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneBasicAuthenticationCredentials(String controlPlaneBasicAuthenticationCredentials)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneBasicAuthenticationCredentials=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_CREDENTIALS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneBasicAuthenticationCredentials=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_CREDENTIALS='admin:$2y$12$Qv0yN...:platform-admins;ci:$2y$12$9fT2a...:qa-team'</code></pre>
+</div>
+
+<button id="button_configuration_control_plane_basic_authentication_users_file" class="accordion title"><strong>Control Plane Basic Authentication Users File</strong></button>
+<div class="panel title">
+    <p>Path to a file of control plane Basic authentication users, one <span class="keyword">username:passwordHash[:scopes]</span> per line, in the same formats as <a href="#button_configuration_control_plane_basic_authentication_credentials">controlPlaneBasicAuthenticationCredentials</a>. This is the format <span class="keyword">htpasswd -B</span> writes, so a file it maintains can be used directly. Blank lines and lines starting with <span class="keyword">#</span> are ignored. Users from the file and from <span class="keyword">controlPlaneBasicAuthenticationCredentials</span> are combined.</p>
+    <p>The file holds password hashes, so make it readable only by the user MockServer runs as. It is read when the server starts, and again whenever another control plane authentication setting changes while the server runs.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneBasicAuthenticationUsersFile(String controlPlaneBasicAuthenticationUsersFile)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneBasicAuthenticationUsersFile=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_USERS_FILE=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneBasicAuthenticationUsersFile=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneBasicAuthenticationUsersFile="/etc/mockserver/control-plane.htpasswd"</code></pre>
+</div>
+
+<button id="button_configuration_control_plane_basic_authentication_allow_insecure" class="accordion title"><strong>Control Plane Basic Authentication Allow Insecure (tests only)</strong></button>
+<div class="panel title">
+    <p><strong>For tests only.</strong> Accept control plane Basic credentials sent over plain HTTP. Without TLS the password crosses the network in a form anyone on the path can decode, so never enable this where the network is shared. Behind a proxy that terminates TLS, have the proxy connect to MockServer over HTTPS instead. MockServer logs a warning at startup when this is enabled. It is fixed at startup.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneBasicAuthenticationAllowInsecure(boolean controlPlaneBasicAuthenticationAllowInsecure)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneBasicAuthenticationAllowInsecure=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_ALLOW_INSECURE=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.controlPlaneBasicAuthenticationAllowInsecure=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.controlPlaneBasicAuthenticationAllowInsecure="true"</code></pre>
+</div>

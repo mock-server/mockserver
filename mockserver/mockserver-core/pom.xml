@@ -714,6 +714,7 @@
                         <exclude>**/HttpStateAuditTest.java</exclude>
                         <exclude>**/HttpStateConfigurationUpdateTest.java</exclude>
                         <exclude>**/HttpStateAuthorizationTest.java</exclude>
+                        <exclude>**/HttpStateControlPlaneBasicAuthenticationTest.java</exclude>
                         <exclude>**/HttpStateAuditEndpointTest.java</exclude>
                         <!-- Timing-sensitive file-watcher polling tests. They USED to shorten and restore the
                              STATIC FileWatcher.pollPeriod, and the @AfterClass restore raced across the two
@@ -1004,6 +1005,7 @@
                                 <include>**/HttpStateAuditTest.java</include>
                                 <include>**/HttpStateConfigurationUpdateTest.java</include>
                                 <include>**/HttpStateAuthorizationTest.java</include>
+                                <include>**/HttpStateControlPlaneBasicAuthenticationTest.java</include>
                                 <include>**/HttpStateAuditEndpointTest.java</include>
                                 <include>**/FileWatcherTest.java</include>
                                 <include>**/ExpectationFileWatcherTest.java</include>

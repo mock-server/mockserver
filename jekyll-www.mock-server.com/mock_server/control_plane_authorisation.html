@@ -1,6 +1,6 @@
 ---
 title: API Security
-description: Secure the MockServer control plane with mTLS client certificate authentication, JWT bearer tokens, or both, plus network and CORS hardening tips.
+description: Secure the MockServer control plane with mTLS client certificate authentication, JWT or OIDC bearer tokens, or HTTP Basic passwords, plus network and CORS hardening tips.
 layout: page
 pageOrder: 2
 section: 'Security'
@@ -20,6 +20,7 @@ sitemap:
     <li>authenticate all <a href="/mock_server/HTTPS_TLS.html">TCP connections using mTLS</a></li>
     <li>authenticate all REST API i.e. control plane requests using mTLS</li>
     <li>authenticate all REST API i.e. control plane requests using JWT</li>
+    <li>authenticate all REST API i.e. control plane requests using a username and password (HTTP Basic over HTTPS)</li>
     <li>set security-focused configuration property values &mdash; see <a href="#configuration_hardening">Configuration Hardening</a> below</li>
 </ul>
 
@@ -31,7 +32,7 @@ sitemap:
 
 <h2>Control Plane Authentication</h2>
 
-<p>Authentication can be enabled for all control plane requests (i.e. <strong>create expectations</strong>, <strong>clear</strong>, <strong>reset</strong>, <strong>verify</strong>, <strong>retrieve</strong>, <strong>stop</strong>, etc) using either <a href="#control_plane_mtls_authentication">mTLS</a>, <a href="#control_plane_jwt_authentication">JWT</a> or both.</p>
+<p>Authentication can be enabled for all control plane requests (i.e. <strong>create expectations</strong>, <strong>clear</strong>, <strong>reset</strong>, <strong>verify</strong>, <strong>retrieve</strong>, <strong>stop</strong>, etc) using <a href="#control_plane_mtls_authentication">mTLS</a>, <a href="#control_plane_jwt_authentication">JWT</a>, <a href="#control_plane_oidc_authentication">OIDC</a>, <a href="#control_plane_basic_authentication">HTTP Basic</a>, or a combination.</p>
 <p>If both <a href="#control_plane_mtls_authentication">mTLS</a> and <a href="#control_plane_jwt_authentication">JWT</a> are enabled <a href="#control_plane_mtls_authentication">mTLS</a> will be validated first.</p>
 
 <p><strong>Control plane authentication settings are read live, not frozen at startup.</strong> The CA chain, JWK source, issuer and audience used to authenticate control plane requests are re-read from the current configuration on every request, so enabling, disabling or re-pointing control plane authentication on a <strong>running</strong> MockServer takes effect immediately &mdash; whether you change it with a system property, a <code>Configuration</code> setter, or <code>PUT /mockserver/configuration</code>.</p>
@@ -72,11 +73,32 @@ sitemap:
 
 {% include_subpage _includes/control_plane_authentication_oidc_configuration.html %}
 
+<a id="control_plane_basic_authentication" class="anchor" href="#control_plane_basic_authentication">&nbsp;</a>
+
+<h3>Control Plane Basic Authentication</h3>
+
+<p>When Basic authentication is enabled, control plane requests can authenticate with a username and password sent in an <strong>authorization</strong> header (<span class="keyword">Authorization: Basic ...</span>), which every HTTP client and browser supports. It suits shared test environments where issuing certificates or tokens is more than you need.</p>
+<ul>
+    <li><strong>Passwords are never configured in plain text.</strong> Each user is configured with a bcrypt, argon2 or PBKDF2 hash of their password, for example the output of <span class="keyword">htpasswd -nbB -C 12 admin 'my password'</span>.</li>
+    <li><strong>HTTPS only.</strong> Credentials sent over plain HTTP are refused, so connect to MockServer with <span class="keyword">https://</span> (MockServer serves HTTP and HTTPS on the same port).</li>
+    <li><strong>Password guessing is slowed down.</strong> After 5 wrong passwords from one address, that address must wait before trying again, starting at 1 second and doubling up to 60 seconds. Users who already logged in are not affected, but clients behind one shared address (a NAT gateway or a load balancer) share the wait for new logins.</li>
+    <li><strong>It is an alternative, not an extra check.</strong> With mTLS, JWT or OIDC also enabled, a request is accepted if it has valid Basic credentials <strong>or</strong> passes the other enabled methods, so you can give scripts a password while services keep using tokens.</li>
+    <li><strong>Who did what is recorded.</strong> The user name is the principal in the control plane audit log, and the optional scopes configured for a user decide its role when <a href="#control_plane_authorization">authorization</a> is enabled.</li>
+    <li>A request refused over HTTPS gets a <span class="keyword">WWW-Authenticate: Basic</span> challenge, so a browser opening the dashboard over HTTPS prompts for the username and password; over plain HTTP it does not, so a browser is never asked to send the password unencrypted.</li>
+    <li><strong>Passwords are kept out of logs.</strong> Control plane requests are recorded in MockServer's log (what <span class="keyword">retrieve</span>, the dashboard and the logged entries show) with their credentials masked, whether they succeed, fail or are cut short, at every log level. The exception is <span class="keyword">TRACE</span>, which also prints the raw network traffic, headers included, to the console or log file, so do not run <span class="keyword">TRACE</span> where those are shared. Every client warns if you configure Basic credentials on a plain HTTP connection.</li>
+</ul>
+<p>The settings are fixed at startup and cannot be changed with <span class="keyword">PUT /mockserver/configuration</span>. Every MockServer client can send Basic credentials, on its HTTP requests and on the WebSockets it opens for callbacks and breakpoints; for example in Java:</p>
+<pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .withSecure(true)
+    .withControlPlaneBasicAuthentication("admin", System.getenv("MOCKSERVER_PASSWORD"));</code></pre>
+
+{% include_subpage _includes/control_plane_authentication_basic_configuration.html %}
+
 <a id="control_plane_authorization" class="anchor" href="#control_plane_authorization">&nbsp;</a>
 
 <h2>Control Plane Authorization</h2>
 
-<p>Once a principal has been <a href="#control_plane_authentication">authenticated</a>, you can layer a coarse <strong>role-based authorization</strong> check on top. Authorization maps the verified principal's OIDC scopes or groups to one of three hierarchical roles and enforces them on every control-plane operation.</p>
+<p>Once a principal has been <a href="#control_plane_authentication">authenticated</a>, you can layer a coarse <strong>role-based authorization</strong> check on top. Authorization maps the verified principal's OIDC scopes or groups, or the scopes configured for a <a href="#control_plane_basic_authentication">Basic authentication</a> user, to one of three hierarchical roles and enforces them on every control-plane operation.</p>
 
 <p><strong>Prerequisite:</strong> Authorization requires a verified principal, so <a href="#control_plane_oidc_authentication">OIDC authentication</a> must be configured. Without authentication there is no principal and authorization has nothing to enforce.</p>
 

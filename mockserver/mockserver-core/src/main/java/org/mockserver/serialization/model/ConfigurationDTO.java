@@ -332,6 +332,10 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private String controlPlaneOidcScopeClaim;
     private Boolean controlPlaneAuthorizationEnabled;
     private Map<String, org.mockserver.authentication.authorization.ControlPlaneRole> controlPlaneScopeMapping;
+    private Boolean controlPlaneBasicAuthenticationRequired;
+    private String controlPlaneBasicAuthenticationCredentials;
+    private String controlPlaneBasicAuthenticationUsersFile;
+    private Boolean controlPlaneBasicAuthenticationAllowInsecure;
     private Boolean transparentProxyEnabled;
     private Boolean transparentProxyTproxy;
     private Boolean transparentProxyEbpf;
@@ -716,6 +720,10 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.controlPlaneAuthorizationEnabled = configuration.controlPlaneAuthorizationEnabled();
             Map<String, org.mockserver.authentication.authorization.ControlPlaneRole> scopeMapping = configuration.controlPlaneScopeMapping();
             this.controlPlaneScopeMapping = scopeMapping != null && !scopeMapping.isEmpty() ? scopeMapping : null;
+            this.controlPlaneBasicAuthenticationRequired = configuration.controlPlaneBasicAuthenticationRequired();
+            this.controlPlaneBasicAuthenticationCredentials = configuration.controlPlaneBasicAuthenticationCredentials();
+            this.controlPlaneBasicAuthenticationUsersFile = configuration.controlPlaneBasicAuthenticationUsersFile();
+            this.controlPlaneBasicAuthenticationAllowInsecure = configuration.controlPlaneBasicAuthenticationAllowInsecure();
             this.transparentProxyEnabled = configuration.transparentProxyEnabled();
             this.transparentProxyTproxy = configuration.transparentProxyTproxy();
             this.transparentProxyEbpf = configuration.transparentProxyEbpf();
@@ -1203,6 +1211,10 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.controlPlaneOidcScopeClaim(controlPlaneOidcScopeClaim);
         configuration.controlPlaneAuthorizationEnabled(controlPlaneAuthorizationEnabled);
         configuration.controlPlaneScopeMapping(controlPlaneScopeMapping);
+        configuration.controlPlaneBasicAuthenticationRequired(controlPlaneBasicAuthenticationRequired);
+        configuration.controlPlaneBasicAuthenticationCredentials(maskFreeOrUnset(controlPlaneBasicAuthenticationCredentials));
+        configuration.controlPlaneBasicAuthenticationUsersFile(controlPlaneBasicAuthenticationUsersFile);
+        configuration.controlPlaneBasicAuthenticationAllowInsecure(controlPlaneBasicAuthenticationAllowInsecure);
         configuration.transparentProxyEnabled(transparentProxyEnabled);
         configuration.transparentProxyTproxy(transparentProxyTproxy);
         configuration.transparentProxyEbpf(transparentProxyEbpf);
@@ -2270,6 +2282,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (controlPlaneScopeMapping != null) {
             target.controlPlaneScopeMapping(controlPlaneScopeMapping);
         }
+        // the controlPlaneBasicAuthentication* properties are deliberately not applied: they decide who may use the
+        // control plane, so they are fixed at startup (see HttpState.applyConfigurationUpdate)
         if (transparentProxyEnabled != null) {
             target.transparentProxyEnabled(transparentProxyEnabled);
         }
@@ -5080,6 +5094,44 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setControlPlaneScopeMapping(Map<String, org.mockserver.authentication.authorization.ControlPlaneRole> controlPlaneScopeMapping) {
         this.controlPlaneScopeMapping = controlPlaneScopeMapping;
+        return this;
+    }
+
+    public Boolean getControlPlaneBasicAuthenticationRequired() {
+        return controlPlaneBasicAuthenticationRequired;
+    }
+
+    public ConfigurationDTO setControlPlaneBasicAuthenticationRequired(Boolean controlPlaneBasicAuthenticationRequired) {
+        this.controlPlaneBasicAuthenticationRequired = controlPlaneBasicAuthenticationRequired;
+        return this;
+    }
+
+    @JsonIgnore
+    public String getControlPlaneBasicAuthenticationCredentials() {
+        return controlPlaneBasicAuthenticationCredentials;
+    }
+
+    @JsonProperty
+    public ConfigurationDTO setControlPlaneBasicAuthenticationCredentials(String controlPlaneBasicAuthenticationCredentials) {
+        this.controlPlaneBasicAuthenticationCredentials = controlPlaneBasicAuthenticationCredentials;
+        return this;
+    }
+
+    public String getControlPlaneBasicAuthenticationUsersFile() {
+        return controlPlaneBasicAuthenticationUsersFile;
+    }
+
+    public ConfigurationDTO setControlPlaneBasicAuthenticationUsersFile(String controlPlaneBasicAuthenticationUsersFile) {
+        this.controlPlaneBasicAuthenticationUsersFile = controlPlaneBasicAuthenticationUsersFile;
+        return this;
+    }
+
+    public Boolean getControlPlaneBasicAuthenticationAllowInsecure() {
+        return controlPlaneBasicAuthenticationAllowInsecure;
+    }
+
+    public ConfigurationDTO setControlPlaneBasicAuthenticationAllowInsecure(Boolean controlPlaneBasicAuthenticationAllowInsecure) {
+        this.controlPlaneBasicAuthenticationAllowInsecure = controlPlaneBasicAuthenticationAllowInsecure;
         return this;
     }
 

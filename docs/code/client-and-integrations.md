@@ -63,6 +63,7 @@ MockServerClient client = MockServerClient.builder()
     .secure(true)                       // withSecure(...)
     .proxyConfiguration(proxy)          // withProxyConfiguration(...)
     .controlPlaneJWT("token")           // withControlPlaneJWT(...)
+    .controlPlaneBasicAuthentication("admin", "s3cret") // withControlPlaneBasicAuthentication(...)
     .requestOverride(request())         // withRequestOverride(...)
     .configuration(clientConfiguration())
     .build();
@@ -164,6 +165,7 @@ A blank correlation id fails in every client before any request is sent. The Nod
 | `withSecure(boolean)` | Enable TLS for client communication |
 | `withControlPlaneJWT(String)` | Set static JWT token |
 | `withControlPlaneJWT(Supplier<String>)` | Set dynamic JWT supplier |
+| `withControlPlaneBasicAuthentication(String, String)` | Send HTTP Basic credentials (needs `withSecure(true)`; a JWT, when set, is sent instead) |
 | `withRequestOverride(HttpRequest)` | Default headers for control-plane requests |
 | `withProxyConfiguration(ProxyConfiguration)` | Route via proxy |
 
@@ -210,6 +212,7 @@ Returned by `when()`, provides terminal methods to define the action:
 |--------|---------|
 | `withControlPlaneJWT(String)` | Static JWT token |
 | `withControlPlaneJWT(Supplier<String>)` | Dynamic JWT supplier |
+| `withControlPlaneBasicAuthentication(String, String)` | HTTP Basic credentials, also sent on the callback and breakpoint WebSockets |
 | `withSecure(boolean)` | Enable TLS for client-to-server |
 | `withRequestOverride(HttpRequest)` | Default headers for all control-plane requests |
 

@@ -11,7 +11,7 @@
     if (module && require) {
         var WebSocketClient = require('websocket').client;
         var Q = require('q');
-        var resolveBearerToken = require('./sendRequest').resolveBearerToken;
+        var resolveAuthorization = require('./sendRequest').resolveAuthorization;
         var clientCertificateOptions = require('./sendRequest').clientCertificateOptions;
         var fs = require('fs');
 
@@ -299,12 +299,12 @@
 
         var DEFAULT_REGISTRATION_TIMEOUT_MILLIS = 10000;
 
-        // resolved per connection attempt, so a reconnect picks up a refreshed bearer token
+        // resolved per connection attempt, so a reconnect picks up a refreshed bearer token (or the Basic credentials)
         var upgradeHeaders = function (clientOptions, clientId) {
             var headers = {};
-            var token = resolveBearerToken(clientOptions);
-            if (token) {
-                headers['Authorization'] = 'Bearer ' + token;
+            var authorization = resolveAuthorization(clientOptions);
+            if (authorization) {
+                headers['Authorization'] = authorization;
             }
             if (clientId) {
                 headers['X-CLIENT-REGISTRATION-ID'] = clientId;

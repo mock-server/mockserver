@@ -236,12 +236,13 @@ impl BreakpointWebSocketClient {
     }
 
     /// Connect to the callback WebSocket and obtain a clientId. A non-empty
-    /// `bearer_token` is sent as `Authorization: Bearer <token>` on the upgrade.
+    /// `authorization` (a whole `Bearer ...` or `Basic ...` value) is sent as the
+    /// `Authorization` header on the upgrade.
     /// An `https` base URL connects over `wss` using `tls`, which carries the
     /// client's HTTPS trust roots, custom CA and client identity.
     pub(crate) fn connect(
         base_url: &str,
-        bearer_token: Option<&str>,
+        authorization: Option<&str>,
         tls: Option<&native_tls::TlsConnector>,
     ) -> Result<Self> {
         let parsed = Url::parse(base_url)
@@ -258,9 +259,9 @@ impl BreakpointWebSocketClient {
             .as_str()
             .into_client_request()
             .map_err(|e| Error::InvalidRequest(format!("bad WebSocket URL: {e}")))?;
-        if let Some(token) = bearer_token.filter(|t| !t.is_empty()) {
-            let mut value = tungstenite::http::HeaderValue::from_str(&format!("Bearer {token}"))
-                .map_err(|e| Error::InvalidRequest(format!("invalid bearer token: {e}")))?;
+        if let Some(authorization) = authorization.filter(|a| !a.is_empty()) {
+            let mut value = tungstenite::http::HeaderValue::from_str(authorization)
+                .map_err(|e| Error::InvalidRequest(format!("invalid control-plane authorization: {e}")))?;
             value.set_sensitive(true);
             request
                 .headers_mut()
@@ -869,7 +870,7 @@ pub(crate) mod tests {
     fn upgrade_authorization(bearer_token: Option<&str>) -> Option<String> {
         let (port, recorded) = recording_callback_server();
         let client =
-            BreakpointWebSocketClient::connect(&format!("http://127.0.0.1:{port}"), bearer_token, None)
+            BreakpointWebSocketClient::connect(&format!("http://127.0.0.1:{port}"), bearer_token.filter(|t| !t.is_empty()).map(|t| format!("Bearer {t}")).as_deref(), None)
                 .expect("connect");
         client.close();
         recorded
@@ -917,7 +918,7 @@ pub(crate) mod tests {
 
         let result = BreakpointWebSocketClient::connect(
             &format!("http://127.0.0.1:{port}"),
-            Some("my-jwt-token"),
+            Some("Bearer my-jwt-token"),
             None,
         );
         server.join().expect("server thread");
@@ -975,7 +976,7 @@ pub(crate) mod tests {
 
         let client = BreakpointWebSocketClient::connect(
             &format!("https://127.0.0.1:{port}"),
-            Some("my-jwt-token"),
+            Some("Bearer my-jwt-token"),
             Some(&connector),
         )
         .expect("wss connect");
@@ -995,7 +996,7 @@ pub(crate) mod tests {
 
         let result = BreakpointWebSocketClient::connect(
             &format!("https://127.0.0.1:{port}"),
-            Some("my-jwt-token"),
+            Some("Bearer my-jwt-token"),
             None,
         );
         assert!(result.is_err(), "an untrusted certificate was accepted");

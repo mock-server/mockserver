@@ -306,6 +306,11 @@ describe('control-plane bearer token on the callback WebSocket upgrade', {timeou
         assert.equal(requests[0].authorization, 'Bearer static-token');
     });
 
+    it('sends Authorization: Basic with the configured basicAuthUsername and basicAuthPassword', async function () {
+        var requests = await upgradeHeadersFor({basicAuthUsername: 'admin', basicAuthPassword: 's3cret'});
+        assert.equal(requests[0].authorization, 'Basic ' + Buffer.from('admin:s3cret').toString('base64'));
+    });
+
     it('sends no Authorization header when no token is configured', async function () {
         var requests = await upgradeHeadersFor(undefined);
         assert.equal(requests[0].authorization, undefined);

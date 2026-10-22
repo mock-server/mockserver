@@ -1,18 +1,22 @@
 package mockserver
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/base64"
 	"encoding/pem"
+	"log"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -66,6 +70,54 @@ func TestWithControlPlaneBearerTokenSupplier_CalledPerRequest(t *testing.T) {
 
 	if len(seen) != 2 || seen[0] != "Bearer token-1" || seen[1] != "Bearer token-2" {
 		t.Errorf("expected per-request tokens token-1, token-2; got %v", seen)
+	}
+}
+
+func TestWithControlPlaneBasicAuthentication_AttachedToControlPlaneRequest(t *testing.T) {
+	var seen []string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		seen = append(seen, r.Header.Get("Authorization"))
+		w.WriteHeader(200)
+		w.Write([]byte(`{"ports":[1080]}`))
+	}))
+	defer ts.Close()
+
+	if _, err := NewFromURL(ts.URL, WithControlPlaneBasicAuthentication("admin", "pä:ss")).Status(); err != nil {
+		t.Fatalf("status failed: %v", err)
+	}
+	if _, err := NewFromURL(ts.URL, WithControlPlaneBasicAuthentication("admin", "s3cret"), WithControlPlaneBearerToken("jwt")).Status(); err != nil {
+		t.Fatalf("status failed: %v", err)
+	}
+	if _, err := NewFromURL(ts.URL, WithControlPlaneBasicAuthentication("a:b", "s3cret")).Status(); err == nil || !strings.Contains(err.Error(), "without ':'") {
+		t.Errorf("expected an unsendable username to fail the request, got %v", err)
+	}
+
+	want := []string{"Basic " + base64.StdEncoding.EncodeToString([]byte("admin:pä:ss")), "Bearer jwt"}
+	if len(seen) != 2 || seen[0] != want[0] || seen[1] != want[1] {
+		t.Errorf("expected %q, got %q", want, seen)
+	}
+}
+
+func TestWithControlPlaneBasicAuthentication_WarnsWithoutTLSAndKeepsCredentialsOutOfErrors(t *testing.T) {
+	var logged bytes.Buffer
+	log.SetOutput(&logged)
+	defer log.SetOutput(os.Stderr)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(500)
+		w.Write([]byte("failed"))
+	}))
+	defer ts.Close()
+
+	_, err := NewFromURL(ts.URL, WithControlPlaneBasicAuthentication("admin", "pa55-near-miss")).Status()
+
+	if strings.Count(logged.String(), "without TLS") != 1 || strings.Contains(logged.String(), "pa55-near-miss") {
+		t.Errorf("expected one warning without the password, got %q", logged.String())
+	}
+	if err == nil {
+		t.Fatal("expected the 500 to fail the request")
+	}
+	if strings.Contains(err.Error(), "pa55-near-miss") || strings.Contains(err.Error(), base64.StdEncoding.EncodeToString([]byte("admin:pa55-near-miss"))) {
+		t.Errorf("credentials leaked into the error: %v", err)
 	}
 }
 

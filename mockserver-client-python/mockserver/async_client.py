@@ -132,6 +132,7 @@ class AsyncMockServerClient:
         client_key_path: str | None = None,
         control_plane_bearer_token: str | None = None,
         control_plane_bearer_token_supplier: Callable[[], str] | None = None,
+        control_plane_basic_auth: tuple[str, str] | None = None,
     ) -> None:
         self._host = host
         self._port = port
@@ -143,6 +144,22 @@ class AsyncMockServerClient:
         self._client_key_path = client_key_path
         self._control_plane_bearer_token = control_plane_bearer_token
         self._control_plane_bearer_token_supplier = control_plane_bearer_token_supplier
+        self._control_plane_basic_authorization: str | None = None
+        if control_plane_basic_auth is not None:
+            username, password = control_plane_basic_auth
+            if not username or ":" in username or password is None:
+                raise ValueError(
+                    "control_plane_basic_auth needs a (username, password) with a username without ':'"
+                )
+            self._control_plane_basic_authorization = "Basic " + base64.b64encode(
+                f"{username}:{password}".encode("utf-8")
+            ).decode("ascii")
+            if not secure:
+                logger.warning(
+                    "control-plane Basic credentials are configured without secure=True, so the password can be "
+                    "read on the network, and MockServer refuses them unless "
+                    "controlPlaneBasicAuthenticationAllowInsecure is set (tests only)"
+                )
         self._websocket_clients: list[MockServerWebSocketClient] = []
 
         scheme = "https" if secure else "http"
@@ -175,6 +192,16 @@ class AsyncMockServerClient:
             return self._control_plane_bearer_token_supplier()
         return self._control_plane_bearer_token
 
+    def _control_plane_authorization(self) -> str | None:
+        """The control-plane ``Authorization`` header value: the bearer token
+        when one is configured, else the Basic credentials, else ``None``.
+        MockServer refuses Basic credentials without TLS, so use ``secure=True``.
+        """
+        bearer = self._control_plane_bearer()
+        if bearer:
+            return f"Bearer {bearer}"
+        return self._control_plane_basic_authorization
+
     async def _request(
         self,
         method: str,
@@ -195,9 +222,9 @@ class AsyncMockServerClient:
             data = None
         req = urllib.request.Request(url, data=data, method=method)
         req.add_header("Content-Type", content_type)
-        bearer = self._control_plane_bearer()
-        if bearer:
-            req.add_header("Authorization", f"Bearer {bearer}")
+        authorization = self._control_plane_authorization()
+        if authorization:
+            req.add_header("Authorization", authorization)
 
         def _do_request() -> tuple[int, str]:
             try:
@@ -1747,7 +1774,7 @@ class AsyncMockServerClient:
                 self._secure,
                 self._ca_cert_path,
                 tls_verify=self._tls_verify,
-                bearer_token_supplier=self._control_plane_bearer,
+                authorization_supplier=self._control_plane_authorization,
                 ssl_context=self._ssl_context,
             )
             ws_client._is_breakpoint_ws = True  # type: ignore[attr-defined]
@@ -1909,7 +1936,7 @@ class AsyncMockServerClient:
             self._secure,
             self._ca_cert_path,
             tls_verify=self._tls_verify,
-            bearer_token_supplier=self._control_plane_bearer,
+            authorization_supplier=self._control_plane_authorization,
             ssl_context=self._ssl_context,
         )
 

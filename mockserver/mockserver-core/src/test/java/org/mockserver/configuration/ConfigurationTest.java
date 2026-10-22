@@ -3593,6 +3593,125 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetControlPlaneBasicAuthenticationRequired() {
+        boolean original = ConfigurationProperties.controlPlaneBasicAuthenticationRequired();
+        try {
+            // then - default value
+            assertThat(configuration.controlPlaneBasicAuthenticationRequired(), equalTo(false));
+
+            // when - system property setter
+            ConfigurationProperties.controlPlaneBasicAuthenticationRequired(true);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.controlPlaneBasicAuthenticationRequired(), equalTo(true));
+            assertThat(System.getProperty("mockserver.controlPlaneBasicAuthenticationRequired"), equalTo("true"));
+            assertThat(configuration.controlPlaneBasicAuthenticationRequired(), equalTo(true));
+            ConfigurationProperties.controlPlaneBasicAuthenticationRequired(original);
+
+            // when - setter
+            configuration.controlPlaneBasicAuthenticationRequired(true);
+
+            // then - getter, and the snapshot the gate reads
+            assertThat(configuration.controlPlaneBasicAuthenticationRequired(), equalTo(true));
+            assertThat(ControlPlaneAuthenticationSettings.of(configuration).authenticationRequired(), equalTo(true));
+        } finally {
+            ConfigurationProperties.controlPlaneBasicAuthenticationRequired(original);
+        }
+    }
+
+    @Test
+    public void shouldSetAndGetControlPlaneBasicAuthenticationCredentials() {
+        String original = ConfigurationProperties.controlPlaneBasicAuthenticationCredentials();
+        String entry = "admin:$2y$05$eN7U8toPb2xRBGaKbeSTyeAYbJVd5cnr2kz627EiE.fvEYWn1FBPa";
+        try {
+            // then - default value
+            assertThat(configuration.controlPlaneBasicAuthenticationCredentials(), equalTo(""));
+
+            // when - system property setter
+            ConfigurationProperties.controlPlaneBasicAuthenticationCredentials(entry);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.controlPlaneBasicAuthenticationCredentials(), equalTo(entry));
+            assertThat(configuration.controlPlaneBasicAuthenticationCredentials(), equalTo(entry));
+            ConfigurationProperties.controlPlaneBasicAuthenticationCredentials(original);
+
+            // when - setter
+            configuration.controlPlaneBasicAuthenticationCredentials("viewer:" + entry.substring("admin:".length()));
+
+            // then - getter
+            assertThat(configuration.controlPlaneBasicAuthenticationCredentials(), equalTo("viewer:" + entry.substring("admin:".length())));
+            assertThat(ControlPlaneAuthenticationSettings.of(configuration).controlPlaneBasicAuthenticationCredentials(), equalTo("viewer:" + entry.substring("admin:".length())));
+        } finally {
+            ConfigurationProperties.controlPlaneBasicAuthenticationCredentials(original);
+        }
+    }
+
+    @Test
+    public void shouldSetAndGetControlPlaneBasicAuthenticationUsersFile() {
+        String original = ConfigurationProperties.controlPlaneBasicAuthenticationUsersFile();
+        try {
+            // then - default value
+            assertThat(configuration.controlPlaneBasicAuthenticationUsersFile(), equalTo(""));
+
+            // when - system property setter
+            String path = tempFilePath();
+            ConfigurationProperties.controlPlaneBasicAuthenticationUsersFile(path);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.controlPlaneBasicAuthenticationUsersFile(), equalTo(path));
+            assertThat(configuration.controlPlaneBasicAuthenticationUsersFile(), equalTo(path));
+            ConfigurationProperties.controlPlaneBasicAuthenticationUsersFile(original);
+
+            // when - setter
+            configuration.controlPlaneBasicAuthenticationUsersFile(path);
+
+            // then - getter
+            assertThat(configuration.controlPlaneBasicAuthenticationUsersFile(), equalTo(path));
+
+            // and - a missing file is refused by both forms
+            assertThrows(RuntimeException.class, () -> configuration.controlPlaneBasicAuthenticationUsersFile("/no/such/users/file"));
+            assertThrows(RuntimeException.class, () -> ConfigurationProperties.controlPlaneBasicAuthenticationUsersFile("/no/such/users/file"));
+        } finally {
+            ConfigurationProperties.controlPlaneBasicAuthenticationUsersFile(original);
+        }
+    }
+
+    @Test
+    public void shouldSetAndGetControlPlaneBasicAuthenticationAllowInsecure() {
+        boolean original = ConfigurationProperties.controlPlaneBasicAuthenticationAllowInsecure();
+        try {
+            // then - default value
+            assertThat(configuration.controlPlaneBasicAuthenticationAllowInsecure(), equalTo(false));
+
+            // when - system property setter
+            ConfigurationProperties.controlPlaneBasicAuthenticationAllowInsecure(true);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.controlPlaneBasicAuthenticationAllowInsecure(), equalTo(true));
+            assertThat(configuration.controlPlaneBasicAuthenticationAllowInsecure(), equalTo(true));
+            ConfigurationProperties.controlPlaneBasicAuthenticationAllowInsecure(original);
+
+            // when - setter
+            configuration.controlPlaneBasicAuthenticationAllowInsecure(true);
+
+            // then - getter
+            assertThat(configuration.controlPlaneBasicAuthenticationAllowInsecure(), equalTo(true));
+        } finally {
+            ConfigurationProperties.controlPlaneBasicAuthenticationAllowInsecure(original);
+        }
+    }
+
+    @Test
+    public void shouldRecogniseControlPlaneBasicAuthenticationEnvironmentVariableForms() {
+        for (String key : java.util.Arrays.asList("REQUIRED", "CREDENTIALS", "USERS_FILE", "ALLOW_INSECURE")) {
+            assertThat(ConfigurationProperties.recognisedEnvironmentVariableKeys(),
+                org.hamcrest.Matchers.hasItem("MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_" + key));
+        }
+        assertThat("the credentials are masked on the diagnostic surfaces",
+            ConfigurationProperties.isSensitivePropertyName("controlPlaneBasicAuthenticationCredentials"), equalTo(true));
+    }
+
+    @Test
     public void shouldSetAndGetControlPlaneJWTAuthenticationRequired() {
         boolean original = ConfigurationProperties.controlPlaneJWTAuthenticationRequired();
         try {

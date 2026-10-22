@@ -46,6 +46,13 @@ $client->verify(
 $client->reset();
 ```
 
+When MockServer accepts control-plane Basic authentication, call `withControlPlaneBasicAuthentication($username, $password)` on a secure client (MockServer refuses Basic credentials without TLS). A bearer token, when also set, is sent instead.
+
+```php
+$client = (new MockServerClient('localhost', 1080, secure: true))
+    ->withControlPlaneBasicAuthentication('admin', getenv('MOCKSERVER_PASSWORD'));
+```
+
 ## API
 
 ### Creating Expectations

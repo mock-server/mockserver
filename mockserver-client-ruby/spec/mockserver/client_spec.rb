@@ -9,6 +9,63 @@ RSpec.describe MockServer::Client do
   after { client.close }
 
   # -------------------------------------------------------------------
+  # control-plane basic authentication
+  # -------------------------------------------------------------------
+  describe 'control_plane_basic_auth' do
+    it 'sends Authorization: Basic on control-plane requests' do
+      authenticated = MockServer::Client.new(host, port, control_plane_basic_auth: ['admin', 'pä:ss'])
+      expected = "Basic #{Base64.strict_encode64('admin:pä:ss')}"
+      stub = stub_request(:put, "#{base_url}/mockserver/reset")
+             .with(headers: { 'Authorization' => expected })
+             .to_return(status: 200, body: '')
+
+      authenticated.reset
+
+      expect(stub).to have_been_requested
+    ensure
+      authenticated&.close
+    end
+
+    it 'sends no Authorization header without credentials' do
+      stub_request(:put, "#{base_url}/mockserver/reset").to_return(status: 200, body: '')
+
+      client.reset
+
+      expect(WebMock).to(have_requested(:put, "#{base_url}/mockserver/reset").with { |request| !request.headers.key?('Authorization') })
+    end
+
+    it 'warns once when the credentials are sent without TLS' do
+      expect { MockServer::Client.new(host, port, control_plane_basic_auth: %w[admin s3cret]).close }
+        .to output(/without secure: true/).to_stderr
+      expect { MockServer::Client.new(host, port, secure: true, control_plane_basic_auth: %w[admin s3cret]).close }
+        .not_to output.to_stderr
+    end
+
+    it 'does not put the credentials in the error of a failed request' do
+      authenticated = MockServer::Client.new(host, port, secure: true, control_plane_basic_auth: %w[admin pa55-near-miss])
+      stub_request(:put, "https://#{host}:#{port}/mockserver/reset").to_return(status: 500, body: 'failed')
+
+      error = begin
+        authenticated.reset
+        nil
+      rescue StandardError => e
+        e
+      end
+
+      expect(error).not_to be_nil
+      expect(error.message).not_to include('pa55-near-miss')
+      expect(error.message).not_to include(Base64.strict_encode64('admin:pa55-near-miss'))
+    ensure
+      authenticated&.close
+    end
+
+    it 'refuses a username that cannot be sent' do
+      expect { MockServer::Client.new(host, port, control_plane_basic_auth: ['a:b', 'x']) }.to raise_error(ArgumentError)
+      expect { MockServer::Client.new(host, port, control_plane_basic_auth: ['', 'x']) }.to raise_error(ArgumentError)
+    end
+  end
+
+  # -------------------------------------------------------------------
   # upsert
   # -------------------------------------------------------------------
   describe '#upsert' do

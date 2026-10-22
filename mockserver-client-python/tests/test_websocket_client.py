@@ -504,6 +504,20 @@ class TestControlPlaneBearerTokenOnUpgrade:
         assert upgrades[0]["Authorization"] == "Bearer static-token"
 
     @pytest.mark.asyncio
+    async def test_sends_the_whole_authorization_value_from_an_authorization_supplier(self):
+        async def open_websocket(port):
+            ws_client = MockServerWebSocketClient()
+            await ws_client.connect(
+                "127.0.0.1", port,
+                bearer_token_supplier=lambda: "ignored",
+                authorization_supplier=lambda: "Basic YWRtaW46czNjcmV0",
+            )
+            return ws_client
+
+        upgrades = await self._upgrade_headers(open_websocket)
+        assert upgrades[0]["Authorization"] == "Basic YWRtaW46czNjcmV0"
+
+    @pytest.mark.asyncio
     @pytest.mark.parametrize("supplier", [None, lambda: None, lambda: ""])
     async def test_sends_no_authorization_without_a_token(self, supplier):
         async def open_websocket(port):

@@ -1471,6 +1471,9 @@ public class ConfigurationDTOCredentialMaskingTest {
         // credential over the control plane must still work
         List<String> notApplied = new ArrayList<>();
         for (String credential : maskRefusingCredentialProperties()) {
+            if (STARTUP_ONLY_CREDENTIAL_PROPERTIES.contains(credential)) {
+                continue;
+            }
             Configuration live = configuration();
             setCredentialOn(live, credential);
             String rotated = valueTheSetterAccepts(credential, "rotated-credential-" + credential);
@@ -1486,6 +1489,30 @@ public class ConfigurationDTOCredentialMaskingTest {
         assertThat("credential-shaped properties a control-plane body carrying a REAL new value failed "
                 + "to rotate — the mask guard has broken the write path: " + notApplied,
             notApplied, is(empty()));
+    }
+
+    /**
+     * Credential-shaped properties fixed at startup: {@code applyTo} never writes them, so a control-plane
+     * {@code PUT} can neither rotate nor clear them (see {@code HttpState.applyConfigurationUpdate}).
+     */
+    private static final Set<String> STARTUP_ONLY_CREDENTIAL_PROPERTIES = Set.of("controlPlaneBasicAuthenticationCredentials");
+
+    @Test
+    public void shouldNeverApplyAStartupOnlyCredentialOverTheControlPlane() throws Exception {
+        List<String> applied = new ArrayList<>();
+        for (String credential : STARTUP_ONLY_CREDENTIAL_PROPERTIES) {
+            for (String supplied : java.util.Arrays.asList("replaced-" + credential, "")) {
+                Configuration live = configuration();
+                setCredentialOn(live, credential);
+                Object held = instanceField(live, credential);
+                applyToViaDto(live, credential, supplied);
+                if (!held.equals(instanceField(live, credential))) {
+                    applied.add(credential + " (took <" + supplied + ">)");
+                }
+            }
+        }
+
+        assertThat("startup-only credentials a control-plane PUT changed: " + applied, applied, is(empty()));
     }
 
     @Test
@@ -1515,20 +1542,22 @@ public class ConfigurationDTOCredentialMaskingTest {
         // over JSON "" binds as "", reaches applyTo, passes the mask guard and clears the credential.
         List<String> notCleared = new ArrayList<>();
         for (String credential : maskRefusingCredentialProperties()) {
-            Configuration overJson = configuration();
-            setCredentialOn(overJson, credential);
-            applyJsonTo("{\"" + credential + "\":\"\"}", overJson);
-            Object cleared = instanceField(overJson, credential);
-            if (!"".equals(cleared)) {
-                notCleared.add(credential + " (PUT of \"\" left <" + cleared + ">)");
-            }
+            if (!STARTUP_ONLY_CREDENTIAL_PROPERTIES.contains(credential)) {
+                Configuration overJson = configuration();
+                setCredentialOn(overJson, credential);
+                applyJsonTo("{\"" + credential + "\":\"\"}", overJson);
+                Object cleared = instanceField(overJson, credential);
+                if (!"".equals(cleared)) {
+                    notCleared.add(credential + " (PUT of \"\" left <" + cleared + ">)");
+                }
 
-            Configuration live = configuration();
-            setCredentialOn(live, credential);
-            applyToViaDto(live, credential, "");
-            Object applied = instanceField(live, credential);
-            if (!"".equals(applied)) {
-                notCleared.add(credential + " (applyTo left <" + applied + ">)");
+                Configuration live = configuration();
+                setCredentialOn(live, credential);
+                applyToViaDto(live, credential, "");
+                Object applied = instanceField(live, credential);
+                if (!"".equals(applied)) {
+                    notCleared.add(credential + " (applyTo left <" + applied + ">)");
+                }
             }
 
             ConfigurationDTO fresh = new ConfigurationDTO();
@@ -1674,7 +1703,7 @@ public class ConfigurationDTOCredentialMaskingTest {
         assertThat("reflection discovered fewer credential-shaped properties than it did when this "
                 + "guard was written — a getter was renamed, retyped or removed, and its write path is "
                 + "now unguarded",
-            properties.size(), greaterThanOrEqualTo(18));
+            properties.size(), greaterThanOrEqualTo(19));
         return new ArrayList<>(properties);
     }
 

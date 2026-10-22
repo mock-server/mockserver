@@ -570,7 +570,12 @@ public class ConfigurationDTOTest {
         // decide where the server may send requests, so a control-plane request must not widen them
         "forwardProxyBlockPrivateNetworks",
         "forwardProxyAllowedHosts",
-        "forwardProxyDeniedHosts"
+        "forwardProxyDeniedHosts",
+        // decide who may use the control plane, so a control-plane request must not change them
+        "controlPlaneBasicAuthenticationRequired",
+        "controlPlaneBasicAuthenticationCredentials",
+        "controlPlaneBasicAuthenticationUsersFile",
+        "controlPlaneBasicAuthenticationAllowInsecure"
     ));
 
     @Test
@@ -757,6 +762,7 @@ public class ConfigurationDTOTest {
             case "forwardProxyTLSCustomTrustX509Certificates":
             case "forwardProxyPrivateKey":
             case "forwardProxyCertificateChain":
+            case "controlPlaneBasicAuthenticationUsersFile":
                 return existingFilePath();
             default:
                 break;

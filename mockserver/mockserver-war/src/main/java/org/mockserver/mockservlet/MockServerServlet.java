@@ -56,6 +56,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
         this.configuration = configuration();
         ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(this.configuration);
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
+        ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneBasicAuthentication(this.configuration, this.mockServerLogger);
         this.httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerHttpRequestDecoder(this.configuration, this.mockServerLogger);
         this.scheduler = new Scheduler(this.configuration, mockServerLogger);
         this.httpStateHandler = new HttpState(this.configuration, mockServerLogger, this.scheduler);
