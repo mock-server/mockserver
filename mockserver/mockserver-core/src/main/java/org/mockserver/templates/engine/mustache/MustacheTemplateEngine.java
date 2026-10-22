@@ -20,6 +20,7 @@ import org.mockserver.templates.engine.TemplateFunctions;
 import org.mockserver.templates.engine.TemplateWarning;
 import org.mockserver.templates.engine.helpers.RequestBodyExtractionHelper;
 import org.mockserver.templates.engine.helpers.ScenarioTemplateHelper;
+import org.mockserver.templates.engine.helpers.SystemValueTemplateHelper;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.templates.engine.model.HttpResponseTemplateObject;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
@@ -139,7 +140,19 @@ public class MustacheTemplateEngine implements TemplateEngine {
             base.put("faker", seededFaker);
         }
         base.put("scenario", scenarioMustacheHelper);
+        base.put("systemValue", systemValueMustacheHelper(new SystemValueTemplateHelper(configuration.templateSystemValueAllowList(), mockServerLogger)));
         this.baseBindings = Collections.unmodifiableMap(base);
+    }
+
+    /**
+     * jmustache cannot pass an argument to a method, so, as with {@code scenario.get}, the name is the section body:
+     * {@code {{#systemValue.env}}NAME{{/systemValue.env}}} and {@code {{#systemValue.property}}name{{/systemValue.property}}}.
+     */
+    private static Map<String, Object> systemValueMustacheHelper(SystemValueTemplateHelper systemValue) {
+        Map<String, Object> helper = new LinkedHashMap<>();
+        helper.put("env", (Mustache.Lambda) (frag, out) -> out.write(systemValue.env(frag.execute().trim())));
+        helper.put("property", (Mustache.Lambda) (frag, out) -> out.write(systemValue.property(frag.execute().trim())));
+        return Collections.unmodifiableMap(helper);
     }
 
     /**

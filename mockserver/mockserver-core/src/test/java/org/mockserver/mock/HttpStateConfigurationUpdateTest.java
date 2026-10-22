@@ -343,6 +343,41 @@ public class HttpStateConfigurationUpdateTest {
     }
 
     @Test
+    public void shouldNotLetAPutWidenTheTemplateSystemValueAllowList() {
+        // given
+        configuration.templateSystemValueAllowList("APP_REGION");
+
+        // when
+        put(new ConfigurationDTO().setTemplateSystemValueAllowList("*,AWS_SECRET_ACCESS_KEY"));
+
+        // then
+        assertThat(configuration.templateSystemValueAllowList(), is("APP_REGION"));
+        List<String> warnings = logger.warnings();
+        assertThat(warnings, hasSize(1));
+        assertThat(warnings.get(0), containsString("templateSystemValueAllowList is fixed at startup"));
+    }
+
+    @Test
+    public void shouldLogWhatTemplatesCanReadEachTimeAServerStarts() {
+        for (int start = 0; start < 2; start++) {
+            // given
+            Configuration startupConfiguration = configuration().logLevel(Level.WARN).templateSystemValueAllowList("APP_*,MOCKSERVER_*");
+            CapturingMockServerLogger startupLogger = new CapturingMockServerLogger(startupConfiguration);
+
+            // when
+            HttpState started = new HttpState(startupConfiguration, startupLogger, mock(Scheduler.class));
+            try {
+                // then
+                List<String> warnings = startupLogger.warnings();
+                assertThat(warnings.stream().filter(warning -> warning.contains("templates can read")).count(), is(1L));
+                assertThat(warnings.stream().filter(warning -> warning.contains("MockServer's own settings")).count(), is(1L));
+            } finally {
+                started.stop();
+            }
+        }
+    }
+
+    @Test
     public void shouldNotWarnWhenInitOnlyPropertiesAreEchoedBackUnchanged() {
         // given - the whole-blob PUT case: a client GETs the configuration and PUTs it back
         // verbatim, including the init-only properties. That must not produce noise.

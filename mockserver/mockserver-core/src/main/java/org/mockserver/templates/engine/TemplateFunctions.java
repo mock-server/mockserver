@@ -14,6 +14,7 @@ import org.mockserver.templates.engine.helpers.MathTemplateHelper;
 import org.mockserver.templates.engine.helpers.RegexTemplateHelper;
 import org.mockserver.templates.engine.helpers.ScenarioTemplateHelper;
 import org.mockserver.templates.engine.helpers.StringTemplateHelper;
+import org.mockserver.templates.engine.helpers.SystemValueTemplateHelper;
 import org.mockserver.templates.engine.helpers.TemplateFaker;
 import org.mockserver.templates.engine.helpers.XmlXPathTemplateHelper;
 import org.mockserver.templates.engine.helpers.YamlTemplateHelper;
@@ -73,6 +74,8 @@ public class TemplateFunctions implements Supplier<Object> {
     public static final Map<String, Object> ON_DEMAND_HELPERS = ImmutableMap.<String, Object>builder()
         .put("lists", new ListTemplateHelper())
         .put("hostname", new TemplateFunctions(TemplateFunctions::hostname))
+        // reads nothing; each engine replaces it with one built from its configuration's templateSystemValueAllowList
+        .put("systemValue", new SystemValueTemplateHelper("", null))
         .build();
 
     private final Supplier<String> supplier;

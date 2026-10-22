@@ -111,6 +111,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private String velocityDisallowedText;
     private String mustacheDisallowedText;
     private Long templateFakerSeed;
+    private String templateSystemValueAllowList;
 
     private String initializationClass;
     private String initializationJsonPath;
@@ -482,6 +483,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.velocityDisallowedText = configuration.velocityDisallowedText();
             this.mustacheDisallowedText = configuration.mustacheDisallowedText();
             this.templateFakerSeed = configuration.templateFakerSeed();
+            this.templateSystemValueAllowList = configuration.templateSystemValueAllowList();
 
             this.initializationClass = configuration.initializationClass();
             this.initializationJsonPath = configuration.initializationJsonPath();
@@ -959,6 +961,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.velocityDisallowedText(velocityDisallowedText);
         configuration.mustacheDisallowedText(mustacheDisallowedText);
         configuration.templateFakerSeed(templateFakerSeed);
+        configuration.templateSystemValueAllowList(templateSystemValueAllowList);
 
         configuration.initializationClass(initializationClass);
         configuration.initializationJsonPath(initializationJsonPath);
@@ -1607,6 +1610,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (templateFakerSeed != null) {
             target.templateFakerSeed(templateFakerSeed);
         }
+        // templateSystemValueAllowList is deliberately not applied: it decides which environment variables and
+        // system properties templates can read, so it is fixed at startup (see HttpState.applyConfigurationUpdate)
         if (initializationClass != null) {
             target.initializationClass(initializationClass);
         }
@@ -3181,6 +3186,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setTemplateFakerSeed(Long templateFakerSeed) {
         this.templateFakerSeed = templateFakerSeed;
+        return this;
+    }
+
+    public String getTemplateSystemValueAllowList() {
+        return templateSystemValueAllowList;
+    }
+
+    public ConfigurationDTO setTemplateSystemValueAllowList(String templateSystemValueAllowList) {
+        this.templateSystemValueAllowList = templateSystemValueAllowList;
         return this;
     }
 

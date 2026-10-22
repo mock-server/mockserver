@@ -134,6 +134,19 @@ public class ConfigurationDTOTest {
     }
 
     @Test
+    public void shouldNotApplyTemplateSystemValueAllowListToARunningServer() {
+        Configuration target = configuration().templateSystemValueAllowList("APP_REGION");
+
+        ConfigurationDTO dto = new ConfigurationDTO();
+        dto.setTemplateSystemValueAllowList("AWS_*,PATH");
+        dto.applyTo(target);
+
+        assertThat(target.templateSystemValueAllowList(), is("APP_REGION"));
+        assertThat(new ConfigurationDTO(target).getTemplateSystemValueAllowList(), is("APP_REGION"));
+        assertThat(new ConfigurationDTO().setTemplateSystemValueAllowList("APP_*").buildObject().templateSystemValueAllowList(), is("APP_*"));
+    }
+
+    @Test
     public void shouldRoundTripDataPlaneAuthenticationFields() {
         Configuration original = configuration()
             .dataPlaneAuthenticationRequired(true)
@@ -551,6 +564,9 @@ public class ConfigurationDTOTest {
         "recordedBodyFilesDirectory",
         // decides which server files a request can read, so a control-plane request must not repoint it
         "staticFilesDirectory",
+        // decides which environment variables and system properties templates can read, so a control-plane
+        // request must not widen it
+        "templateSystemValueAllowList",
         // decide where the server may send requests, so a control-plane request must not widen them
         "forwardProxyBlockPrivateNetworks",
         "forwardProxyAllowedHosts",

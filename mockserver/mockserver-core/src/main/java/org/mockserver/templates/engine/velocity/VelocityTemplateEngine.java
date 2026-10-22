@@ -32,6 +32,7 @@ import org.mockserver.templates.engine.TemplateEvaluationException;
 import org.mockserver.templates.engine.TemplateFunctions;
 import org.mockserver.templates.engine.TemplateWarning;
 import org.mockserver.templates.engine.helpers.RequestBodyExtractionHelper;
+import org.mockserver.templates.engine.helpers.SystemValueTemplateHelper;
 import org.mockserver.templates.engine.model.HttpRequestTemplateObject;
 import org.mockserver.templates.engine.model.HttpResponseTemplateObject;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
@@ -196,6 +197,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
             functionsAndHelpers.put("faker", TemplateFunctions.resolveFaker(configuration.templateFakerSeed()));
             functionsAndHelpers.put("lists", TemplateFunctions.resolveLists(configuration.templateFakerSeed()));
         }
+        functionsAndHelpers.put("systemValue", new SystemValueTemplateHelper(configuration.templateSystemValueAllowList(), mockServerLogger));
         this.sharedFunctionsAndHelpers = Collections.unmodifiableMap(functionsAndHelpers);
     }
 

@@ -11,9 +11,11 @@ import org.mockserver.serialization.ObjectMapperFactory;
 import org.mockserver.serialization.model.DTO;
 import org.mockserver.templates.engine.TemplateEngine;
 import org.mockserver.templates.engine.TemplateEvaluationException;
+import org.mockserver.templates.engine.helpers.SystemValueTemplateHelper;
 import org.mockserver.templates.engine.serializer.HttpTemplateOutputDeserializer;
 import org.slf4j.event.Level;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -73,8 +75,9 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
     // Per-engine seeded faker when templateFakerSeed is non-zero, else null (the shared unseeded faker
     // from BUILT_IN_HELPERS is used). Resolved once so the seeded sequence is deterministic across renders.
     private final Object seededFaker;
-    // as seededFaker, for the lists helper's pickRandom
-    private final Object seededLists;
+    // per-engine replacements for TemplateFunctions.ON_DEMAND_HELPERS: the systemValue helper reading this
+    // configuration's allow list and, when templateFakerSeed is set, a seeded lists helper for pickRandom
+    private final Map<String, Object> onDemandOverrides;
 
     public JavaScriptTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
         this(mockServerLogger, configuration, POLYGLOT_AVAILABLE);
@@ -107,9 +110,12 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
         this.seededFaker = this.configuration.templateFakerSeed() != 0L
             ? org.mockserver.templates.engine.TemplateFunctions.resolveFaker(this.configuration.templateFakerSeed())
             : null;
-        this.seededLists = this.configuration.templateFakerSeed() != 0L
-            ? org.mockserver.templates.engine.TemplateFunctions.resolveLists(this.configuration.templateFakerSeed())
-            : null;
+        Map<String, Object> overrides = new HashMap<>();
+        overrides.put("systemValue", new SystemValueTemplateHelper(this.configuration.templateSystemValueAllowList(), mockServerLogger));
+        if (this.configuration.templateFakerSeed() != 0L) {
+            overrides.put("lists", org.mockserver.templates.engine.TemplateFunctions.resolveLists(this.configuration.templateFakerSeed()));
+        }
+        this.onDemandOverrides = Map.copyOf(overrides);
         if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(Level.WARN)) {
             if (isUnrestricted(this.configuration.javascriptAllowedClasses())) {
                 mockServerLogger.logEvent(
@@ -310,7 +316,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 executionTimeoutMillis(),
                 true,
                 seededFaker,
-                seededLists,
+                onDemandOverrides,
                 null,
                 cacheParsedSources
             );
@@ -366,7 +372,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 executionTimeoutMillis(),
                 false,
                 seededFaker,
-                seededLists,
+                onDemandOverrides,
                 parameters,
                 cacheParsedSources
             );
