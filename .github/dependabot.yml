@@ -61,6 +61,11 @@ updates:
       # classgraph 6.x ships Java 25 bytecode (class file 69); the 5.x line is its Java 17 build.
       - dependency-name: "io.github.classgraph:classgraph"
         versions: [">=6.0.0"]
+      # Kotlin (mockserver-client-kotlin's kotlin.version: kotlin-stdlib and kotlin-maven-plugin) is capped at
+      # the newest version the CodeQL Java/Kotlin extractor supports; a newer one is silently not analysed.
+      # Raise it when CodeQL supports a newer Kotlin (docs/operations/security.md). Module-only: not mirrored.
+      - dependency-name: "org.jetbrains.kotlin:*"
+        versions: [">=2.4.21"]
 
   # examples/java is the relocated example suite. It is deliberately NOT a module
   # of the /mockserver reactor (a `<module>../examples/java</module>` path escaped

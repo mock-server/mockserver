@@ -213,6 +213,58 @@ Returned by `when()`, provides terminal methods to define the action:
 | `withSecure(boolean)` | Enable TLS for client-to-server |
 | `withRequestOverride(HttpRequest)` | Default headers for all control-plane requests |
 
+## Kotlin DSL (`mockserver-client-kotlin`)
+
+`mockserver-client-kotlin` is a thin Kotlin layer over `MockServerClient`: builders that produce the
+Java domain objects, and extension functions that hand them to the existing client methods. It adds
+no transport, state or server behaviour, so every DSL call is equivalent to a Java client call.
+
+```mermaid
+flowchart LR
+    DSL["mockServer.expect { ... }"] --> Spec["ExpectationSpec\nRequestSpec / ResponseSpec\nForwardSpec / ErrorSpec"]
+    Spec -->|"build()"| Exp["Java Expectation\n(HttpRequest + action)"]
+    Exp --> Upsert["MockServerClient.upsert"]
+```
+
+| Kotlin API | Java equivalent |
+|------------|-----------------|
+| `MockServerClient.expect { request { } respond/forward/error { } }` | `upsert(Expectation)`, the same call `when(...).respond(...)` makes |
+| `MockServerClient.verify(times = atLeast(1)) { ... }` | `verify(HttpRequest, VerificationTimes)` |
+| `MockServerClient.verifySequence { request { }; request { } }` | `verify(RequestDefinition...)` |
+| `clear { }`, `retrieveRecordedRequests { }`, `retrieveActiveExpectations { }` | the `RequestDefinition` overloads |
+| top-level `request { }`, `response { }`, `expectation { }` | `HttpRequest`, `HttpResponse`, `Expectation` builders |
+
+**Design points.**
+
+- Every spec class carries the `@MockServerDsl` `@DslMarker`, so a nested block cannot call an outer
+  block's builder by accident (for example `respond { }` inside `request { }` does not compile).
+- An expectation must have exactly one `request { }` and exactly one action; `ExpectationSpec.build()`
+  throws `IllegalStateException` before anything is sent. `forward { }` without a `host` throws
+  `IllegalArgumentException`.
+- `customize { }` on the request and response specs runs after the DSL's own settings and exposes
+  the Java builder, so the DSL never has to mirror the whole Java model. `body(Body<*>)` accepts any
+  Java body matcher.
+- Delays and `timeToLive` are `kotlin.time.Duration`, converted to milliseconds. `timeToLive = Duration.INFINITE` means unlimited; a `timeToLive` under 1 ms, a negative value or an infinite delay throws `IllegalArgumentException`, because `TimeToLive` has millisecond granularity and `Long.MAX_VALUE` ms would overflow its end date.
+- No coroutine API: the Java client blocks, and wrapping it needs `kotlinx-coroutines`, a dependency
+  this module does not take. Callers in a coroutine use `withContext(Dispatchers.IO)`.
+
+**Build.** The module compiles with `kotlin-maven-plugin` (`jvmTarget` 17, explicit-API mode for
+main sources, in-process compiler with no daemon) from `src/main/kotlin`. `kotlin.version` in the
+module pom pins both the plugin and `kotlin-stdlib` (compile scope, because the public API exposes
+stdlib types). No other module depends on it, so the shaded `*-no-dependencies` artifacts are
+unaffected. Maven Central needs a `-javadoc.jar` and `maven-javadoc-plugin` finds no Java sources,
+so the module's `release` profile attaches one holding `src/main/javadoc/README.md`; the KDoc ships in
+the `-sources.jar`.
+
+Its test, `MockServerKotlinDslTest`, runs every DSL entry point against an embedded `ClientAndServer`.
+`mockserver-client-java` is declared first, so `mockserver-core` keeps the client's exclusions of the
+server-side engines (protobuf-java-util, Velocity, and others) and main code compiles against exactly
+the classpath consumers get; `mockserver-netty` is test scope. The embedded server needs those engines,
+so surefire's `additionalClasspathDependencies` adds `mockserver-core`'s full tree to the test run time
+only (minus the libraries the test classpath already has at the managed version).
+
+Source: `mockserver/mockserver-client-kotlin/src/main/kotlin/org/mockserver/client/kotlin/`.
+
 ## ClientAndServer
 
 `ClientAndServer` (`mockserver-netty`) combines an embedded `MockServer` with a `MockServerClient`, used by all test framework integrations:

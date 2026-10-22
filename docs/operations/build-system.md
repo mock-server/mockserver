@@ -130,7 +130,7 @@ These are the **native** transport property names. Maven 3.9 defaults to the nat
 
 ### Modules
 
-The project comprises 26 Maven reactor modules (the table also lists the standalone examples project):
+The project comprises 27 Maven reactor modules (the table also lists the standalone examples project):
 
 | Module | Packaging | Purpose |
 |--------|-----------|---------|
@@ -138,6 +138,7 @@ The project comprises 26 Maven reactor modules (the table also lists the standal
 | `mockserver-testing` | jar | Shared test utilities |
 | `mockserver-client-java` | jar | Java client API (`MockServerClient`) |
 | `mockserver-client-java-no-dependencies` | jar (shaded) | Client with all dependencies shaded |
+| `mockserver-client-kotlin` | jar | Kotlin DSL over the Java client; compiled by `kotlin-maven-plugin` (the reactor's only Kotlin module) |
 | `mockserver-core` | jar | Domain model, matching, TLS, templates, codecs, event log, action handlers |
 | `mockserver-integration-testing` | jar | Integration test base classes |
 | `mockserver-integration-testing-no-dependencies` | jar (shaded) | Integration test base classes, shaded |

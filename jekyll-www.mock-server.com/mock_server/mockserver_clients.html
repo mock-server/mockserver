@@ -1,6 +1,6 @@
 ---
 title: MockServer Clients
-description: Control MockServer from Java, JavaScript, Python, Ruby, Go, .NET, Rust, PHP, or the REST API to create expectations, verify requests, and retrieve recorded traffic.
+description: Control MockServer from Java, Kotlin, JavaScript, Python, Ruby, Go, .NET, Rust, PHP, or the REST API to create expectations, verify requests, and retrieve recorded traffic.
 layout: page
 pageOrder: 3
 section: 'Getting Started'
@@ -8,7 +8,7 @@ subsection: true
 sitemap:
   priority: 0.8
   changefreq: 'monthly'
-  lastmod: 2026-06-10T00:00:00+00:00
+  lastmod: 2026-10-22T00:00:00+00:00
 ---
 
 <p>MockServer can be controlled in the following ways:</p>
@@ -16,6 +16,7 @@ sitemap:
 <ul>
     <li><a href="#rest-api">REST API</a></li>
 	<li><a href="#java-mockserver-client">Java</a></li>
+	<li><a href="#kotlin-mockserver-client">Kotlin</a> (a DSL on top of the Java client)</li>
 	<li><a href="#javascript-mockserver-client">JavaScript</a> (both browser API & Node.js module)</li>
 	<li><a href="#python-mockserver-client">Python</a> (sync and async)</li>
 	<li><a href="#ruby-mockserver-client">Ruby</a></li>
@@ -144,6 +145,107 @@ String prometheusText = mockServerClient.scrapeMetrics();</code></pre>
 <h3>Retrieving by expectation id</h3>
 
 <p>Every <span class="inline_code">retrieve...</span> family has an <span class="inline_code">*ById(expectationId)</span> variant that scopes the result to one expectation: <span class="inline_code">retrieveActiveExpectationsById</span>, <span class="inline_code">retrieveRecordedExpectationsById</span>, <span class="inline_code">retrieveRecordedRequestsById</span>, and <span class="inline_code">retrieveRecordedRequestsAndResponsesById</span> each additionally have a <span class="inline_code">Format</span> overload for the serialized-string form; <span class="inline_code">retrieveLogMessagesById</span> (returns the joined log text as a <span class="inline_code">String</span>) and <span class="inline_code">retrieveLogMessagesArrayById</span> (the same text split into a <span class="inline_code">String[]</span>) do not take a <span class="inline_code">Format</span> — there is only the one text representation for logs.</p>
+
+<a id="kotlin-mockserver-client" class="anchor" href="#kotlin-mockserver-client">&nbsp;</a>
+
+<h2>Kotlin DSL</h2>
+
+<p><strong>mockserver-client-kotlin</strong> adds Kotlin builders and extension functions to the Java client, so
+    expectations and verifications read as Kotlin rather than as chains of Java builder calls. It works with both
+    <span class="inline_code">MockServerClient</span> and <span class="inline_code">ClientAndServer</span>, and
+    everything the Java client offers is still available on the same object.</p>
+
+<p>Install via Maven (it brings in <span class="inline_code">mockserver-client-java</span> and the Kotlin standard library):</p>
+
+<pre class="prettyprint code"><code class="code">&lt;dependency&gt;
+    &lt;groupId&gt;org.mock-server&lt;/groupId&gt;
+    &lt;artifactId&gt;mockserver-client-kotlin&lt;/artifactId&gt;
+    &lt;version&gt;{{ site.mockserver_version }}&lt;/version&gt;
+    &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+
+<p>or Gradle:</p>
+
+<pre class="prettyprint code"><code class="code">testImplementation(&quot;org.mock-server:mockserver-client-kotlin:{{ site.mockserver_version }}&quot;)</code></pre>
+
+<p>To start an embedded MockServer from a test, add <span class="inline_code">mockserver-netty</span> as well, as for the Java client.</p>
+
+<p>Create an expectation, with the request and its response on one line:</p>
+
+<pre class="prettyprint code"><code class="code">import org.mockserver.client.MockServerClient
+import org.mockserver.client.kotlin.expect
+
+val mockServer = MockServerClient(&quot;localhost&quot;, 1080)
+
+mockServer.expect { request { method = &quot;GET&quot;; path = &quot;/hello&quot; } respond { status = 200; body = &quot;world&quot; } }</code></pre>
+
+<p>or as a block, with headers, query parameters, a JSON body, a delay, a match count and a time to live:</p>
+
+<pre class="prettyprint code"><code class="code">import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import org.mockserver.matchers.Times
+
+mockServer.expect {
+    id = &quot;create-order&quot;          // a later expectation with the same id replaces this one
+    times = Times.exactly(2)
+    timeToLive = 5.minutes
+    request {
+        method = &quot;POST&quot;
+        path = &quot;/orders&quot;
+        header(&quot;X-Tenant&quot;, &quot;acme&quot;)
+        queryParameter(&quot;dryRun&quot;, &quot;false&quot;)
+        json(&quot;&quot;&quot;{ &quot;sku&quot;: &quot;abc&quot; }&quot;&quot;&quot;)    // other fields in the request body are ignored
+    }
+    respond {
+        status = 201
+        header(&quot;Location&quot;, &quot;/orders/1&quot;)
+        json(&quot;&quot;&quot;{ &quot;id&quot;: 1 }&quot;&quot;&quot;)
+        delay = 250.milliseconds
+    }
+}</code></pre>
+
+<p>Instead of <span class="inline_code">respond</span>, an expectation can <span class="inline_code">forward</span> the
+    request or produce an <span class="inline_code">error</span>:</p>
+
+<pre class="prettyprint code"><code class="code">mockServer.expect { request { path = &quot;/legacy/.*&quot; } forward { host = &quot;legacy.internal&quot;; port = 8080 } }
+mockServer.expect { request { path = &quot;/flaky&quot; } error { dropConnection = true } }</code></pre>
+
+<p>Verify requests, at least once by default, or in order:</p>
+
+<pre class="prettyprint code"><code class="code">import org.mockserver.client.kotlin.verify
+import org.mockserver.client.kotlin.verifySequence
+import org.mockserver.verify.VerificationTimes
+
+mockServer.verify { method = &quot;GET&quot;; path = &quot;/hello&quot; }
+mockServer.verify(VerificationTimes.exactly(2)) { path = &quot;/orders&quot; }
+mockServer.verify(VerificationTimes.never()) { path = &quot;/admin&quot; }
+
+mockServer.verifySequence {
+    request { path = &quot;/login&quot; }
+    request { path = &quot;/orders&quot; }
+}</code></pre>
+
+<p>Clear and retrieve take the same request block:
+    <span class="inline_code">mockServer.clear { path = &quot;/orders&quot; }</span>,
+    <span class="inline_code">mockServer.retrieveRecordedRequests { method = &quot;POST&quot; }</span> and
+    <span class="inline_code">mockServer.retrieveActiveExpectations { path = &quot;/orders&quot; }</span>.</p>
+
+<p>Anything the DSL does not cover is still one call away. <span class="inline_code">body(...)</span> accepts any
+    Java body matcher, such as <span class="inline_code">regex(...)</span> or <span class="inline_code">jsonPath(...)</span>;
+    <span class="inline_code">customize { }</span> gives you the underlying Java <span class="inline_code">HttpRequest</span>
+    or <span class="inline_code">HttpResponse</span>; and the standalone <span class="inline_code">request { }</span>,
+    <span class="inline_code">response { }</span> and <span class="inline_code">expectation { }</span> builders produce
+    Java objects for any <span class="inline_code">MockServerClient</span> method:</p>
+
+<pre class="prettyprint code"><code class="code">import org.mockserver.client.kotlin.request
+import org.mockserver.client.kotlin.response
+
+mockServer.`when`(request { path = &quot;/teapot&quot; }).respond(response { status = 418 })</code></pre>
+
+<p>An expectation needs exactly one <span class="inline_code">request { }</span> and exactly one action; the DSL
+    throws <span class="inline_code">IllegalStateException</span> before contacting MockServer if either is missing
+    or repeated. The client calls block, as the Java client's do; from a coroutine, call them inside
+    <span class="inline_code">withContext(Dispatchers.IO)</span>.</p>
 
 <a id="spring-boot-starter" class="anchor" href="#spring-boot-starter">&nbsp;</a>
 

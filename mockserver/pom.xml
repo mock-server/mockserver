@@ -143,6 +143,7 @@
         <module>mockserver-testing</module>
         <module>mockserver-client-java</module>
         <module>mockserver-client-java-no-dependencies</module>
+        <module>mockserver-client-kotlin</module>
         <module>mockserver-core</module>
         <module>mockserver-integration-testing</module>
         <module>mockserver-integration-testing-no-dependencies</module>

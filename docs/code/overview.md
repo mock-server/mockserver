@@ -11,6 +11,7 @@ mockserver-monorepo/
 │   ├── mockserver-testing/         # Shared test utilities (internal, scope=test)
 │   ├── mockserver-client-java/     # Java client library
 │   ├── mockserver-client-java-no-dependencies/        # ↑ shaded, zero transitive deps
+│   ├── mockserver-client-kotlin/                      # Kotlin DSL on top of mockserver-client-java
 │   ├── mockserver-netty/           # Netty-based HTTP server (main artifact)
 │   ├── mockserver-netty-no-dependencies/              # ↑ shaded, zero transitive deps
 │   ├── mockserver-netty-docker/                       # ↑ with JNA unrelocated: the Docker images' jar (not published)
@@ -71,6 +72,7 @@ Everything published to Maven Central under `org.mock-server` is produced by a m
 | `mockserver-core/` | `mockserver-core` | Transitive dependency of every other Java module; not consumed directly. |
 | `mockserver-testing/` | `mockserver-testing` | Internal test scope; transitive only. |
 | `mockserver-client-java/` | `mockserver-client-java` + `mockserver-client-java-no-dependencies` | Java client for the REST API. |
+| `mockserver-client-kotlin/` | `mockserver-client-kotlin` | Kotlin DSL (builders and `MockServerClient` extension functions) on top of the Java client. The reactor's only Kotlin module; see [client-and-integrations.md](client-and-integrations.md#kotlin-dsl-mockserver-client-kotlin). |
 | `mockserver-netty/` | `mockserver-netty` + `mockserver-netty-no-dependencies` + `mockserver-netty:jar-with-dependencies` | Main HTTP server. The `jar-with-dependencies` classifier is the executable uber-jar (assembly plugin, not shade). |
 | `mockserver-war/` | `mockserver-war` | Servlet WAR (mock mode). |
 | `mockserver-proxy-war/` | `mockserver-proxy-war` | Servlet WAR (proxy mode). |

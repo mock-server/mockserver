@@ -196,6 +196,27 @@ Dependencies introduced by `mockserver-state-infinispan`, which provides the Inf
 
 The `ExpectationEntry` uses custom `writeObject`/`readObject` to serialize the `Expectation` as its JSON string (via `ExpectationDTO`), avoiding the need for the entire domain model to implement `Serializable`. The LOCAL-mode path retains the `".*"` wildcard because heap-only storage never deserializes untrusted bytes.
 
+### Kotlin DSL Dependencies (Optional Module)
+
+`mockserver-client-kotlin` is the only Kotlin module. Nothing else in the reactor depends on it, so the Kotlin
+artifacts never reach `mockserver-core`, the Java client, the server jars or the shaded `*-no-dependencies` artifacts.
+
+| Dependency | Version | Module | Purpose | Java 17 compatible |
+|------------|---------|--------|---------|:---:|
+| `org.jetbrains.kotlin:kotlin-stdlib` | 2.4.20 | `mockserver-client-kotlin` (compile) | Kotlin standard library; compile scope because the DSL's public API uses stdlib types (lambdas, `kotlin.time.Duration`). Brings `org.jetbrains:annotations:13.0`. | Yes (Java 8 bytecode) |
+| `org.jetbrains.kotlin:kotlin-maven-plugin` | 2.4.20 | `mockserver-client-kotlin` (build) | Kotlin compiler for Maven, run in-process (`kotlin.compiler.daemon=false`) with `jvmTarget` 17. | Yes (runs on JDK 17) |
+
+Both come from the module's `kotlin.version` property, so a Dependabot bump moves them together.
+
+**Ceiling: CodeQL's supported Kotlin range (`< 2.4.21`).** The CodeQL Java/Kotlin extractor supports only a range
+of Kotlin compiler versions (Kotlin 1.8.0 to 2.4.20 when this module was added), and the CodeQL workflow compiles
+this module with the rest of `mockserver/`; a newer Kotlin can leave the module unanalysed without failing anything.
+The `/mockserver` block of `.github/dependabot.yml` therefore ignores `org.jetbrains.kotlin:*` `>=2.4.21`. To raise
+it, check the new version against the
+[supported languages page](https://codeql.github.com/docs/codeql-overview/supported-languages-and-frameworks/) and
+the CodeQL bundle pinned in `.github/workflows/codeql-analysis.yml`, then move the ignore and `kotlin.version`
+together.
+
 ### Cloud Blob Store Dependencies (Optional Modules)
 
 Dependencies introduced by the cloud blob store modules, which provide durable `BlobStore` implementations for S3, GCS, and Azure Blob Storage. Each module is **optional** -- it is not pulled into `mockserver-core` or any other module. mockserver-core has **zero** compile-time or runtime dependencies on any cloud SDK; the cloud modules self-register via reflection when present on the classpath. Their transitive dependencies enter CodeQL/Dependabot scan scope only when the module is included in the reactor build.

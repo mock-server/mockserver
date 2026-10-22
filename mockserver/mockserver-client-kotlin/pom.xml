@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.mock-server</groupId>
+        <artifactId>mockserver</artifactId>
+        <version>9.1.1-SNAPSHOT</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>mockserver-client-kotlin</artifactId>
+
+    <name>MockServer Kotlin Client DSL</name>
+    <description>Idiomatic Kotlin builders and extension functions on top of the MockServer Java client</description>
+    <url>https://www.mock-server.com</url>
+
+    <properties>
+        <module.name>org.mockserver.client.kotlin</module.name>
+        <!-- kotlin-maven-plugin and kotlin-stdlib must stay on the same version -->
+        <kotlin.version>2.4.20</kotlin.version>
+        <!-- compile in-process so no Kotlin daemon outlives the build (CI containers, local runs) -->
+        <kotlin.compiler.daemon>false</kotlin.compiler.daemon>
+    </properties>
+
+    <dependencies>
+        <!-- mockserver: the client comes first, so mockserver-core keeps the client's exclusions of the
+             server-side engines and main code compiles against exactly what consumers get -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>mockserver-client-java</artifactId>
+        </dependency>
+
+        <!-- kotlin: compile scope because the DSL's public API exposes stdlib types (lambdas, Duration) -->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+
+        <!-- test: the embedded server; the engines it needs at run time are added by surefire below -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>mockserver-netty</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
+        <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory>
+        <plugins>
+            <!-- The embedded server needs the engines (protobuf-java-util, Velocity, ...) that
+                 mockserver-client-java excludes from mockserver-core; adding core's full tree to the test
+                 run time only keeps them off the main and test compile classpaths. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <additionalClasspathDependencies>
+                        <additionalClasspathDependency>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>mockserver-core</artifactId>
+                            <version>${project.version}</version>
+                            <!-- resolved without dependencyManagement, so drop what the test classpath
+                                 already has at the managed version -->
+                            <exclusions>
+                                <exclusion>
+                                    <groupId>tools.jackson.core</groupId>
+                                    <artifactId>*</artifactId>
+                                </exclusion>
+                                <exclusion>
+                                    <groupId>tools.jackson.dataformat</groupId>
+                                    <artifactId>*</artifactId>
+                                </exclusion>
+                                <exclusion>
+                                    <groupId>org.reactivestreams</groupId>
+                                    <artifactId>*</artifactId>
+                                </exclusion>
+                                <exclusion>
+                                    <groupId>org.ow2.asm</groupId>
+                                    <artifactId>*</artifactId>
+                                </exclusion>
+                                <exclusion>
+                                    <groupId>commons-logging</groupId>
+                                    <artifactId>*</artifactId>
+                                </exclusion>
+                                <exclusion>
+                                    <groupId>org.jspecify</groupId>
+                                    <artifactId>*</artifactId>
+                                </exclusion>
+                            </exclusions>
+                        </additionalClasspathDependency>
+                    </additionalClasspathDependencies>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <configuration>
+                    <jvmTarget>${maven.compiler.target}</jvmTarget>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <args>
+                                <!-- every public declaration needs an explicit visibility and return type -->
+                                <arg>-Xexplicit-api=strict</arg>
+                            </args>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!-- Maven Central requires a -javadoc.jar, and maven-javadoc-plugin (parent release profile)
+             finds no Java sources here, so attach one holding a README that points at the docs. -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>javadoc-readme-jar</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <classifier>javadoc</classifier>
+                                    <classesDirectory>${project.basedir}/src/main/javadoc</classesDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>
