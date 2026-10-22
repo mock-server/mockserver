@@ -1,6 +1,7 @@
 package org.mockserver.templates.engine.helpers;
 
 import net.datafaker.Faker;
+import net.datafaker.service.RandomService;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.slf4j.event.Level;
@@ -65,7 +66,7 @@ public class TemplateFaker extends Faker {
     }
 
     private TemplateFaker(String supportedTag, TemplateFaker root) {
-        super(toLocale(supportedTag), root.seed != null ? new Random(root.seed) : new Random());
+        super(toLocale(supportedTag), root.seed != null ? new RandomService(new Random(root.seed)) : new RandomService());
         this.seed = root.seed;
         this.root = root;
         this.localeFakers = root.localeFakers;
