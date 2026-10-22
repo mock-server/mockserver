@@ -15,6 +15,7 @@ public class JsonSchemaRequestDefinitionValidator extends JsonSchemaValidator {
             "org/mockserver/model/schema/",
             "requestDefinition",
             "conditionalRequestDefinition",
+            "anyOfRequestDefinition",
             "httpRequest",
             "stringOrJsonSchema",
             "openAPIDefinition",

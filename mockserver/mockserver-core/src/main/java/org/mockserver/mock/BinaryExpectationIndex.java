@@ -1,5 +1,6 @@
 package org.mockserver.mock;
 
+import org.mockserver.model.AnyOfRequestDefinition;
 import org.mockserver.model.BinaryRequestDefinition;
 import org.mockserver.model.ConditionalRequestDefinition;
 import org.mockserver.model.RequestDefinition;
@@ -13,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Which binary messages the registered expectations could match, so that a proxied binary message no expectation
  * can match skips the matcher pass. Of the request definitions, a {@link BinaryRequestDefinition} matches a binary
  * message only when their bytes are equal, unless it has no bytes or is negated, and a
- * {@link ConditionalRequestDefinition} may match any message; no other kind matches one.
+ * {@link ConditionalRequestDefinition} or {@link AnyOfRequestDefinition} may match any message; no other kind matches one.
  * <p>
  * Kept by expectation id off the expectation store's mutation listener, and read lock-free. It errs towards "may
  * match": a wrong yes costs one matcher pass, while a wrong no would lose a match.
@@ -46,7 +47,7 @@ final class BinaryExpectationIndex {
                 });
             }
             binaryIds.add(id);
-        } else if (requestDefinition instanceof ConditionalRequestDefinition) {
+        } else if (requestDefinition instanceof ConditionalRequestDefinition || requestDefinition instanceof AnyOfRequestDefinition) {
             matchAnyIds.add(id);
         }
     }

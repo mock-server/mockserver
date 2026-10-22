@@ -361,6 +361,24 @@ public class GeneratedJavaCodeRoundTripTest {
             .withGraphqlNullifyData(false);
     }
 
+    @Test
+    public void shouldRecreateAnyOfRequestMatcherWithEveryBranchKind() throws Exception {
+        assertRecreated(new Expectation(AnyOfRequestDefinition.requestAnyOf(
+            request().withMethod("GET").withPath("/pets"),
+            ConditionalRequestDefinition.requestIf(request().withMethod("POST"), request().withPath("/orders"), request().withPath("/other")),
+            AnyOfRequestDefinition.requestAnyOf(request().withPath("/admin/.*")).withNot(true)
+        )).thenRespond(response().withBody("either")));
+    }
+
+    @Test
+    public void shouldRecreateConditionalRequestMatcherWithAnAbsentThenBranch() throws Exception {
+        assertRecreated(new Expectation(Not.not(ConditionalRequestDefinition.requestIf(
+            request().withMethod("GET"),
+            null,
+            AnyOfRequestDefinition.requestAnyOf(request().withPath("/a"), request().withPath("/b"))
+        ))).thenRespond(response().withBody("conditional")));
+    }
+
     private static void assertRecreated(Expectation original) throws Exception {
         boolean idSet = original.hasId();
         String generatedCode = new ExpectationToJavaSerializer().serialize(2, original);

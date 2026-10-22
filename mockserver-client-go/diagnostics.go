@@ -70,6 +70,25 @@ type ExplainedExpectation struct {
 	DifferingFieldCount *int                `json:"differingFieldCount,omitempty"`
 	Differences         map[string][]string `json:"differences,omitempty"`
 	Remediation         map[string]string   `json:"remediation,omitempty"`
+	// AnyOf is set only for an anyOf request matcher that does not match: how
+	// each branch compared. Differences are then the closest branch's.
+	AnyOf *AnyOfBranchComparison `json:"anyOf,omitempty"`
+}
+
+// AnyOfBranchComparison is which branch of an anyOf request matcher came
+// closest to the request (ClosestBranch, 0-based, the earlier on a tie) and how
+// each branch differed.
+type AnyOfBranchComparison struct {
+	ClosestBranch int           `json:"closestBranch"`
+	Branches      []AnyOfBranch `json:"branches,omitempty"`
+}
+
+// AnyOfBranch is how one branch of an anyOf request matcher compared.
+type AnyOfBranch struct {
+	Branch              int      `json:"branch"`
+	Matches             bool     `json:"matches"`
+	DifferingFieldCount int      `json:"differingFieldCount"`
+	DifferingFields     []string `json:"differingFields,omitempty"`
 }
 
 // ExplainedRequest is the recorded request that Explain re-checked.

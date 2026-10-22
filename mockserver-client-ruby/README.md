@@ -219,6 +219,19 @@ MockServer::HttpRequest.new(path: '/internal').with_client_ip('10.0.0.0/8')
 # or MockServer::HttpRequest.new(path: '/internal', client_ip: '!10.0.0.0/8')
 ```
 
+## Any-of (logical OR) matcher
+
+`MockServer::AnyOfRequestDefinition` matches a request when any one of its request matchers does, tried in order. Entries may be `HttpRequest`, `OpenAPIDefinition`, `ConditionalRequestDefinition` or a nested `AnyOfRequestDefinition`; `not_any_of: true` matches requests that match none of them. `ExplainedExpectation#any_of` says which entry came closest when none matches.
+
+```ruby
+client.when(
+  MockServer::AnyOfRequestDefinition.new(
+    any_of: [MockServer::HttpRequest.new(method: 'GET', path: '/pets'),
+             MockServer::HttpRequest.new(method: 'GET', path: '/animals')]
+  )
+).respond(MockServer::HttpResponse.new(body: 'pets or animals'))
+```
+
 ## LLM Mocking
 
 Fluent builders under `MockServer::LLM` mock LLM provider endpoints. They produce

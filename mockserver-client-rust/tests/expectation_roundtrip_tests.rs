@@ -964,3 +964,63 @@ fn client_ip_round_trip() {
     let unset = serde_json::to_value(HttpRequest::new().path("/x")).unwrap();
     assert!(unset.get("clientIp").is_none());
 }
+
+#[test]
+fn any_of_round_trip() {
+    let exp = round_trip_expectation(
+        &json!({
+            "httpRequest": {
+                "not": true,
+                "anyOf": [
+                    { "method": "GET", "path": "/pets" },
+                    { "specUrlOrPayload": "https://example.com/spec.json", "operationId": "listPets" },
+                    { "if": { "method": "POST" }, "then": { "path": "/orders" } },
+                    { "not": true, "anyOf": [ { "path": "/admin/.*" }, { "path": "/internal/.*" } ] }
+                ]
+            },
+            "httpResponse": { "statusCode": 200 }
+        })
+        .to_string(),
+    );
+    let branches = exp
+        .http_request
+        .as_ref()
+        .and_then(|r| r.any_of_value())
+        .expect("anyOf branches");
+    assert_eq!(branches.len(), 4);
+    assert_eq!(branches[0].path.as_deref(), Some("/pets"));
+    assert!(branches[2].if_request.is_some());
+    assert_eq!(
+        branches[3].any_of_value().map(|nested| nested.len()),
+        Some(2)
+    );
+}
+
+#[test]
+fn any_of_builder_matches_wire_form() {
+    let request = HttpRequest::any_of([
+        HttpRequest::new().path("/a"),
+        HttpRequest::new().method("POST").path("/b"),
+    ])
+    .not(true);
+    let out = serde_json::to_value(&request).unwrap();
+    assert_eq!(
+        out,
+        json!({ "not": true, "anyOf": [ { "path": "/a" }, { "method": "POST", "path": "/b" } ] })
+    );
+    let back: HttpRequest = serde_json::from_value(out).unwrap();
+    assert_eq!(back, request);
+    assert!(HttpRequest::new().path("/x").any_of_value().is_none());
+}
+
+#[test]
+fn empty_any_of_is_sent_for_the_server_to_reject() {
+    // {} would match every request; "anyOf": [] is rejected by the server
+    let request = HttpRequest::any_of(Vec::<HttpRequest>::new());
+    assert_eq!(serde_json::to_value(&request).unwrap(), json!({ "anyOf": [] }));
+    let exp = round_trip_expectation(&json!({ "httpRequest": { "anyOf": [] } }).to_string());
+    assert_eq!(
+        exp.http_request.and_then(|r| r.any_of_value()).map(|b| b.len()),
+        Some(0)
+    );
+}

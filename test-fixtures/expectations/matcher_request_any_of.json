@@ -1,0 +1,34 @@
+{
+  "httpRequest": {
+    "anyOf": [
+      {
+        "method": "GET",
+        "path": "/pets"
+      },
+      {
+        "method": "POST",
+        "path": "/pets",
+        "headers": {
+          "X-Tenant": [
+            "acme"
+          ]
+        }
+      },
+      {
+        "not": true,
+        "anyOf": [
+          {
+            "path": "/admin/.*"
+          },
+          {
+            "path": "/internal/.*"
+          }
+        ]
+      }
+    ]
+  },
+  "httpResponse": {
+    "statusCode": 200,
+    "body": "matched one of the alternatives"
+  }
+}

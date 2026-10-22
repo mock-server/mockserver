@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.fixture.SensitiveValueMatcher;
+import org.mockserver.matchers.AnyOfRequestMatcher;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.matchers.LlmConversationMatcher;
 import org.mockserver.matchers.MatchDifference;
@@ -68,7 +69,40 @@ final class RequestMatchExplainer {
                 result.set("remediation", remediationNode);
             }
         }
+        if (!matches) {
+            addAnyOfBranches(objectMapper, result, matcher, clonedRequest);
+        }
         return result;
+    }
+
+    /**
+     * For an anyOf request matcher that did not match, adds which branch came closest and how many fields each
+     * branch differed on, so a user can see which alternative to fix. The top-level differences are the closest
+     * branch's.
+     */
+    static void addAnyOfBranches(ObjectMapper objectMapper, ObjectNode result, HttpRequestMatcher matcher, HttpRequest request) {
+        if (!(matcher instanceof AnyOfRequestMatcher anyOfMatcher)) {
+            return;
+        }
+        List<AnyOfRequestMatcher.BranchComparison> comparisons = anyOfMatcher.compareBranches(request.clone(), true);
+        if (comparisons.isEmpty()) {
+            return;
+        }
+        ObjectNode anyOf = objectMapper.createObjectNode();
+        anyOf.put("closestBranch", AnyOfRequestMatcher.closestBranch(comparisons));
+        ArrayNode branches = anyOf.putArray("branches");
+        for (int i = 0; i < comparisons.size(); i++) {
+            AnyOfRequestMatcher.BranchComparison comparison = comparisons.get(i);
+            ObjectNode branch = branches.addObject();
+            branch.put("branch", i);
+            branch.put("matches", comparison.matches());
+            branch.put("differingFieldCount", comparison.getDifferences().size());
+            ArrayNode fields = branch.putArray("differingFields");
+            for (MatchDifference.Field field : comparison.getDifferences().keySet()) {
+                fields.add(field.getName());
+            }
+        }
+        result.set("anyOf", anyOf);
     }
 
     private static ObjectNode expectationSummary(ObjectMapper objectMapper, Expectation expectation) {

@@ -210,6 +210,35 @@ public sealed class ExplainedExpectation
     /// <see cref="MockServerClient.ExplainUnmatched"/> with <c>suggestFixes</c>, otherwise null.
     /// </summary>
     public SuggestedFix? SuggestedFix { get; set; }
+    /// <summary>
+    /// For an anyOf request matcher that does not match, how each branch compared; the differences are then
+    /// the closest branch's. Null otherwise.
+    /// </summary>
+    public AnyOfBranchComparison? AnyOf { get; set; }
+}
+
+/// <summary>
+/// Which branch of an anyOf request matcher came closest to the request, and how each branch differed.
+/// </summary>
+public sealed class AnyOfBranchComparison
+{
+    /// <summary>The 0-based index of the branch with the fewest differing fields, the earlier on a tie.</summary>
+    public int ClosestBranch { get; set; }
+    /// <summary>How each branch compared, in anyOf order.</summary>
+    public List<AnyOfBranch> Branches { get; set; } = new();
+}
+
+/// <summary>How one branch of an anyOf request matcher compared with the request.</summary>
+public sealed class AnyOfBranch
+{
+    /// <summary>The 0-based index of the branch in anyOf.</summary>
+    public int Branch { get; set; }
+    /// <summary>Whether the branch matches the request.</summary>
+    public bool Matches { get; set; }
+    /// <summary>How many fields of the branch differ.</summary>
+    public int DifferingFieldCount { get; set; }
+    /// <summary>The names of the differing fields.</summary>
+    public List<string> DifferingFields { get; set; } = new();
 }
 
 /// <summary>

@@ -298,6 +298,17 @@ mockServerClient("localhost", 1080).mockAnyResponse({
 });
 ```
 
+### Any-of (logical OR) matcher
+
+Match a request that satisfies any one of several request matchers with an `httpRequest` holding `anyOf` (typed as `AnyOfRequestDefinition`). Entries may be request fields, OpenAPI matchers, conditionals or nested `anyOf`s; add `not: true` to match requests that match none of them.
+
+```js
+mockServerClient("localhost", 1080).mockAnyResponse({
+    httpRequest: { anyOf: [{ method: "GET", path: "/pets" }, { method: "GET", path: "/animals" }] },
+    httpResponse: { body: "pets or animals" }
+});
+```
+
 ### Diagnose Matching
 
 `explain(correlationId)` tells you which expectation would serve a recorded request now and why

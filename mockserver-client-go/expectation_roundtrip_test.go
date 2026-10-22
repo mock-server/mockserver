@@ -3,6 +3,7 @@ package mockserver
 import (
 	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -801,5 +802,111 @@ func TestClientIPRoundTrip(t *testing.T) {
 	unset, _ := json.Marshal(Request().Path("/x").Build())
 	if string(unset) != `{"path":"/x"}` {
 		t.Errorf("clientIp should be omitted when unset: %s", unset)
+	}
+}
+
+// TestAnyOfRequestRoundTrip covers an anyOf matcher whose branches are an HTTP
+// matcher, an OpenAPI matcher, a conditional and a nested, negated anyOf.
+func TestAnyOfRequestRoundTrip(t *testing.T) {
+	fixture := `{
+      "httpRequest": {
+        "not": true,
+        "anyOf": [
+          {"method": "GET", "path": "/pets"},
+          {"specUrlOrPayload": "file:///specs/pets.yaml", "operationId": "listPets"},
+          {"if": {"method": "POST"}, "then": {"path": "/orders"}},
+          {"not": true, "anyOf": [{"path": "/admin/.*"}, {"path": "/internal/.*"}]}
+        ]
+      },
+      "httpResponse": {"statusCode": 200}
+    }`
+	assertRoundTrip(t, fixture)
+
+	var exp Expectation
+	if err := json.Unmarshal([]byte(fixture), &exp); err != nil {
+		t.Fatal(err)
+	}
+	req := exp.HttpRequest
+	if req.Not == nil || !*req.Not || len(req.AnyOf) != 4 {
+		t.Fatalf("anyOf matcher not read: %+v", req)
+	}
+	if req.AnyOf[0].Path != "/pets" || req.AnyOf[1].OperationId != "listPets" || req.AnyOf[2].If == nil {
+		t.Errorf("anyOf branches not read: %+v", req.AnyOf)
+	}
+	if nested := req.AnyOf[3]; nested.Not == nil || !*nested.Not || len(nested.AnyOf) != 2 || nested.AnyOf[1].Path != "/internal/.*" {
+		t.Errorf("nested anyOf not read: %+v", nested)
+	}
+}
+
+// TestAnyOfRequestBuilderMatchesConstructor proves the fluent AnyOf builder
+// writes the same JSON as AnyOfRequest, and a plain matcher gains no anyOf key.
+func TestAnyOfRequestBuilderMatchesConstructor(t *testing.T) {
+	built, err := json.Marshal(Request().AnyOf(Request().Path("/a"), Request().Method("POST").Path("/b")).Build())
+	if err != nil {
+		t.Fatal(err)
+	}
+	constructed, err := json.Marshal(AnyOfRequest(&HttpRequest{Path: "/a"}, &HttpRequest{Method: "POST", Path: "/b"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := decodeJSON(t, []byte(`{"anyOf": [{"path": "/a"}, {"method": "POST", "path": "/b"}]}`))
+	if !reflect.DeepEqual(want, decodeJSON(t, built)) || !reflect.DeepEqual(want, decodeJSON(t, constructed)) {
+		t.Errorf("builder %s or constructor %s != %v", built, constructed, want)
+	}
+	plain, err := json.Marshal(Request().Path("/x").Build())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(plain), "anyOf") {
+		t.Errorf("plain request gained anyOf: %s", plain)
+	}
+}
+
+// TestExplainedExpectationReadsAnyOfBranches proves the diagnostics model reads
+// which anyOf branch came closest.
+func TestExplainedExpectationReadsAnyOfBranches(t *testing.T) {
+	var explained ExplainedExpectation
+	if err := json.Unmarshal([]byte(`{"expectationId": "any-of", "anyOf": {"closestBranch": 1, "branches": [
+      {"branch": 0, "matches": false, "differingFieldCount": 2, "differingFields": ["method", "path"]},
+      {"branch": 1, "matches": false, "differingFieldCount": 1, "differingFields": ["headers"]}]}}`), &explained); err != nil {
+		t.Fatal(err)
+	}
+	if explained.AnyOf == nil || explained.AnyOf.ClosestBranch != 1 || len(explained.AnyOf.Branches) != 2 ||
+		explained.AnyOf.Branches[1].DifferingFields[0] != "headers" {
+		t.Errorf("anyOf branches not read: %+v", explained.AnyOf)
+	}
+}
+
+// TestEmptyAnyOfIsSentNotDropped proves an empty anyOf reaches the server as
+// "anyOf": [], which it rejects, rather than collapsing to {}, which matches
+// every request; an unset AnyOf is still left out.
+func TestEmptyAnyOfIsSentNotDropped(t *testing.T) {
+	for name, req := range map[string]HttpRequest{
+		"constructor":  *AnyOfRequest(),
+		"builder":      Request().AnyOf().Build(),
+		"empty slice":  {AnyOf: []*HttpRequest{}},
+		"spread empty": *AnyOfRequest([]*HttpRequest{}...),
+	} {
+		out, err := json.Marshal(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(out) != `{"anyOf":[]}` {
+			t.Errorf("%s: empty anyOf marshalled to %s", name, out)
+		}
+		var back HttpRequest
+		if err := json.Unmarshal(out, &back); err != nil {
+			t.Fatal(err)
+		}
+		if back.AnyOf == nil || len(back.AnyOf) != 0 {
+			t.Errorf("%s: empty anyOf not read back as empty: %#v", name, back.AnyOf)
+		}
+	}
+	out, err := json.Marshal(HttpRequest{Path: "/x"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(out) != `{"path":"/x"}` {
+		t.Errorf("unset anyOf was sent: %s", out)
 	}
 }

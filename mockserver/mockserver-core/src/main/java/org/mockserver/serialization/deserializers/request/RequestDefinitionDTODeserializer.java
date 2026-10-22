@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.*;
+import org.mockserver.serialization.model.AnyOfRequestDefinitionDTO;
 import org.mockserver.serialization.model.BinaryRequestDefinitionDTO;
 import org.mockserver.serialization.model.BodyDTO;
 import org.mockserver.serialization.model.ConditionalRequestDefinitionDTO;
@@ -17,6 +18,7 @@ import org.mockserver.serialization.model.OpenAPIDefinitionDTO;
 import org.mockserver.serialization.model.RequestDefinitionDTO;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -67,6 +69,7 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
             RequestDefinitionDTO conditionalThen = null;
             RequestDefinitionDTO conditionalElse = null;
             boolean hasConditionalIf = false;
+            List<RequestDefinitionDTO> anyOf = null;
             while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                 String fieldName = jsonParser.currentName();
                 if (fieldName != null) {
@@ -258,10 +261,20 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                             conditionalElse = ctxt.readValue(jsonParser, RequestDefinitionDTO.class);
                             break;
                         }
+                        case "anyOf": {
+                            jsonParser.nextToken();
+                            RequestDefinitionDTO[] branches = ctxt.readValue(jsonParser, RequestDefinitionDTO[].class);
+                            anyOf = branches != null ? new ArrayList<>(Arrays.asList(branches)) : new ArrayList<>();
+                            break;
+                        }
                     }
                 }
             }
-            if (hasConditionalIf) {
+            if (anyOf != null) {
+                return (RequestDefinitionDTO) new AnyOfRequestDefinitionDTO()
+                    .setAnyOf(anyOf)
+                    .setNot(not);
+            } else if (hasConditionalIf) {
                 return (RequestDefinitionDTO) new ConditionalRequestDefinitionDTO()
                     .setIf(conditionalIf)
                     .setThen(conditionalThen)

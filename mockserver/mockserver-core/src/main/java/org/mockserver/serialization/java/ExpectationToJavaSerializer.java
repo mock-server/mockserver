@@ -2,7 +2,9 @@ package org.mockserver.serialization.java;
 
 import org.mockserver.mock.Expectation;
 import org.mockserver.model.Action;
+import org.mockserver.model.AnyOfRequestDefinition;
 import org.mockserver.model.CaptureRule;
+import org.mockserver.model.ConditionalRequestDefinition;
 import org.mockserver.model.CrossProtocolScenario;
 import org.mockserver.model.ExpectationStep;
 import org.mockserver.model.HttpChaosProfile;
@@ -15,6 +17,7 @@ import org.mockserver.model.RequestDefinition;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -88,12 +91,7 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
             String forward = upsert ? ".thenForward(" : ".forward(";
             String error = upsert ? ".thenError(" : ".error(";
             String respondWith = upsert ? ".thenRespondWith" : ".respondWith";
-            RequestDefinition requestDefinition = expectation.getHttpRequest();
-            if (requestDefinition instanceof HttpRequest) {
-                new HttpRequestToJavaSerializer().write(indent + 1, (HttpRequest) requestDefinition, output);
-            } else if (requestDefinition instanceof OpenAPIDefinition) {
-                output.append(new OpenAPIMatcherToJavaSerializer().serialize(indent + 1, (OpenAPIDefinition) requestDefinition));
-            }
+            writeRequestDefinition(indent + 1, expectation.getHttpRequest(), output);
             output.append(",");
             if (expectation.getTimes() != null) {
                 output.append(new TimesToJavaSerializer().serialize(indent + 1, expectation.getTimes()));
@@ -368,6 +366,52 @@ public class ExpectationToJavaSerializer implements ToJavaSerializer<Expectation
             appendNewLineAndIndent((numberOfSpacesToIndent + 2) * INDENT_SIZE, output).append(".withPrimary(true)");
         }
         appendNewLineAndIndent(numberOfSpacesToIndent * INDENT_SIZE, output).append(")");
+    }
+
+    private void writeRequestDefinition(int indent, RequestDefinition requestDefinition, JavaCode output) {
+        if (requestDefinition instanceof HttpRequest) {
+            new HttpRequestToJavaSerializer().write(indent, (HttpRequest) requestDefinition, output);
+        } else if (requestDefinition instanceof OpenAPIDefinition) {
+            output.append(new OpenAPIMatcherToJavaSerializer().serialize(indent, (OpenAPIDefinition) requestDefinition));
+        } else if (requestDefinition instanceof AnyOfRequestDefinition) {
+            AnyOfRequestDefinition anyOf = (AnyOfRequestDefinition) requestDefinition;
+            appendNewLineAndIndent(indent * INDENT_SIZE, output)
+                .append(anyOf.isNot() ? "org.mockserver.model.Not.not(" : "")
+                .append("org.mockserver.model.AnyOfRequestDefinition.requestAnyOf(");
+            List<RequestDefinition> branches = anyOf.getAnyOf();
+            for (int i = 0; i < branches.size(); i++) {
+                writeBranch(indent + 1, branches.get(i), output);
+                if (i < branches.size() - 1) {
+                    output.append(",");
+                }
+            }
+            appendNewLineAndIndent(indent * INDENT_SIZE, output).append(anyOf.isNot() ? "))" : ")");
+        } else if (requestDefinition instanceof ConditionalRequestDefinition) {
+            ConditionalRequestDefinition conditional = (ConditionalRequestDefinition) requestDefinition;
+            List<RequestDefinition> branches = new ArrayList<>(Arrays.asList(conditional.getIf(), conditional.getThen(), conditional.getElse()));
+            while (branches.size() > 1 && branches.get(branches.size() - 1) == null) {
+                branches.remove(branches.size() - 1);
+            }
+            appendNewLineAndIndent(indent * INDENT_SIZE, output)
+                .append(conditional.isNot() ? "org.mockserver.model.Not.not(" : "")
+                .append("org.mockserver.model.ConditionalRequestDefinition.requestIf(");
+            for (int i = 0; i < branches.size(); i++) {
+                writeBranch(indent + 1, branches.get(i), output);
+                if (i < branches.size() - 1) {
+                    output.append(",");
+                }
+            }
+            appendNewLineAndIndent(indent * INDENT_SIZE, output).append(conditional.isNot() ? "))" : ")");
+        }
+    }
+
+    private void writeBranch(int indent, RequestDefinition branch, JavaCode output) {
+        if (branch instanceof HttpRequest || branch instanceof OpenAPIDefinition || branch instanceof AnyOfRequestDefinition || branch instanceof ConditionalRequestDefinition) {
+            writeRequestDefinition(indent, branch, output);
+        } else {
+            // an absent branch, or one with no Java form, keeps the argument list compilable
+            appendNewLineAndIndent(indent * INDENT_SIZE, output).append("null");
+        }
     }
 
     private JavaCode appendNewLineAndIndent(int numberOfSpacesToIndent, JavaCode output) {

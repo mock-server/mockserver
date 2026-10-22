@@ -18,6 +18,7 @@ from mockserver.exceptions import (
 )
 from mockserver.fluent import ForwardChainExpectation
 from mockserver.models import (
+    AnyOfRequestDefinition,
     ConditionalRequestDefinition,
     DebugMismatchResult,
     DnsRequestDefinition,
@@ -1231,7 +1232,7 @@ class AsyncMockServerClient:
 
     async def verify(
         self,
-        request: HttpRequest | ConditionalRequestDefinition | None = None,
+        request: HttpRequest | ConditionalRequestDefinition | AnyOfRequestDefinition | None = None,
         times: VerificationTimes | None = None,
         *,
         response: HttpResponse | None = None,
@@ -1248,7 +1249,7 @@ class AsyncMockServerClient:
 
     async def verify_sequence(
         self,
-        *requests: HttpRequest | ConditionalRequestDefinition,
+        *requests: HttpRequest | ConditionalRequestDefinition | AnyOfRequestDefinition,
         responses: list[HttpResponse] | None = None,
     ) -> None:
         verification = VerificationSequence(
@@ -1665,7 +1666,7 @@ class AsyncMockServerClient:
 
     def when(
         self,
-        request: HttpRequest | ConditionalRequestDefinition,
+        request: HttpRequest | ConditionalRequestDefinition | AnyOfRequestDefinition,
         times: Times | None = None,
         time_to_live: TimeToLive | None = None,
         priority: int | None = None,

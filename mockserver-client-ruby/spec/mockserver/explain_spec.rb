@@ -263,7 +263,7 @@ RSpec.describe MockServer::Client do
     end
 
     %w[ExplainedExpectation SuggestedFix DebugMismatchResult ClosestMatch ExplainUnmatchedResult UnmatchedRequest
-       ExplanationNarration].each do |name|
+       ExplanationNarration AnyOfBranchComparison].each do |name|
       it "#{name} reads every schema property" do
         expect(readers(MockServer.const_get(name)))
           .to eq(schemas[name]['properties'].keys.map { |k| snake(k) }.sort)

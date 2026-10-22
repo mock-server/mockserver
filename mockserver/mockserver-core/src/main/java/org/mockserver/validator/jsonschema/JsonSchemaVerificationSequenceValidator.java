@@ -17,6 +17,7 @@ public class JsonSchemaVerificationSequenceValidator extends JsonSchemaValidator
             "expectationId",
             "requestDefinition",
             "conditionalRequestDefinition",
+            "anyOfRequestDefinition",
             "openAPIDefinition",
             "binaryRequestDefinition",
             "dnsRequestDefinition",

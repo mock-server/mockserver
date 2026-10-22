@@ -187,6 +187,11 @@ export interface DebugMismatchExpectationResult {
   matchedFieldCount: number;
   totalFieldCount: number;
   differences?: Record<string, string[]>;
+  /** An anyOf request matcher that does not match: which branch came closest; differences are that branch's. */
+  anyOf?: {
+    closestBranch: number;
+    branches: { branch: number; matches: boolean; differingFieldCount: number; differingFields: string[] }[];
+  };
 }
 
 export interface DebugMismatchClosestMatch {

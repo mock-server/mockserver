@@ -212,6 +212,20 @@ Match requests by the client IP address or CIDR range, IPv4 or IPv6. The client 
 req := mockserver.Request().Path("/internal").ClientIP("10.0.0.0/8")
 ```
 
+#### Any-of (logical OR) matcher
+
+`AnyOfRequest(...)` (or `RequestBuilder.AnyOf(...)`) matches a request when any one of its branches does, tried in order; set `Not` to match requests that match none of them. A branch is any `*HttpRequest`, including an OpenAPI matcher, a conditional or another anyOf. `ExplainedExpectation.AnyOf` says which branch came closest when none matches.
+
+```go
+client.Upsert(mockserver.Expectation{
+    HttpRequest: mockserver.AnyOfRequest(
+        &mockserver.HttpRequest{Method: "GET", Path: "/pets"},
+        &mockserver.HttpRequest{Method: "GET", Path: "/animals"},
+    ),
+    HttpResponse: &mockserver.HttpResponse{Body: "pets or animals"},
+})
+```
+
 #### allOf body matcher
 
 Require every nested body matcher to match with `AllOfBody(...)` (or the standalone

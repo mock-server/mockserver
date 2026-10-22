@@ -836,7 +836,8 @@ public abstract class AbstractControlPlaneIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  9 errors:" + NEW_LINE +
+            "  10 errors:" + NEW_LINE +
+            "   - $.anyOf: is missing but it is required" + NEW_LINE +
             "   - $.binaryData: is missing but it is required" + NEW_LINE +
             "   - $.dnsName: is missing but it is required" + NEW_LINE +
             "   - $.if: is missing but it is required" + NEW_LINE +

@@ -315,4 +315,21 @@ describe('DebugMismatchDialog', () => {
       ).toBeInTheDocument();
     });
   });
+
+  it('names the closest branch of an anyOf request matcher', () => {
+    const anyOfResult: DebugMismatchResult = {
+      ...sampleResult,
+      results: [{
+        ...sampleResult.results[0]!,
+        anyOf: { closestBranch: 1, branches: [
+          { branch: 0, matches: false, differingFieldCount: 2, differingFields: ['method', 'path'] },
+          { branch: 1, matches: false, differingFieldCount: 1, differingFields: ['path'] },
+        ] },
+      }, sampleResult.results[1]!],
+    };
+    useDashboardStore.setState({ debugMismatchOpen: true, debugMismatchResult: anyOfResult });
+    render(<DebugMismatchDialog connectionParams={connectionParams} />);
+    expect(screen.getAllByTestId('debug-mismatch-any-of-closest')).toHaveLength(1);
+    expect(screen.getByText('anyOf: closest is branch 1 of 2')).toBeInTheDocument();
+  });
 });

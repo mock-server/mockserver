@@ -107,7 +107,8 @@ export type RequestDefinition =
   | OpenAPIDefinition
   | DnsRequestDefinition
   | BinaryRequestDefinition
-  | ConditionalRequestDefinition;
+  | ConditionalRequestDefinition
+  | AnyOfRequestDefinition;
 
 /** DNS record type a {@link DnsRequestDefinition} matches on. */
 export type DnsRecordType = "A" | "AAAA" | "CNAME" | "MX" | "SRV" | "TXT" | "PTR";
@@ -150,6 +151,15 @@ export interface ConditionalRequestDefinition {
   if?: RequestDefinition;
   then?: RequestDefinition;
   else?: RequestDefinition;
+}
+
+/**
+ * A logical OR of request matchers: matches a request when any of `anyOf` matches it, trying them in order; with
+ * `not` set it matches when none does. Discriminated on the wire by the presence of `anyOf`.
+ */
+export interface AnyOfRequestDefinition {
+  not?: boolean;
+  anyOf: Array<HttpRequest | OpenAPIDefinition | ConditionalRequestDefinition | AnyOfRequestDefinition>;
 }
 
 /** HTTP protocol version a {@link HttpRequest} matches on. */
@@ -1030,6 +1040,15 @@ export interface ExplainedExpectation {
   remediation?: { [field: string]: string };
   /** explainUnmatched with suggestFixes only */
   suggestedFix?: SuggestedFix;
+  /** an anyOf request matcher that does not match only: how each branch compared; differences are the closest branch's */
+  anyOf?: AnyOfBranchComparison;
+}
+
+/** For an anyOf request matcher that does not match the request, which branch came closest and how each differed. */
+export interface AnyOfBranchComparison {
+  /** 0-based index of the branch with the fewest differing fields, the earlier on a tie */
+  closestBranch?: number;
+  branches?: { branch: number; matches: boolean; differingFieldCount: number; differingFields: string[] }[];
 }
 
 /** The recorded request explain re-checked. */

@@ -52,14 +52,56 @@ classDiagram
         +dnsType: DnsRecordType
         +dnsClass: DnsRecordClass
     }
+    class ConditionalRequestDefinition {
+        +if: RequestDefinition
+        +then: RequestDefinition
+        +else: RequestDefinition
+    }
+    class AnyOfRequestDefinition {
+        +anyOf: List~RequestDefinition~
+    }
     Not <|-- RequestDefinition
     RequestDefinition <|-- HttpRequest
     RequestDefinition <|-- OpenAPIDefinition
     RequestDefinition <|-- BinaryRequestDefinition
     RequestDefinition <|-- DnsRequestDefinition
+    RequestDefinition <|-- ConditionalRequestDefinition
+    RequestDefinition <|-- AnyOfRequestDefinition
 ```
 
 `BinaryRequestDefinition` matches raw binary connections by byte content. `DnsRequestDefinition` matches DNS queries by name, record type, and record class.
+
+`ConditionalRequestDefinition` (if/then/else) and `AnyOfRequestDefinition` (logical OR) compose other request
+definitions. Both serialise as an `httpRequest` holding their own keys (`if`/`then`/`else`, or an `anyOf` array), and
+`RequestDefinitionDTODeserializer` dispatches on those keys before any other shape. Their branches are limited to
+`HttpRequest`, `OpenAPIDefinition`, a conditional or an anyOf (`AnyOfRequestDefinitionDTO.branchDTO`, shared by both
+DTOs), matching the `anyOfBranch` and `conditionalBranch` JSON schema definitions; `anyOf` needs at least one branch.
+
+- **Matching.** `AnyOfRequestMatcher` compiles each branch once to its own matcher via `MatcherBuilder`, in the same
+  plane (data-plane branches through a throwaway `Expectation`, as `ConditionalRequestMatcher` does), into an array
+  published through one `volatile` holder. A match walks the array with an indexed loop, passing the caller's
+  `MatchDifference` through, and stops at the first branch that matches, so the composition allocates nothing beyond
+  what its branches allocate (`AnyOfRequestMatcherCostTest`, in the `allocation-tests-without-c2` execution). `not`
+  inverts the result. As with conditional branches, each data-plane branch writes its own `EXPECTATION_NOT_MATCHED`
+  entry at INFO, under the shared `maxLoggedMatchFailures` budget.
+- **Diagnostics.** Only a context that is both detailed and log-suppressed (`MatchDifference.isDiagnosticOnly()`: the
+  explain, closest-match and debug-mismatch re-evaluations; the serving scan never creates one) evaluates every branch
+  in its own context and keeps the closest branch's differences rather than the union. `RequestMatchExplainer`
+  then adds an `anyOf` object (`closestBranch`, 0-based, and each branch's differing fields) to the per-expectation
+  node of `explain`, `explainUnmatched` and `debugMismatch`. The 404 closest-match INFO line is ranked on the serving
+  scan, where an anyOf's branches share one context, so an anyOf counts the union of its branches' differing fields
+  and can lose to a plain expectation that its closest branch beats; it is ranked that way to keep the
+  per-branch comparison off the serving path. The explain endpoints rank by the closest branch.
+- **Filters.** An HTTP-shaped filter cannot describe an anyOf (or a conditional), so retrieving active expectations
+  with one always lists an anyOf expectation, and clearing with one never removes it; clear it by id.
+- **Indexing.** `CandidateIndex` buckets only `HttpRequestPropertiesMatcher`, so an anyOf (like a conditional) goes to
+  the fallthrough and is evaluated for every request in global priority order; expectations without one are indexed
+  exactly as before. The closest-match memo reuses only exact-class `HttpRequestPropertiesMatcher` non-matches, so it
+  re-evaluates an anyOf. `BinaryExpectationIndex` treats an anyOf as able to match any binary message, since a negated
+  one does.
+- **Clients.** Python, Ruby and PHP model it as its own class (`AnyOfRequestDefinition`, PHP `HttpRequest::anyOf`); Go
+  and .NET as an `AnyOf` list on `HttpRequest`; Rust in `HttpRequest.extra` (`HttpRequest::any_of`,
+  `any_of_value`), so no public field changed; Node types it in `mockServer.d.ts`.
 
 `HttpRequest` carries two distinct client-certificate fields that must not be confused:
 
@@ -811,6 +853,9 @@ classDiagram
     AbstractHttpRequestMatcher <|-- HttpRequestsPropertiesMatcher
     AbstractHttpRequestMatcher <|-- BinaryRequestPropertiesMatcher
     AbstractHttpRequestMatcher <|-- DnsRequestPropertiesMatcher
+    AbstractHttpRequestMatcher <|-- ConditionalRequestMatcher
+    AbstractHttpRequestMatcher <|-- AnyOfRequestMatcher
+    AnyOfRequestMatcher --> AbstractHttpRequestMatcher : composes (any must match)
 ```
 
 ### BinaryRequestPropertiesMatcher

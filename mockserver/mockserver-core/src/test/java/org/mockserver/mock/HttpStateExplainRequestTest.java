@@ -341,7 +341,9 @@ public class HttpStateExplainRequestTest {
         schema.assertDocuments(narrated("s1"));
 
         // explainUnmatched alone fills suggestedFix; HttpStateDiagnosticsOpenApiSchemaTest covers it
-        assertThat("documented but never returned", schema.documentedButNeverReturned(path -> path.startsWith("ExplainedExpectation/suggestedFix") || path.startsWith("SuggestedFix/")),
+        // HttpStateDiagnosticsOpenApiSchemaTest covers an anyOf expectation's branches
+        assertThat("documented but never returned", schema.documentedButNeverReturned(path -> path.startsWith("ExplainedExpectation/suggestedFix") || path.startsWith("SuggestedFix/")
+                || path.startsWith("ExplainedExpectation/anyOf") || path.startsWith("AnyOfBranchComparison/")),
             is(java.util.Collections.emptyList()));
     }
 

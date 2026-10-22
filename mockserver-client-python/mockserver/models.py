@@ -1629,13 +1629,54 @@ class ConditionalRequestDefinition:
         )
 
 
+@dataclass
+class AnyOfRequestDefinition:
+    """A logical OR of request matchers — an alternative to :class:`HttpRequest`
+    as the ``http_request`` of an expectation.
+
+    It matches a request when any of ``any_of`` matches it, trying them in order.
+    Each branch is an :class:`HttpRequest`, an :class:`OpenAPIDefinition`, a
+    :class:`ConditionalRequestDefinition` or another ``AnyOfRequestDefinition``.
+    ``not_any_of`` inverts the whole match, so it matches when no branch does.
+
+    Serialises to ``{"anyOf": [..], "not": ..}``; MockServer recognises it by the
+    presence of ``anyOf``.
+    """
+
+    any_of: list[Any] = field(default_factory=list)
+    not_any_of: bool | None = None
+
+    def to_dict(self) -> dict:
+        return _strip_none({
+            "not": self.not_any_of,
+            "anyOf": [branch.to_dict() for branch in self.any_of],
+        })
+
+    @classmethod
+    def from_dict(cls, data: dict) -> AnyOfRequestDefinition:
+        if data is None:
+            return None
+        return cls(
+            any_of=[_deserialize_conditional_branch(branch) for branch in data.get("anyOf") or []],
+            not_any_of=data.get("not"),
+        )
+
+    @staticmethod
+    def request_any_of(*requests: Any) -> AnyOfRequestDefinition:
+        return AnyOfRequestDefinition(any_of=list(requests))
+
+
 def _deserialize_conditional_branch(data: Any) -> Any | None:
-    """Deserialize one branch of a :class:`ConditionalRequestDefinition`: a dict
-    carrying ``if`` is a nested conditional, one carrying ``specUrlOrPayload`` an
-    :class:`OpenAPIDefinition`, anything else an :class:`HttpRequest`.
+    """Deserialize one branch of a :class:`ConditionalRequestDefinition` or an
+    :class:`AnyOfRequestDefinition`: a dict carrying ``if`` is a nested
+    conditional, one carrying ``anyOf`` a nested anyOf, one carrying
+    ``specUrlOrPayload`` an :class:`OpenAPIDefinition`, anything else an
+    :class:`HttpRequest`.
     """
     if data is None:
         return None
+    if isinstance(data, dict) and "anyOf" in data:
+        return AnyOfRequestDefinition.from_dict(data)
     if isinstance(data, dict) and "if" in data:
         return ConditionalRequestDefinition.from_dict(data)
     if isinstance(data, dict) and "specUrlOrPayload" in data:
@@ -1646,14 +1687,17 @@ def _deserialize_conditional_branch(data: Any) -> Any | None:
 def _deserialize_request_definition(data: Any) -> Any | None:
     """Deserialize an expectation ``httpRequest`` into the correct request-matcher
     type. A dict carrying ``dnsName`` is a :class:`DnsRequestDefinition`, one
-    carrying ``if`` a :class:`ConditionalRequestDefinition`, one carrying
-    ``specUrlOrPayload`` an :class:`OpenAPIDefinition`; anything else is an
+    carrying ``anyOf`` an :class:`AnyOfRequestDefinition`, one carrying ``if`` a
+    :class:`ConditionalRequestDefinition`, one carrying ``specUrlOrPayload`` an
+    :class:`OpenAPIDefinition`; anything else is an
     :class:`HttpRequest`.
     """
     if data is None:
         return None
     if isinstance(data, dict) and "dnsName" in data:
         return DnsRequestDefinition.from_dict(data)
+    if isinstance(data, dict) and "anyOf" in data:
+        return AnyOfRequestDefinition.from_dict(data)
     if isinstance(data, dict) and "if" in data:
         return ConditionalRequestDefinition.from_dict(data)
     if isinstance(data, dict) and "specUrlOrPayload" in data:
@@ -3260,7 +3304,7 @@ class Expectation:
     id: str | None = None
     priority: int | None = None
     percentage: int | None = None
-    http_request: HttpRequest | DnsRequestDefinition | ConditionalRequestDefinition | None = None
+    http_request: HttpRequest | DnsRequestDefinition | ConditionalRequestDefinition | AnyOfRequestDefinition | None = None
     http_response: HttpResponse | None = None
     http_response_template: HttpTemplate | None = None
     http_response_class_callback: HttpClassCallback | None = None
@@ -4152,13 +4196,34 @@ class SuggestedFix:
 
 
 @dataclass
+class AnyOfBranchComparison:
+    """For an anyOf request matcher that does not match the request, which
+    branch came closest (``closest_branch``, 0-based, the earlier on a tie) and
+    how each branch differed: each item of ``branches`` has ``branch``,
+    ``matches``, ``differingFieldCount`` and ``differingFields``."""
+
+    closest_branch: int | None = None
+    branches: list[dict] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> AnyOfBranchComparison | None:
+        if data is None:
+            return None
+        return cls(
+            closest_branch=data.get("closestBranch"),
+            branches=list(data.get("branches") or []),
+        )
+
+
+@dataclass
 class ExplainedExpectation:
     """One expectation as explain, debug_mismatch or explain_unmatched
     evaluated it. The matched expectation has no ``reason``; a skipped or
     shadowed one has a ``reason`` (``NAMESPACE``, ``INACTIVE``,
     ``FIELDS_DIFFER``, ``NOT_OPERATOR``, ``CONVERSATION``, ``SCENARIO_STATE``,
     ``PERCENTAGE`` or ``LOWER_PRIORITY``) and an ``explanation``.
-    ``suggested_fix`` is set only by explain_unmatched with ``suggest_fixes``."""
+    ``suggested_fix`` is set only by explain_unmatched with ``suggest_fixes``;
+    ``any_of`` only for an anyOf request matcher that does not match."""
 
     expectation_id: str | None = None
     expectation_method: str | None = None
@@ -4174,6 +4239,7 @@ class ExplainedExpectation:
     differences: dict[str, list[str]] = field(default_factory=dict)
     remediation: dict[str, str] = field(default_factory=dict)
     suggested_fix: SuggestedFix | None = None
+    any_of: AnyOfBranchComparison | None = None
 
     @classmethod
     def from_dict(cls, data: dict | None) -> ExplainedExpectation | None:
@@ -4194,6 +4260,7 @@ class ExplainedExpectation:
             differences={k: list(v) for k, v in (data.get("differences") or {}).items()},
             remediation=dict(data.get("remediation") or {}),
             suggested_fix=SuggestedFix.from_dict(data.get("suggestedFix")),
+            any_of=AnyOfBranchComparison.from_dict(data.get("anyOf")),
         )
 
 

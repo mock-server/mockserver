@@ -266,6 +266,23 @@ HttpRequest.request("/internal").with_client_ip("10.0.0.0/8")
 # or HttpRequest(path="/internal", client_ip="!10.0.0.0/8")
 ```
 
+### Any-of (logical OR) matcher
+
+`AnyOfRequestDefinition` matches a request when any one of its request matchers does, tried in order. Entries may be `HttpRequest`, `OpenAPIDefinition`, `ConditionalRequestDefinition` or a nested `AnyOfRequestDefinition`; `not_any_of=True` matches requests that match none of them. It serialises to `{"anyOf": [...]}` inside `httpRequest`.
+
+```python
+from mockserver import AnyOfRequestDefinition, HttpRequest, HttpResponse
+
+client.when(
+    AnyOfRequestDefinition.request_any_of(
+        HttpRequest(method="GET", path="/pets"),
+        HttpRequest(method="GET", path="/animals"),
+    )
+).respond(HttpResponse(body="pets or animals"))
+```
+
+`ExplainedExpectation.any_of` (an `AnyOfBranchComparison`) says which entry came closest when none matches.
+
 ### allOf body matcher
 
 Require a request body to satisfy **all** of several body matchers at once.

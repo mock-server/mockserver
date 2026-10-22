@@ -116,6 +116,14 @@ public class MatchDifference {
     }
 
     /**
+     * True for a read-only diagnostic evaluation whose recorded differences will be read: detailed differences with
+     * match logging suppressed. The serving path never creates such a context.
+     */
+    public boolean isDiagnosticOnly() {
+        return suppressMatchResultLogging && detailedMatchFailures;
+    }
+
+    /**
      * Share the request's {@code maxLoggedMatchFailures} budget (null for no limit). A matcher writes its
      * EXPECTATION_NOT_MATCHED entry, and builds its "because" text, only while the budget has room, and records each
      * entry it writes or withholds; EXPECTATION_MATCHED and the recorded differences are unaffected.

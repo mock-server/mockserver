@@ -228,7 +228,7 @@ describe('explain types follow the OpenAPI schemas', function () {
     });
 
     ['ExplainedExpectation', 'SuggestedFix', 'DebugMismatchResult', 'ExplainUnmatchedResult', 'UnmatchedRequest',
-        'ExplanationNarration'].forEach(function (name) {
+        'ExplanationNarration', 'AnyOfBranchComparison'].forEach(function (name) {
         it(name + ' declares every schema property', function () {
             assert.deepEqual(declaredMembers(name), Object.keys(spec.components.schemas[name].properties).sort());
         });
@@ -248,6 +248,7 @@ describe('explain types follow the OpenAPI schemas', function () {
         assert.deepEqual(inlineMembers('DebugMismatchResult', 'closestMatch'), Object.keys(schemas.ClosestMatch.properties).sort());
         assert.deepEqual(inlineMembers('SuggestedFix', 'patch'), Object.keys(schemas.SuggestedFix.properties.patch.items.properties).sort());
         assert.deepEqual(inlineMembers('SuggestedFix', 'unpatchedFields'), Object.keys(schemas.SuggestedFix.properties.unpatchedFields.items.properties).sort());
+        assert.deepEqual(inlineMembers('AnyOfBranchComparison', 'branches'), Object.keys(schemas.AnyOfBranchComparison.properties.branches.items.properties).sort());
     });
 
     it('the reason and outcome unions list every schema enum value', function () {

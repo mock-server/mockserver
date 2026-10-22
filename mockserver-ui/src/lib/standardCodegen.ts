@@ -1846,6 +1846,15 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
+ * A request matcher the form cannot show field by field: an anyOf (logical OR) or a conditional (if/then/else).
+ * Its fields sit inside its branches, so overlaying the form's method or path beside them would make the
+ * matcher invalid; a save keeps it exactly as loaded.
+ */
+export function isCompositeRequestMatcher(request: unknown): boolean {
+  return isPlainObject(request) && ('anyOf' in request || 'if' in request);
+}
+
+/**
  * Top-level keys the edit form models but whose SERVER DEFAULT it prefills as its
  * neutral value: priority `0`, times `{unlimited:true}`, timeToLive `{unlimited:true}`.
  * `buildExpectationJson` omits these when the form is at its default (priority 0,
@@ -2108,7 +2117,7 @@ export function mergeUnmodeledFields(
   // Request matcher — nested merge: modeled sub-fields authoritative, the rest
   // (keepAlive / socketAddress / protocol / clientCertificate / …) pass through.
   // buildExpectationJson always emits an httpRequest.
-  if (isPlainObject(formJson['httpRequest'])) {
+  if (isPlainObject(formJson['httpRequest']) && !isCompositeRequestMatcher(result['httpRequest'])) {
     const formReq = formJson['httpRequest'];
     const mergedReq: Record<string, unknown> = isPlainObject(result['httpRequest'])
       ? structuredClone(result['httpRequest'])
@@ -2708,6 +2717,74 @@ function javaMatcherFieldLines(
 interface JavaMatcherExtras {
   imports: Set<string>;
   omitted: string[];
+}
+
+/**
+ * A loaded anyOf request matcher as Java: requestAnyOf(...) of request() branches built from their wire JSON.
+ * A branch field the builder below does not write is named in {@link JavaMatcherExtras.omitted}.
+ */
+function anyOfRequestToJava(request: Record<string, unknown>, extras: JavaMatcherExtras, at = 'httpRequest'): string {
+  extras.imports.add('import static org.mockserver.model.AnyOfRequestDefinition.requestAnyOf;');
+  const branches = (request['anyOf'] as unknown[]).map((branch, n) =>
+    '    ' + wireBranchToJava(isPlainObject(branch) ? branch : {}, extras, `${at}.anyOf[${n}]`).split('\n').join('\n    '));
+  for (const key of Object.keys(request)) {
+    if (key !== 'anyOf' && key !== 'not') extras.omitted.push(`${at}.${key}`);
+  }
+  const anyOf = ['requestAnyOf(', branches.join(',\n'), ')'].join('\n');
+  if (request['not'] !== true) return anyOf;
+  extras.imports.add('import static org.mockserver.model.Not.not;');
+  return 'not(' + anyOf + ')';
+}
+
+function wireBranchToJava(branch: Record<string, unknown>, extras: JavaMatcherExtras, at: string): string {
+  if (Array.isArray(branch['anyOf'])) return anyOfRequestToJava(branch, extras, at);
+  const lines: string[] = ['request()'];
+  const javaString = (v: unknown) => `"${escapeJava(String(v))}"`;
+  const multiValues = (key: string, setter: string) => {
+    const values = branch[key];
+    if (!isPlainObject(values) || !Object.values(values).every((vs) => Array.isArray(vs) && vs.every((v) => typeof v === 'string'))) {
+      extras.omitted.push(`${at}.${key}`);
+      return;
+    }
+    for (const [name, vs] of Object.entries(values)) {
+      lines.push(`    .${setter}(${javaString(name)}, ${(vs as string[]).map(javaString).join(', ')})`);
+    }
+  };
+  for (const key of Object.keys(branch)) {
+    const value = branch[key];
+    switch (key) {
+      case 'method':
+      case 'path':
+      case 'clientIp':
+        if (typeof value === 'string') lines.push(`    .with${key === 'clientIp' ? 'ClientIp' : key[0]!.toUpperCase() + key.slice(1)}(${javaString(value)})`);
+        else extras.omitted.push(`${at}.${key}`);
+        break;
+      case 'headers': multiValues(key, 'withHeader'); break;
+      case 'queryStringParameters': multiValues(key, 'withQueryStringParameter'); break;
+      case 'cookies':
+        if (isPlainObject(value) && Object.values(value).every((v) => typeof v === 'string')) {
+          for (const [name, v] of Object.entries(value)) lines.push(`    .withCookie(${javaString(name)}, ${javaString(v)})`);
+        } else extras.omitted.push(`${at}.${key}`);
+        break;
+      case 'body':
+        if (typeof value === 'string') lines.push(`    .withBody(${javaString(value)})`);
+        else extras.omitted.push(`${at}.${key}`);
+        break;
+      case 'secure':
+      case 'keepAlive':
+        if (typeof value === 'boolean') lines.push(`    .with${key[0]!.toUpperCase() + key.slice(1)}(${value})`);
+        else extras.omitted.push(`${at}.${key}`);
+        break;
+      case 'not':
+        break;
+      default:
+        extras.omitted.push(`${at}.${key}`);
+    }
+  }
+  const request = lines.join('\n');
+  if (branch['not'] !== true) return request;
+  extras.imports.add('import static org.mockserver.model.Not.not;');
+  return 'not(' + request + ')';
 }
 
 function matcherToJava(matcher: StandardMatcher, extras: JavaMatcherExtras = { imports: new Set(), omitted: [] }): string {
@@ -3971,7 +4048,10 @@ export function standardToJava(matcher: StandardMatcher, action: StandardActionP
   }
   const lines: string[] = [];
   const matcherExtras: JavaMatcherExtras = { imports: wireAction.imports, omitted: [] };
-  const matcherJava = '    ' + matcherToJava(matcher, matcherExtras).split('\n').join('\n    ');
+  const wireRequest = json['httpRequest'];
+  const matcherJava = '    ' + (isPlainObject(wireRequest) && Array.isArray(wireRequest['anyOf'])
+    ? anyOfRequestToJava(wireRequest, matcherExtras)
+    : matcherToJava(matcher, matcherExtras)).split('\n').join('\n    ');
   const matcherNote = matcherExtras.omitted.length > 0
     ? `// NOTE: the Java preview omits matcher value(s) the builder cannot express: ${matcherExtras.omitted.join(', ')} -- see the JSON tab.`
     : undefined;

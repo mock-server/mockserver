@@ -72,12 +72,27 @@ type HttpRequest struct {
 	If   *HttpRequest `json:"if,omitempty"`
 	Then *HttpRequest `json:"then,omitempty"`
 	Else *HttpRequest `json:"else,omitempty"`
+
+	// --- AnyOf request definition (AnyOfRequestDefinition) ---
+	// When AnyOf is set, the request matches when any branch matches it,
+	// trying them in order; Not inverts the result, so it then matches when no
+	// branch does. Each branch is an HTTP, OpenAPI, conditional or nested anyOf
+	// matcher. Build one with AnyOfRequest or RequestBuilder.AnyOf. A non-nil
+	// empty AnyOf is still sent, as "anyOf": [], so the server rejects it
+	// rather than reading the request as {}, which matches every request.
+	AnyOf []*HttpRequest `json:"anyOf,omitempty"`
 }
 
 // ConditionalRequest builds a conditional (if/then/else) request matcher.
 // thenReq and elseReq may be nil.
 func ConditionalRequest(ifReq, thenReq, elseReq *HttpRequest) *HttpRequest {
 	return &HttpRequest{If: ifReq, Then: thenReq, Else: elseReq}
+}
+
+// AnyOfRequest builds a logical OR request matcher: it matches a request when
+// any of branches matches it.
+func AnyOfRequest(branches ...*HttpRequest) *HttpRequest {
+	return &HttpRequest{AnyOf: append([]*HttpRequest{}, branches...)}
 }
 
 // SocketAddress represents a socket address constraint.
@@ -207,6 +222,18 @@ func (b *RequestBuilder) Then(req *RequestBuilder) *RequestBuilder {
 // Else sets the branch that must match when the If guard does not.
 func (b *RequestBuilder) Else(req *RequestBuilder) *RequestBuilder {
 	b.request.Else = req.BuildPtr()
+	return b
+}
+
+// AnyOf makes this a logical OR matcher of the given branches. See
+// HttpRequest.AnyOf.
+func (b *RequestBuilder) AnyOf(branches ...*RequestBuilder) *RequestBuilder {
+	if b.request.AnyOf == nil {
+		b.request.AnyOf = []*HttpRequest{}
+	}
+	for _, branch := range branches {
+		b.request.AnyOf = append(b.request.AnyOf, branch.BuildPtr())
+	}
 	return b
 }
 
@@ -467,6 +494,7 @@ func (r HttpRequest) MarshalJSON() ([]byte, error) {
 		QueryStringParams interface{} `json:"queryStringParameters,omitempty"`
 		Cookies           interface{} `json:"cookies,omitempty"`
 		PathParameters    interface{} `json:"pathParameters,omitempty"`
+		AnyOf             interface{} `json:"anyOf,omitempty"`
 	}{plain: plain(r)}
 
 	// the embedded plain still carries the original maps; blank them there and
@@ -475,6 +503,11 @@ func (r HttpRequest) MarshalJSON() ([]byte, error) {
 	aux.plain.QueryStringParams = nil
 	aux.plain.Cookies = nil
 	aux.plain.PathParametersList = nil
+	aux.plain.AnyOf = nil
+	// nil, not len: an empty but set AnyOf must reach the server, which rejects it
+	if r.AnyOf != nil {
+		aux.AnyOf = r.AnyOf
+	}
 
 	// len, not nil: aux.Headers is an interface{}, and `omitempty` drops only a
 	// NIL interface -- one holding an empty map still emits `{}`, which the

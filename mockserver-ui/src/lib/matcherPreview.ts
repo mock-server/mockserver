@@ -468,6 +468,32 @@ function evaluateBody(raw: unknown, actualBody: string): FieldResult | null {
  * entirely on the client. `expectation` may be the whole expectation `{ httpRequest }`
  * or a bare `httpRequest` object.
  */
+/**
+ * An anyOf matcher matches when any branch does: one result per branch, numbered from 0 as the server's
+ * explain output numbers them. It is undecided only when no branch matches and one could not be evaluated.
+ */
+function previewAnyOf(httpRequest: Record<string, unknown>, sample: SampleRequest): PreviewResult {
+  const branches = (httpRequest['anyOf'] as unknown[]).map((branch) => previewMatch({ httpRequest: branch ?? {} }, sample));
+  const anyMatches = branches.some((branch) => branch.matches);
+  const hasUnsupported = !anyMatches && branches.some((branch) => branch.hasUnsupported);
+  const results: FieldResult[] = branches.map((branch, n) => {
+    const failed = branch.results.filter((r) => r.verdict !== 'match');
+    return {
+      field: `anyOf branch ${n}`,
+      verdict: branch.matches ? 'match' : branch.hasUnsupported ? 'unsupported' : 'mismatch',
+      expected: 'matches',
+      actual: branch.matches ? 'matches' : failed.map((r) => r.field).join(', ') || 'does not match',
+      reason: branch.matches ? undefined : failed[0]?.reason ?? 'the branch does not match',
+    };
+  });
+  const negated = httpRequest['not'] === true;
+  return {
+    matches: !hasUnsupported && (negated ? !anyMatches : anyMatches),
+    hasUnsupported,
+    results,
+  };
+}
+
 export function previewMatch(expectation: unknown, sample: SampleRequest): PreviewResult {
   const root = (expectation ?? {}) as Record<string, unknown>;
   const httpRequest = (
@@ -475,6 +501,8 @@ export function previewMatch(expectation: unknown, sample: SampleRequest): Previ
       ? root['httpRequest']
       : root
   ) as Record<string, unknown>;
+
+  if (Array.isArray(httpRequest['anyOf'])) return previewAnyOf(httpRequest, sample);
 
   const results: FieldResult[] = [];
 
@@ -543,6 +571,7 @@ export function previewMatch(expectation: unknown, sample: SampleRequest): Previ
     ['keepAlive', 'keep-alive flag'],
     ['protocol', 'protocol'],
     ['clientIp', 'client IP'],
+    ['if', 'conditional (if/then/else) matcher'],
   ] as const) {
     const v = httpRequest[field];
     const isPresent =

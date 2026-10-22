@@ -189,6 +189,20 @@ client.When(
 
 Or set `HttpRequest.ClientIp` in an object initialiser.
 
+### Any-of (logical OR) Matcher
+
+`HttpRequest.RequestAnyOf(...)` (or `WithAnyOf(...)` on the builder) matches a request when any one of its branches does, tried in order; set `Not` to match requests that match none of them. A branch may be an OpenAPI matcher, a conditional or another anyOf. `ExplainedExpectation.AnyOf` says which branch came closest when none matches.
+
+```csharp
+client.When(
+    HttpRequest.RequestAnyOf(
+        HttpRequest.Request().WithMethod("GET").WithPath("/pets"),
+        HttpRequest.Request().WithMethod("GET").WithPath("/animals"))
+).Respond(
+    HttpResponse.Response().WithBody("pets or animals")
+);
+```
+
 ### ALL_OF Body Matcher
 
 Require the request body to satisfy every sub-matcher. Combine any typed body matchers

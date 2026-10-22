@@ -54,6 +54,8 @@ final class ExplainedExpectation
      * @param array<string, string> $remediation For each differing field, a hint on how to change the expectation.
      * @param SuggestedFix|null $suggestedFix A patch that would make it match; only from
      *        {@see \MockServer\MockServerClient::explainUnmatched()} with suggestFixes.
+     * @param AnyOfBranchComparison|null $anyOf For an anyOf request matcher that does not match, how each
+     *        branch compared; null otherwise.
      */
     public function __construct(
         public readonly ?string $expectationId,
@@ -70,6 +72,7 @@ final class ExplainedExpectation
         public readonly array $differences,
         public readonly array $remediation,
         public readonly ?SuggestedFix $suggestedFix,
+        public readonly ?AnyOfBranchComparison $anyOf = null,
     ) {
     }
 
@@ -89,6 +92,7 @@ final class ExplainedExpectation
             }
         }
         $fix = Fields::object($data, 'suggestedFix');
+        $anyOf = Fields::object($data, 'anyOf');
         return new self(
             Fields::string($data, 'expectationId'),
             Fields::string($data, 'expectationMethod'),
@@ -104,6 +108,7 @@ final class ExplainedExpectation
             $differences,
             $remediation,
             $fix !== null ? SuggestedFix::fromArray($fix) : null,
+            $anyOf !== null ? AnyOfBranchComparison::fromArray($anyOf) : null,
         );
     }
 }

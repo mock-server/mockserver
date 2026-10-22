@@ -58,6 +58,7 @@ const STRUCTS: Record<string, FieldSpec[]> = {
     ['specUrlOrPayload', 'SpecUrlOrPayload', 'raw'],
     ['operationId', 'OperationId', 'string'],
     ['contextPathPrefix', 'ContextPathPrefix', 'string'],
+    ['anyOf', 'AnyOf', 'structPtrSlice:HttpRequest'],
   ],
   SocketAddress: [
     ['host', 'Host', 'string'],

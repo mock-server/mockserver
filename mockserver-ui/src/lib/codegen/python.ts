@@ -312,6 +312,7 @@ class PyBuilder {
   }
 
   private request(v: Json, indent: number, at: string): string {
+    if (Array.isArray(v['anyOf'])) return this.anyOfRequest(v, indent, at);
     this.use('HttpRequest');
     this.known(at, v, [
       'method', 'path', 'headers', 'queryStringParameters', 'cookies', 'pathParameters', 'body', 'jwt', 'secure',
@@ -335,6 +336,15 @@ class PyBuilder {
     if (typeof v['not'] === 'boolean') kw.push(['not_request', pyBool(v['not'])]);
     if (v['clientIp'] != null) kw.push(['client_ip', pyStr(v['clientIp'])]);
     return renderCall('HttpRequest', kw, indent);
+  }
+
+  private anyOfRequest(v: Json, indent: number, at: string): string {
+    this.use('AnyOfRequestDefinition');
+    this.known(at, v, ['anyOf', 'not']);
+    const branches = (v['anyOf'] as unknown[]).map((b, n) => this.request(b as Json, indent + 8, `${at}.anyOf[${n}]`));
+    const kw: Kw[] = [['any_of', renderList(branches, indent + 4)]];
+    if (typeof v['not'] === 'boolean') kw.push(['not_any_of', pyBool(v['not'])]);
+    return renderCall('AnyOfRequestDefinition', kw, indent);
   }
 
   private socketAddress(o: Json, at: string): string {

@@ -5613,6 +5613,7 @@ components:
         - $ref: "#/components/schemas/HttpRequest"
         - $ref: "#/components/schemas/OpenAPIDefinition"
         - $ref: "#/components/schemas/ConditionalRequestDefinition"
+        - $ref: "#/components/schemas/AnyOfRequestDefinition"
     HttpRequest:
       description: request properties matcher
       type: object
@@ -5713,6 +5714,20 @@ components:
           $ref: "#/components/schemas/RequestDefinition"
         else:
           $ref: "#/components/schemas/RequestDefinition"
+    AnyOfRequestDefinition:
+      description: "logical OR of request matchers: matches a request when any of the 'anyOf' request matchers matches it, trying them in order; with 'not' set it matches when none does"
+      type: object
+      additionalProperties: false
+      required:
+        - anyOf
+      properties:
+        not:
+          type: boolean
+        anyOf:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/RequestDefinition"
     HttpResponse:
       description: response to return
       type: object
@@ -8635,7 +8650,8 @@ components:
         suggestedFix; the matched expectation has no reason, every skipped or shadowed one has a reason and an
         explanation. PUT /mockserver/debugMismatch fills expectationId, expectationMethod, expectationPath,
         matches, matchedFieldCount, totalFieldCount and differences. PUT /mockserver/explainUnmatched fills
-        those plus differingFieldCount and remediation, and suggestedFix when asked for.
+        those plus differingFieldCount and remediation, and suggestedFix when asked for. Each fills anyOf for an
+        anyOf request matcher that does not match.
       type: object
       properties:
         expectationId:
@@ -8686,6 +8702,34 @@ components:
             type: string
         suggestedFix:
           $ref: '#/components/schemas/SuggestedFix'
+        anyOf:
+          $ref: '#/components/schemas/AnyOfBranchComparison'
+    AnyOfBranchComparison:
+      description: >-
+        for an anyOf request matcher that does not match the request, which branch came closest and how each
+        branch differed (PUT /mockserver/explain, explainUnmatched and debugMismatch); the expectation's
+        differences are those of the closest branch
+      type: object
+      properties:
+        closestBranch:
+          type: integer
+          description: the 0-based index of the branch with the fewest differing fields, the earlier on a tie
+        branches:
+          type: array
+          items:
+            type: object
+            properties:
+              branch:
+                type: integer
+                description: the 0-based index of the branch in anyOf
+              matches:
+                type: boolean
+              differingFieldCount:
+                type: integer
+              differingFields:
+                type: array
+                items:
+                  type: string
     SuggestedFix:
       description: >-
         an RFC 6902 JSON patch of an expectation, as PUT /mockserver/retrieve?type=active_expectations returns it,

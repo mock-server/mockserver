@@ -1656,7 +1656,8 @@ public abstract class AbstractBasicMockingIntegrationTest extends AbstractMockin
             "" + NEW_LINE +
             " schema validation errors:" + NEW_LINE +
             "" + NEW_LINE +
-            "  9 errors:\n" +
+            "  10 errors:\n" +
+            "   - $.anyOf: is missing but it is required\n" +
             "   - $.binaryData: is missing but it is required\n" +
             "   - $.dnsName: is missing but it is required\n" +
             "   - $.if: is missing but it is required\n" +

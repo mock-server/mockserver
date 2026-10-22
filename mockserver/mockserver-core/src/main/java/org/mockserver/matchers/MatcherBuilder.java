@@ -4,6 +4,7 @@ import org.mockserver.cache.LRUCache;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
+import org.mockserver.model.AnyOfRequestDefinition;
 import org.mockserver.model.BinaryRequestDefinition;
 import org.mockserver.model.ConditionalRequestDefinition;
 import org.mockserver.model.DnsRequestDefinition;
@@ -38,6 +39,8 @@ public class MatcherBuilder {
                 httpRequestMatcher = new DnsRequestPropertiesMatcher(configuration, mockServerLogger);
             } else if (requestDefinition instanceof ConditionalRequestDefinition) {
                 httpRequestMatcher = new ConditionalRequestMatcher(configuration, mockServerLogger);
+            } else if (requestDefinition instanceof AnyOfRequestDefinition) {
+                httpRequestMatcher = new AnyOfRequestMatcher(configuration, mockServerLogger);
             } else {
                 httpRequestMatcher = new HttpRequestPropertiesMatcher(configuration, mockServerLogger);
             }
@@ -57,6 +60,8 @@ public class MatcherBuilder {
             httpRequestMatcher = new DnsRequestPropertiesMatcher(configuration, mockServerLogger);
         } else if (expectation.getHttpRequest() instanceof ConditionalRequestDefinition) {
             httpRequestMatcher = new ConditionalRequestMatcher(configuration, mockServerLogger);
+        } else if (expectation.getHttpRequest() instanceof AnyOfRequestDefinition) {
+            httpRequestMatcher = new AnyOfRequestMatcher(configuration, mockServerLogger);
         } else {
             httpRequestMatcher = new HttpRequestPropertiesMatcher(configuration, mockServerLogger);
         }

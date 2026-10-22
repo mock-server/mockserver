@@ -268,6 +268,8 @@ public class ObjectMapperFactory {
             new OpenAPIDefinitionDTOSerializer(),
             new org.mockserver.serialization.serializers.request.ConditionalRequestDefinitionSerializer(),
             new org.mockserver.serialization.serializers.request.ConditionalRequestDefinitionDTOSerializer(),
+            new org.mockserver.serialization.serializers.request.AnyOfRequestDefinitionSerializer(),
+            new org.mockserver.serialization.serializers.request.AnyOfRequestDefinitionDTOSerializer(),
             // request body
             new BinaryBodySerializer(),
             new BinaryBodyDTOSerializer(),

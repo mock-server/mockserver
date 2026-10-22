@@ -125,6 +125,21 @@ $client->when(
 );
 ```
 
+### Any-of (logical OR) Matcher
+
+`HttpRequest::anyOf(...)` matches a request when any one of its branches does, tried in order; `->not()` matches requests that match none of them. A branch may be an OpenAPI matcher, a conditional or another anyOf. `ExplainedExpectation::$anyOf` says which branch came closest when none matches.
+
+```php
+$client->when(
+    HttpRequest::anyOf(
+        HttpRequest::request()->method('GET')->path('/pets'),
+        HttpRequest::request()->method('GET')->path('/animals')
+    )
+)->respond(
+    HttpResponse::response()->body('pets or animals')
+);
+```
+
 ### ALL_OF Body Matcher
 
 Require several body matchers to all match the same request body. Compose any

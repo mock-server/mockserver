@@ -16,6 +16,7 @@ public class JsonSchemaHttpRequestAndHttpResponseValidator extends JsonSchemaVal
             "httpRequestAndHttpResponse",
             "requestDefinition",
             "conditionalRequestDefinition",
+            "anyOfRequestDefinition",
             "openAPIDefinition",
             "httpRequest",
             "stringOrJsonSchema",

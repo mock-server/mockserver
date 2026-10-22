@@ -16,6 +16,7 @@ public class JsonSchemaExpectationValidator extends JsonSchemaValidator {
             "expectation",
             "requestDefinition",
             "conditionalRequestDefinition",
+            "anyOfRequestDefinition",
             "openAPIDefinition",
             "binaryRequestDefinition",
             "dnsRequestDefinition",

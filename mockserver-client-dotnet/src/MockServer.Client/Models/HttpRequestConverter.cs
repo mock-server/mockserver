@@ -67,10 +67,14 @@ public sealed class HttpRequestConverter : JsonConverter<HttpRequest>
         ReplaceWithMatchers(node, "cookies", value.CookieMatchers, options);
         ReplaceWithMatchers(node, "pathParameters", value.PathParameterMatchers, options);
 
-        // Conditional branches go back through this converter so their own matcher maps survive.
+        // Conditional and anyOf branches go back through this converter so their own matcher maps survive.
         WriteBranch(node, "if", value.If, options);
         WriteBranch(node, "then", value.Then, options);
         WriteBranch(node, "else", value.Else, options);
+        if (value.AnyOf is not null)
+        {
+            node["anyOf"] = JsonSerializer.SerializeToNode(value.AnyOf, options);
+        }
 
         node.WriteTo(writer, options);
     }
@@ -118,17 +122,24 @@ public sealed class HttpRequestConverter : JsonConverter<HttpRequest>
         FlattenScalar(node, "path");
         FlattenScalar(node, "method");
 
-        // Conditional branches are read back through this converter (recursively), so a branch's
+        // Conditional and anyOf branches are read back through this converter (recursively), so a branch's
         // object-form matcher values decode as they do at the top level.
         var ifBranch = DetachObject(node, "if");
         var thenBranch = DetachObject(node, "then");
         var elseBranch = DetachObject(node, "else");
+        JsonNode? anyOfBranches = null;
+        if (node.TryGetPropertyValue("anyOf", out var anyOf) && anyOf is JsonArray)
+        {
+            node.Remove("anyOf");
+            anyOfBranches = anyOf;
+        }
 
         var request = node.Deserialize<HttpRequest>(Inner(options))!;
 
         request.If = ifBranch?.Deserialize<HttpRequest>(options) ?? request.If;
         request.Then = thenBranch?.Deserialize<HttpRequest>(options) ?? request.Then;
         request.Else = elseBranch?.Deserialize<HttpRequest>(options) ?? request.Else;
+        request.AnyOf = anyOfBranches?.Deserialize<List<HttpRequest>>(options) ?? request.AnyOf;
 
         DecodeMulti(headers, options, plain => request.Headers = plain, matchers => request.HeaderMatchers = matchers);
         DecodeMulti(query, options, plain => request.QueryStringParameters = plain, matchers => request.QueryStringParameterMatchers = matchers);

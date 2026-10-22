@@ -1373,6 +1373,43 @@ impl HttpRequest {
         self
     }
 
+    /// A logical OR request matcher: it matches a request when any of
+    /// `branches` matches it, trying them in order; with [`not`](Self::not) it
+    /// matches when none does. A branch may be an HTTP, OpenAPI, conditional or
+    /// anyOf matcher. Serialises to `{ "anyOf": [ … ] }`, held in
+    /// [`extra`](Self::extra) so adding it changed no public field.
+    ///
+    /// # Example
+    /// ```
+    /// use mockserver_client::HttpRequest;
+    ///
+    /// let request = HttpRequest::any_of([
+    ///     HttpRequest::new().path("/pets"),
+    ///     HttpRequest::new().path("/animals"),
+    /// ]);
+    /// assert_eq!(
+    ///     serde_json::to_value(&request).unwrap(),
+    ///     serde_json::json!({ "anyOf": [ { "path": "/pets" }, { "path": "/animals" } ] })
+    /// );
+    /// assert_eq!(request.any_of_value().unwrap().len(), 2);
+    /// ```
+    pub fn any_of(branches: impl IntoIterator<Item = HttpRequest>) -> Self {
+        let branches = branches
+            .into_iter()
+            .map(|branch| serde_json::to_value(branch).unwrap_or(serde_json::Value::Null))
+            .collect();
+        let mut request = Self::new();
+        request
+            .extra
+            .insert("anyOf".into(), serde_json::Value::Array(branches));
+        request
+    }
+
+    /// The branches of this anyOf matcher, or `None` when it is not one.
+    pub fn any_of_value(&self) -> Option<Vec<HttpRequest>> {
+        serde_json::from_value(self.extra.get("anyOf")?.clone()).ok()
+    }
+
     /// An OpenAPI request matcher for a spec URL, file path, classpath resource
     /// or inline spec — a string, or an inline spec object as a
     /// [`serde_json::Value`].

@@ -254,10 +254,11 @@ module MockServer
   end
 
   # @api private
-  # An httpRequest holding if is a conditional matcher, one naming an OpenAPI
-  # spec (specUrlOrPayload) is an OpenAPI matcher; anything else is an HTTP (or
-  # DNS) request matcher.
+  # An httpRequest holding anyOf is an anyOf matcher, one holding if a
+  # conditional matcher, one naming an OpenAPI spec (specUrlOrPayload) an
+  # OpenAPI matcher; anything else is an HTTP (or DNS) request matcher.
   def self.deserialize_request_definition(data)
+    return AnyOfRequestDefinition.from_hash(data) if data.is_a?(Hash) && data.key?('anyOf')
     return ConditionalRequestDefinition.from_hash(data) if data.is_a?(Hash) && data.key?('if')
     return OpenAPIDefinition.from_hash(data) if data.is_a?(Hash) && data.key?('specUrlOrPayload')
 
@@ -3332,6 +3333,37 @@ module MockServer
     end
   end
 
+  # A logical OR of request matchers, written as an httpRequest holding an
+  # anyOf array. It matches a request when any branch matches it, trying them
+  # in order. Each branch is an HttpRequest, an OpenAPIDefinition, a
+  # ConditionalRequestDefinition or another AnyOfRequestDefinition.
+  class AnyOfRequestDefinition
+    # not_any_of inverts the match (the server's +not+ field): it then matches
+    # when no branch does.
+    attr_accessor :any_of, :not_any_of
+
+    def initialize(any_of: [], not_any_of: nil)
+      @any_of = any_of
+      @not_any_of = not_any_of
+    end
+
+    def to_h
+      MockServer.strip_none({
+        'not'   => @not_any_of,
+        'anyOf' => (@any_of || []).map(&:to_h)
+      })
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(
+        any_of:     (data['anyOf'] || []).map { |branch| MockServer.deserialize_request_definition(branch) },
+        not_any_of: data['not']
+      )
+    end
+  end
+
   class OpenAPIExpectation
     attr_accessor :spec_url_or_payload, :operations_and_responses
 
@@ -4029,20 +4061,40 @@ module MockServer
     end
   end
 
+  # For an anyOf request matcher that does not match the request, which branch
+  # came closest (+closest_branch+, 0-based, the earlier on a tie) and how each
+  # differed: each of +branches+ has branch, matches, differingFieldCount and
+  # differingFields.
+  class AnyOfBranchComparison
+    attr_reader :closest_branch, :branches
+
+    def initialize(closest_branch: nil, branches: [])
+      @closest_branch = closest_branch
+      @branches = branches
+    end
+
+    def self.from_hash(data)
+      return nil if data.nil?
+
+      new(closest_branch: data['closestBranch'], branches: data['branches'] || [])
+    end
+  end
+
   # One expectation as explain, debug_mismatch or explain_unmatched evaluated
   # it. The matched expectation has no +reason+; a skipped or shadowed one has
   # a +reason+ (NAMESPACE, INACTIVE, FIELDS_DIFFER, NOT_OPERATOR, CONVERSATION,
   # SCENARIO_STATE, PERCENTAGE or LOWER_PRIORITY) and an +explanation+.
-  # +suggested_fix+ is set only by explain_unmatched with +suggest_fixes+.
+  # +suggested_fix+ is set only by explain_unmatched with +suggest_fixes+;
+  # +any_of+ only for an anyOf request matcher that does not match.
   class ExplainedExpectation
     attr_reader :expectation_id, :expectation_method, :expectation_path, :position, :priority,
                 :reason, :explanation, :matches, :matched_field_count, :total_field_count,
-                :differing_field_count, :differences, :remediation, :suggested_fix
+                :differing_field_count, :differences, :remediation, :suggested_fix, :any_of
 
     def initialize(expectation_id: nil, expectation_method: nil, expectation_path: nil, position: nil,
                    priority: nil, reason: nil, explanation: nil, matches: nil, matched_field_count: nil,
                    total_field_count: nil, differing_field_count: nil, differences: {}, remediation: {},
-                   suggested_fix: nil)
+                   suggested_fix: nil, any_of: nil)
       @expectation_id = expectation_id
       @expectation_method = expectation_method
       @expectation_path = expectation_path
@@ -4057,6 +4109,7 @@ module MockServer
       @differences = differences
       @remediation = remediation
       @suggested_fix = suggested_fix
+      @any_of = any_of
     end
 
     def self.from_hash(data)
@@ -4076,7 +4129,8 @@ module MockServer
         differing_field_count: data['differingFieldCount'],
         differences:           data['differences'] || {},
         remediation:           data['remediation'] || {},
-        suggested_fix:         SuggestedFix.from_hash(data['suggestedFix'])
+        suggested_fix:         SuggestedFix.from_hash(data['suggestedFix']),
+        any_of:                AnyOfBranchComparison.from_hash(data['anyOf'])
       )
     end
 

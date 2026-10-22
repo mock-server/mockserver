@@ -9,7 +9,8 @@ namespace MockServer;
  *
  * The same class also carries the other request matchers an expectation's
  * {@code httpRequest} can hold: an OpenAPI matcher ({@see HttpRequest::openAPI()})
- * and a conditional if/then/else matcher ({@see HttpRequest::conditional()}).
+ * a conditional if/then/else matcher ({@see HttpRequest::conditional()}) and a
+ * logical OR of matchers ({@see HttpRequest::anyOf()}).
  *
  * @example
  *   $request = HttpRequest::request()
@@ -50,6 +51,8 @@ class HttpRequest implements \JsonSerializable
     private ?HttpRequest $ifRequest = null;
     private ?HttpRequest $thenRequest = null;
     private ?HttpRequest $elseRequest = null;
+    /** @var list<HttpRequest|array<string, mixed>>|null branches; a decoded JSON branch is written as is */
+    private ?array $anyOf = null;
     /**
      * Fields read by {@see HttpRequest::fromArray()} that this class does not
      * model, written back unchanged by {@see HttpRequest::toArray()}.
@@ -91,6 +94,25 @@ class HttpRequest implements \JsonSerializable
         $request->ifRequest = $ifRequest;
         $request->thenRequest = $thenRequest;
         $request->elseRequest = $elseRequest;
+        return $request;
+    }
+
+    /**
+     * A logical OR request matcher, written as an {@code httpRequest} holding an
+     * {@code anyOf} array: it matches a request when any branch matches it,
+     * trying them in order, and with {@see not()} when none does. Each branch is
+     * an HTTP matcher, an OpenAPI matcher, a conditional or another anyOf.
+     *
+     * @example
+     *   HttpRequest::anyOf(
+     *       HttpRequest::request()->path('/pets'),
+     *       HttpRequest::request()->path('/animals'),
+     *   );
+     */
+    public static function anyOf(HttpRequest ...$branches): self
+    {
+        $request = new self();
+        $request->anyOf = array_values($branches);
         return $request;
     }
 
@@ -533,6 +555,24 @@ class HttpRequest implements \JsonSerializable
     }
 
     /**
+     * The branches of an anyOf matcher, or null when this is not one.
+     *
+     * @return list<HttpRequest>|null
+     */
+    public function getAnyOf(): ?array
+    {
+        return $this->anyOf;
+    }
+
+    /**
+     * Whether this is an anyOf (logical OR) matcher.
+     */
+    public function isAnyOf(): bool
+    {
+        return $this->anyOf !== null;
+    }
+
+    /**
      * Whether this is an OpenAPI matcher.
      */
     public function isOpenAPI(): bool
@@ -544,8 +584,9 @@ class HttpRequest implements \JsonSerializable
      * Read a request matcher from a decoded JSON object, such as the
      * {@code httpRequest} of an expectation the server returns.
      *
-     * An {@code httpRequest} holding {@code if} reads as a conditional matcher
-     * whose branches are read the same way, recursively; one naming
+     * An {@code httpRequest} holding {@code if} reads as a conditional matcher,
+     * and one holding {@code anyOf} as an anyOf matcher, whose branches are read
+     * the same way, recursively; one naming
      * {@code specUrlOrPayload} reads as an OpenAPI matcher. A field this class
      * does not model, or one whose JSON shape it cannot hold (for example a
      * {@code method} written as a {@code {not, value}} object), is kept as read
@@ -624,6 +665,17 @@ class HttpRequest implements \JsonSerializable
                     return false;
                 }
                 $this->{$key . 'Request'} = self::fromArray($value);
+                return true;
+            case 'anyOf':
+                if (!is_array($value) || !array_is_list($value)) {
+                    return false;
+                }
+                foreach ($value as $branch) {
+                    if (!is_array($branch)) {
+                        return false;
+                    }
+                }
+                $this->anyOf = array_map(static fn (array $branch): self => self::fromArray($branch), $value);
                 return true;
             default:
                 return false;
@@ -750,6 +802,12 @@ class HttpRequest implements \JsonSerializable
         }
         if ($this->elseRequest !== null) {
             $data['else'] = $this->elseRequest->toArray();
+        }
+        if ($this->anyOf !== null) {
+            $data['anyOf'] = array_map(
+                static fn (mixed $branch): mixed => $branch instanceof HttpRequest ? $branch->toArray() : $branch,
+                $this->anyOf,
+            );
         }
         foreach ($this->additionalFields as $key => $value) {
             if (!array_key_exists($key, $data)) {

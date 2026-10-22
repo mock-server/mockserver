@@ -528,6 +528,18 @@ export const topMetadataLiteral: Expectation = {
     }
 };
 
+/* Logical OR of request matchers, nested and negated (matcher_request_any_of.json). */
+export const matcherRequestAnyOfLiteral: Expectation = {
+    httpRequest: {
+        anyOf: [
+            { method: 'GET', path: '/pets' },
+            { method: 'POST', path: '/pets', headers: { 'X-Tenant': ['acme'] } },
+            { not: true, anyOf: [{ path: '/admin/.*' }, { path: '/internal/.*' }] },
+        ],
+    },
+    httpResponse: { statusCode: 200, body: 'matched one of the alternatives' },
+};
+
 /* ================================================================== *
  * SECTION 2 — KNOWN-GAP REGISTER
  *

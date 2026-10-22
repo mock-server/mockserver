@@ -1,5 +1,6 @@
 package org.mockserver.serialization.model;
 
+import org.mockserver.model.AnyOfRequestDefinition;
 import org.mockserver.model.BinaryRequestDefinition;
 import org.mockserver.model.ConditionalRequestDefinition;
 import org.mockserver.model.DnsRequestDefinition;
@@ -30,9 +31,11 @@ public abstract class RequestDefinitionDTO extends NotDTO {
             return new BinaryRequestDefinitionDTO((BinaryRequestDefinition) requestDefinition);
         } else if (requestDefinition instanceof ConditionalRequestDefinition) {
             return new ConditionalRequestDefinitionDTO((ConditionalRequestDefinition) requestDefinition);
+        } else if (requestDefinition instanceof AnyOfRequestDefinition) {
+            return new AnyOfRequestDefinitionDTO((AnyOfRequestDefinition) requestDefinition);
         } else {
             throw new IllegalArgumentException("a " + requestDefinition.getClass().getName() + " cannot be sent to MockServer as a request definition,"
-                + " only an http request, OpenAPI, DNS, binary or conditional request definition can");
+                + " only an http request, OpenAPI, DNS, binary, conditional or anyOf request definition can");
         }
     }
 

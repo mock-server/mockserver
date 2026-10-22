@@ -25,6 +25,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.log.model.LogEntry.LogMessageType.NO_MATCH_RESPONSE;
+import static org.mockserver.model.AnyOfRequestDefinition.requestAnyOf;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -64,7 +65,9 @@ public class HttpStateDiagnosticsOpenApiSchemaTest {
         assertThat(truncated.path("truncated").asBoolean(), is(true));
         schema.assertDocuments(truncated);
 
-        assertThat("documented but never returned", schema.documentedButNeverReturned(path -> path.startsWith("ExplainedExpectation/") || path.startsWith("SuggestedFix/")),
+        // anyOfBranchesAreDocumentedForEveryDiagnostic covers AnyOfBranchComparison
+        assertThat("documented but never returned", schema.documentedButNeverReturned(path -> path.startsWith("ExplainedExpectation/") || path.startsWith("SuggestedFix/")
+                || path.startsWith("AnyOfBranchComparison/")),
             is(Collections.emptyList()));
         assertThat(explainedExpectationFields(schema), is(fields("expectationId", "expectationMethod", "expectationPath", "matches",
             "matchedFieldCount", "totalFieldCount", "differences", "differences{}")));
@@ -104,11 +107,35 @@ public class HttpStateDiagnosticsOpenApiSchemaTest {
             org.mockserver.llm.client.LlmBackend.of(org.mockserver.model.Provider.OPENAI, "key"));
         schema.assertDocuments(narratedExplainUnmatched());
 
-        assertThat("documented but never returned", schema.documentedButNeverReturned(path -> path.startsWith("ExplainedExpectation/")),
+        assertThat("documented but never returned", schema.documentedButNeverReturned(path -> path.startsWith("ExplainedExpectation/")
+                || path.startsWith("AnyOfBranchComparison/")),
             is(Collections.emptyList()));
         assertThat(explainedExpectationFields(schema), is(fields("expectationId", "expectationMethod", "expectationPath", "matches",
             "matchedFieldCount", "totalFieldCount", "differingFieldCount", "differences", "differences{}",
             "remediation", "remediation{}", "suggestedFix")));
+    }
+
+    @Test
+    public void anyOfBranchesAreDocumentedForEveryDiagnostic() throws Exception {
+        start(configuration());
+        httpState.add(new Expectation(requestAnyOf(
+            request().withMethod("POST").withPath("/api/other"),
+            request().withMethod("GET").withPath("/api/order")
+        )).withId("any-of").thenRespond(response()));
+        logUnmatched(request().withMethod("GET").withPath("/api/orders"));
+
+        OpenApiResponseSchema debugMismatch = OpenApiResponseSchema.of("/mockserver/debugMismatch", "200");
+        JsonNode mismatch = debugMismatch(200);
+        debugMismatch.assertDocuments(mismatch);
+        assertThat(mismatch.path("results").get(0).path("anyOf").path("closestBranch").asInt(), is(1));
+        OpenApiResponseSchema explainUnmatched = OpenApiResponseSchema.of("/mockserver/explainUnmatched", "200");
+        explainUnmatched.assertDocuments(explainUnmatched("{\"limit\":10}"));
+
+        for (OpenApiResponseSchema schema : new OpenApiResponseSchema[]{debugMismatch, explainUnmatched}) {
+            assertThat("documented but never returned", schema.documentedButNeverReturned(path -> !path.startsWith("AnyOfBranchComparison/")),
+                is(Collections.emptyList()));
+            assertThat(explainedExpectationFields(schema).contains("anyOf"), is(true));
+        }
     }
 
     private static Set<String> explainedExpectationFields(OpenApiResponseSchema schema) {

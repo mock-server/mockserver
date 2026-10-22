@@ -15,6 +15,9 @@
     },
     {
       "$ref": "#/definitions/conditionalRequestDefinition"
+    },
+    {
+      "$ref": "#/definitions/anyOfRequestDefinition"
     }
   ],
   "definitions": {

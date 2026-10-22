@@ -294,6 +294,7 @@ function body(w: Json, indent: number, at: string): string {
 // ---------------------------------------------------------------------------
 
 function httpRequest(w: Obj, indent: number, at: string): string {
+  if (Array.isArray(w['anyOf'])) return anyOfRequest(w, indent, at);
   const args: Arg[] = [];
   const keys: string[] = [];
   const push = (wk: string, arg: string, render: (v: Json) => string) => {
@@ -319,6 +320,14 @@ function httpRequest(w: Obj, indent: number, at: string): string {
   push('socketAddress', 'socket_address', (v) => socketAddress(v as Obj, indent + 2, `${at}.socketAddress`));
   known(at, w, keys);
   return ctor('HttpRequest', args, indent);
+}
+
+function anyOfRequest(w: Obj, indent: number, at: string): string {
+  known(at, w, ['anyOf', 'not']);
+  const branches = (w['anyOf'] as Json[]).map((b, n) => httpRequest(b as Obj, indent + 4, `${at}.anyOf[${n}]`));
+  const args: Arg[] = [{ name: 'any_of', value: arrayOf(branches, indent + 2) }];
+  if (typeof w['not'] === 'boolean') args.push({ name: 'not_any_of', value: scalar(w['not']) });
+  return ctor('AnyOfRequestDefinition', args, indent);
 }
 
 function socketAddress(w: Obj, indent: number, at: string): string {

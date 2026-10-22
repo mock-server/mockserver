@@ -223,6 +223,16 @@ public sealed class HttpRequest
     public HttpRequest? Else { get; set; }
 
     /// <summary>
+    /// Logical OR of request matchers. Setting it makes this an anyOf matcher (the server's
+    /// <c>anyOfRequestDefinition</c>): it matches a request when any branch matches it, trying them in
+    /// order, and with <see cref="Not"/> when none does. Use it with <see cref="Not"/> only. Each branch
+    /// is an HTTP, OpenAPI, conditional or anyOf matcher. See <see cref="RequestAnyOf"/>.
+    /// </summary>
+    [JsonPropertyName("anyOf")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<HttpRequest>? AnyOf { get; set; }
+
+    /// <summary>
     /// Creates a new HttpRequest builder.
     /// </summary>
     public static HttpRequestBuilder Request() => new();
@@ -234,6 +244,13 @@ public sealed class HttpRequest
     /// </summary>
     public static HttpRequest RequestIf(HttpRequest ifRequest, HttpRequest? thenRequest = null, HttpRequest? elseRequest = null)
         => new() { If = ifRequest ?? throw new ArgumentNullException(nameof(ifRequest)), Then = thenRequest, Else = elseRequest };
+
+    /// <summary>
+    /// Creates a logical OR request matcher: it matches a request when any of <paramref name="branches"/>
+    /// matches it. Branches may themselves be OpenAPI, conditional or anyOf matchers.
+    /// </summary>
+    public static HttpRequest RequestAnyOf(params HttpRequest[] branches)
+        => new() { AnyOf = (branches ?? throw new ArgumentNullException(nameof(branches))).ToList() };
 
     /// <summary>
     /// Creates an OpenAPI request matcher for <paramref name="specUrlOrPayload"/> (a URL, file/classpath

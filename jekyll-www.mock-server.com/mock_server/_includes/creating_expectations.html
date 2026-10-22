@@ -315,6 +315,8 @@ $client-&gt;when(
     <li><strong><a href="#request_openapi_matchers">open api request matcher</a></strong> - that match requests using an <a target="_blank" href="https://swagger.io/docs/specification/about/" rel="noopener noreferrer"><strong>OpenAPI</strong></a> definition</li>
 </ul>
 
+<p>Request matchers can also be combined: an <a href="#any_of_request_matcher"><strong>anyOf</strong></a> matcher matches a request when any one of several request matchers does, and a <a href="#conditional_request_matcher"><strong>conditional</strong></a> matcher applies if/then/else logic.</p>
+
 <a id="request_properties_matchers" class="anchor" href="#request_properties_matchers">&nbsp;</a>
 
 <p>A <strong>request properties matcher</strong> matches requests using one or more of the following properties:</p>
@@ -2735,6 +2737,165 @@ $client-&gt;when(
     </div>
 </div>
 
+
+<a id="any_of_request_matcher" class="anchor" href="#any_of_request_matcher">&nbsp;</a>
+
+<h4>Any Of (logical OR) Request Matcher</h4>
+
+<p>To match a request that satisfies <em>any one</em> of several request matchers, give the expectation's <code>httpRequest</code> an <code>anyOf</code> list in place of the usual request fields. MockServer tries the matchers in order and stops at the first that matches. Each entry can be any request matcher &mdash; the usual request fields, an OpenAPI definition, an <code>if</code>/<code>then</code>/<code>else</code> conditional, or another <code>anyOf</code>. Add <code>"not": true</code> beside <code>anyOf</code> to match requests that match <em>none</em> of them.</p>
+
+<p>This expectation matches a GET to either <code>/pets</code> or <code>/animals</code>, and nothing else. The same matcher works for <a href="/mock_server/verification.html">verification</a> and for retrieving recorded requests. When a request matches none of the entries, <a href="/mock_server/debugging_issues.html">explain and debugMismatch</a> report which entry came closest (<code>anyOf.closestBranch</code>, counted from 0) and show that entry's differences.</p>
+
+<button id="button_any_of_request_definition" class="accordion">match request using any of several request matchers (logical OR)</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">import static org.mockserver.model.AnyOfRequestDefinition.requestAnyOf;
+
+new MockServerClient("localhost", 1080)
+    .when(
+        requestAnyOf(
+            request().withMethod("GET").withPath("/pets"),
+            request().withMethod("GET").withPath("/animals")
+        )
+    )
+    .respond(response().withBody("pets or animals"));</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "anyOf": [
+            { "method": "GET", "path": "/pets" },
+            { "method": "GET", "path": "/animals" }
+        ]
+    },
+    "httpResponse": {
+        "body": "pets or animals"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, AnyOfRequestDefinition, HttpRequest, HttpResponse
+
+client = MockServerClient("localhost", 1080)
+client.when(
+    AnyOfRequestDefinition.request_any_of(
+        HttpRequest(method="GET", path="/pets"),
+        HttpRequest(method="GET", path="/animals"),
+    )
+).respond(
+    HttpResponse(body="pets or animals")
+)</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+include MockServer
+
+client = Client.new('localhost', 1080)
+client.when(
+  AnyOfRequestDefinition.new(
+    any_of: [
+      HttpRequest.new(method: 'GET', path: '/pets'),
+      HttpRequest.new(method: 'GET', path: '/animals')
+    ]
+  )
+).respond(
+  HttpResponse.new(body: 'pets or animals')
+)
+client.close</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">package main
+
+import (
+    mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
+)
+
+func main() {
+    client := mockserver.New("localhost", 1080)
+    client.Upsert(mockserver.Expectation{
+        HttpRequest: mockserver.AnyOfRequest(
+            &amp;mockserver.HttpRequest{Method: "GET", Path: "/pets"},
+            &amp;mockserver.HttpRequest{Method: "GET", Path: "/animals"},
+        ),
+        HttpResponse: &amp;mockserver.HttpResponse{Body: "pets or animals"},
+    })
+}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using MockServer.Client;
+using MockServer.Client.Models;
+
+using var client = new MockServerClient("localhost", 1080);
+client.When(
+    HttpRequest.RequestAnyOf(
+        HttpRequest.Request().WithMethod("GET").WithPath("/pets"),
+        HttpRequest.Request().WithMethod("GET").WithPath("/animals")
+    )
+).Respond(
+    HttpResponse.Response()
+        .WithBody("pets or animals")
+);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use mockserver_client::{ClientBuilder, HttpRequest, HttpResponse};
+
+let client = ClientBuilder::new("localhost", 1080).build().unwrap();
+client.when(
+    HttpRequest::any_of([
+        HttpRequest::new().method("GET").path("/pets"),
+        HttpRequest::new().method("GET").path("/animals"),
+    ]),
+).respond(
+    HttpResponse::new().body("pets or animals"),
+).unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">use MockServer\MockServerClient;
+use MockServer\HttpRequest;
+use MockServer\HttpResponse;
+
+$client = new MockServerClient('localhost', 1080);
+$client-&gt;when(
+    HttpRequest::anyOf(
+        HttpRequest::request()-&gt;method('GET')-&gt;path('/pets'),
+        HttpRequest::request()-&gt;method('GET')-&gt;path('/animals')
+    )
+)-&gt;respond(
+    HttpResponse::response()-&gt;body('pets or animals')
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "anyOf": [
+            { "method": "GET", "path": "/pets" },
+            { "method": "GET", "path": "/animals" }
+        ]
+    },
+    "httpResponse": {
+        "body": "pets or animals"
+    }
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 
 <a id="accept_header_matching" class="anchor" href="#accept_header_matching">&nbsp;</a>
 

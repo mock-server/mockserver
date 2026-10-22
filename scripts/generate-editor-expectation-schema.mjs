@@ -71,6 +71,7 @@ const REFERENCE_FILES = [
   "protocol",
   "rateLimit",
   "conditionalRequestDefinition",
+  "anyOfRequestDefinition",
   "recoverAfter",
   // NOTE: "draft-07" is deliberately NOT bundled. The source schemas reference
   // it via `#/definitions/draft-07` to mean "any valid JSON schema" (for JSON

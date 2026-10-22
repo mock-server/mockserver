@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from mockserver import (
+    AnyOfBranchComparison,
     Arrival,
     ArrivalForwardFailure,
     AsyncMockServerClient,
@@ -314,7 +315,7 @@ class TestModelsFollowTheSchema:
     @pytest.mark.parametrize(
         "model",
         [ExplainedExpectation, SuggestedFix, DebugMismatchResult, ClosestMatch, ExplainUnmatchedResult, UnmatchedRequest,
-         ExplanationNarration],
+         ExplanationNarration, AnyOfBranchComparison],
     )
     def test_diagnostic_model_models_every_schema_property(self, model):
         fields = {f.name for f in dataclasses.fields(model)}

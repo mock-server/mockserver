@@ -1,8 +1,6 @@
 package org.mockserver.serialization.model;
 
 import org.mockserver.model.ConditionalRequestDefinition;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.OpenAPIDefinition;
 import org.mockserver.model.RequestDefinition;
 
 /**
@@ -30,24 +28,7 @@ public class ConditionalRequestDefinitionDTO extends RequestDefinitionDTO {
     }
 
     private static RequestDefinitionDTO toDTO(RequestDefinition requestDefinition) {
-        // Branch types are deliberately limited to those the conditionalRequestDefinition JSON schema
-        // accepts (httpRequest, openAPIDefinition and a nested conditionalRequestDefinition), so the
-        // DTO mapping and the control-plane schema stay in lock step and an expectation built in Java
-        // always round-trips over the JSON API. BinaryRequestDefinition/DnsRequestDefinition are not
-        // supported as conditional branches.
-        if (requestDefinition instanceof HttpRequest) {
-            return new HttpRequestDTO((HttpRequest) requestDefinition);
-        } else if (requestDefinition instanceof OpenAPIDefinition) {
-            return new OpenAPIDefinitionDTO((OpenAPIDefinition) requestDefinition);
-        } else if (requestDefinition instanceof ConditionalRequestDefinition) {
-            return new ConditionalRequestDefinitionDTO((ConditionalRequestDefinition) requestDefinition);
-        } else if (requestDefinition != null) {
-            throw new IllegalArgumentException("Unsupported conditional request branch type: "
-                + requestDefinition.getClass().getSimpleName()
-                + " (only httpRequest, openAPIDefinition and a nested conditional are supported as if/then/else branches)");
-        } else {
-            return null;
-        }
+        return AnyOfRequestDefinitionDTO.branchDTO(requestDefinition);
     }
 
     public ConditionalRequestDefinition buildObject() {

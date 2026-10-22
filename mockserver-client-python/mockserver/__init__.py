@@ -1,6 +1,8 @@
 from mockserver.models import (
     AfterAction,
     AllOfBody,
+    AnyOfBranchComparison,
+    AnyOfRequestDefinition,
     BinaryResponse,
     BinaryUpstream,
     Body,
@@ -168,6 +170,8 @@ from mockserver.launcher import (
 __all__ = [
     "AfterAction",
     "AllOfBody",
+    "AnyOfBranchComparison",
+    "AnyOfRequestDefinition",
     "AsyncMockServerClient",
     "BinaryResponse",
     "BinaryUpstream",

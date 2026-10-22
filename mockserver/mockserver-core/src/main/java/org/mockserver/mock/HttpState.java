@@ -1333,6 +1333,7 @@ public class HttpState {
                         }
                     }
                     matchResult.set("differences", differences);
+                    RequestMatchExplainer.addAnyOfBranches(objectMapper, matchResult, matcher, clonedRequest);
 
                     if (failures < closestMatchFailures && expectation != null) {
                         closestMatchFailures = failures;

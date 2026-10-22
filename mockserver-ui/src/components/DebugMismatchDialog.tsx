@@ -120,6 +120,15 @@ function ExpectationResultRow({ result, isClosest }: { result: DebugMismatchExpe
         {isClosest && (
           <Chip label="closest" size="small" color="warning" sx={{ fontSize: '0.7rem', height: 18 }} />
         )}
+        {result.anyOf && (
+          <Chip
+            label={`anyOf: closest is branch ${result.anyOf.closestBranch} of ${result.anyOf.branches.length}`}
+            size="small"
+            variant="outlined"
+            data-testid="debug-mismatch-any-of-closest"
+            sx={{ fontFamily: monospaceFontFamily, fontSize: '0.7rem', height: 18 }}
+          />
+        )}
       </Box>
       {expanded && hasDiffs && (
         <Box sx={{ pl: 5, pb: 1, pr: 1 }}>

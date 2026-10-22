@@ -5,6 +5,7 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.TimeToLive;
 import org.mockserver.matchers.Times;
+import org.mockserver.model.AnyOfRequestDefinition;
 import org.mockserver.model.BinaryRequestDefinition;
 import org.mockserver.model.BinaryResponse;
 import org.mockserver.model.ConditionalRequestDefinition;
@@ -92,7 +93,7 @@ public class BinaryMessageGateDifferentialTest {
 
     /**
      * Always one unlimited binary expectation, so the pass ran for every message before the gate; then a random mix of
-     * binary expectations of short lengths (so lengths collide), negated ones, ones without bytes, conditional and
+     * binary expectations of short lengths (so lengths collide), negated ones, ones without bytes, conditional, anyOf and
      * HTTP ones, with random priorities and Times.
      */
     private static List<Supplier<Expectation>> randomStore(Random random) {
@@ -112,6 +113,9 @@ public class BinaryMessageGateDifferentialTest {
                 store.add(binary(id, random.nextBoolean() ? new byte[0] : null, false, times, priority));
             } else if (kind < 16) {
                 store.add(expectation(id, ConditionalRequestDefinition.requestIf(request().withPath("/guard"), request().withPath("/then")), times, priority, false));
+            } else if (kind < 17) {
+                AnyOfRequestDefinition anyOf = AnyOfRequestDefinition.requestAnyOf(request().withPath("/a"), request().withPath("/b"));
+                store.add(expectation(id, random.nextBoolean() ? Not.not(anyOf) : anyOf, times, priority, false));
             } else {
                 store.add(expectation(id, request().withPath("/http-" + i), times, priority, false));
             }

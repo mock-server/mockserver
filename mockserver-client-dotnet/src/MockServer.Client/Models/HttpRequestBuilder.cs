@@ -245,6 +245,15 @@ public sealed class HttpRequestBuilder
         return this;
     }
 
+    /// <summary>
+    /// Makes this a logical OR matcher of <paramref name="branches"/>. See <see cref="HttpRequest.RequestAnyOf"/>.
+    /// </summary>
+    public HttpRequestBuilder WithAnyOf(params HttpRequest[] branches)
+    {
+        (_request.AnyOf ??= new List<HttpRequest>()).AddRange(branches);
+        return this;
+    }
+
     public HttpRequest Build() => _request;
 
     /// <summary>

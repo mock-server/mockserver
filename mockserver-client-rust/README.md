@@ -351,6 +351,17 @@ let request = HttpRequest::new().path("/internal").client_ip("10.0.0.0/8");
 assert_eq!(request.client_ip_value(), Some("10.0.0.0/8"));
 ```
 
+### Any-of (logical OR) matcher
+
+`HttpRequest::any_of([...])` matches a request when any one of its branches does, tried in order; `.not(true)` matches requests that match none of them. A branch may be an OpenAPI matcher, a conditional or another anyOf. It serialises to `{"anyOf": [...]}` and is held in `extra`, so adding it changed no public field; `any_of_value()` reads the branches back.
+
+```rust
+client.when(HttpRequest::any_of([
+    HttpRequest::new().method("GET").path("/pets"),
+    HttpRequest::new().method("GET").path("/animals"),
+])).respond(HttpResponse::new().body("pets or animals")).unwrap();
+```
+
 ### Binary, JSON and file response bodies
 
 `.body(..)` sends a plain string body. For any other body shape, use
