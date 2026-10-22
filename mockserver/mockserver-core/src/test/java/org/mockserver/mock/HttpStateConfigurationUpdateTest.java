@@ -378,6 +378,51 @@ public class HttpStateConfigurationUpdateTest {
     }
 
     @Test
+    public void shouldNotLetAPutAddRemoveOrReconfigureExtensions() {
+        // given
+        configuration.extensions("com.example.Loaded").extensionScanning(false).extensionStartTimeoutMillis(1000L);
+
+        // when
+        put(new ConfigurationDTO().setExtensions("com.example.Injected").setExtensionScanning(true).setExtensionStartTimeoutMillis(5L));
+
+        // then
+        assertThat(configuration.extensions(), is("com.example.Loaded"));
+        assertThat(configuration.extensionScanning(), is(false));
+        assertThat(configuration.extensionStartTimeoutMillis(), is(1000L));
+        List<String> warnings = logger.warnings();
+        assertThat(warnings, hasSize(3));
+        assertThat(warnings.get(0), containsString("extensions is fixed at startup"));
+        assertThat(warnings.get(1), containsString("extensionScanning is fixed at startup"));
+        assertThat(warnings.get(2), containsString("extensionStartTimeoutMillis is fixed at startup"));
+    }
+
+    @Test
+    public void shouldNotWarnWhenExtensionPropertiesAreEchoedBackUnchanged() {
+        // given - GET then PUT of the whole configuration of a server with extensions
+        configuration.extensions("com.example.Loaded").extensionScanning(true);
+
+        // when
+        put(new ConfigurationDTO(configuration));
+
+        // then
+        assertThat(logger.warnings(), is(empty()));
+        assertThat(configuration.extensions(), is("com.example.Loaded"));
+    }
+
+    @Test
+    public void shouldNotLetAPutRemoveExtensions() {
+        // given
+        configuration.extensions("com.example.Loaded");
+
+        // when
+        put(new ConfigurationDTO().setExtensions(""));
+
+        // then
+        assertThat(configuration.extensions(), is("com.example.Loaded"));
+        assertThat(logger.warnings(), hasSize(1));
+    }
+
+    @Test
     public void shouldNotWarnWhenInitOnlyPropertiesAreEchoedBackUnchanged() {
         // given - the whole-blob PUT case: a client GETs the configuration and PUTs it back
         // verbatim, including the init-only properties. That must not produce noise.

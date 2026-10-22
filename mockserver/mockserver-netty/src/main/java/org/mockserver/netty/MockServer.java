@@ -96,10 +96,16 @@ public class MockServer extends LifeCycle {
      */
     public MockServer(final Configuration configuration, final List<ProxyConfiguration> proxyConfigurations, final Integer... localPorts) {
         super(configuration);
-        createServerBootstrap(proxyConfigurations, localPorts);
+        try {
+            createServerBootstrap(proxyConfigurations, localPorts);
 
-        // wait to start
-        getLocalPort();
+            // wait to start
+            getLocalPort();
+        } catch (Throwable throwable) {
+            // the caller gets no reference to stop, so release what LifeCycle started, extensions included
+            stopRefusedStart();
+            throw throwable;
+        }
     }
 
     /**
@@ -144,27 +150,33 @@ public class MockServer extends LifeCycle {
      */
     public MockServer(final Configuration configuration, final List<ProxyConfiguration> proxyConfigurations, @Nullable String remoteHost, final Integer remotePort, final Integer... localPorts) {
         super(configuration);
-        if (remotePort == null) {
-            throw new IllegalArgumentException("You must specify a remote hostname");
-        }
-        if (isBlank(remoteHost)) {
-            remoteHost = "localhost";
-        }
+        try {
+            if (remotePort == null) {
+                throw new IllegalArgumentException("You must specify a remote hostname");
+            }
+            if (isBlank(remoteHost)) {
+                remoteHost = "localhost";
+            }
 
-        remoteSocket = new InetSocketAddress(remoteHost, remotePort);
-        if (proxyConfigurations != null && mockServerLogger.isEnabledForInstance(Level.INFO)) {
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(SERVER_CONFIGURATION)
-                    .setLogLevel(Level.INFO)
-                    .setMessageFormat("using proxy configuration for forwarded requests:{}")
-                    .setArguments(proxyConfigurations)
-            );
-        }
-        createServerBootstrap(proxyConfigurations, localPorts);
+            remoteSocket = new InetSocketAddress(remoteHost, remotePort);
+            if (proxyConfigurations != null && mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(Level.INFO)
+                        .setMessageFormat("using proxy configuration for forwarded requests:{}")
+                        .setArguments(proxyConfigurations)
+                );
+            }
+            createServerBootstrap(proxyConfigurations, localPorts);
 
-        // wait to start
-        getLocalPort();
+            // wait to start
+            getLocalPort();
+        } catch (Throwable throwable) {
+            // the caller gets no reference to stop, so release what LifeCycle started, extensions included
+            stopRefusedStart();
+            throw throwable;
+        }
     }
 
     private void createServerBootstrap(final List<ProxyConfiguration> proxyConfigurations, final Integer... localPorts) {

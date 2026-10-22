@@ -147,6 +147,28 @@ public class ConfigurationDTOTest {
     }
 
     @Test
+    public void shouldNotApplyExtensionPropertiesToARunningServer() {
+        Configuration target = configuration()
+            .extensions("com.example.Loaded")
+            .extensionScanning(false)
+            .extensionStartTimeoutMillis(1000L);
+
+        new ConfigurationDTO()
+            .setExtensions("com.example.Injected")
+            .setExtensionScanning(true)
+            .setExtensionStartTimeoutMillis(5L)
+            .applyTo(target);
+
+        assertThat(target.extensions(), is("com.example.Loaded"));
+        assertThat(target.extensionScanning(), is(false));
+        assertThat(target.extensionStartTimeoutMillis(), is(1000L));
+        // still shown, read-only, by GET /mockserver/configuration
+        assertThat(new ConfigurationDTO(target).getExtensions(), is("com.example.Loaded"));
+        // and still settable at startup from a DTO
+        assertThat(new ConfigurationDTO().setExtensions("com.example.Startup").buildObject().extensions(), is("com.example.Startup"));
+    }
+
+    @Test
     public void shouldRoundTripDataPlaneAuthenticationFields() {
         Configuration original = configuration()
             .dataPlaneAuthenticationRequired(true)
@@ -567,6 +589,10 @@ public class ConfigurationDTOTest {
         // decides which environment variables and system properties templates can read, so a control-plane
         // request must not widen it
         "templateSystemValueAllowList",
+        // extensions are trusted code loaded once at startup, so a control-plane request must not add or reconfigure them
+        "extensions",
+        "extensionScanning",
+        "extensionStartTimeoutMillis",
         // decide where the server may send requests, so a control-plane request must not widen them
         "forwardProxyBlockPrivateNetworks",
         "forwardProxyAllowedHosts",

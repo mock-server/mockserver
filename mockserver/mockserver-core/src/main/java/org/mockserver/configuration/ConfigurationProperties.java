@@ -326,6 +326,11 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_TEMPLATE_FAKER_SEED = "mockserver.templateFakerSeed";
     private static final String MOCKSERVER_TEMPLATE_SYSTEM_VALUE_ALLOW_LIST = "mockserver.templateSystemValueAllowList";
 
+    // extensions
+    private static final String MOCKSERVER_EXTENSIONS = "mockserver.extensions";
+    private static final String MOCKSERVER_EXTENSION_SCANNING = "mockserver.extensionScanning";
+    private static final String MOCKSERVER_EXTENSION_START_TIMEOUT_MILLIS = "mockserver.extensionStartTimeoutMillis";
+
     // mock initialization
     private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
     private static final String MOCKSERVER_INITIALIZATION_JSON_PATH = "mockserver.initializationJsonPath";
@@ -4971,6 +4976,53 @@ public class ConfigurationProperties {
      */
     public static void templateSystemValueAllowList(String allowList) {
         setProperty(MOCKSERVER_TEMPLATE_SYSTEM_VALUE_ALLOW_LIST, allowList == null ? "" : allowList);
+    }
+
+    // extensions
+
+    public static String extensions() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_EXTENSIONS, "MOCKSERVER_EXTENSIONS", "");
+    }
+
+    /**
+     * Comma-separated names of {@code org.mockserver.extension.Extension} classes, each with a public no-argument
+     * constructor, that a server loads and starts when it starts. Empty (the default) loads none. Fixed at startup:
+     * it cannot be changed over the control plane.
+     *
+     * @param classNames comma-separated extension class names
+     */
+    public static void extensions(String classNames) {
+        setProperty(MOCKSERVER_EXTENSIONS, classNames == null ? "" : classNames);
+    }
+
+    public static boolean extensionScanning() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_EXTENSION_SCANNING, "MOCKSERVER_EXTENSION_SCANNING", "" + false));
+    }
+
+    /**
+     * When true, a server also loads every extension listed in a {@code META-INF/services/org.mockserver.extension.Extension}
+     * file on the classpath, logging the JAR each comes from. Off by default, so only the extensions named in
+     * {@code mockserver.extensions} load. Fixed at startup.
+     *
+     * @param enable true to load extensions found on the classpath
+     */
+    public static void extensionScanning(boolean enable) {
+        setProperty(MOCKSERVER_EXTENSION_SCANNING, "" + enable);
+    }
+
+    public static long extensionStartTimeoutMillis() {
+        return Math.max(1L, readLongProperty(MOCKSERVER_EXTENSION_START_TIMEOUT_MILLIS, "MOCKSERVER_EXTENSION_START_TIMEOUT_MILLIS", 30_000L));
+    }
+
+    /**
+     * How long a server waits for each extension's {@code start}, {@code onStarted} and {@code stop} to return. A
+     * {@code start} or {@code onStarted} that takes longer refuses or ends start-up. Default 30000; values below 1 are
+     * read as 1. Fixed at startup.
+     *
+     * @param millis the time to wait for each call, in milliseconds
+     */
+    public static void extensionStartTimeoutMillis(long millis) {
+        setProperty(MOCKSERVER_EXTENSION_START_TIMEOUT_MILLIS, "" + millis);
     }
 
     // mock initialization

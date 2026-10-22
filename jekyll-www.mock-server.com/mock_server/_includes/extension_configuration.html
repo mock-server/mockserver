@@ -1,0 +1,55 @@
+<a id="extension_configuration" class="anchor" href="#extension_configuration">&nbsp;</a>
+
+<h2>Extension Configuration:</h2>
+
+<p>Extensions are your own Java classes that MockServer loads when it starts. See <a href="/mock_server/extensions.html">Extensions</a> for how to write and load one. These properties can only be set before MockServer starts (system property, environment variable, properties file or startup configuration); <span class="inline_code">PUT /mockserver/configuration</span> ignores them with a warning, so the control plane can never load code into MockServer.</p>
+
+<button id="button_configuration_extensions" class="accordion title"><strong>Extensions</strong></button>
+<div class="panel title">
+    <p>Comma-separated names of the extension classes to load and start, in addition to any passed in Java code. Each class must implement <span class="inline_code">org.mockserver.extension.Extension</span>, have a public no-argument constructor, and be on MockServer's classpath. If a class cannot be loaded or fails to start, MockServer refuses to start.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span> (no extensions)</p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.extensions(String classNames)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensions=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_EXTENSIONS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.extensions=...</code></pre>
+    <p>Command Line:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">--extensions com.example.AuditExtension</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensions="com.example.AuditExtension,com.example.SeedExtension"</code></pre>
+</div>
+
+<button id="button_configuration_extension_scanning" class="accordion title"><strong>Extension Scanning</strong></button>
+<div class="panel title">
+    <p>When enabled, MockServer also loads every extension listed in a <span class="inline_code">META-INF/services/org.mockserver.extension.Extension</span> file on its classpath, and logs the JAR each one came from. Off by default, so only the extensions you name are loaded; turn it on only when you control every JAR on the classpath.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.extensionScanning(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionScanning=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_EXTENSION_SCANNING=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.extensionScanning=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionScanning="true"</code></pre>
+</div>
+
+<button id="button_configuration_extension_start_timeout_millis" class="accordion title"><strong>Extension Start Timeout</strong></button>
+<div class="panel title">
+    <p>How long MockServer waits, in milliseconds, for each extension's <span class="inline_code">start</span>, <span class="inline_code">onStarted</span> and <span class="inline_code">stop</span> to return. If <span class="inline_code">start</span> or <span class="inline_code">onStarted</span> takes longer, MockServer refuses to start. Values below 1 are treated as 1.</p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">30000</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.extensionStartTimeoutMillis(long millis)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionStartTimeoutMillis=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_EXTENSION_START_TIMEOUT_MILLIS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.extensionStartTimeoutMillis=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionStartTimeoutMillis="60000"</code></pre>
+</div>

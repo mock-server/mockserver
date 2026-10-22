@@ -5,6 +5,7 @@ import io.netty.channel.*;
 import io.netty.util.NetUtil;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.UpcomingDefaultChanges;
+import org.mockserver.extension.ExtensionRegistry;
 import org.mockserver.socket.NettyTransport;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.log.model.LogEntry;
@@ -122,6 +123,8 @@ public abstract class LifeCycle implements Stoppable {
     // optional Prometheus remote-write push exporter — null unless enabled
     private final org.mockserver.metrics.PrometheusRemoteWriteExporter prometheusRemoteWriteExporter;
     private final DriftWiring driftWiring;
+    // null unless extensions are configured, so an unconfigured server loads no extension class
+    private final ExtensionRegistry extensionRegistry;
 
     protected LifeCycle(Configuration configuration) {
         this.configuration = configuration != null ? configuration : configuration();
@@ -129,20 +132,29 @@ public abstract class LifeCycle implements Stoppable {
         if (this.configuration.logEventListener() != null) {
             MockServerLogger.setGlobalLogEventListener(this.configuration.logEventListener());
         }
-        boolean nativeTransport = this.configuration.useNativeTransport();
-        this.bossGroup = NettyTransport.newEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"), nativeTransport);
-        this.workerGroup = NettyTransport.newEventLoopGroup(this.configuration.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"), nativeTransport);
-        // NOTE: the outbound forward/proxy (loopback) client's event-loop group (forwardClientGroup) is
-        // NOT created here — it is created lazily on first forward via getForwardClientEventLoopGroup(),
-        // so a pure-mock server never allocates it. It remains disjoint from workerGroup (see field javadoc).
-        this.scheduler = new Scheduler(this.configuration, this.mockServerLogger);
-        this.httpState = new HttpState(this.configuration, this.mockServerLogger, this.scheduler);
-        this.otelMetricsExporter = org.mockserver.metrics.OtelMetricsExporter.startIfEnabled(this.configuration);
-        this.genAiSpanExporter = org.mockserver.telemetry.GenAiSpanExporter.startIfEnabled(this.configuration);
-        this.prometheusRemoteWriteExporter = org.mockserver.metrics.PrometheusRemoteWriteExporter.startIfEnabled(this.configuration);
-        installSemanticMatchingIfEnabled(this.workerGroup);
-        installLlmCompletionServiceIfAvailable(this.workerGroup);
-        this.driftWiring = DriftWiring.start(this.configuration, this.mockServerLogger, this.workerGroup);
+        // extensions start before any event loop, selector or scheduler exists, so a refused start leaks none
+        this.extensionRegistry = this.configuration.extensionsConfigured() ? ExtensionRegistry.start(this.configuration, this.mockServerLogger) : null;
+        try {
+            boolean nativeTransport = this.configuration.useNativeTransport();
+            this.bossGroup = NettyTransport.newEventLoopGroup(5, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-bossEventLoop"), nativeTransport);
+            this.workerGroup = NettyTransport.newEventLoopGroup(this.configuration.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-workerEventLoop"), nativeTransport);
+            // NOTE: the outbound forward/proxy (loopback) client's event-loop group (forwardClientGroup) is
+            // NOT created here — it is created lazily on first forward via getForwardClientEventLoopGroup(),
+            // so a pure-mock server never allocates it. It remains disjoint from workerGroup (see field javadoc).
+            this.scheduler = new Scheduler(this.configuration, this.mockServerLogger);
+            this.httpState = new HttpState(this.configuration, this.mockServerLogger, this.scheduler, this.extensionRegistry);
+            this.otelMetricsExporter = org.mockserver.metrics.OtelMetricsExporter.startIfEnabled(this.configuration);
+            this.genAiSpanExporter = org.mockserver.telemetry.GenAiSpanExporter.startIfEnabled(this.configuration);
+            this.prometheusRemoteWriteExporter = org.mockserver.metrics.PrometheusRemoteWriteExporter.startIfEnabled(this.configuration);
+            installSemanticMatchingIfEnabled(this.workerGroup);
+            installLlmCompletionServiceIfAvailable(this.workerGroup);
+            this.driftWiring = DriftWiring.start(this.configuration, this.mockServerLogger, this.workerGroup);
+        } catch (Throwable throwable) {
+            if (this.extensionRegistry != null) {
+                this.extensionRegistry.stop();
+            }
+            throw throwable;
+        }
     }
 
     /**
@@ -347,6 +359,9 @@ public abstract class LifeCycle implements Stoppable {
                 drainInFlightRequests();
 
                 httpState.stop();
+                if (extensionRegistry != null) {
+                    extensionRegistry.stop();
+                }
                 scheduler.shutdown();
                 if (otelMetricsExporter != null) {
                     otelMetricsExporter.stop();
@@ -434,11 +449,7 @@ public abstract class LifeCycle implements Stoppable {
             // otherwise stop() returns to the caller before the server has actually shut down. The
             // drain can block up to stopDrainMillis (WS7.2), so allow that plus a buffer for the
             // event-loop teardown that follows. Falls back to a 30s floor when draining is disabled.
-            long drainMillis = configuration != null
-                ? configuration.stopDrainMillis()
-                : org.mockserver.configuration.ConfigurationProperties.stopDrainMillis();
-            long stopTimeoutMillis = Math.max(30_000L, drainMillis + 10_000L);
-            stopAsync().get(stopTimeoutMillis, MILLISECONDS);
+            stopAsync().get(stopTimeoutMillis(), MILLISECONDS);
         } catch (Throwable throwable) {
             // a stop that did not stop must not be silent. Logging this at DEBUG meant the first
             // visible symptom was an unrelated BindException later, when something tried to rebind
@@ -453,6 +464,18 @@ public abstract class LifeCycle implements Stoppable {
                 );
             }
         }
+    }
+
+    /**
+     * How long {@link #stop()} waits: never shorter than the drain plus a buffer, plus the longest the extensions' own
+     * bounded {@code stop()} calls can take.
+     */
+    long stopTimeoutMillis() {
+        long drainMillis = configuration != null
+            ? configuration.stopDrainMillis()
+            : org.mockserver.configuration.ConfigurationProperties.stopDrainMillis();
+        long stopTimeoutMillis = Math.max(30_000L, drainMillis + 10_000L);
+        return extensionRegistry != null ? stopTimeoutMillis + extensionRegistry.maximumStopMillis() : stopTimeoutMillis;
     }
 
     @Override
@@ -504,6 +527,13 @@ public abstract class LifeCycle implements Stoppable {
 
     public Scheduler getScheduler() {
         return scheduler;
+    }
+
+    /**
+     * @return the extensions this server loaded, or {@code null} when none are configured
+     */
+    public ExtensionRegistry getExtensionRegistry() {
+        return extensionRegistry;
     }
 
     /**
@@ -710,6 +740,18 @@ public abstract class LifeCycle implements Stoppable {
 
     protected void startedServer(List<Integer> ports) {
         final String message = "started on port" + (ports.size() == 1 ? ": " + ports.get(0) : "s: " + ports);
+        if (extensionRegistry != null) {
+            try {
+                extensionRegistry.notifyStarted(ports);
+            } catch (RuntimeException notifyFailed) {
+                boolean interrupted = Thread.interrupted();
+                stop();
+                if (interrupted) {
+                    Thread.currentThread().interrupt();
+                }
+                throw notifyFailed;
+            }
+        }
         setPort(ports);
         logUpcomingDefaultChanges();
         if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(INFO)) {

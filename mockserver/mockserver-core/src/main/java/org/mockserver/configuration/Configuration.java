@@ -15,7 +15,9 @@ import org.slf4j.event.Level;
 import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +27,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
@@ -273,6 +276,13 @@ public class Configuration {
     private volatile String mustacheDisallowedText;
     private volatile Long templateFakerSeed;
     private volatile String templateSystemValueAllowList;
+
+    // extensions
+    private volatile String extensions;
+    private volatile Boolean extensionScanning;
+    private volatile Long extensionStartTimeoutMillis;
+    private volatile List<Class<? extends org.mockserver.extension.Extension>> extensionClasses = Collections.emptyList();
+    private volatile List<Supplier<? extends org.mockserver.extension.Extension>> extensionSuppliers = Collections.emptyList();
 
     // mock initialization
     private volatile String initializationClass;
@@ -4044,6 +4054,106 @@ public class Configuration {
     public Configuration templateSystemValueAllowList(String templateSystemValueAllowList) {
         this.templateSystemValueAllowList = templateSystemValueAllowList;
         return this;
+    }
+
+    public String extensions() {
+        if (extensions == null) {
+            return ConfigurationProperties.extensions();
+        }
+        return extensions;
+    }
+
+    /**
+     * Comma-separated names of {@link org.mockserver.extension.Extension} classes, each with a public no-argument
+     * constructor, that the server loads and starts when it starts. Read once at startup: it cannot be changed over
+     * the control plane.
+     *
+     * @param extensions comma-separated extension class names
+     */
+    public Configuration extensions(String extensions) {
+        this.extensions = extensions;
+        return this;
+    }
+
+    /**
+     * Extension classes, each with a public no-argument constructor, that the server loads and starts when it starts,
+     * after any named in {@link #extensions()}. Each server built from this configuration creates its own instances.
+     * Replaces any classes set before.
+     *
+     * @param extensionClasses the extension classes
+     */
+    @SafeVarargs
+    public final Configuration extensions(Class<? extends org.mockserver.extension.Extension>... extensionClasses) {
+        this.extensionClasses = extensionClasses == null ? Collections.emptyList() : Collections.unmodifiableList(new ArrayList<>(Arrays.asList(extensionClasses)));
+        return this;
+    }
+
+    /**
+     * Suppliers of extensions the server loads and starts when it starts, after any named in {@link #extensions()}
+     * or set as classes. Each server built from this configuration calls each supplier once, so a supplier should
+     * return a new instance each time. Replaces any suppliers set before.
+     *
+     * @param extensionSuppliers the extension suppliers
+     */
+    @SafeVarargs
+    public final Configuration extensions(Supplier<? extends org.mockserver.extension.Extension>... extensionSuppliers) {
+        this.extensionSuppliers = extensionSuppliers == null ? Collections.emptyList() : Collections.unmodifiableList(new ArrayList<>(Arrays.asList(extensionSuppliers)));
+        return this;
+    }
+
+    public List<Class<? extends org.mockserver.extension.Extension>> extensionClasses() {
+        return extensionClasses;
+    }
+
+    public List<Supplier<? extends org.mockserver.extension.Extension>> extensionSuppliers() {
+        return extensionSuppliers;
+    }
+
+    public Boolean extensionScanning() {
+        if (extensionScanning == null) {
+            return ConfigurationProperties.extensionScanning();
+        }
+        return extensionScanning;
+    }
+
+    /**
+     * When true, the server also loads every extension listed in a
+     * {@code META-INF/services/org.mockserver.extension.Extension} file on the classpath. Read once at startup.
+     *
+     * @param extensionScanning true to load extensions found on the classpath
+     */
+    public Configuration extensionScanning(Boolean extensionScanning) {
+        this.extensionScanning = extensionScanning;
+        return this;
+    }
+
+    public Long extensionStartTimeoutMillis() {
+        if (extensionStartTimeoutMillis == null) {
+            return ConfigurationProperties.extensionStartTimeoutMillis();
+        }
+        return Math.max(1L, extensionStartTimeoutMillis);
+    }
+
+    /**
+     * How long the server waits for each extension's {@code start}, {@code onStarted} and {@code stop} to return.
+     * Values below 1 are read as 1. Read once at startup.
+     *
+     * @param extensionStartTimeoutMillis the time to wait for each call, in milliseconds
+     */
+    public Configuration extensionStartTimeoutMillis(Long extensionStartTimeoutMillis) {
+        this.extensionStartTimeoutMillis = extensionStartTimeoutMillis;
+        return this;
+    }
+
+    /**
+     * @return true when this configuration names, supplies or scans for any extension; when false a server loads
+     * no extension code and scans nothing
+     */
+    public boolean extensionsConfigured() {
+        return isNotBlank(extensions())
+            || Boolean.TRUE.equals(extensionScanning())
+            || !extensionClasses.isEmpty()
+            || !extensionSuppliers.isEmpty();
     }
 
     public String initializationClass() {

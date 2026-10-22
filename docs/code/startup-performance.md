@@ -57,6 +57,8 @@ Port bind also includes the loopback reachability check ([Port Binding and Loopb
 
 TLS key generation (RSA-2048, on first TLS connection; `proactivelyInitialiseTLS` defaults to `false`), Jackson ObjectMappers, template engines (Velocity, Mustache, GraalJS), metrics exporters, DNS/HTTP3/gRPC subsystems.
 
+The extension SPI ([extensions.md](extensions.md)) is lazy in the same way: with no extension configured, startup adds one `Configuration.extensionsConfigured()` check, loads no `org.mockserver.extension` class and makes no `ServiceLoader` call for extensions. `ExtensionClassLoadingTest` pins that no `org.mockserver.extension` class loads, in a fresh JVM, with a positive control.
+
 ## Variant Matrix
 
 All variants measured 2026-07-02, arm64 Mac, 7.3.1-SNAPSHOT fat jar, median of 5, time from `java -jar` to first `PUT /mockserver/status` → 200.

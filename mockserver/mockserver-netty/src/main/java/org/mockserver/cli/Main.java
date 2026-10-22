@@ -587,6 +587,9 @@ public class Main {
         @Option(names = "--validate-enforce", description = "When combined with --validate-openapi, reject requests that violate the spec (400) and replace non-conformant upstream responses (502). Without this flag, violations are report-only.")
         boolean validateEnforce;
 
+        @Option(names = {"--extensions", "-extensions"}, description = "Comma-separated extension class names (each implementing org.mockserver.extension.Extension) to load and start at startup; their JARs must be on the classpath. Equivalent to MOCKSERVER_EXTENSIONS or -Dmockserver.extensions.")
+        String extensions;
+
         // Legacy hidden flags — exact single-token names so picocli matches them as long options
         @Option(names = "-serverPort", hidden = true)
         String legacyServerPort;
@@ -680,6 +683,11 @@ public class Main {
                 }
                 if (validateEnforce) {
                     ConfigurationProperties.validateProxyEnforce(true);
+                }
+
+                // Wire --extensions (startup-only: extensions load once, before anything else is built)
+                if (isNotBlank(extensions)) {
+                    ConfigurationProperties.extensions(extensions);
                 }
 
                 // Validate legacy arguments inline (matching old behavior for error messages)

@@ -2,6 +2,7 @@ package org.mockserver.mock;
 
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.extension.ExtensionRegistry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.scheduler.Scheduler;
 
@@ -41,6 +42,20 @@ public final class ExpectationStoreFactory {
                                MockServerLogger mockServerLogger,
                                Scheduler scheduler,
                                WebSocketClientRegistry webSocketClientRegistry);
+
+        /**
+         * Creates the store for a server that may have extensions loaded. The default ignores the registry, so a
+         * factory written against the four-argument form keeps working unchanged.
+         *
+         * @param extensionRegistry the server's extensions, or {@code null} when none are configured
+         */
+        default RequestMatchers create(Configuration configuration,
+                                       MockServerLogger mockServerLogger,
+                                       Scheduler scheduler,
+                                       WebSocketClientRegistry webSocketClientRegistry,
+                                       ExtensionRegistry extensionRegistry) {
+            return create(configuration, mockServerLogger, scheduler, webSocketClientRegistry);
+        }
     }
 
     private static final Factory DEFAULT_FACTORY = RequestMatchers::new;
@@ -81,5 +96,18 @@ public final class ExpectationStoreFactory {
                                          Scheduler scheduler,
                                          WebSocketClientRegistry webSocketClientRegistry) {
         return factory.create(configuration, mockServerLogger, scheduler, webSocketClientRegistry);
+    }
+
+    /**
+     * Create the expectation store via the registered factory, passing the server's extensions.
+     *
+     * @param extensionRegistry the server's extensions, or {@code null} when none are configured
+     */
+    public static RequestMatchers create(Configuration configuration,
+                                         MockServerLogger mockServerLogger,
+                                         Scheduler scheduler,
+                                         WebSocketClientRegistry webSocketClientRegistry,
+                                         ExtensionRegistry extensionRegistry) {
+        return factory.create(configuration, mockServerLogger, scheduler, webSocketClientRegistry, extensionRegistry);
     }
 }

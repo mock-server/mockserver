@@ -41,6 +41,7 @@ Deep-dive documentation of MockServer's codebase, from high-level module structu
 | [SLO Verdicts](code/slo-verdicts.md) | Low | Synchronous SLO verdicts over forwarded traffic: SloSampleStore, SloEvaluator, PUT /mockserver/verifySLO (200 PASS / 406 FAIL) |
 | [Load Generation](code/load-generation.md) | Low | API-driven load scenarios: LoadScenarioOrchestrator, ramp profiles, per-iteration templating, PUT/GET/DELETE /mockserver/loadScenario, SLI producer for SLO verdicts |
 | [WASM Rules](code/wasm-rules.md) | Low | WASM custom rule engine: chicory interpreter, module ABI, REST endpoints, configuration |
+| [Extensions](code/extensions.md) | Low | Startup-only extension SPI: Extension API, loader and registry, start-first order and reverse-order cleanup, hooks that can be disabled with a reason, zero cost when unconfigured |
 | [Async Messaging](code/async-messaging.md) | Low | AsyncAPI broker mocking: spec parsing, example generation, Kafka/MQTT publisher adapters, orchestrator |
 | [HTTP/3 (QUIC)](code/http3.md) | Low | Experimental HTTP/3 support: Http3Server, QUIC native dependency, MVP boundaries |
 | [Clustered State](code/clustered-state.md) | Low | StateBackend SPI, InMemoryStateBackend, InfinispanStateBackend (LOCAL/CLUSTERED), cross-node invalidation, config knobs, limitations |

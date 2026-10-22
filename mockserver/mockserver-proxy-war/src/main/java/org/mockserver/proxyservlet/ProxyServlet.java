@@ -5,6 +5,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.mockserver.authentication.ControlPlaneAuthenticationHandlerFactory;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.extension.ExtensionRegistry;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.HttpServletRequestToMockServerHttpRequestDecoder;
@@ -22,6 +23,8 @@ import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.util.Collections;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -50,19 +53,49 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
     // mockserver
     private HttpActionHandler actionHandler;
     private final EventLoopGroup workerGroup;
+    private final ExtensionRegistry extensionRegistry;
 
     @SuppressWarnings("WeakerAccess")
     public ProxyServlet() {
         this.configuration = configuration();
         ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(this.configuration);
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
-        this.httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerHttpRequestDecoder(this.configuration, this.mockServerLogger);
-        this.scheduler = new Scheduler(this.configuration, mockServerLogger);
-        this.httpStateHandler = new HttpState(this.configuration, mockServerLogger, this.scheduler);
-        this.mockServerLogger = httpStateHandler.getMockServerLogger();
-        this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
-        this.workerGroup = new NioEventLoopGroup(configuration.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
-        this.actionHandler = new HttpActionHandler(this.configuration, () -> workerGroup, httpStateHandler, null, new NettySslContextFactory(this.configuration, this.mockServerLogger, true));
+        // extensions start before anything else is built, so a refused start leaks no thread or event loop
+        this.extensionRegistry = this.configuration.extensionsConfigured() ? ExtensionRegistry.start(this.configuration, this.mockServerLogger) : null;
+        Scheduler createdScheduler = null;
+        HttpState createdHttpState = null;
+        EventLoopGroup createdWorkerGroup = null;
+        try {
+            this.httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerHttpRequestDecoder(this.configuration, this.mockServerLogger);
+            this.scheduler = createdScheduler = new Scheduler(this.configuration, mockServerLogger);
+            this.httpStateHandler = createdHttpState = new HttpState(this.configuration, mockServerLogger, this.scheduler, this.extensionRegistry);
+            this.mockServerLogger = httpStateHandler.getMockServerLogger();
+            this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
+            this.workerGroup = createdWorkerGroup = new NioEventLoopGroup(configuration.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
+            this.actionHandler = new HttpActionHandler(this.configuration, () -> workerGroup, httpStateHandler, null, new NettySslContextFactory(this.configuration, this.mockServerLogger, true));
+            if (this.extensionRegistry != null) {
+                // a WAR has no ports of its own to report
+                this.extensionRegistry.notifyStarted(Collections.emptyList());
+            }
+        } catch (Throwable throwable) {
+            stopRefusedStart(createdScheduler, createdWorkerGroup, createdHttpState, this.extensionRegistry);
+            throw throwable;
+        }
+    }
+
+    private static void stopRefusedStart(Scheduler scheduler, EventLoopGroup workerGroup, HttpState httpState, ExtensionRegistry extensionRegistry) {
+        if (scheduler != null) {
+            scheduler.shutdown();
+        }
+        if (workerGroup != null) {
+            workerGroup.shutdownGracefully(0, 750, MILLISECONDS).syncUninterruptibly();
+        }
+        if (httpState != null) {
+            httpState.stop();
+        }
+        if (extensionRegistry != null) {
+            extensionRegistry.stop();
+        }
     }
 
     @Override
@@ -86,6 +119,9 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
             this.workerGroup.shutdownGracefully(100, 750, MILLISECONDS).syncUninterruptibly();
         }
         this.httpStateHandler.stop();
+        if (this.extensionRegistry != null) {
+            this.extensionRegistry.stop();
+        }
     }
 
     @Override

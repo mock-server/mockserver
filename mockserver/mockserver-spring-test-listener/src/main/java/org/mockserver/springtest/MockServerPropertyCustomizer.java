@@ -126,6 +126,16 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
             case "initializationOpenAPIPath":
                 config.initializationOpenAPIPath(value);
                 break;
+            case "extensions":
+                // per instance: each @MockServerInstance builds its own Configuration, so each loads its own extensions
+                config.extensions(value);
+                break;
+            case "extensionScanning":
+                config.extensionScanning(parseStrictBoolean(value, key));
+                break;
+            case "extensionStartTimeoutMillis":
+                config.extensionStartTimeoutMillis(Long.parseLong(value));
+                break;
             case "openAPIContextPathPrefix":
                 config.openAPIContextPathPrefix(value);
                 break;

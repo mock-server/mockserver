@@ -53,6 +53,7 @@ Comprehensive internal documentation is maintained in `docs/`. **Always consult 
 | [docs/code/chaos.md](docs/code/chaos.md) | Before modifying chaos experiments, ChaosExperimentOrchestrator, auto-halt integration, or the /chaosExperiment endpoints |
 | [docs/code/drift-detection.md](docs/code/drift-detection.md) | Before modifying mock drift detection, DriftAnalyzer, DriftStore, or the /drift endpoint |
 | [docs/code/wasm-rules.md](docs/code/wasm-rules.md) | Before modifying WASM custom rule engine, chicory integration, or WASM REST endpoints |
+| [docs/code/extensions.md](docs/code/extensions.md) | Before modifying the extension SPI (`org.mockserver.extension`), ExtensionRegistry, extension loading, or the extension start/stop order in LifeCycle and the servlets |
 | [docs/code/telemetry.md](docs/code/telemetry.md) | Before modifying OpenTelemetry integration, OTLP export, GenAI spans, or W3C trace context propagation |
 | [docs/code/async-messaging.md](docs/code/async-messaging.md) | Before modifying the AsyncAPI broker mocking module, AsyncApiParser, MessagePublisher adapters, or AsyncApiMockOrchestrator |
 | [docs/code/http3.md](docs/code/http3.md) | Before modifying experimental HTTP/3 (QUIC) support, Http3Server, or QUIC native dependencies |

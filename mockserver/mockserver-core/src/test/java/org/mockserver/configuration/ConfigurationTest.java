@@ -2971,6 +2971,44 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetExtensionProperties() {
+        String originalExtensions = ConfigurationProperties.extensions();
+        boolean originalScanning = ConfigurationProperties.extensionScanning();
+        long originalTimeout = ConfigurationProperties.extensionStartTimeoutMillis();
+        try {
+            // then - default values
+            ConfigurationProperties.extensions(null);
+            assertThat(ConfigurationProperties.extensions(), equalTo(""));
+            assertThat(configuration.extensions(), equalTo(""));
+            assertThat(configuration.extensionsConfigured(), equalTo(false));
+
+            // when - system property setters
+            ConfigurationProperties.extensions("com.example.A,com.example.B");
+            ConfigurationProperties.extensionScanning(true);
+            ConfigurationProperties.extensionStartTimeoutMillis(0L);
+
+            // then - system property getters
+            assertThat(System.getProperty("mockserver.extensions"), equalTo("com.example.A,com.example.B"));
+            assertThat(configuration.extensions(), equalTo("com.example.A,com.example.B"));
+            assertThat(configuration.extensionScanning(), equalTo(true));
+            assertThat("clamped to at least 1", configuration.extensionStartTimeoutMillis(), equalTo(1L));
+            assertThat(configuration.extensionsConfigured(), equalTo(true));
+
+            // when - setters
+            configuration.extensions("com.example.C").extensionScanning(false).extensionStartTimeoutMillis(-5L);
+
+            // then - getters
+            assertThat(configuration.extensions(), equalTo("com.example.C"));
+            assertThat(configuration.extensionScanning(), equalTo(false));
+            assertThat(configuration.extensionStartTimeoutMillis(), equalTo(1L));
+        } finally {
+            ConfigurationProperties.extensions(originalExtensions);
+            ConfigurationProperties.extensionScanning(originalScanning);
+            ConfigurationProperties.extensionStartTimeoutMillis(originalTimeout);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetStaticFilesDirectory() {
         String original = ConfigurationProperties.staticFilesDirectory();
         try {

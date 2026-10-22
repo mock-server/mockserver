@@ -15,7 +15,8 @@ import static org.hamcrest.Matchers.is;
 import static org.mockserver.configuration.Configuration.configuration;
 
 /**
- * Reachability guard for the 27 properties that used to exist ONLY on {@link ConfigurationProperties}.
+ * Reachability guard for the 27 properties that used to exist ONLY on {@link ConfigurationProperties}, plus the
+ * startup-only extension properties, which must be read through the {@link Configuration} instance too.
  *
  * <p>Before this was wired, each of these had no {@code Configuration} accessor and no
  * {@code ConfigurationDTO} field, so it was unreachable from the instance / DTO / REST routes BY
@@ -66,6 +67,10 @@ public class ConfigurationInstanceOnlyPropertiesTest {
         NEWLY_WIRED_PROPERTIES.put("prometheusRemoteWriteUrl", String.class);
         NEWLY_WIRED_PROPERTIES.put("regexMatchingTimeoutMillis", Long.class);
         NEWLY_WIRED_PROPERTIES.put("xpathMatchingTimeoutMillis", Long.class);
+        // startup-only extension properties: read through the instance, never settable over the control plane
+        NEWLY_WIRED_PROPERTIES.put("extensions", String.class);
+        NEWLY_WIRED_PROPERTIES.put("extensionScanning", Boolean.class);
+        NEWLY_WIRED_PROPERTIES.put("extensionStartTimeoutMillis", Long.class);
         // write-only credentials
         NEWLY_WIRED_PROPERTIES.put("llmApiKey", String.class);
         NEWLY_WIRED_PROPERTIES.put("prometheusRemoteWriteBasicAuthPassword", String.class);
@@ -100,7 +105,7 @@ public class ConfigurationInstanceOnlyPropertiesTest {
         assertThat("properties with no Configuration getter/fluent-setter pair — they remain unreachable "
                 + "from the instance, DTO and REST routes: " + missing,
             missing, is(empty()));
-        assertThat(NEWLY_WIRED_PROPERTIES.size(), is(27));
+        assertThat(NEWLY_WIRED_PROPERTIES.size(), is(30));
     }
 
     @Test

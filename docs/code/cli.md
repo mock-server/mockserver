@@ -74,6 +74,7 @@ flowchart TD
 | `--proxy-setup` | — | `mockserver.proxySetup` | Generate a unique, local CA on first startup (forces `dynamicallyCreateCertificateAuthorityCertificate=true`). Recommended for shared or persistent setups. Without this flag, MockServer uses the built-in default CA whose private key is published in the git repository. The standalone launcher auto-enables `mockserver.proxySetupLogging`, which writes `mockserver-ca.pem` to the dynamic-SSL directory at startup and prints the copy-paste "Proxy Setup" block; set `mockserver.proxySetupLogging=false` to suppress both. When `proxySetupLogging` is off (e.g. embedded usage), the CA file is written on the first `GET /mockserver/proxyConfiguration` call instead. |
 | `--validate-openapi` | — | `mockserver.validateProxyOpenAPISpec` | Validate forwarded/proxied requests and responses against the given OpenAPI spec (URL, file path, or inline payload). Violations are logged; combine with `--validate-enforce` to block non-conformant traffic. |
 | `--validate-enforce` | — | `mockserver.validateProxyEnforce` | When combined with `--validate-openapi`, reject requests that violate the spec (400) and replace non-conformant upstream responses (502). Without this flag, violations are report-only. |
+| `--extensions` | `-extensions` | `mockserver.extensions` | Comma-separated extension class names, loaded and started before anything else; their JARs must be on the classpath, so launch with `java -cp ... org.mockserver.cli.Main` (`java -jar` ignores `-cp`). See [extensions.md](extensions.md) |
 | `-serverPort` | — | same as `--port` | Hidden legacy flag |
 | `-proxyRemotePort` | — | same as `--proxy-to` port part | Hidden legacy flag |
 | `-proxyRemoteHost` | — | same as `--proxy-to` host part | Hidden legacy flag |
@@ -204,6 +205,7 @@ if (isNotBlank(persist)) {
 }
 if (isNotBlank(validateOpenapi))  ConfigurationProperties.validateProxyOpenAPISpec(validateOpenapi);
 if (validateEnforce)              ConfigurationProperties.validateProxyEnforce(true);
+if (isNotBlank(extensions))       ConfigurationProperties.extensions(extensions);
 ```
 
 These calls write into the same `ConfigurationProperties` property store that env vars and `.properties` files write into, so the precedence rule still applies — a `-Dmockserver.initializationJsonPath=...` JVM flag will be overwritten if `--init` is also supplied on the command line (CLI wins).

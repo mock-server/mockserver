@@ -3,10 +3,14 @@ package org.mockserver.mock;
 import org.junit.After;
 import org.junit.Test;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
+import org.mockserver.configuration.Configuration;
+import org.mockserver.extension.Extension;
+import org.mockserver.extension.ExtensionRegistry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.scheduler.Scheduler;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -47,6 +51,57 @@ public class ExpectationStoreFactoryTest {
         RequestMatchers store = callCreate();
         assertThat(invoked.get(), is(true));
         assertThat(store, is(notNullValue()));
+    }
+
+    @Test
+    public void shouldUseAFourArgumentFactoryForAServerWithExtensions() {
+        AtomicBoolean invoked = new AtomicBoolean(false);
+        ExpectationStoreFactory.register((c, l, s, w) -> {
+            invoked.set(true);
+            return new RequestMatchers(c, l, s, w);
+        });
+        ExtensionRegistry registry = ExtensionRegistry.start(configuration().extensions(NamedExtension::new), new MockServerLogger());
+        try {
+            RequestMatchers store = ExpectationStoreFactory.create(
+                configuration(), new MockServerLogger(), mock(Scheduler.class), mock(WebSocketClientRegistry.class), registry);
+
+            assertThat(invoked.get(), is(true));
+            assertThat(store, is(notNullValue()));
+        } finally {
+            registry.stop();
+        }
+    }
+
+    @Test
+    public void shouldPassTheExtensionRegistryToAFactoryThatTakesIt() {
+        AtomicReference<ExtensionRegistry> received = new AtomicReference<>();
+        ExpectationStoreFactory.register(new ExpectationStoreFactory.Factory() {
+            @Override
+            public RequestMatchers create(Configuration c, MockServerLogger l, Scheduler s, WebSocketClientRegistry w) {
+                return new RequestMatchers(c, l, s, w);
+            }
+
+            @Override
+            public RequestMatchers create(Configuration c, MockServerLogger l, Scheduler s, WebSocketClientRegistry w, ExtensionRegistry extensionRegistry) {
+                received.set(extensionRegistry);
+                return new RequestMatchers(c, l, s, w);
+            }
+        });
+        ExtensionRegistry registry = ExtensionRegistry.start(configuration().extensions(NamedExtension::new), new MockServerLogger());
+        try {
+            ExpectationStoreFactory.create(configuration(), new MockServerLogger(), mock(Scheduler.class), mock(WebSocketClientRegistry.class), registry);
+
+            assertThat(received.get(), is(sameInstance(registry)));
+        } finally {
+            registry.stop();
+        }
+    }
+
+    public static class NamedExtension implements Extension {
+        @Override
+        public String name() {
+            return "factory-test";
+        }
     }
 
     @Test

@@ -469,6 +469,8 @@ public class HttpState {
     // instant the port binds, but a readiness probe should stay not-ready until seeding finishes so
     // an orchestrator does not route traffic before the seeded expectations exist.
     private volatile boolean initializationComplete = false;
+    // null unless the configuration names, supplies or scans for an extension
+    private final org.mockserver.extension.ExtensionRegistry extensionRegistry;
 
     public static void setPort(final HttpRequest request) {
         if (request != null && request.getSocketAddress() != null) {
@@ -498,7 +500,16 @@ public class HttpState {
     }
 
     public HttpState(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler) {
+        this(configuration, mockServerLogger, scheduler, null);
+    }
+
+    /**
+     * @param extensionRegistry the extensions the server started before building this state, or {@code null} when
+     *                          none are configured
+     */
+    public HttpState(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, org.mockserver.extension.ExtensionRegistry extensionRegistry) {
         this.configuration = configuration;
+        this.extensionRegistry = extensionRegistry;
         this.corsHeaders = new CORSHeaders(configuration);
         this.mockServerLogger = mockServerLogger.setHttpStateHandler(this);
         this.scheduler = scheduler;
@@ -519,7 +530,7 @@ public class HttpState {
             this.loadScenarioRegistry = new org.mockserver.mock.action.http.LoadScenarioRegistry(stateBackend);
             // G10 phase 1: obtain the expectation store via the pluggable factory (default = standard
             // in-memory RequestMatchers; an optional clustered backend can register an alternative).
-            this.requestMatchers = ExpectationStoreFactory.create(configuration, mockServerLogger, scheduler, webSocketClientRegistry);
+            this.requestMatchers = ExpectationStoreFactory.create(configuration, mockServerLogger, scheduler, webSocketClientRegistry, extensionRegistry);
             this.requestMatchers.setStateBackend(stateBackend);
             // G10 phase 2c: wire invalidation listener so remote cluster writes
             // trigger a node-local view rebuild (reconcileFromBackend). For
@@ -614,6 +625,9 @@ public class HttpState {
                     this.expectationFileWatcher = new ExpectationFileWatcher(configuration, mockServerLogger, requestMatchers, expectationInitializerLoader);
                 }
             }
+            if (extensionRegistry != null) {
+                extensionRegistry.initializeExpectations(requestMatchers);
+            }
             // G11 follow-up: wire the cross-protocol event bus to the clustered
             // backend for fleet-wide registration replication. When the backend is
             // not clustered (default), setStateBackend is a no-op and the bus stays
@@ -675,7 +689,14 @@ public class HttpState {
      * answer 200 the instant the port binds.
      */
     public boolean isInitializationComplete() {
-        return initializationComplete;
+        return initializationComplete && (extensionRegistry == null || extensionRegistry.isStartedNotified());
+    }
+
+    /**
+     * @return the extensions this server loaded, or {@code null} when none are configured
+     */
+    public org.mockserver.extension.ExtensionRegistry getExtensionRegistry() {
+        return extensionRegistry;
     }
 
     private void initGrpcDescriptorStore() {
@@ -7511,6 +7532,21 @@ public class HttpState {
         if (suppliedTemplateSystemValueAllowList != null && !suppliedTemplateSystemValueAllowList.equals(configuration.templateSystemValueAllowList())) {
             warnInitOnlyProperty("templateSystemValueAllowList", "\"" + suppliedTemplateSystemValueAllowList + "\"", "\"" + configuration.templateSystemValueAllowList() + "\"",
                 "it decides which environment variables and system properties templates can read, so a request to the control plane cannot widen it");
+        }
+        String suppliedExtensions = suppliedConfiguration.getExtensions();
+        if (suppliedExtensions != null && !suppliedExtensions.equals(configuration.extensions())) {
+            warnInitOnlyProperty("extensions", "\"" + suppliedExtensions + "\"", "\"" + configuration.extensions() + "\"",
+                "extensions are trusted code loaded when the server starts, so a request to the control plane cannot add, remove or replace them");
+        }
+        Boolean suppliedExtensionScanning = suppliedConfiguration.getExtensionScanning();
+        if (suppliedExtensionScanning != null && !suppliedExtensionScanning.equals(configuration.extensionScanning())) {
+            warnInitOnlyProperty("extensionScanning", String.valueOf(suppliedExtensionScanning), String.valueOf(configuration.extensionScanning()),
+                "extensions are trusted code loaded when the server starts, so a request to the control plane cannot load more");
+        }
+        Long suppliedExtensionStartTimeoutMillis = suppliedConfiguration.getExtensionStartTimeoutMillis();
+        if (suppliedExtensionStartTimeoutMillis != null && !suppliedExtensionStartTimeoutMillis.equals(configuration.extensionStartTimeoutMillis())) {
+            warnInitOnlyProperty("extensionStartTimeoutMillis", String.valueOf(suppliedExtensionStartTimeoutMillis), String.valueOf(configuration.extensionStartTimeoutMillis()),
+                "extensions are started when the server starts");
         }
         Integer suppliedMaxWebSocketExpectations = suppliedConfiguration.getMaxWebSocketExpectations();
         if (suppliedMaxWebSocketExpectations != null && configuration.maxWebSocketExpectations() != maxWebSocketExpectationsInForce) {

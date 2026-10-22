@@ -230,6 +230,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Boolean templatizeRecordedValues;
     private String recordedBodyFilesDirectory;
     private String staticFilesDirectory;
+    private String extensions;
+    private Boolean extensionScanning;
+    private Long extensionStartTimeoutMillis;
     private Boolean redactSecretsInRecordedExpectations;
     private Boolean redactSecretsInLog;
     private Double llmCostBudgetUsd;
@@ -613,6 +616,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.templatizeRecordedValues = configuration.templatizeRecordedValues();
             this.recordedBodyFilesDirectory = configuration.recordedBodyFilesDirectory();
             this.staticFilesDirectory = configuration.staticFilesDirectory();
+            this.extensions = configuration.extensions();
+            this.extensionScanning = configuration.extensionScanning();
+            this.extensionStartTimeoutMillis = configuration.extensionStartTimeoutMillis();
             this.redactSecretsInRecordedExpectations = configuration.redactSecretsInRecordedExpectations();
             this.redactSecretsInLog = configuration.redactSecretsInLog();
             this.llmCostBudgetUsd = configuration.llmCostBudgetUsd();
@@ -1093,6 +1099,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.templatizeRecordedValues(templatizeRecordedValues);
         configuration.recordedBodyFilesDirectory(recordedBodyFilesDirectory);
         configuration.staticFilesDirectory(staticFilesDirectory);
+        configuration.extensions(extensions);
+        configuration.extensionScanning(extensionScanning);
+        configuration.extensionStartTimeoutMillis(extensionStartTimeoutMillis);
         configuration.redactSecretsInRecordedExpectations(redactSecretsInRecordedExpectations);
         configuration.redactSecretsInLog(redactSecretsInLog);
         configuration.llmCostBudgetUsd(llmCostBudgetUsd);
@@ -1956,6 +1965,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         // recordedBodyFilesDirectory is deliberately not applied: it decides where the server writes files, so it is
         // fixed at startup (see HttpState.applyConfigurationUpdate)
+        // extensions, extensionScanning and extensionStartTimeoutMillis are deliberately not applied: extensions are
+        // trusted code loaded once at startup, so a control-plane request must not add, remove or reconfigure them
+        // (see HttpState.applyConfigurationUpdate)
         // staticFilesDirectory is deliberately not applied: it decides which server files requests can read, so it
         // is fixed at startup (see HttpState.applyConfigurationUpdate)
         if (redactSecretsInRecordedExpectations != null) {
@@ -4136,6 +4148,33 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setRecordedBodyFilesDirectory(String recordedBodyFilesDirectory) {
         this.recordedBodyFilesDirectory = recordedBodyFilesDirectory;
+        return this;
+    }
+
+    public String getExtensions() {
+        return extensions;
+    }
+
+    public ConfigurationDTO setExtensions(String extensions) {
+        this.extensions = extensions;
+        return this;
+    }
+
+    public Boolean getExtensionScanning() {
+        return extensionScanning;
+    }
+
+    public ConfigurationDTO setExtensionScanning(Boolean extensionScanning) {
+        this.extensionScanning = extensionScanning;
+        return this;
+    }
+
+    public Long getExtensionStartTimeoutMillis() {
+        return extensionStartTimeoutMillis;
+    }
+
+    public ConfigurationDTO setExtensionStartTimeoutMillis(Long extensionStartTimeoutMillis) {
+        this.extensionStartTimeoutMillis = extensionStartTimeoutMillis;
         return this;
     }
 

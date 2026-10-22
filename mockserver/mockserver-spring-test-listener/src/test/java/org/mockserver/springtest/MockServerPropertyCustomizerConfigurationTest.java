@@ -57,6 +57,20 @@ public class MockServerPropertyCustomizerConfigurationTest {
     }
 
     @Test
+    public void shouldApplyExtensionProperties() {
+        Configuration config = MockServerPropertyCustomizer.buildConfiguration(
+            Arrays.asList(
+                "mockserver.extensions=com.example.First,com.example.Second",
+                "mockserver.extensionScanning=true",
+                "mockserver.extensionStartTimeoutMillis=5000"
+            )
+        );
+        assertThat(config.extensions(), is("com.example.First,com.example.Second"));
+        assertThat(config.extensionScanning(), is(true));
+        assertThat(config.extensionStartTimeoutMillis(), is(5000L));
+    }
+
+    @Test
     public void shouldApplyDnsProperties() {
         Configuration config = MockServerPropertyCustomizer.buildConfiguration(
             Arrays.asList("mockserver.dnsEnabled=true", "mockserver.dnsPort=0")
