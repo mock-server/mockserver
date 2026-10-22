@@ -228,6 +228,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Boolean deduplicateRecordedExpectations;
     private Boolean templatizeRecordedValues;
     private String recordedBodyFilesDirectory;
+    private String staticFilesDirectory;
     private Boolean redactSecretsInRecordedExpectations;
     private Boolean redactSecretsInLog;
     private Double llmCostBudgetUsd;
@@ -609,6 +610,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.deduplicateRecordedExpectations = configuration.deduplicateRecordedExpectations();
             this.templatizeRecordedValues = configuration.templatizeRecordedValues();
             this.recordedBodyFilesDirectory = configuration.recordedBodyFilesDirectory();
+            this.staticFilesDirectory = configuration.staticFilesDirectory();
             this.redactSecretsInRecordedExpectations = configuration.redactSecretsInRecordedExpectations();
             this.redactSecretsInLog = configuration.redactSecretsInLog();
             this.llmCostBudgetUsd = configuration.llmCostBudgetUsd();
@@ -1087,6 +1089,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.deduplicateRecordedExpectations(deduplicateRecordedExpectations);
         configuration.templatizeRecordedValues(templatizeRecordedValues);
         configuration.recordedBodyFilesDirectory(recordedBodyFilesDirectory);
+        configuration.staticFilesDirectory(staticFilesDirectory);
         configuration.redactSecretsInRecordedExpectations(redactSecretsInRecordedExpectations);
         configuration.redactSecretsInLog(redactSecretsInLog);
         configuration.llmCostBudgetUsd(llmCostBudgetUsd);
@@ -1948,6 +1951,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         // recordedBodyFilesDirectory is deliberately not applied: it decides where the server writes files, so it is
         // fixed at startup (see HttpState.applyConfigurationUpdate)
+        // staticFilesDirectory is deliberately not applied: it decides which server files requests can read, so it
+        // is fixed at startup (see HttpState.applyConfigurationUpdate)
         if (redactSecretsInRecordedExpectations != null) {
             target.redactSecretsInRecordedExpectations(redactSecretsInRecordedExpectations);
         }
@@ -4119,6 +4124,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setRecordedBodyFilesDirectory(String recordedBodyFilesDirectory) {
         this.recordedBodyFilesDirectory = recordedBodyFilesDirectory;
+        return this;
+    }
+
+    public String getStaticFilesDirectory() {
+        return staticFilesDirectory;
+    }
+
+    public ConfigurationDTO setStaticFilesDirectory(String staticFilesDirectory) {
+        this.staticFilesDirectory = staticFilesDirectory;
         return this;
     }
 

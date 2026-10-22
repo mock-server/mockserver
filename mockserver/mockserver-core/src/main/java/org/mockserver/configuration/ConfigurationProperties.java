@@ -242,6 +242,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_TEMPLATIZE_RECORDED_VALUES = "mockserver.templatizeRecordedValues";
     private static final String MOCKSERVER_REDACT_SECRETS_IN_RECORDED_EXPECTATIONS = "mockserver.redactSecretsInRecordedExpectations";
     private static final String MOCKSERVER_RECORDED_BODY_FILES_DIRECTORY = "mockserver.recordedBodyFilesDirectory";
+    private static final String MOCKSERVER_STATIC_FILES_DIRECTORY = "mockserver.staticFilesDirectory";
     private static final String MOCKSERVER_REDACT_SECRETS_IN_LOG = "mockserver.redactSecretsInLog";
     private static final String MOCKSERVER_LLM_COST_BUDGET_USD = "mockserver.llmCostBudgetUsd";
     private static final String MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR = "mockserver.useSemicolonAsQueryParameterSeparator";
@@ -4193,6 +4194,22 @@ public class ConfigurationProperties {
      */
     public static void recordedBodyFilesDirectory(String directory) {
         setProperty(MOCKSERVER_RECORDED_BODY_FILES_DIRECTORY, directory == null ? "" : directory);
+    }
+
+    public static String staticFilesDirectory() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_STATIC_FILES_DIRECTORY, "MOCKSERVER_STATIC_FILES_DIRECTORY", "");
+    }
+
+    /**
+     * A directory of files served for {@code GET} and {@code HEAD} requests that match no expectation and are
+     * not proxied: a request for {@code /a/b.json} is answered with {@code <directory>/a/b.json}, with a content
+     * type from the file extension. A request that names a missing, hidden, oversized or out-of-directory file
+     * still gets the normal {@code 404}. Empty (the default) disables it. Fixed at startup.
+     *
+     * @param directory the directory to serve unmatched requests from
+     */
+    public static void staticFilesDirectory(String directory) {
+        setProperty(MOCKSERVER_STATIC_FILES_DIRECTORY, directory == null ? "" : directory);
     }
 
     public static boolean redactSecretsInRecordedExpectations() {

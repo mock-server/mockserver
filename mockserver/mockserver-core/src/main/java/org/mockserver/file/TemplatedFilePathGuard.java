@@ -183,7 +183,7 @@ public final class TemplatedFilePathGuard {
         return false;
     }
 
-    private static boolean isUnsafe(char c) {
+    static boolean isUnsafe(char c) {
         int type = Character.getType(c);
         return type == Character.CONTROL || type == Character.LINE_SEPARATOR || type == Character.PARAGRAPH_SEPARATOR;
     }

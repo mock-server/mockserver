@@ -73,11 +73,23 @@ public class Scheduler {
     // Null in synchronous mode (renders then run inline, preserving WAR/servlet blocking semantics).
     private final ExecutorService templateActionExecutor;
 
+    // Small BOUNDED pool for blocking staticFilesDirectory reads, kept off the event loops and off the shared
+    // pool that forwards and delays use. Created on first use, so a server that never serves static files has
+    // none; shut down with the other pools.
+    static final int STATIC_FILE_READ_THREADS = 4;
+    static final int MAX_QUEUED_STATIC_FILE_READS = 1000;
+    private volatile ThreadPoolExecutor staticFileReadExecutor;
+    private boolean stopped;
+    private final AtomicInteger queuedStaticFileReads = new AtomicInteger();
+    private volatile int maxQueuedStaticFileReads = MAX_QUEUED_STATIC_FILE_READS;
+
     private final boolean synchronous;
 
     private static final long OVERLOAD_LOG_INTERVAL_NANOS = TimeUnit.SECONDS.toNanos(10);
     private static final String OVERLOAD_LOG_FORMAT = "overloaded:{}task(s) that were:{}exceeded:{}which has a limit of:{}so they were:{}"
         + "in total since startup:{}raise that property or reduce the request rate; this is logged at most every 10 seconds per reason";
+    private static final String FIXED_LIMIT_OVERLOAD_LOG_FORMAT = "overloaded:{}task(s) that were:{}exceeded:{}which has a fixed limit of:{}so they were:{}"
+        + "in total since startup:{}reduce the request rate; this is logged at most every 10 seconds per reason";
 
     // Three independent budgets of the same size, so a backlog of one kind can never refuse another: delayed
     // responses (incl. forwarded responses waiting for chaos latency), delayed side actions, and WebSocket bidi
@@ -109,16 +121,25 @@ public class Scheduler {
         DELAY_SKIPPED("delay_skipped", "maxPendingDelayedResponses", "forwarded responses waiting for chaos latency", "sent at once without the injected latency"),
         SIDE_ACTIONS("side_actions", "maxPendingDelayedResponses", "delayed side actions (after-actions, secondary actions, step side effects)", "dropped"),
         WEBSOCKET_REPLIES("websocket_replies", "maxPendingDelayedResponses", "WebSocket reply frames waiting for their delays", "refused a whole reply set at a time, closing the WebSocket with 1013 Try Again Later"),
-        TEMPLATE_ACTIONS("template_actions", "maxQueuedTemplateActions", "template renders waiting for a template thread", "answered 503 Service Unavailable");
+        TEMPLATE_ACTIONS("template_actions", "maxQueuedTemplateActions", "template renders waiting for a template thread", "answered 503 Service Unavailable"),
+        STATIC_FILES("static_files", "the static file read queue", true, "static file reads waiting for a static file thread", "answered 503 Service Unavailable");
 
         private final String metricLabel;
         private final String property;
         private final String description;
         private final String outcome;
 
+        // a fixed limit is not a property, so its log line does not advise raising one
+        private final boolean fixedLimit;
+
         OverloadReason(String metricLabel, String property, String description, String outcome) {
+            this(metricLabel, property, false, description, outcome);
+        }
+
+        OverloadReason(String metricLabel, String property, boolean fixedLimit, String description, String outcome) {
             this.metricLabel = metricLabel;
             this.property = property;
+            this.fixedLimit = fixedLimit;
             this.description = description;
             this.outcome = outcome;
         }
@@ -436,14 +457,87 @@ public class Scheduler {
                 new LogEntry()
                     .setType(WARN)
                     .setLogLevel(Level.WARN)
-                    .setMessageFormat(OVERLOAD_LOG_FORMAT)
+                    .setMessageFormat(reason.fixedLimit ? FIXED_LIMIT_OVERLOAD_LOG_FORMAT : OVERLOAD_LOG_FORMAT)
                     .setArguments(rejected, reason.description, reason.property, limit, reason.outcome, overloadLog.total.get())
             );
         }
         run(onRejected, port);
     }
 
+    /**
+     * Runs a blocking static file read on its own bounded pool: inline when {@code inline} is set or this
+     * scheduler is synchronous, and {@code onRejected} instead once {@link #MAX_QUEUED_STATIC_FILE_READS} reads
+     * are waiting or the scheduler has been shut down.
+     */
+    public void submitStaticFileRead(Runnable command, Runnable onRejected, boolean inline) {
+        Integer port = getPort();
+        if (this.synchronous || inline) {
+            run(command, port);
+            return;
+        }
+        ThreadPoolExecutor executor = staticFileReadExecutor();
+        int limit = maxQueuedStaticFileReads;
+        if (executor == null) {
+            run(onRejected, port);
+            return;
+        }
+        if (!tryAdmit(queuedStaticFileReads, 1, limit)) {
+            rejectForOverload(OverloadReason.STATIC_FILES, limit, onRejected, port);
+            return;
+        }
+        try {
+            executor.execute(() -> {
+                queuedStaticFileReads.decrementAndGet();
+                run(command, port);
+            });
+        } catch (RejectedExecutionException shutDown) {
+            queuedStaticFileReads.decrementAndGet();
+            run(onRejected, port);
+        }
+    }
+
+    private ThreadPoolExecutor staticFileReadExecutor() {
+        ThreadPoolExecutor executor = staticFileReadExecutor;
+        if (executor != null) {
+            return executor;
+        }
+        synchronized (this) {
+            if (staticFileReadExecutor == null && !stopped) {
+                staticFileReadExecutor = new ThreadPoolExecutor(
+                    STATIC_FILE_READ_THREADS, STATIC_FILE_READ_THREADS,
+                    0L, TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<>(),
+                    new SchedulerThreadFactory("StaticFile")
+                );
+            }
+            return staticFileReadExecutor;
+        }
+    }
+
+    /**
+     * @return the static file read pool, or {@code null} before the first read is submitted
+     */
+    @VisibleForTesting
+    public ExecutorService getStaticFileReadExecutor() {
+        return staticFileReadExecutor;
+    }
+
+    @VisibleForTesting
+    public void maxQueuedStaticFileReads(int maxQueuedStaticFileReads) {
+        this.maxQueuedStaticFileReads = maxQueuedStaticFileReads;
+    }
+
     public synchronized void shutdown() {
+        stopped = true;
+        if (staticFileReadExecutor != null && !staticFileReadExecutor.isShutdown()) {
+            // a read still waiting would answer a client of a stopped server; their connections are closing
+            staticFileReadExecutor.shutdownNow();
+            try {
+                staticFileReadExecutor.awaitTermination(500, MILLISECONDS);
+            } catch (InterruptedException ignore) {
+                // ignore interrupted exception
+            }
+        }
         // Both executors are null in synchronous mode (WAR/servlet) — guard both so shutdown() is a
         // safe no-op there, matching the localCallbackExecutor guard below.
         if (scheduler != null && !scheduler.isShutdown()) {

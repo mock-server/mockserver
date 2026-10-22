@@ -11,6 +11,7 @@ import org.mockserver.closurecallback.websocketregistry.LocalCallbackRegistry;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.cors.CORSHeaders;
 import org.mockserver.file.FileBodyException;
+import org.mockserver.file.StaticFileDirectory;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.grpc.GrpcForwardTranslator;
 import org.mockserver.grpc.GrpcProtoDescriptorStore;
@@ -53,6 +54,7 @@ import org.mockserver.telemetry.W3CTraceContext;
 import org.slf4j.event.Level;
 
 import javax.net.ssl.SSLException;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -66,6 +68,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -109,6 +112,8 @@ public class HttpActionHandler {
     private final NottableString loopPreventionHeaderValue;
     private final ForwardLoopGuard forwardLoopGuard;
     private final Scheduler scheduler;
+    // null when staticFilesDirectory is unset or unusable, so the not-found path checks one field
+    private final StaticFileDirectory staticFileDirectory;
     // Drift analyses submitted but not yet finished (queued or running); bounded by maxPendingDriftAnalyses().
     private final AtomicInteger pendingDriftAnalyses = new AtomicInteger();
     static final int MIN_PENDING_DRIFT_ANALYSES = 16;
@@ -177,6 +182,39 @@ public class HttpActionHandler {
         this.httpClient = new NettyHttpClient(configuration, mockServerLogger, eventLoopGroupSupplier, proxyConfigurations, true, nettySslContextFactory);
         this.nettySslContextFactory = nettySslContextFactory;
         this.metrics = new org.mockserver.metrics.Metrics(configuration);
+        this.staticFileDirectory = openStaticFileDirectory(configuration);
+    }
+
+    private StaticFileDirectory openStaticFileDirectory(Configuration configuration) {
+        String directory = configuration != null ? configuration.staticFilesDirectory() : null;
+        if (isBlank(directory)) {
+            return null;
+        }
+        try {
+            StaticFileDirectory opened = StaticFileDirectory.open(directory);
+            if (mockServerLogger.isEnabledForInstance(Level.INFO)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(Level.INFO)
+                        .setMessageFormat("serving GET and HEAD requests that match no expectation from staticFilesDirectory {}")
+                        .setArguments(opened.getDirectory())
+                );
+            }
+            return opened;
+        } catch (IOException | RuntimeException unusable) {
+            if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(WARN)
+                        .setLogLevel(Level.WARN)
+                        .setMessageFormat("staticFilesDirectory {} is not a readable directory, so requests that match no expectation get a 404")
+                        .setArguments(directory)
+                        .setThrowable(unusable)
+                );
+            }
+            return null;
+        }
     }
 
     private WebSocketProxyRelayHandler getWebSocketProxyRelayHandler() {
@@ -441,12 +479,69 @@ public class HttpActionHandler {
             // breakpoint: REQUEST-phase pause on the unmatched-404 path — lets a registered matcher
             // pause / modify / abort even though nothing matched and the server is not proxying.
             if (attemptRequestBreakpoint(request, synchronous, responseWriter, null, null,
-                req -> returnNotFound(responseWriter, req, null, synchronous))) {
+                req -> serveStaticFileOrReturnNotFound(responseWriter, req, ctx, synchronous))) {
                 return;
             }
-            returnNotFound(responseWriter, request, null, synchronous);
+            serveStaticFileOrReturnNotFound(responseWriter, request, ctx, synchronous);
 
         }
+    }
+
+    /**
+     * Answers a request that matched nothing and is not proxied from {@code staticFilesDirectory}, or with the
+     * usual 404. The file system work runs on the scheduler's bounded static file pool, so never on an event
+     * loop (HTTP/3 also calls this synchronously); only a caller with no channel, a servlet, reads inline.
+     */
+    private void serveStaticFileOrReturnNotFound(final ResponseWriter responseWriter, final HttpRequest request, final ChannelHandlerContext ctx, final boolean synchronous) {
+        final StaticFileDirectory staticFiles = staticFileDirectory;
+        if (staticFiles == null || !StaticFileDirectory.isServableMethod(request) || httpStateHandler.isControlPlaneRequest(request)) {
+            returnNotFound(responseWriter, request, null, synchronous);
+            return;
+        }
+        scheduler.submitStaticFileRead(
+            () -> serveStaticFile(staticFiles, responseWriter, request, synchronous),
+            () -> responseWriter.writeResponse(request, response()
+                .withStatusCode(503)
+                .withReasonPhrase("Service Unavailable")
+                .withHeader("Retry-After", "1")
+                .withBody("MockServer is overloaded, too many static file reads are already waiting"), false),
+            synchronous && ctx == null
+        );
+    }
+
+    private void serveStaticFile(final StaticFileDirectory staticFiles, final ResponseWriter responseWriter, final HttpRequest request, final boolean synchronous) {
+        HttpResponse response = null;
+        try {
+            response = staticFiles.respond(request);
+        } catch (IOException | RuntimeException unreadable) {
+            if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(WARN)
+                        .setLogLevel(Level.WARN)
+                        .setCorrelationId(request.getLogCorrelationId())
+                        .setHttpRequest(request)
+                        .setMessageFormat("returning 404 as the static file for request:{}could not be served")
+                        .setArguments(request)
+                        .setThrowable(unreadable)
+                );
+            }
+        }
+        if (response == null) {
+            returnNotFound(responseWriter, request, null, synchronous);
+            return;
+        }
+        mockServerLogger.logEvent(
+            new LogEntry()
+                .setType(EXPECTATION_RESPONSE)
+                .setLogLevel(Level.INFO)
+                .setCorrelationId(request.getLogCorrelationId())
+                .setHttpRequest(request)
+                .setHttpResponse(response)
+                .setMessageFormat("returning static file response:{}for request:{}")
+                .setArguments(response, request)
+        );
+        responseWriter.writeResponse(request, response, false);
     }
 
     /**

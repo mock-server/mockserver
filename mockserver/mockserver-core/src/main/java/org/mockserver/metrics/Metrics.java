@@ -341,7 +341,7 @@ public class Metrics {
                         .register();
                     overloadRejectionsTotal = Counter.builder()
                         .name("mock_server_overload_rejections")
-                        .help("Tasks refused because a bound was full, by reason (delayed_responses and template_actions answered 503, delay_skipped sent without chaos latency, side_actions dropped, websocket_replies closed with 1013)")
+                        .help("Tasks refused because a bound was full, by reason (delayed_responses and template_actions answered 503, delay_skipped sent without chaos latency, side_actions dropped, websocket_replies closed with 1013, static_files answered 503)")
                         .labelNames("reason")
                         .register();
                     webSocketReadPausesTotal = Counter.builder()
@@ -1128,7 +1128,8 @@ public class Metrics {
 
     /**
      * Count one task refused because the bound named by {@code reason} was full ({@code delayed_responses},
-     * {@code template_actions}, {@code delay_skipped}, {@code side_actions} or {@code websocket_replies}). No-op
+     * {@code template_actions}, {@code delay_skipped}, {@code side_actions}, {@code websocket_replies} or
+     * {@code static_files}). No-op
      * unless metrics are enabled.
      */
     public static void incrementOverloadRejections(String reason) {

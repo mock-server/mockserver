@@ -98,6 +98,7 @@ public class Configuration {
     private volatile Boolean deduplicateRecordedExpectations;
     private volatile Boolean templatizeRecordedValues;
     private volatile String recordedBodyFilesDirectory;
+    private volatile String staticFilesDirectory;
     private volatile Boolean redactSecretsInRecordedExpectations;
     private volatile Boolean redactSecretsInLog;
     private volatile Double llmCostBudgetUsd;
@@ -841,6 +842,25 @@ public class Configuration {
      */
     public Configuration recordedBodyFilesDirectory(String recordedBodyFilesDirectory) {
         this.recordedBodyFilesDirectory = recordedBodyFilesDirectory;
+        return this;
+    }
+
+    public String staticFilesDirectory() {
+        if (staticFilesDirectory == null) {
+            return ConfigurationProperties.staticFilesDirectory();
+        }
+        return staticFilesDirectory;
+    }
+
+    /**
+     * A directory of files served for {@code GET} and {@code HEAD} requests that match no expectation and are
+     * not proxied, by request path, with a content type from the file extension. Empty (the default) disables
+     * it. Read once when the server starts.
+     *
+     * @param staticFilesDirectory the directory to serve unmatched requests from
+     */
+    public Configuration staticFilesDirectory(String staticFilesDirectory) {
+        this.staticFilesDirectory = staticFilesDirectory;
         return this;
     }
 

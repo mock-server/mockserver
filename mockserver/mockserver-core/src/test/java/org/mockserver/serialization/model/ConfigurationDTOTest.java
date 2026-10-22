@@ -108,6 +108,19 @@ public class ConfigurationDTOTest {
     }
 
     @Test
+    public void shouldNotApplyStaticFilesDirectoryToARunningServer() {
+        Configuration target = configuration().staticFilesDirectory("__files");
+
+        ConfigurationDTO dto = new ConfigurationDTO();
+        dto.setStaticFilesDirectory("/");
+        dto.applyTo(target);
+
+        assertThat(target.staticFilesDirectory(), is("__files"));
+        assertThat(new ConfigurationDTO(target).getStaticFilesDirectory(), is("__files"));
+        assertThat(new ConfigurationDTO().setStaticFilesDirectory("dir").buildObject().staticFilesDirectory(), is("dir"));
+    }
+
+    @Test
     public void shouldRoundTripDataPlaneAuthenticationFields() {
         Configuration original = configuration()
             .dataPlaneAuthenticationRequired(true)
@@ -523,6 +536,8 @@ public class ConfigurationDTOTest {
         "tlsMutualAuthenticationAllowBundledCa",
         // decides where the server writes recorded body files, so a control-plane request must not repoint it
         "recordedBodyFilesDirectory",
+        // decides which server files a request can read, so a control-plane request must not repoint it
+        "staticFilesDirectory",
         // decide where the server may send requests, so a control-plane request must not widen them
         "forwardProxyAllowedHosts",
         "forwardProxyDeniedHosts"

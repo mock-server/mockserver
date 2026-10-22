@@ -241,6 +241,7 @@ mockserver.enableCORSForAllResponses=false</code></pre>
         <tr><td><a href="#button_configuration_json_schema_allow_remote_refs">JSON Schema Remote $ref Resolution</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_attach_mismatch_diagnostic_to_response">Attach Mismatch Diagnostic To Unmatched Response</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_closest_match_hint_enabled">Closest Match Hint On Unmatched Response</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
+        <tr><td><a href="#button_configuration_static_files_directory">Static Files Directory</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_forward_proxy_block_private_networks">Block Forwarding To Private Networks (SSRF Protection)</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_forward_proxy_allowed_hosts">Hosts Forwarding Is Allowed To</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
         <tr><td><a href="#button_configuration_forward_proxy_denied_hosts">Hosts Forwarding Is Denied To</a></td><td><a href="#http_request_size_configuration">HTTP Request Parsing</a></td></tr>
@@ -1354,6 +1355,25 @@ mockserver.enableCORSForAllResponses=true</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">mockserver.closestMatchHintEnabled=...</code></pre>
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.closestMatchHintEnabled="true"</code></pre>
+</div>
+
+<button id="button_configuration_static_files_directory" class="accordion title"><strong>Static Files Directory</strong></button>
+<div class="panel title">
+    <p>A directory of files MockServer serves when a <span class="inline_code">GET</span> or <span class="inline_code">HEAD</span> request matches no expectation and is not proxied, like WireMock's <span class="inline_code">__files</span> directory. A request for <span class="inline_code">/assets/site.css</span> is answered with the file <span class="inline_code">assets/site.css</span> inside the directory, with a <span class="inline_code">Content-Type</span> chosen from the file extension (<span class="inline_code">application/octet-stream</span> when the extension is not recognised). A path ending in <span class="inline_code">/</span> serves that folder's <span class="inline_code">index.html</span>. A <span class="inline_code">HEAD</span> request gets the headers and the file's <span class="inline_code">Content-Length</span> without the body.</p>
+    <p>Expectations always win: a file is only served when nothing matched. Anything that is not served &mdash; a missing file, a folder, another method, a control plane path under <span class="inline_code">/mockserver/</span>, or a file larger than 50 MiB &mdash; still gets the normal <span class="inline_code">404</span>. Files are read by a small pool of their own, so slow reads never hold up other responses; if more than 1,000 file requests are waiting, the rest get <span class="inline_code">503 Service Unavailable</span> with a <span class="inline_code">Retry-After: 1</span> header until it catches up; this is logged at most every 10 seconds and, when metrics are enabled, counted by <span class="inline_code">mock_server_overload_rejections</span> with <span class="inline_code">reason="static_files"</span>. When MockServer runs as a WAR, files are read on the servlet container's request thread instead, and this limit does not apply.</p>
+    <p>Because the request chooses the file, only plain paths inside the directory are served. Paths containing <span class="inline_code">..</span>, encoded or double-encoded separators, backslashes, drive letters or control characters are refused, as are hidden files and folders (any name starting with <span class="inline_code">.</span>, such as <span class="inline_code">.env</span> or <span class="inline_code">.git</span>) and symbolic links that lead outside the directory. Folders are never listed. Still, point it only at a directory whose files anyone who can reach MockServer may read.</p>
+    <p>This is <strong>off by default</strong>. It can only be set before MockServer starts (system property, environment variable, properties file or startup configuration); <span class="inline_code">PUT /mockserver/configuration</span> ignores it with a warning. If the directory does not exist when MockServer starts, a warning is logged and unmatched requests get a <span class="inline_code">404</span> as usual.</p>
+    <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.staticFilesDirectory(String directory)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.staticFilesDirectory=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_STATIC_FILES_DIRECTORY=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.staticFilesDirectory=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.staticFilesDirectory="/var/mockserver/__files"</code></pre>
 </div>
 
 <button id="button_configuration_forward_proxy_block_private_networks" class="accordion title"><strong>Block Forwarding To Private Networks (SSRF Protection)</strong></button>

@@ -28,7 +28,10 @@ required?"}
     AUTH -->|Pass| FWD[Forward via NettyHttpClient]
     AUTH -->|Fail| R407[407 Proxy Auth Required]
     LOOP -->|Yes| R404A[404 + loop warning]
-    PROXY -->|No| R404[404 Not Found]
+    PROXY -->|No| STATIC{"staticFilesDirectory
+serves the file?"}
+    STATIC -->|Yes| SF[Static file response]
+    STATIC -->|No| R404[404 Not Found]
 
     DISPATCH --> RESP[HttpResponseActionHandler]
     DISPATCH --> TMPL_R[HttpResponseTemplateActionHandler]
@@ -51,11 +54,16 @@ required?"}
     FWD_S --> LOG_FWD[Log FORWARDED_REQUEST]
     FWD --> LOG_FWD
     R404 --> LOG_NO[Log NO_MATCH_RESPONSE]
+    SF --> LOG_RESP
 
     LOG_RESP --> WRITE[Write response to channel]
     LOG_FWD --> WRITE
     LOG_NO --> WRITE
 ```
+
+### Static files for unmatched requests
+
+`staticFilesDirectory` (default empty) lets `HttpActionHandler.serveStaticFileOrReturnNotFound` answer an unmatched, unproxied `GET`/`HEAD` from a directory, after CRUD, expectation matching, CORS preflight, proxy-pass, proxying and the stored OpenAI Responses lookup, and inside the unmatched-path request breakpoint's continuation. `StaticFileDirectory` (`mockserver-core/.../file/`) resolves the directory's real path once in the `HttpActionHandler` constructor, so the property is startup-only and unset costs one final-field null check on the 404 path. When set, control-plane paths (`HttpState.isControlPlaneRequest`) and other methods go straight to the 404; everything else is resolved and read through `Scheduler.submitStaticFileRead` on the scheduler's own pool of 4 static file threads, created on first use and shut down with the other pools in `Scheduler.shutdown` (pending reads are dropped, as their connections are closing), not on the shared scheduler pool that forwards and delays use. Only a synchronous caller with no channel (the WAR servlets) reads inline, on the servlet container's request thread, where the 1,000-read bound does not apply; HTTP/3 calls `processAction` synchronously on its stream's event loop but has a channel, so it hops too. Over 1,000 queued reads a request gets `503` with `Retry-After: 1`, counted as `static_files` in `mock_server_overload_rejections` and logged at most every 10 seconds. The request path is percent-decoded once, then confined like `TemplatedFilePathGuard`: no empty, `.`-prefixed (so `.`, `..` and hidden) segment, no `\`, `:`, `%` or control character, and the real path must be a regular, non-hidden file under the real directory, opened with `NOFOLLOW_LINKS`. Files over 50 MiB, unreadable files and missing files get the normal 404; a served file is logged as `EXPECTATION_RESPONSE` at every log level (like matched and CRUD responses), so verification, dispositions, retrieve and disk recording see it below INFO. `StaticFileDirectoryTest`, `HttpActionHandlerStaticFilesTest` (reading thread, `503`), `StaticFilesIntegrationTest` (including that `stop()` terminates only that server's read pool) and `Http3StaticFilesIntegrationTest` pin the traversal, precedence, HEAD and control-plane behaviour.
 
 ### Injected-vs-real latency timing
 
@@ -1103,6 +1111,7 @@ flowchart TD
 |---------|----------|--------|----------------|-----------------|
 | `Scheduler.rejectable(task, onRejected)` | Every request dispatch that can carry a delay: the delayed write in `writeResponseActionResponse` (all mock-response actions), each action type's action/global delay (callbacks, the forward family, SSE, LLM, WebSocket, gRPC streaming, `error`), templates | Delayed responses (`maxPendingDelayedResponses`) | `503`, expectation post-processed | `delayed_responses` |
 | same, template stage | Response/forward template renders waiting for a thread | Template queue (`maxQueuedTemplateActions`) | `503` | `template_actions` |
+| `Scheduler.submitStaticFileRead(...)` | `staticFilesDirectory` reads waiting for one of the 4 static file threads | Fixed queue of 1,000 reads | `503` with `Retry-After: 1` | `static_files` |
 | `Scheduler.delayOptional(write)` | Chaos latency on an already-forwarded response | Delayed responses | The upstream response is written at once, without the latency | `delay_skipped` |
 | `Scheduler.sheddable(task)` | Delayed fire-and-forget side actions: after-actions and non-blocking before-actions, secondary actions, step side effects | Delayed side actions (its own budget, same limit) | Dropped | `side_actions` |
 | `Scheduler.scheduleReplySet(...)` | WebSocket bidi reply sets (one per matched inbound frame); per connection, reads also pause while more than 128 delayed sets are pending | WebSocket reply frames (its own budget, same limit), admitted or refused a whole set at a time | The WebSocket is closed with status `1013` (Try Again Later); no frame of the set is sent | `websocket_replies` |

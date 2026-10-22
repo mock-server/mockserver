@@ -312,6 +312,21 @@ public class HttpStateConfigurationUpdateTest {
     }
 
     @Test
+    public void shouldNotLetAPutRepointTheStaticFilesDirectory() {
+        // given
+        configuration.staticFilesDirectory("__files");
+
+        // when
+        put(new ConfigurationDTO().setStaticFilesDirectory("/"));
+
+        // then
+        assertThat(configuration.staticFilesDirectory(), is("__files"));
+        List<String> warnings = logger.warnings();
+        assertThat(warnings, hasSize(1));
+        assertThat(warnings.get(0), containsString("staticFilesDirectory is fixed at startup"));
+    }
+
+    @Test
     public void shouldNotWarnWhenInitOnlyPropertiesAreEchoedBackUnchanged() {
         // given - the whole-blob PUT case: a client GETs the configuration and PUTs it back
         // verbatim, including the init-only properties. That must not produce noise.

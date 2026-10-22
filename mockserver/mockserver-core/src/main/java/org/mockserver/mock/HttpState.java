@@ -7492,6 +7492,11 @@ public class HttpState {
             warnInitOnlyProperty("recordedBodyFilesDirectory", "\"" + suppliedRecordedBodyFilesDirectory + "\"", "\"" + configuration.recordedBodyFilesDirectory() + "\"",
                 "it decides where the server writes files, so a request to the control plane cannot change it");
         }
+        String suppliedStaticFilesDirectory = suppliedConfiguration.getStaticFilesDirectory();
+        if (suppliedStaticFilesDirectory != null && !suppliedStaticFilesDirectory.equals(configuration.staticFilesDirectory())) {
+            warnInitOnlyProperty("staticFilesDirectory", "\"" + suppliedStaticFilesDirectory + "\"", "\"" + configuration.staticFilesDirectory() + "\"",
+                "it decides which server files a request can read, so a request to the control plane cannot change it");
+        }
         Integer suppliedMaxWebSocketExpectations = suppliedConfiguration.getMaxWebSocketExpectations();
         if (suppliedMaxWebSocketExpectations != null && configuration.maxWebSocketExpectations() != maxWebSocketExpectationsInForce) {
             warnInitOnlyProperty("maxWebSocketExpectations", configuration.maxWebSocketExpectations(), maxWebSocketExpectationsInForce,

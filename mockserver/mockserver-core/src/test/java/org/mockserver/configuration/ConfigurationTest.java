@@ -2971,6 +2971,33 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetStaticFilesDirectory() {
+        String original = ConfigurationProperties.staticFilesDirectory();
+        try {
+            // then - default value
+            ConfigurationProperties.staticFilesDirectory(null);
+            assertThat(ConfigurationProperties.staticFilesDirectory(), equalTo(""));
+            assertThat(configuration.staticFilesDirectory(), equalTo(""));
+
+            // when - system property setter
+            ConfigurationProperties.staticFilesDirectory("__files");
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.staticFilesDirectory(), equalTo("__files"));
+            assertThat(System.getProperty("mockserver.staticFilesDirectory"), equalTo("__files"));
+            assertThat(configuration.staticFilesDirectory(), equalTo("__files"));
+
+            // when - setter
+            configuration.staticFilesDirectory("other-files");
+
+            // then - getter
+            assertThat(configuration.staticFilesDirectory(), equalTo("other-files"));
+        } finally {
+            ConfigurationProperties.staticFilesDirectory(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetMaximumNumberOfRequestToReturnInVerificationFailure() {
         int original = ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure();
         try {
