@@ -235,6 +235,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Long extensionStartTimeoutMillis;
     private Integer extensionAdminMaxInFlight;
     private Long extensionAdminTimeoutMillis;
+    private Integer extensionListenerQueueSize;
+    private Long extensionListenerMaxBytes;
     private Boolean redactSecretsInRecordedExpectations;
     private Boolean redactSecretsInLog;
     private Double llmCostBudgetUsd;
@@ -623,6 +625,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.extensionStartTimeoutMillis = configuration.extensionStartTimeoutMillis();
             this.extensionAdminMaxInFlight = configuration.extensionAdminMaxInFlight();
             this.extensionAdminTimeoutMillis = configuration.extensionAdminTimeoutMillis();
+            this.extensionListenerQueueSize = configuration.extensionListenerQueueSize();
+            this.extensionListenerMaxBytes = configuration.extensionListenerMaxBytes();
             this.redactSecretsInRecordedExpectations = configuration.redactSecretsInRecordedExpectations();
             this.redactSecretsInLog = configuration.redactSecretsInLog();
             this.llmCostBudgetUsd = configuration.llmCostBudgetUsd();
@@ -1108,6 +1112,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.extensionStartTimeoutMillis(extensionStartTimeoutMillis);
         configuration.extensionAdminMaxInFlight(extensionAdminMaxInFlight);
         configuration.extensionAdminTimeoutMillis(extensionAdminTimeoutMillis);
+        configuration.extensionListenerQueueSize(extensionListenerQueueSize);
+        configuration.extensionListenerMaxBytes(extensionListenerMaxBytes);
         configuration.redactSecretsInRecordedExpectations(redactSecretsInRecordedExpectations);
         configuration.redactSecretsInLog(redactSecretsInLog);
         configuration.llmCostBudgetUsd(llmCostBudgetUsd);
@@ -1971,10 +1977,10 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         // recordedBodyFilesDirectory is deliberately not applied: it decides where the server writes files, so it is
         // fixed at startup (see HttpState.applyConfigurationUpdate)
-        // extensions, extensionScanning, extensionStartTimeoutMillis, extensionAdminMaxInFlight and
-        // extensionAdminTimeoutMillis are deliberately not applied: extensions are
-        // trusted code loaded once at startup, so a control-plane request must not add, remove or reconfigure them
-        // (see HttpState.applyConfigurationUpdate)
+        // extensions, extensionScanning, extensionStartTimeoutMillis, extensionAdminMaxInFlight,
+        // extensionAdminTimeoutMillis, extensionListenerQueueSize and extensionListenerMaxBytes are deliberately not
+        // applied: extensions are trusted code loaded once at startup, so a control-plane request must not add, remove
+        // or reconfigure them (see HttpState.applyConfigurationUpdate)
         // staticFilesDirectory is deliberately not applied: it decides which server files requests can read, so it
         // is fixed at startup (see HttpState.applyConfigurationUpdate)
         if (redactSecretsInRecordedExpectations != null) {
@@ -4200,6 +4206,24 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setExtensionAdminTimeoutMillis(Long extensionAdminTimeoutMillis) {
         this.extensionAdminTimeoutMillis = extensionAdminTimeoutMillis;
+        return this;
+    }
+
+    public Integer getExtensionListenerQueueSize() {
+        return extensionListenerQueueSize;
+    }
+
+    public ConfigurationDTO setExtensionListenerQueueSize(Integer extensionListenerQueueSize) {
+        this.extensionListenerQueueSize = extensionListenerQueueSize;
+        return this;
+    }
+
+    public Long getExtensionListenerMaxBytes() {
+        return extensionListenerMaxBytes;
+    }
+
+    public ConfigurationDTO setExtensionListenerMaxBytes(Long extensionListenerMaxBytes) {
+        this.extensionListenerMaxBytes = extensionListenerMaxBytes;
         return this;
     }
 

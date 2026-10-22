@@ -14,8 +14,12 @@
 - Phase 1 is delivered in units. **U11a** is the core: API, loader, registry, lifecycle and the
   expectation-initializer hook. **U11b** adds admin routes: an `AdminApiExtension` serves
   `/mockserver/extensions/<name>/…` behind the control-plane gate, on a capped pool of its own with a timeout.
-  `$ext` template helpers (U11c) and listeners (U11d) build on it. A global request filter and response transformer
-  are deliberately out of phase 1.
+  **U11d** adds three listeners: served requests (H3), expectation lifecycle (H7) and configuration updates (H8),
+  each delivered on the extension's own thread through a queue that never waits. `$ext` template helpers (U11c)
+  build on the same core. A global request filter and response transformer are deliberately out of phase 1.
+- **With listeners loaded, no listener code runs on a server thread.** The thread that logs, removes or changes
+  something only builds a small event and makes a lock-free, bounded offer; when the queue is full the event is
+  dropped and counted, never waited on.
 
 ## Lifecycle
 
@@ -44,9 +48,14 @@ sequenceDiagram
 |---|---|
 | `Extension` | Public API: `name()`, `priority()`, `start(ExtensionContext)`, `onStarted(List<Integer>)`, `stop()` |
 | `ExtensionContext` | The server's live `Configuration` and `MockServerLogger` |
-| `ExtensionHook` | The optional capabilities an extension adds by implementing a hook interface: `EXPECTATION_INITIALIZER` (U11a), `ADMIN_API` (U11b); later units add theirs |
+| `ExtensionHook` | The optional capabilities an extension adds by implementing a hook interface: `EXPECTATION_INITIALIZER` (U11a), `ADMIN_API` (U11b), `SERVE_EVENT_LISTENER`, `EXPECTATION_LIFECYCLE_LISTENER`, `SETTINGS_LISTENER` (U11d); later units add theirs |
 | `AdminApiExtension` | Public API (U11b): `handle(request, subPath)` and `isReadOnly(method, subPath)` |
 | `ExtensionAdminRoutes` | Built by `ExtensionRegistry.createAdminRoutes` only when a started extension implements `ADMIN_API`: route lookup, admission cap, admin pool, timeout, response-once writer, start-up shadow WARN |
+| `ServeEventListener`, `ServeEvent` | H3: each answered request (`MOCKED`, `FORWARDED`, `NOT_MATCHED`) with request, response, expectation id, correlation id and time |
+| `ExpectationLifecycleListener`, `ExpectationChange`, `ChangeCause` | H7: each expectation `ADDED`, `UPDATED` or `REMOVED`, with why and, for clustered exhaustion, `isFleetWide()` |
+| `SettingsListener` | H8: the live `Configuration` after each `PUT /mockserver/configuration` |
+| `ListenerDispatch` | Public only so `RequestMatchers`, `MockServerEventLog` and `HttpState` can hold it; builds events and offers them to each listener's queue |
+| `ListenerQueue` | Package-private. One per listener extension: a lock-free queue bounded by count (and, for H3 and H7, bytes), drained by one daemon thread `MockServer-ext-listener-<name>` |
 | `LoadedExtension` | One loaded extension: instance, name, priority, class, source JAR, implemented hooks and **disabled hooks with their reasons** |
 | `ExtensionLoader` | Package-private. Resolves classes through `CallbackClassLoaderResolver`, validates and de-duplicates, sorts by priority then name |
 | `ExtensionRegistry` | Starts, notifies and stops extensions; disables hooks; runs the initializer hook |
@@ -161,8 +170,99 @@ overload reason, and `ExtensionAdminRoutes` keeps `timeoutCount`, `lateResultCou
 ### Store factory overload
 
 `ExpectationStoreFactory.Factory` gained a default five-argument `create(..., ExtensionRegistry)` that delegates to
-the four-argument form, so existing factories (such as the clustered one) are unchanged. `HttpState` calls the
-five-argument form; U11d uses it to give the store its listener dispatch.
+the four-argument form, so existing factories are unchanged. The default factory overrides both and calls the
+five-argument `RequestMatchers` constructor, which takes the registry's lifecycle dispatch; `HttpState` likewise
+calls the five-argument `MockServerEventLog` constructor. The four-argument constructors stay, so benchmarks and
+other callers are unchanged.
+
+### Listeners (H3, H7, H8)
+
+```mermaid
+flowchart LR
+    LOG["MockServerEventLog consumer\nafter truncation and releaseDerivedForms"] -->|"served(entry)"| D["ListenerDispatch"]
+    RM["RequestMatchers\nadd, update, remove, trim, reconcile"] -->|"added / updated / removed"| D
+    HS["HttpState.applyConfigurationUpdate(dto)"] -->|"notifySettingsUpdated"| D
+    D -->|"lock-free bounded offer"| Q["ListenerQueue per extension"]
+    Q -->|"own daemon thread"| L["onServed / onChange / onConfigurationUpdated"]
+```
+
+The registry builds the dispatch after every `start()` has returned, with one `ListenerQueue` per started extension
+that implements any listener interface. `serveEventDispatch()` and `lifecycleDispatch()` return `null` when no
+extension implements that hook, so the fields that hold them stay `null` and each site costs one null check.
+
+**Where each event is emitted.**
+
+| Event | Site | Thread |
+|---|---|---|
+| H3 serve event | `MockServerEventLog.processLogEntry`, after `truncateBodiesForLog` and `releaseDerivedForms`, immediately before `eventLog.add`. Types `EXPECTATION_RESPONSE` (`MOCKED`), `FORWARDED_REQUEST` (`FORWARDED`, not re-imported archives), `NO_MATCH_RESPONSE` (`NOT_MATCHED`); an entry without a response is skipped | Event-log consumer |
+| H7 `ADDED` / `UPDATED` | `add` and `update`, inside the monitor, right after the node-local mutation. `UPDATED` only when the matcher actually changed, so an identical re-add or an unchanged file reload is silent | Caller (control plane, initialiser, watcher) |
+| H7 `REMOVED` | `removeHttpRequestMatcher`, inside the monitor and only when the CPQ removal returned `true` (so a racing `postProcess` and lazy task report once); `trimEvictedFromBackend` and the no-backend CPQ eviction listener (`EVICTED`); `reconcileClusteredScan` (`CLUSTER`). Clear, the OpenAPI prune, `update`'s removals and reset (one event per expectation) all go through `removeHttpRequestMatcher` | Remover: control plane, scheduler, or the response-completion thread (an event loop for binary, gRPC bidi and HTTP/3) |
+| H8 | `HttpState.applyConfigurationUpdate(ConfigurationDTO)` with a non-null DTO, after the update and the init-only warnings. The no-argument form (programmatic changes) does not fire | Control plane |
+
+**Order.** Every H7 offer is made under the store's monitor, at the mutation it reports, so a listener sees changes in
+the order the store applied them: an expectation's `ADDED` always precedes its `REMOVED`, even when a request uses up a
+just-added `once()` expectation before `add` returns. The offer never waits, so this is the one listener call allowed
+inside the monitor's "no notification" invariant. An `update` batch reports its adds and updates before the removals
+it makes outside the monitor.
+
+**`ChangeCause`.** `RequestMatchers` passes a package-private `Origin` constant (`CAUSE`, `FILE_WATCHER`, `RECLAIM`,
+`FLEET_EXHAUSTED`) alongside the legacy `Cause`, and maps it to the public `ChangeCause` only inside the
+`lifecycleDispatch != null` branch. The legacy `Cause` and the `MockServerMatcherListener` firing set are unchanged
+(pinned by `shouldLeaveTheLegacyListenerFiringSetUnchanged`).
+
+| Cause | When |
+|---|---|
+| `API` | Legacy `Cause.Type.API`: control-plane or client add, update, clear, reset |
+| `FILE_INITIALISER` | Legacy `FILE_INITIALISER`: startup JSON/OpenAPI files and the persisted-blob reload |
+| `CLASS_INITIALISER` | Legacy `CLASS_INITIALISER`: `initializationClass` and H4 extension initialisers |
+| `FILE_WATCHER` | `ExpectationFileWatcher` calls `ExpectationInitializerLoader.retrieveExpectationsFrom*File(..., true)`, which calls `update(expectations, cause, true)`; the legacy `Cause` stays `FILE_INITIALISER`, so the update still replaces that file's expectations |
+| `EXHAUSTED` | `Origin.RECLAIM` (from `postProcess` and the lazy-removal task) when `!hasRemainingMatches()`; also `Origin.FLEET_EXHAUSTED`, with `isFleetWide()` true |
+| `EXPIRED` | `Origin.RECLAIM` when matches remain, so the `TimeToLive` passed. `EXHAUSTED` wins when both apply |
+| `EVICTED` | Non-clustered backend trim, or the no-backend CPQ eviction |
+| `CLUSTER` | Clustered reconcile: remote add, changed remote update, and every reconcile removal (a remote remove and a clustered eviction look the same there). A reconcile racing this node's own write, before `lastReconciledVersion` records it, can report that write once more as `CLUSTER` `UPDATED` |
+
+**Timing.** `EXHAUSTED` and `EXPIRED` fire when the store removes the expectation: normally from `postProcess` as the
+response that used the last match completes (a `TimeToLive` lapsing mid-response is `EXPIRED` the same way);
+otherwise when a later match or a control-plane retrieval meets the inactive expectation and schedules the lazy
+removal. In clustered shared-Times mode the node-local `Times` never decrements, so exhaustion is reported when a node
+next tries to match the expectation (the `consumeTimesViaBackendCas` result is `exhausted`, origin
+`FLEET_EXHAUSTED`), or as `CLUSTER` on a peer that reconciles the backend removal. A served decrement never fires H7.
+
+**Events carry references, not copies.** `ExpectationChange.expectation()` is the live expectation (read-only by
+contract). `ServeEvent` copies the log entry's request, response, expectation id, correlation id and time on the
+consumer thread and never holds the `LogEntry`, so ring eviction's `LogEntry::clear` cannot change it. Its weight is
+the entry's memoised `estimatedHeapSize()`; because the hook sits after `releaseDerivedForms`, `eventLog.add` reuses
+the same memo, and the event log's retained bytes are identical with and without an H3 loaded (pinned).
+
+**Bounds and drops.** Each queue holds at most `extensionListenerQueueSize` events (including the one being
+delivered). Queues of H3 or H7 listeners also share `extensionListenerMaxBytes` equally, so one stuck listener can
+fill only its own share. A serve event weighs its log entry's `estimatedHeapSize()`; an expectation change weighs its
+expectation's memoised `estimatedHeapSize()`, because it keeps a removed or superseded expectation reachable; one oversize event is admitted into an empty queue, matching `wouldExceedInFlightBudget`. The offer is a CAS on
+two counters plus a `ConcurrentLinkedQueue.offer`, with an `unpark` only when the delivery thread is parked. A refused
+event increments `mock_server_extension_listener_dropped_total{extension, reason}` (`count`, `bytes`, `shutdown`) and
+logs one WARN per queue; it never touches `MockServerEventLog.DropReason` or `droppedSinceLogReset`, so verification is
+not tainted (pinned). A throw from a listener is counted in `mock_server_extension_errors_total{extension, hook}`,
+logged once, and delivery continues. A hook disabled with `disableHook` is skipped at delivery.
+
+**Stop.** `ExtensionRegistry.stop()` stops accepting events and waits up to `stopDrainMillis` for each queue to
+drain, calls every extension's `stop()` in reverse order, then ends the listener threads, counting anything still
+queued as `shutdown`. `maximumStopMillis()` includes the flush budget, so `LifeCycle.stop()` waits for it.
+
+**Not yet implemented.** From design §5.7, `mock_server_extension_invocations_total`, `_timeouts_total`,
+`_duration_seconds` and the `mock_server_extension_stuck` gauge do not exist for the listener hooks yet; only the
+dropped and errors counters do. They are a tracked U11 follow-up.
+
+### What runs with no listener loaded
+
+| Site | Added |
+|---|---|
+| `processAction`, Netty handlers, the per-decrement commit branch, `postProcess` signature | Nothing. `postProcess` passes the constant `Origin.RECLAIM` on its existing removal branch |
+| `processLogEntry` | `if (serveEventDispatch != null)` |
+| `removeHttpRequestMatcher` (via `expectationRemoved`) and the active-expectation `postProcess` | One null check and nothing allocated, pinned by `ExpectationRemovalNoListenerCostTest`, which also runs in the C1-only `allocation-tests-without-c2` execution because C2 escape analysis would hide an added allocation |
+| `add`, `update`, trim, reconcile, CPQ eviction | `if (lifecycleDispatch != null)`, once per mutation; nothing is built before the check (by inspection, not pinned) |
+| The two per-match commit branches | No listener check at all, pinned structurally by `shouldKeepEveryListenerCheckOutOfThePerMatchCommitBranches` |
+| `applyConfigurationUpdate` | `if (extensionRegistry != null)` |
+| Class loading | None: `ExtensionClassLoadingTest`'s fresh-JVM probe adds, serves to exhaustion, logs, PUTs configuration and resets, and loads no `org.mockserver.extension` class |
 
 ## Appendix: configuration
 
@@ -173,13 +273,16 @@ five-argument form; U11d uses it to give the store its listener dispatch.
 | `mockserver.extensionStartTimeoutMillis` | `30000` | Per `start`, `onStarted` and `stop`; values below 1 read as 1 |
 | `mockserver.extensionAdminMaxInFlight` | `32` | Admin route calls in flight; beyond it a `503` counted as `extension_admin`; values below 1 read as 1 |
 | `mockserver.extensionAdminTimeoutMillis` | `30000` | Per admin route call on Netty; values below 1 read as 1 |
+| `mockserver.extensionListenerQueueSize` | `10000` | Events per listener queue; values below 1 read as 1 |
+| `mockserver.extensionListenerMaxBytes` | `heapFraction(heapAvailableInKB(), 20)`, or 16 MB with no heap ceiling | Shared equally by the H3 and H7 queues; values below 1 use the default, so it is never unbounded |
 
-All five are startup-only (skipped by `ConfigurationDTO.applyTo`, warned about by `applyConfigurationUpdate`).
+All seven are startup-only (skipped by `ConfigurationDTO.applyTo`, warned about by `applyConfigurationUpdate`).
 
-Spring: `MockServerPropertyCustomizer.applyProperty` maps all five, so `@MockServerInstance(properties = ...)`
+Spring: `MockServerPropertyCustomizer.applyProperty` maps all seven, so `@MockServerInstance(properties = ...)`
 gives each named instance its own extensions.
 
-Tests: `ExtensionRegistryTest`, `ExtensionAdminRoutesTest` and the extension case in `HttpStateAuditTest` (core),
-`ExtensionLifecycleTest`, `ExtensionAdminRouteTest` and `ExtensionClassLoadingTest` (netty),
+Tests: `ExtensionRegistryTest`, `ExtensionAdminRoutesTest`, `ExtensionListenersTest`,
+`ExpectationRemovalNoListenerCostTest` and the extension case in `HttpStateAuditTest` (core), `ExtensionLifecycleTest`,
+`ExtensionAdminRouteTest`, `ExtensionListenersIntegrationTest` and `ExtensionClassLoadingTest` (netty),
 `MockServerServletExtensionTest`, `ProxyServletExtensionTest`, `MockServerInstanceExtensionsTest` (Spring), plus
 the startup-only cases in `HttpStateConfigurationUpdateTest` and `ConfigurationDTOTest`.

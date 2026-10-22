@@ -35,6 +35,9 @@ public final class ExtensionRegistry {
     private final MockServerLogger mockServerLogger;
     private final long timeoutMillis;
     private final ExtensionContext context;
+    private final long listenerFlushMillis;
+    // null until every extension has started, and null afterwards when none is a listener
+    private volatile ListenerDispatch listenerDispatch;
     // guarded by this
     private final List<LoadedExtension> started = new ArrayList<>();
     private final AtomicBoolean stopped = new AtomicBoolean(false);
@@ -46,6 +49,7 @@ public final class ExtensionRegistry {
         this.mockServerLogger = mockServerLogger;
         this.timeoutMillis = configuration.extensionStartTimeoutMillis();
         this.context = new ServerExtensionContext(configuration, mockServerLogger);
+        this.listenerFlushMillis = configuration.stopDrainMillis();
     }
 
     /**
@@ -58,6 +62,7 @@ public final class ExtensionRegistry {
         ExtensionRegistry registry = new ExtensionRegistry(ExtensionLoader.load(configuration), configuration, mockServerLogger);
         registry.logLoaded();
         registry.startAll();
+        registry.listenerDispatch = ListenerDispatch.create(registry.startedExtensions(), configuration, mockServerLogger);
         return registry;
     }
 
@@ -130,6 +135,37 @@ public final class ExtensionRegistry {
     }
 
     /**
+     * @return the dispatch for {@link ServeEventListener}s, or {@code null} when no started extension is one
+     */
+    public ListenerDispatch serveEventDispatch() {
+        ListenerDispatch dispatch = listenerDispatch;
+        return dispatch != null && dispatch.hasServeEventListeners() ? dispatch : null;
+    }
+
+    /**
+     * @return the dispatch for {@link ExpectationLifecycleListener}s, or {@code null} when no started extension is
+     * one
+     */
+    public ListenerDispatch lifecycleDispatch() {
+        ListenerDispatch dispatch = listenerDispatch;
+        return dispatch != null && dispatch.hasLifecycleListeners() ? dispatch : null;
+    }
+
+    /**
+     * Queues the updated configuration for every {@link SettingsListener}, without waiting.
+     */
+    public void notifySettingsUpdated(Configuration configuration) {
+        ListenerDispatch dispatch = listenerDispatch;
+        if (dispatch != null && dispatch.hasSettingsListeners()) {
+            dispatch.settingsUpdated(configuration);
+        }
+    }
+
+    ListenerDispatch listenerDispatch() {
+        return listenerDispatch;
+    }
+
+    /**
      * Calls each started extension's {@code onStarted} in order; afterwards {@link #isStartedNotified()} is true.
      *
      * @throws ExtensionException when one throws or times out; the caller stops the server
@@ -156,10 +192,11 @@ public final class ExtensionRegistry {
     }
 
     /**
-     * @return the longest {@link #stop()} can take: one {@code extensionStartTimeoutMillis} per started extension
+     * @return the longest {@link #stop()} can take: the listener flush ({@code stopDrainMillis}) when any extension is
+     * a listener, plus one {@code extensionStartTimeoutMillis} per started extension
      */
     public long maximumStopMillis() {
-        return startedExtensions().size() * timeoutMillis;
+        return (listenerDispatch != null ? listenerFlushMillis : 0L) + startedExtensions().size() * timeoutMillis;
     }
 
     /**
@@ -170,7 +207,9 @@ public final class ExtensionRegistry {
     }
 
     /**
-     * Calls {@code stop} on every started extension in reverse start order. Safe to call more than once.
+     * Delivers what the listener queues still hold (for at most {@code stopDrainMillis}; anything left is dropped and
+     * counted), calls {@code stop} on every started extension in reverse start order, then ends the listener
+     * threads. Safe to call more than once.
      */
     public void stop() {
         if (!stopped.compareAndSet(false, true)) {
@@ -180,9 +219,16 @@ public final class ExtensionRegistry {
         Collections.reverse(toStop);
         // an interrupted caller (such as a refused start) must still wait for each stop
         boolean interrupted = Thread.interrupted();
+        ListenerDispatch dispatch = listenerDispatch;
         try {
+            if (dispatch != null) {
+                dispatch.flush(listenerFlushMillis);
+            }
             stopEach(toStop);
         } finally {
+            if (dispatch != null) {
+                dispatch.shutdown();
+            }
             if (interrupted) {
                 Thread.currentThread().interrupt();
             }

@@ -267,9 +267,19 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
     // disk. Null when disk persistence is disabled.
     private Consumer<LogEntry> recordedRequestConsumer;
     private volatile Runnable recordedRequestFlush;
+    // null unless a started extension is a ServeEventListener
+    private final org.mockserver.extension.ListenerDispatch serveEventDispatch;
 
     public MockServerEventLog(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, boolean asynchronousEventProcessing) {
-        this(configuration, mockServerLogger, scheduler, asynchronousEventProcessing, MockServerEventLog::defaultWaitStrategy);
+        this(configuration, mockServerLogger, scheduler, asynchronousEventProcessing, MockServerEventLog::defaultWaitStrategy, null);
+    }
+
+    /**
+     * @param extensionRegistry the server's extensions, or {@code null} when none are configured; its serve-event
+     *                          listeners are told about each answered request
+     */
+    public MockServerEventLog(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, boolean asynchronousEventProcessing, org.mockserver.extension.ExtensionRegistry extensionRegistry) {
+        this(configuration, mockServerLogger, scheduler, asynchronousEventProcessing, MockServerEventLog::defaultWaitStrategy, extensionRegistry);
     }
 
     /**
@@ -277,7 +287,12 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
      *                            polls, so only an explicit wake can deliver an entry
      */
     MockServerEventLog(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, boolean asynchronousEventProcessing, IntFunction<CoalescingWakeWaitStrategy> waitStrategyFactory) {
+        this(configuration, mockServerLogger, scheduler, asynchronousEventProcessing, waitStrategyFactory, null);
+    }
+
+    private MockServerEventLog(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, boolean asynchronousEventProcessing, IntFunction<CoalescingWakeWaitStrategy> waitStrategyFactory, org.mockserver.extension.ExtensionRegistry extensionRegistry) {
         super(scheduler);
+        this.serveEventDispatch = extensionRegistry != null ? extensionRegistry.serveEventDispatch() : null;
         this.configuration = configuration;
         // Bound to this server's Configuration instance (not a static method reference) so
         // redactSecretsInLog set programmatically or via PUT /mockserver/configuration is honoured.
@@ -775,6 +790,11 @@ public class MockServerEventLog extends MockServerEventLogNotifier {
         // the next render/verify. Drop it BEFORE add() so the weight add() computes reflects the released
         // body (roughly raw bytes plus the structural constants) rather than double-counting the second copy.
         logEntry.releaseDerivedForms();
+        // here, not earlier: the event's weight memoises the entry's estimatedHeapSize, which add() then reuses, so
+        // it must be taken after truncation and releaseDerivedForms; and before add(), whose eviction may clear it
+        if (serveEventDispatch != null) {
+            serveEventDispatch.served(logEntry);
+        }
         // add() weighs the (possibly truncated) entry via LogEntry::estimatedHeapSize for the byte
         // budget — truncation has already run, and the estimate is computed lazily inside add().
         eventLog.add(logEntry);

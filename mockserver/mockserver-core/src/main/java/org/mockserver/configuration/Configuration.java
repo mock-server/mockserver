@@ -283,6 +283,8 @@ public class Configuration {
     private volatile Long extensionStartTimeoutMillis;
     private volatile Integer extensionAdminMaxInFlight;
     private volatile Long extensionAdminTimeoutMillis;
+    private volatile Integer extensionListenerQueueSize;
+    private volatile Long extensionListenerMaxBytes;
     private volatile List<Class<? extends org.mockserver.extension.Extension>> extensionClasses = Collections.emptyList();
     private volatile List<Supplier<? extends org.mockserver.extension.Extension>> extensionSuppliers = Collections.emptyList();
 
@@ -4181,6 +4183,44 @@ public class Configuration {
      */
     public Configuration extensionAdminTimeoutMillis(Long extensionAdminTimeoutMillis) {
         this.extensionAdminTimeoutMillis = extensionAdminTimeoutMillis;
+        return this;
+    }
+
+    public Integer extensionListenerQueueSize() {
+        if (extensionListenerQueueSize == null) {
+            return ConfigurationProperties.extensionListenerQueueSize();
+        }
+        return Math.max(1, extensionListenerQueueSize);
+    }
+
+    /**
+     * How many events each listener extension's queue holds while its listener catches up; further events are
+     * dropped and counted. Values below 1 are read as 1. Read once at startup.
+     *
+     * @param extensionListenerQueueSize the number of queued events per listener extension
+     */
+    public Configuration extensionListenerQueueSize(Integer extensionListenerQueueSize) {
+        this.extensionListenerQueueSize = extensionListenerQueueSize;
+        return this;
+    }
+
+    public Long extensionListenerMaxBytes() {
+        if (extensionListenerMaxBytes == null || extensionListenerMaxBytes < 1) {
+            return ConfigurationProperties.extensionListenerMaxBytes();
+        }
+        return extensionListenerMaxBytes;
+    }
+
+    /**
+     * The most bytes of requests, responses and expectations that events waiting for serve-event and lifecycle
+     * listener extensions may hold, split evenly between those listeners. Values below 1 use the default, about 5%
+     * of the maximum heap. Read once
+     * at startup.
+     *
+     * @param extensionListenerMaxBytes the byte bound shared by every serve-event and lifecycle listener queue
+     */
+    public Configuration extensionListenerMaxBytes(Long extensionListenerMaxBytes) {
+        this.extensionListenerMaxBytes = extensionListenerMaxBytes;
         return this;
     }
 

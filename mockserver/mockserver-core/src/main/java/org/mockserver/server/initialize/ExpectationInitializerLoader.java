@@ -159,6 +159,14 @@ public class ExpectationInitializerLoader {
     }
 
     public List<Expectation> retrieveExpectationsFromOpenAPIFile(String initialLogMessage, String exceptionLogMessage, String completedLogMessage, Cause.Type causeType) {
+        return retrieveExpectationsFromOpenAPIFile(initialLogMessage, exceptionLogMessage, completedLogMessage, causeType, false);
+    }
+
+    /**
+     * @param fileWatcherReload true when a watched file changed, so lifecycle listeners are told the cause is
+     *                          {@code FILE_WATCHER}
+     */
+    public List<Expectation> retrieveExpectationsFromOpenAPIFile(String initialLogMessage, String exceptionLogMessage, String completedLogMessage, Cause.Type causeType, boolean fileWatcherReload) {
         List<String> initializationOpenAPIPaths = ExpectationInitializerLoader.expandedInitializationOpenAPIPaths(configuration.initializationOpenAPIPath());
         return initializationOpenAPIPaths
             .stream()
@@ -199,13 +207,21 @@ public class ExpectationInitializerLoader {
                             .setArguments(expectations, initializationOpenAPIPath)
                     );
                 }
-                requestMatchers.update(expectations.toArray(new Expectation[0]), new Cause(initializationOpenAPIPath, causeType));
+                update(expectations.toArray(new Expectation[0]), new Cause(initializationOpenAPIPath, causeType), fileWatcherReload);
                 return expectations.stream();
             })
             .collect(Collectors.toList());
     }
 
     public List<Expectation> retrieveExpectationsFromFile(String initialLogMessage, String expectationLogMessage, String completedLogMessage, Cause.Type causeType) {
+        return retrieveExpectationsFromFile(initialLogMessage, expectationLogMessage, completedLogMessage, causeType, false);
+    }
+
+    /**
+     * @param fileWatcherReload true when a watched file changed, so lifecycle listeners are told the cause is
+     *                          {@code FILE_WATCHER}
+     */
+    public List<Expectation> retrieveExpectationsFromFile(String initialLogMessage, String expectationLogMessage, String completedLogMessage, Cause.Type causeType, boolean fileWatcherReload) {
         List<String> initializationJsonPaths = ExpectationInitializerLoader.expandedInitializationJsonPaths(configuration.initializationJsonPath());
         return initializationJsonPaths
             .stream()
@@ -280,10 +296,18 @@ public class ExpectationInitializerLoader {
                             .setArguments(Arrays.asList(expectations), initializationJsonPath)
                     );
                 }
-                requestMatchers.update(expectations, new Cause(initializationJsonPath, causeType));
+                update(expectations, new Cause(initializationJsonPath, causeType), fileWatcherReload);
                 return Arrays.stream(expectations);
             })
             .collect(Collectors.toList());
+    }
+
+    private void update(Expectation[] expectations, Cause cause, boolean fileWatcherReload) {
+        if (fileWatcherReload) {
+            requestMatchers.update(expectations, cause, true);
+        } else {
+            requestMatchers.update(expectations, cause);
+        }
     }
 
     // lint is advisory: a failure in it must never stop a file loading, or fail startup

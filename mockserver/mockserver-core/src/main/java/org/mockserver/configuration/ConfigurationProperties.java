@@ -332,6 +332,8 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_EXTENSION_START_TIMEOUT_MILLIS = "mockserver.extensionStartTimeoutMillis";
     private static final String MOCKSERVER_EXTENSION_ADMIN_MAX_IN_FLIGHT = "mockserver.extensionAdminMaxInFlight";
     private static final String MOCKSERVER_EXTENSION_ADMIN_TIMEOUT_MILLIS = "mockserver.extensionAdminTimeoutMillis";
+    private static final String MOCKSERVER_EXTENSION_LISTENER_QUEUE_SIZE = "mockserver.extensionListenerQueueSize";
+    private static final String MOCKSERVER_EXTENSION_LISTENER_MAX_BYTES = "mockserver.extensionListenerMaxBytes";
 
     // mock initialization
     private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
@@ -5055,6 +5057,42 @@ public class ConfigurationProperties {
      */
     public static void extensionAdminTimeoutMillis(long millis) {
         setProperty(MOCKSERVER_EXTENSION_ADMIN_TIMEOUT_MILLIS, "" + millis);
+    }
+
+    public static int extensionListenerQueueSize() {
+        return Math.max(1, readIntegerProperty(MOCKSERVER_EXTENSION_LISTENER_QUEUE_SIZE, "MOCKSERVER_EXTENSION_LISTENER_QUEUE_SIZE", 10_000));
+    }
+
+    /**
+     * How many events each listener extension's queue holds while its listener catches up; further events are
+     * dropped and counted in {@code mock_server_extension_listener_dropped_total}. Default 10000; values below 1 are
+     * read as 1. Fixed at startup.
+     *
+     * @param size the number of queued events per listener extension
+     */
+    public static void extensionListenerQueueSize(int size) {
+        setProperty(MOCKSERVER_EXTENSION_LISTENER_QUEUE_SIZE, "" + size);
+    }
+
+    public static long extensionListenerMaxBytes() {
+        long configured = readLongProperty(MOCKSERVER_EXTENSION_LISTENER_MAX_BYTES, "MOCKSERVER_EXTENSION_LISTENER_MAX_BYTES", 0L);
+        return configured > 0 ? configured : defaultExtensionListenerMaxBytes(heapAvailableInKB());
+    }
+
+    /**
+     * The most bytes of requests, responses and expectations that events waiting for {@code ServeEventListener} and
+     * {@code ExpectationLifecycleListener} extensions may hold, split evenly between those listeners. Default about 5% of the maximum heap (16 MB when the heap has no
+     * limit); values below 1 use the default. Fixed at startup.
+     *
+     * @param bytes the byte bound shared by every serve-event and lifecycle listener queue
+     */
+    public static void extensionListenerMaxBytes(long bytes) {
+        setProperty(MOCKSERVER_EXTENSION_LISTENER_MAX_BYTES, "" + bytes);
+    }
+
+    static long defaultExtensionListenerMaxBytes(long heapAvailableInKB) {
+        long fraction = heapFraction(heapAvailableInKB, 20);
+        return fraction > 0 ? fraction : 16L * 1024 * 1024;
     }
 
     // mock initialization

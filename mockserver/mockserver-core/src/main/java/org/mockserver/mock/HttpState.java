@@ -519,7 +519,7 @@ public class HttpState {
         LocalCallbackRegistry.setMaxWebSocketExpectations(configuration.maxWebSocketExpectations());
         this.maxWebSocketExpectationsInForce = configuration.maxWebSocketExpectations();
         org.mockserver.llm.OpenAiResponsesStore.getInstance().setMaxSizeInBytes(configuration.maxOpenAiResponsesSizeInBytes());
-        this.mockServerLog = new MockServerEventLog(configuration, mockServerLogger, scheduler, true);
+        this.mockServerLog = new MockServerEventLog(configuration, mockServerLogger, scheduler, true, extensionRegistry);
         try {
             // G10 phase 2a: create the pluggable state backend (default in-memory, clustered in 2b+).
             this.stateBackend = StateBackendFactory.create(configuration);
@@ -7513,6 +7513,13 @@ public class HttpState {
         if (suppliedConfiguration == null) {
             return;
         }
+        reportInitOnlyProperties(suppliedConfiguration);
+        if (extensionRegistry != null) {
+            extensionRegistry.notifySettingsUpdated(configuration);
+        }
+    }
+
+    private void reportInitOnlyProperties(ConfigurationDTO suppliedConfiguration) {
         Integer suppliedRingBufferSize = suppliedConfiguration.getRingBufferSize();
         int ringBufferSizeInForce = mockServerLog.getRingBufferSizeInForce();
         if (suppliedRingBufferSize != null && configuration.ringBufferSize() != ringBufferSizeInForce) {
@@ -7589,6 +7596,16 @@ public class HttpState {
         if (suppliedExtensionAdminTimeoutMillis != null && !suppliedExtensionAdminTimeoutMillis.equals(configuration.extensionAdminTimeoutMillis())) {
             warnInitOnlyProperty("extensionAdminTimeoutMillis", String.valueOf(suppliedExtensionAdminTimeoutMillis), String.valueOf(configuration.extensionAdminTimeoutMillis()),
                 "the extension admin route executor is built when the server starts");
+        }
+        Integer suppliedExtensionListenerQueueSize = suppliedConfiguration.getExtensionListenerQueueSize();
+        if (suppliedExtensionListenerQueueSize != null && !suppliedExtensionListenerQueueSize.equals(configuration.extensionListenerQueueSize())) {
+            warnInitOnlyProperty("extensionListenerQueueSize", String.valueOf(suppliedExtensionListenerQueueSize), String.valueOf(configuration.extensionListenerQueueSize()),
+                "the extension listener queues are created when the server starts");
+        }
+        Long suppliedExtensionListenerMaxBytes = suppliedConfiguration.getExtensionListenerMaxBytes();
+        if (suppliedExtensionListenerMaxBytes != null && !suppliedExtensionListenerMaxBytes.equals(configuration.extensionListenerMaxBytes())) {
+            warnInitOnlyProperty("extensionListenerMaxBytes", String.valueOf(suppliedExtensionListenerMaxBytes), String.valueOf(configuration.extensionListenerMaxBytes()),
+                "the extension listener queues are created when the server starts");
         }
         Integer suppliedMaxWebSocketExpectations = suppliedConfiguration.getMaxWebSocketExpectations();
         if (suppliedMaxWebSocketExpectations != null && configuration.maxWebSocketExpectations() != maxWebSocketExpectationsInForce) {

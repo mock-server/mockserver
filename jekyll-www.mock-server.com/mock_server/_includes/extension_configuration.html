@@ -85,3 +85,35 @@
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionAdminTimeoutMillis="5000"</code></pre>
 </div>
+
+<button id="button_configuration_extension_listener_queue_size" class="accordion title"><strong>Extension Listener Queue Size</strong></button>
+<div class="panel title">
+    <p>How many events each listener extension can have waiting while it catches up. Each listener runs on its own thread, so a slow listener never slows MockServer down; once its queue is full, further events for it are dropped and counted in the <span class="inline_code">mock_server_extension_listener_dropped_total</span> metric, and a warning is logged once. Raise it if a listener falls behind during bursts. Values below 1 are treated as 1.</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">10000</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.extensionListenerQueueSize(int size)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionListenerQueueSize=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_EXTENSION_LISTENER_QUEUE_SIZE=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.extensionListenerQueueSize=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionListenerQueueSize="50000"</code></pre>
+</div>
+
+<button id="button_configuration_extension_listener_max_bytes" class="accordion title"><strong>Extension Listener Maximum Bytes</strong></button>
+<div class="panel title">
+    <p>The most data, in bytes, that events waiting for <span class="inline_code">ServeEventListener</span> and <span class="inline_code">ExpectationLifecycleListener</span> extensions may hold: the requests and responses of served-request events, and the expectations that expectation changes refer to. It is split equally between those listeners, so one that stops reading can only fill its own share; events that do not fit are dropped and counted. This keeps listeners from running MockServer out of memory even with large bodies or large expectations. Bodies in these events are already cut to <a href="/mock_server/configuration_properties.html#button_configuration_max_logged_body_bytes"><span class="inline_code">maxLoggedBodyBytes</span></a> when that is set. Values below 1 use the default.</p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">about 5% of the maximum heap</span> (16 MB when the heap has no limit)</p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.extensionListenerMaxBytes(long bytes)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionListenerMaxBytes=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_EXTENSION_LISTENER_MAX_BYTES=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.extensionListenerMaxBytes=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionListenerMaxBytes="67108864"</code></pre>
+</div>

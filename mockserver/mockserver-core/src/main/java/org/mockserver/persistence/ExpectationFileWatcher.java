@@ -97,8 +97,8 @@ public class ExpectationFileWatcher {
     }
 
     private synchronized void addExpectationsFromInitializer() {
-        expectationInitializerLoader.retrieveExpectationsFromFile("", "exception while loading JSON initialization file with file watcher, ignoring file:{}", "updating expectations:{}from file:{}", Cause.Type.FILE_INITIALISER);
-        expectationInitializerLoader.retrieveExpectationsFromOpenAPIFile("", "exception while loading OpenAPI initialization file with file watcher, ignoring file:{}", "updating expectations:{}from OpenAPI file:{}", Cause.Type.FILE_INITIALISER);
+        expectationInitializerLoader.retrieveExpectationsFromFile("", "exception while loading JSON initialization file with file watcher, ignoring file:{}", "updating expectations:{}from file:{}", Cause.Type.FILE_INITIALISER, true);
+        expectationInitializerLoader.retrieveExpectationsFromOpenAPIFile("", "exception while loading OpenAPI initialization file with file watcher, ignoring file:{}", "updating expectations:{}from OpenAPI file:{}", Cause.Type.FILE_INITIALISER, true);
     }
 
     public void stop() {

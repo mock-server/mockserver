@@ -33,8 +33,7 @@ public final class ExpectationStoreFactory {
 
     /**
      * Creates the {@link RequestMatchers} instance backing an {@link HttpState}.
-     * The parameter order matches the {@link RequestMatchers} constructor so the
-     * default can be a constructor reference.
+     * The parameter order matches the {@link RequestMatchers} constructors.
      */
     @FunctionalInterface
     public interface Factory {
@@ -58,7 +57,17 @@ public final class ExpectationStoreFactory {
         }
     }
 
-    private static final Factory DEFAULT_FACTORY = RequestMatchers::new;
+    private static final Factory DEFAULT_FACTORY = new Factory() {
+        @Override
+        public RequestMatchers create(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
+            return new RequestMatchers(configuration, mockServerLogger, scheduler, webSocketClientRegistry);
+        }
+
+        @Override
+        public RequestMatchers create(Configuration configuration, MockServerLogger mockServerLogger, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry, ExtensionRegistry extensionRegistry) {
+            return new RequestMatchers(configuration, mockServerLogger, scheduler, webSocketClientRegistry, extensionRegistry);
+        }
+    };
 
     private static volatile Factory factory = DEFAULT_FACTORY;
 
