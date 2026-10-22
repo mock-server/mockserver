@@ -151,6 +151,15 @@ public sealed class HttpRequest
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Protocol? Protocol { get; set; }
 
+    /// <summary>
+    /// The client IP address or CIDR range the request must come from, IPv4 or IPv6, for example
+    /// <c>10.0.0.0/8</c>; prefix with <c>!</c> to match any other address. This is the connection's TCP peer
+    /// address, not <c>X-Forwarded-For</c>.
+    /// </summary>
+    [JsonPropertyName("clientIp")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ClientIp { get; set; }
+
     /// <summary>The local socket address the request arrived on (matcher / recorded value).</summary>
     [JsonPropertyName("localAddress")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

@@ -204,6 +204,16 @@ public sealed class HttpRequestBuilder
         return this;
     }
 
+    /// <summary>
+    /// Matches only requests from this client IP address or CIDR range (for example <c>10.0.0.0/8</c>);
+    /// prefix with <c>!</c> to match any other address. The address is the TCP peer, not X-Forwarded-For.
+    /// </summary>
+    public HttpRequestBuilder WithClientIp(string clientIp)
+    {
+        _request.ClientIp = clientIp;
+        return this;
+    }
+
     /// <summary>Negates the whole matcher (the request, OpenAPI or conditional matcher) when true.</summary>
     public HttpRequestBuilder WithNot(bool not)
     {

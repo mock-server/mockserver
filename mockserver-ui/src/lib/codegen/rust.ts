@@ -269,6 +269,7 @@ const REQUEST_BUILDER_KEYS = new Set([
   'body',
   'jwt',
   'secure',
+  'clientIp',
 ]);
 
 const isPlainValue = (v: unknown): boolean => v === null || typeof v !== 'object';
@@ -332,6 +333,8 @@ function renderHttpRequest(req: Record<string, unknown>, ctx: Ctx, indent: numbe
 
   // typeof, not === true: secure:false is an HTTP-only matcher, not an absent field
   if (typeof req['secure'] === 'boolean') calls.push(`.secure(${req['secure']})`);
+  const clientIpTyped = typeof req['clientIp'] === 'string';
+  if (clientIpTyped) calls.push(`.client_ip(${rustStr(req['clientIp'] as string)})`);
 
   // Fields with no dedicated builder (dnsName/dnsType/dnsClass DNS matcher, a
   // claims-less jwt, protocol, keepAlive, socketAddress, edit-passthrough fields,
@@ -341,6 +344,7 @@ function renderHttpRequest(req: Record<string, unknown>, ctx: Ctx, indent: numbe
     if (REQUEST_BUILDER_KEYS.has(k)) {
       if (k === 'jwt' && !jwtTyped) extras.push([k, v]); // claims-less jwt → raw
       if (rawFields.has(k)) extras.push([k, v]);
+      if (k === 'clientIp' && !clientIpTyped) extras.push([k, v]);
       continue;
     }
     extras.push([k, v]);

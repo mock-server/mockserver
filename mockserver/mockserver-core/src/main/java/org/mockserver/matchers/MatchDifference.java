@@ -36,7 +36,8 @@ public class MatchDifference {
         DNS_NAME("dnsName"),
         DNS_TYPE("dnsType"),
         DNS_CLASS("dnsClass"),
-        BINARY_BODY("binaryBody");
+        BINARY_BODY("binaryBody"),
+        CLIENT_IP("clientIp");
 
         private final String name;
 

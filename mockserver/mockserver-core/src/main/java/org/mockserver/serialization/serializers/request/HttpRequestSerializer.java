@@ -62,6 +62,9 @@ public class HttpRequestSerializer extends StdSerializer<HttpRequest> {
         if (httpRequest.getJwt() != null) {
             jgen.writeObjectField("jwt", httpRequest.getJwt());
         }
+        if (httpRequest.getClientIp() != null) {
+            jgen.writeObjectField("clientIp", httpRequest.getClientIp());
+        }
         if (httpRequest.getSocketAddress() != null) {
             jgen.writeObjectField("socketAddress", httpRequest.getSocketAddress());
         }

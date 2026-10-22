@@ -58,6 +58,11 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withProtocol(Protocol.").append(request.getProtocol().toString()).append(")");
             }
+            if (request.getClientIp() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
+                // an IP address never starts with '!', so the negation marker in the string form is unambiguous
+                output.append(".withClientIp(\"").appendEscaped((request.getClientIp().isNot() ? "!" : "") + request.getClientIp().getValue()).append("\")");
+            }
             if (request.getSocketAddress() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                 output.append(".withSocketAddress(");

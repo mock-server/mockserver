@@ -26,6 +26,7 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
     private List<X509Certificate> clientCertificateChain;
     private ClientCertificate clientCertificate;
     private Jwt jwt;
+    private NottableString clientIp;
     private SocketAddress socketAddress;
     private String localAddress;
     private String remoteAddress;
@@ -52,6 +53,7 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
             clientCertificateChain = httpRequest.getClientCertificateChain();
             clientCertificate = httpRequest.getClientCertificate();
             jwt = httpRequest.getJwt();
+            clientIp = httpRequest.getClientIp();
             socketAddress = httpRequest.getSocketAddress();
             localAddress = httpRequest.getLocalAddress();
             remoteAddress = httpRequest.getRemoteAddress();
@@ -75,6 +77,7 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
             .withClientCertificateChain(clientCertificateChain)
             .withClientCertificate(clientCertificate)
             .withJwt(jwt)
+            .withClientIp(clientIp)
             .withSocketAddress(socketAddress)
             .withLocalAddress(localAddress)
             .withRemoteAddress(remoteAddress)
@@ -213,6 +216,15 @@ public class HttpRequestDTO extends RequestDefinitionDTO implements DTO<HttpRequ
 
     public HttpRequestDTO setJwt(Jwt jwt) {
         this.jwt = jwt;
+        return this;
+    }
+
+    public NottableString getClientIp() {
+        return clientIp;
+    }
+
+    public HttpRequestDTO setClientIp(NottableString clientIp) {
+        this.clientIp = clientIp;
         return this;
     }
 

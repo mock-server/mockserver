@@ -51,6 +51,16 @@ public class ExpectationCompletenessTests
     }
 
     [Fact]
+    public void Request_ClientIp_RoundTrips()
+    {
+        AssertRoundTrips<HttpRequest>("{\"path\":\"/x\",\"clientIp\":\"10.0.0.0/8\"}");
+        AssertRoundTrips<HttpRequest>("{\"path\":\"/x\",\"clientIp\":\"!2001:db8::/32\"}");
+        var built = new HttpRequestBuilder().WithPath("/x").WithClientIp("!10.0.0.0/8").Build();
+        Assert.Contains("\"clientIp\":\"!10.0.0.0/8\"", JsonSerializer.Serialize(built, JsonOptions));
+        Assert.DoesNotContain("clientIp", JsonSerializer.Serialize(new HttpRequestBuilder().WithPath("/x").Build(), JsonOptions));
+    }
+
+    [Fact]
     public void Response_CookiesTrailersAndExtras_RoundTrip()
     {
         var json = "{\"statusCode\":201,\"statusCodeRange\":\"2xx\",\"reasonPhrase\":\"Created\"," +

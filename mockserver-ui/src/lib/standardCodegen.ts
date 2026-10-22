@@ -65,6 +65,11 @@ export interface StandardMatcher {
    * silently widens an HTTP-only matcher into a wildcard.
    */
   secure?: boolean;
+  /**
+   * Client IP address or CIDR range the request must come from (httpRequest.clientIp), IPv4 or IPv6, with an
+   * optional leading `!` to match any other address; omitted when blank.
+   */
+  clientIp?: string;
   priority: number;
   times: number;
   /** Time-to-live in seconds before the expectation auto-expires; 0/undefined = unlimited. */
@@ -1355,6 +1360,8 @@ export function buildExpectationJson(
     if (jwtJson) httpRequest['jwt'] = jwtJson;
     // != null, not truthiness: `secure: false` is an HTTP-only matcher and must be emitted.
     if (matcher.secure != null) httpRequest['secure'] = matcher.secure;
+    const clientIp = matcher.clientIp?.trim();
+    if (clientIp) httpRequest['clientIp'] = clientIp;
   }
 
   const out: Record<string, unknown> = { httpRequest };
@@ -1769,7 +1776,7 @@ export const ACTION_FAMILY_KEYS: readonly string[] = [
  */
 export const FORM_MODELED_REQUEST_KEYS: readonly string[] = [
   'method', 'path', 'headers', 'queryStringParameters', 'cookies',
-  'pathParameters', 'body', 'secure', 'dnsName', 'dnsType', 'dnsClass',
+  'pathParameters', 'body', 'secure', 'clientIp', 'dnsName', 'dnsType', 'dnsClass',
 ];
 
 export interface MergeUnmodeledOptions {
@@ -2757,6 +2764,8 @@ function matcherToJava(matcher: StandardMatcher, extras: JavaMatcherExtras = { i
     lines.push(`    .withJwt(${jwtToJava(matcher.jwt!)})`);
   }
   if (matcher.secure != null) lines.push(`    .withSecure(${matcher.secure})`);
+  const clientIp = matcher.clientIp?.trim();
+  if (clientIp) lines.push(`    .withClientIp("${escapeJava(clientIp)}")`);
   return lines.join('\n');
 }
 

@@ -718,6 +718,44 @@ public class FullHttpRequestToMockServerHttpRequestTest {
         assertThat(third.getLocalAddress(), is(sameInstance(first.getLocalAddress())));
     }
 
+    @Test
+    public void shouldRecordOnlyTheRemoteAddressTextUntilAClientIpMatcherIsInUse() throws Exception {
+        FullHttpRequestToMockServerHttpRequest mapper = createMapper(false, 1080);
+        mapper.clientIpInUseForTesting(() -> false);
+        InetSocketAddress local = new InetSocketAddress(InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), 8080);
+        InetSocketAddress remote = new InetSocketAddress(InetAddress.getByAddress(new byte[]{10, 1, 2, (byte) 200}), 40000);
+
+        HttpRequest first = mapWithAddresses(mapper, local, remote);
+        HttpRequest second = mapWithAddresses(mapper, local, remote);
+
+        assertThat(first.getRemoteAddress(), is("10.1.2.200:40000"));
+        assertThat(second.getRemoteAddress(), is(sameInstance(first.getRemoteAddress())));
+        // no holder and no address bytes: a connection that never meets a clientIp pays nothing for it
+        assertThat(first.getRemoteAddressBytes(), is(nullValue()));
+
+        // once a clientIp matcher exists, the same connection switches to a holder built once for it
+        mapper.clientIpInUseForTesting(() -> true);
+        HttpRequest third = mapWithAddresses(mapper, local, remote);
+        HttpRequest fourth = mapWithAddresses(mapper, local, remote);
+        assertThat(third.getRemoteAddress(), is(sameInstance(first.getRemoteAddress())));
+        assertThat(third.getRemoteAddressBytes(), is(new byte[]{10, 1, 2, (byte) 200}));
+        assertThat(fourth.getRemoteAddressBytes(), is(sameInstance(third.getRemoteAddressBytes())));
+    }
+
+    @Test
+    public void shouldDeriveRemoteAddressBytesForEachAddressFamily() throws Exception {
+        FullHttpRequestToMockServerHttpRequest mapper = createMapper(false, 1080);
+        mapper.clientIpInUseForTesting(() -> true);
+        InetSocketAddress local = new InetSocketAddress(InetAddress.getByAddress(new byte[]{5, 6, 7, 8}), 8080);
+
+        InetSocketAddress ipv4Mapped = new InetSocketAddress(InetAddress.getByAddress(new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, (byte) 0xFF, (byte) 0xFF, 10, 0, 0, 1}), 40000);
+        assertThat(mapWithAddresses(mapper, local, ipv4Mapped).getRemoteAddressBytes(), is(new byte[]{10, 0, 0, 1}));
+        InetSocketAddress ipv6 = new InetSocketAddress(InetAddress.getByName("2001:db8::1"), 40000);
+        assertThat(mapWithAddresses(mapper, local, ipv6).getRemoteAddressBytes().length, is(16));
+        InetSocketAddress unresolved = InetSocketAddress.createUnresolved("some-host", 40000);
+        assertThat(mapWithAddresses(mapper, local, unresolved).getRemoteAddressBytes(), is(nullValue()));
+    }
+
     private HttpRequest mapWithAddresses(FullHttpRequestToMockServerHttpRequest mapper, InetSocketAddress local, InetSocketAddress remote) {
         FullHttpRequest nettyRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/path");
         try {

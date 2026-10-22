@@ -29,6 +29,16 @@ class HttpRequestTest extends TestCase
         ], $request->toArray());
     }
 
+    public function testClientIpRoundTripsAndIsOmittedWhenUnset(): void
+    {
+        $request = HttpRequest::request()->path('/x')->clientIp('!10.0.0.0/8');
+        $this->assertSame(['path' => '/x', 'clientIp' => '!10.0.0.0/8'], $request->toArray());
+        foreach ([['path' => '/x', 'clientIp' => '10.0.0.0/8'], ['path' => '/x', 'clientIp' => '!2001:db8::/32']] as $data) {
+            $this->assertSame($data, HttpRequest::fromArray($data)->toArray());
+        }
+        $this->assertArrayNotHasKey('clientIp', HttpRequest::request()->path('/x')->toArray());
+    }
+
     public function testQueryStringParameters(): void
     {
         $request = HttpRequest::request()

@@ -38,6 +38,7 @@ classDiagram
         +clientCertificateChain: List~X509Certificate~
         +clientCertificate: ClientCertificate
         +jwt: Jwt
+        +clientIp: NottableString
     }
     class OpenAPIDefinition {
         +specUrlOrPayload: String
@@ -108,6 +109,32 @@ carried in a request header:
   is not treated as a secret by this matcher. Wired through `HttpRequest.jwt` → `HttpRequestDTO`/`RequestDefinitionDTODeserializer`
   → `JwtSerializer`/`JwtDeserializer` (registered in `ObjectMapperFactory`) and the `jwt` block of the
   `httpRequest` JSON schema.
+
+`HttpRequest` also carries a **`clientIp`** (`NottableString`) matcher: an IP address or CIDR range, IPv4 or
+IPv6, optionally `!`-negated, matched against the request's client address.
+
+- **Compiled once.** `ClientIpMatcher.compile` (`org.mockserver.matchers`) parses the value into masked network
+  bytes plus a prefix length when the expectation is applied, and `HttpRequest.withClientIp` runs the same parse
+  to reject a host name or malformed range up front. Matching only compares bytes: no text parsing, no DNS.
+- **Where the address comes from.** `HttpRequest.remoteAddress` is one slot holding either the text (a `String`)
+  or an `HttpRequest.RemoteAddress` (the text plus the peer's `InetAddress`, with IP bytes derived and memoised on
+  the first comparison), so `HttpRequest` gains no field. `FullHttpRequestToMockServerHttpRequest` sets the cached
+  text, exactly as before, until `ClientIpMatcher.isInUse()` (a JVM-wide latch set the first time a `clientIp` is
+  compiled for matching, never cleared); from then on it builds one holder per connection. So requests allocate
+  nothing new until some expectation or filter uses `clientIp`; the only standing cost is 8 B on each connection's
+  mapper (64 B to 72 B: the cached holder and the test seam for the latch). Retention per connection is listed in
+  [memory-management.md](memory-management.md#httprequest-35-5-kb-typical). The address is
+  `SocketAddresses.clientAddress` (the TCP peer, or a PROXY protocol header's source, in both the normal decoder
+  and `EarlyMatchingHandler`); never `X-Forwarded-For`. The PROXY header is accepted from any client when
+  transparent proxying is on, so `clientIp` is not access control. A request without a holder (mapped before the
+  latch, deserialised, or from the servlet) parses its `remoteAddress` text once, with `NetUtil` (no lookup), and
+  keeps the result. HTTP/3 requests carry no address, so never match.
+- **Cost when unused.** `HttpRequestPropertiesMatcher.Compiled.clientIpMatcher` is null unless the expectation
+  declares a `clientIp`, so every other expectation pays one null test. It is not indexed by `CandidateIndex`
+  and does not mark a mismatch as decided by method or path, so the closest-match memo never reuses it.
+- **Semantics.** IPv4-mapped IPv6 addresses (`::ffff:a.b.c.d`) are treated as IPv4; an IPv4 client checked
+  against an IPv6 range is compared as its mapped form. An unknown client address never matches, even negated.
+  Mismatches are reported under the `clientIp` `MatchDifference` field.
 
 ### Action Types
 

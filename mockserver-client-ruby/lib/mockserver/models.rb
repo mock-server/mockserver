@@ -13,6 +13,7 @@ module MockServer
     'reason_phrase'                  => 'reasonPhrase',
     'keep_alive'                     => 'keepAlive',
     'respond_before_body'            => 'respondBeforeBody',
+    'client_ip'                      => 'clientIp',
     'query_string_parameters'        => 'queryStringParameters',
     'path_parameters'                => 'pathParameters',
     'socket_address'                 => 'socketAddress',
@@ -1063,7 +1064,7 @@ module MockServer
     attr_accessor :method, :path, :body, :secure, :protocol, :keep_alive, :respond_before_body,
                   :socket_address, :jwt, :dns_name, :dns_type, :dns_class,
                   :headers_key_match_style, :query_string_parameters_key_match_style,
-                  :path_parameters_key_match_style
+                  :path_parameters_key_match_style, :client_ip
     attr_reader :query_string_parameters, :headers, :cookies, :path_parameters
 
     def initialize(method: nil, path: nil, query_string_parameters: nil, headers: nil,
@@ -1071,7 +1072,7 @@ module MockServer
                    respond_before_body: nil, path_parameters: nil, socket_address: nil,
                    jwt: nil, dns_name: nil, dns_type: nil, dns_class: nil,
                    headers_key_match_style: nil, query_string_parameters_key_match_style: nil,
-                   path_parameters_key_match_style: nil)
+                   path_parameters_key_match_style: nil, client_ip: nil)
       @method = method
       @path = path
       self.query_string_parameters = query_string_parameters
@@ -1088,6 +1089,7 @@ module MockServer
       @dns_name = dns_name
       @dns_type = dns_type
       @dns_class = dns_class
+      @client_ip = client_ip
       @headers_key_match_style = headers_key_match_style if headers_key_match_style
       @query_string_parameters_key_match_style = query_string_parameters_key_match_style if query_string_parameters_key_match_style
       @path_parameters_key_match_style = path_parameters_key_match_style if path_parameters_key_match_style
@@ -1133,6 +1135,7 @@ module MockServer
         'protocol'              => @protocol,
         'keepAlive'             => @keep_alive,
         'respondBeforeBody'     => @respond_before_body,
+        'clientIp'              => @client_ip,
         'pathParameters'        => path_parameters,
         'socketAddress'         => @socket_address&.to_h,
         'jwt'                   => @jwt&.to_h,
@@ -1156,6 +1159,7 @@ module MockServer
         protocol:                data['protocol'],
         keep_alive:              data['keepAlive'],
         respond_before_body:     data['respondBeforeBody'],
+        client_ip:               data['clientIp'],
         path_parameters:         MockServer.deserialize_key_multi_values(data['pathParameters']),
         socket_address:          SocketAddress.from_hash(data['socketAddress']),
         jwt:                     Jwt.from_hash(data['jwt']),
@@ -1227,6 +1231,13 @@ module MockServer
 
     def with_respond_before_body(respond_before_body)
       @respond_before_body = respond_before_body
+      self
+    end
+
+    # Match only requests from this client IP address or CIDR range (e.g. '10.0.0.0/8'); prefix with '!'
+    # to match any other address. It is the TCP peer address, not X-Forwarded-For.
+    def with_client_ip(client_ip)
+      @client_ip = client_ip
       self
     end
   end

@@ -311,6 +311,7 @@ function httpRequest(w: Obj, indent: number, at: string): string {
   push('protocol', 'protocol', (v) => rb(String(v)));
   push('keepAlive', 'keep_alive', (v) => scalar(v));
   push('respondBeforeBody', 'respond_before_body', (v) => scalar(v));
+  push('clientIp', 'client_ip', (v) => rb(String(v)));
   push('jwt', 'jwt', (v) => jwt(v as Obj, indent + 2));
   push('dnsName', 'dns_name', (v) => rb(String(v)));
   push('dnsType', 'dns_type', (v) => rb(String(v)));

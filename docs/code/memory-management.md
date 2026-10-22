@@ -640,6 +640,7 @@ graph LR
 | `body` (StringBody, if present) | 0-2,000 B | Null for GET; ~630 B for 100-char JSON; ~1,800 B for 500-char JSON |
 | `socketAddress` | ~116 B | host String + port Integer + scheme enum |
 | `localAddress` / `remoteAddress` | ~140 B | Two short strings |
+| `remoteAddress` holder, once any `clientIp` is used | +24 B, +~56 B, +24-32 B | Before the JVM-wide `clientIp` latch: nothing beyond the string. After it: a 24 B `HttpRequest.RemoteAddress` shared by the connection's requests, which keeps the peer `InetAddress` alive (~56 B IPv4, more for IPv6) and, after the first comparison, its bytes (24 B IPv4, 32 B IPv6). Shared under keep-alive; with one request per connection about 100 B (IPv4) to 170 B (IPv6) per retained entry, bounded by `maxLogEntries`. A request mapped before the latch gains a ~48 B holder plus bytes the first time it is compared |
 | `keepAlive` / `secure` | ~32 B | Two boxed Booleans |
 | **Total (GET, no body)** | **~3,800 B** | |
 | **Total (POST, 200-char body)** | **~4,700 B** | |

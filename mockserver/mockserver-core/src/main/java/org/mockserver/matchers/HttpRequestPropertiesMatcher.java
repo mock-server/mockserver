@@ -110,6 +110,8 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
         private final ExactStringMatcher protocolMatcher;
         private final ClientCertificateMatcher clientCertificateMatcher;
         private final JwtMatcher jwtMatcher;
+        // null unless the expectation declares a clientIp, so every other expectation skips it with one null test
+        private final ClientIpMatcher clientIpMatcher;
         private final JsonSchemaBodyDecoder jsonSchemaBodyParser;
 
         /**
@@ -131,6 +133,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             this.protocolMatcher = null;
             this.clientCertificateMatcher = null;
             this.jwtMatcher = null;
+            this.clientIpMatcher = null;
             this.jsonSchemaBodyParser = null;
         }
 
@@ -140,7 +143,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
          * but set {@code httpRequests = singletonList(null)}.
          */
         private Compiled(HttpRequest httpRequest) {
-            this(httpRequest, null, null, null, null, null, null, null, null, null, null, null, null, null);
+            this(httpRequest, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         }
 
         private Compiled(
@@ -157,6 +160,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             ExactStringMatcher protocolMatcher,
             ClientCertificateMatcher clientCertificateMatcher,
             JwtMatcher jwtMatcher,
+            ClientIpMatcher clientIpMatcher,
             JsonSchemaBodyDecoder jsonSchemaBodyParser
         ) {
             this.httpRequest = httpRequest;
@@ -173,6 +177,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
             this.protocolMatcher = protocolMatcher;
             this.clientCertificateMatcher = clientCertificateMatcher;
             this.jwtMatcher = jwtMatcher;
+            this.clientIpMatcher = clientIpMatcher;
             this.jsonSchemaBodyParser = jsonSchemaBodyParser;
         }
     }
@@ -244,6 +249,7 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                     new ExactStringMatcher(mockServerLogger, httpRequest.getProtocol() != null ? string(httpRequest.getProtocol().name()) : null),
                     new ClientCertificateMatcher(mockServerLogger, httpRequest.getClientCertificate(), controlPlaneMatcher),
                     new JwtMatcher(mockServerLogger, httpRequest.getJwt(), controlPlaneMatcher),
+                    httpRequest.getClientIp() != null ? ClientIpMatcher.compileForMatching(mockServerLogger, httpRequest.getClientIp()) : null,
                     jsonSchemaBodyParser
                 );
             } else {
@@ -393,6 +399,16 @@ public class HttpRequestPropertiesMatcher extends AbstractHttpRequestMatcher {
                             context.decidedByMethodOrPath();
                         }
                         return false;
+                    }
+
+                    // compares already-captured address bytes, so cheap enough to run before the body; it must
+                    // not mark the result decided by method or path, as two requests can differ only by address
+                    ClientIpMatcher clientIpMatcher = compiled.clientIpMatcher;
+                    if (clientIpMatcher != null) {
+                        boolean clientIpMatches = matches(CLIENT_IP, context, clientIpMatcher, request);
+                        if (failFast(compiled, clientIpMatcher, context, matchDifferenceCount, becauseBuilder, clientIpMatches, CLIENT_IP)) {
+                            return false;
+                        }
                     }
 
                     boolean bodyMatches = bodyMatches(compiled, context, request);

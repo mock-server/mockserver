@@ -54,6 +54,8 @@ public class MismatchRemediation {
                 return "check the protocol version";
             case KEEP_ALIVE:
                 return "check the keep-alive setting";
+            case CLIENT_IP:
+                return "check the client IP address: it is the connection's peer address, not X-Forwarded-For";
             case OPERATION:
             case OPENAPI:
                 return "check the OpenAPI operation id";

@@ -150,6 +150,22 @@ client.When(
 
 A plain string such as `"before:2026-01-01"` is always matched as literal text, never as a date-time.
 
+### Client IP Matcher
+
+Match requests by the client IP address or CIDR range, IPv4 or IPv6. The client address is the TCP peer of the connection, not `X-Forwarded-For`; prefix with `!` to match every other address.
+
+```csharp
+client.When(
+    HttpRequest.Request()
+        .WithPath("/internal")
+        .WithClientIp("10.0.0.0/8")
+).Respond(
+    HttpResponse.Response().WithStatusCode(200)
+);
+```
+
+Or set `HttpRequest.ClientIp` in an object initialiser.
+
 ### ALL_OF Body Matcher
 
 Require the request body to satisfy every sub-matcher. Combine any typed body matchers

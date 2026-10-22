@@ -1,9 +1,11 @@
 package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mockserver.matchers.ClientIpMatcher;
 import org.mockserver.matchers.ParsedBodyCache;
 import org.mockserver.socket.SocketAddresses;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -44,9 +46,12 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     private List<X509Certificate> clientCertificateChain;
     private ClientCertificate clientCertificate;
     private Jwt jwt;
+    private NottableString clientIp;
     private SocketAddress socketAddress;
     private String localAddress;
-    private String remoteAddress;
+    // the text (a String), or, once any expectation uses clientIp, a RemoteAddress the transport shares across a
+    // connection that also holds the peer's InetAddress; one slot either way, so HttpRequest gains no field
+    private Object remoteAddress;
     // Per-request memoization of the expensive body conversion performed during matching
     // (e.g. the XML DOM parse + ObjectMapper serialisation in JsonSchemaBodyDecoder.convertToJson).
     // The conversion result is a pure function of the request body + the target content type, so it
@@ -341,6 +346,45 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         return this;
     }
 
+    /**
+     * The client IP criteria: an IP address or CIDR range, optionally negated. Null (the default) matches any
+     * request.
+     */
+    public NottableString getClientIp() {
+        return clientIp;
+    }
+
+    /**
+     * Match only requests whose client address is the given IP address or falls within the given CIDR range,
+     * IPv4 or IPv6, for example {@code "192.168.1.10"}, {@code "10.0.0.0/8"} or {@code "2001:db8::/32"}. Prefix
+     * with {@code "!"} to match requests from any other address. The client address is the TCP peer of the
+     * connection, so behind a proxy or load balancer it is the proxy's address, not the value of
+     * {@code X-Forwarded-For}; only a PROXY protocol header, read when transparent proxying is enabled, replaces it.
+     * That header is accepted from any client, so this is a matching criterion, not access control.
+     *
+     * @param clientIp an IP address or CIDR range, optionally prefixed with "!"
+     * @throws IllegalArgumentException when the value is not an IP address or CIDR range
+     */
+    public HttpRequest withClientIp(String clientIp) {
+        return withClientIp(clientIp != null ? string(clientIp) : null);
+    }
+
+    /**
+     * Match only requests whose client address is (or, when negated, is not) the given IP address or within
+     * the given CIDR range; see {@link #withClientIp(String)}.
+     *
+     * @param clientIp an IP address or CIDR range, for example {@code not("10.0.0.0/8")}
+     * @throws IllegalArgumentException when the value is not an IP address or CIDR range
+     */
+    public HttpRequest withClientIp(NottableString clientIp) {
+        if (clientIp != null) {
+            ClientIpMatcher.compile(null, clientIp);
+        }
+        this.clientIp = clientIp;
+        this.hashCode = 0;
+        return this;
+    }
+
     public SocketAddress getSocketAddress() {
         return socketAddress;
     }
@@ -473,8 +517,64 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         return this;
     }
 
+    /**
+     * Internal: sets the remote address as the transport received it, text and IP bytes together.
+     */
+    public HttpRequest withReceivedRemoteAddress(RemoteAddress remoteAddress) {
+        this.remoteAddress = remoteAddress;
+        this.hashCode = 0;
+        return this;
+    }
+
     public String getRemoteAddress() {
-        return remoteAddress;
+        return remoteAddress instanceof RemoteAddress received ? received.text : (String) remoteAddress;
+    }
+
+    /**
+     * Internal: the IP bytes of the client address this request was received from, computed on first use, or
+     * null when not known. The array is shared and must not be modified. Not part of request identity or JSON.
+     */
+    @JsonIgnore
+    public byte[] getRemoteAddressBytes() {
+        return remoteAddress instanceof RemoteAddress received ? received.bytes() : null;
+    }
+
+    /**
+     * Internal: records the IP bytes of the remote address, keeping its text; not part of request identity.
+     */
+    public HttpRequest withRemoteAddressBytes(byte[] remoteAddressBytes) {
+        this.remoteAddress = new RemoteAddress(getRemoteAddress(), null, remoteAddressBytes);
+        return this;
+    }
+
+    /**
+     * Internal: a remote address as received, its text (for example {@code 127.0.0.1:52000}) and the peer's
+     * {@link InetAddress}, whose bytes are derived on first use. The transport shares one per connection.
+     */
+    public static final class RemoteAddress {
+        private final String text;
+        private final InetAddress address;
+        // derived once, on the first clientIp comparison; volatile so the array's contents are safely published
+        private volatile byte[] bytes;
+
+        public RemoteAddress(String text, InetAddress address) {
+            this(text, address, null);
+        }
+
+        private RemoteAddress(String text, InetAddress address, byte[] bytes) {
+            this.text = text;
+            this.address = address;
+            this.bytes = bytes;
+        }
+
+        byte[] bytes() {
+            byte[] result = bytes;
+            if (result == null && address != null) {
+                result = ClientIpMatcher.normalise(address.getAddress());
+                bytes = result;
+            }
+            return result;
+        }
     }
 
     /**
@@ -1585,8 +1685,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             .withClientCertificate(clientCertificate)
             .withJwt(jwt)
             .withSocketAddress(socketAddress)
-            .withLocalAddress(localAddress)
-            .withRemoteAddress(remoteAddress);
+            .withLocalAddress(localAddress);
+        clone.remoteAddress = remoteAddress;
+        clone.clientIp = clientIp;
         clone.withReceivedTimestamp(getReceivedTimestamp());
         clone.bodyAsReceived = bodyAsReceived;
         clone.contentEncodingAsReceived = contentEncodingAsReceived;
@@ -1613,8 +1714,9 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             .withClientCertificate(clientCertificate != null ? clientCertificate.clone() : null)
             .withJwt(jwt != null ? jwt.clone() : null)
             .withSocketAddress(socketAddress)
-            .withLocalAddress(localAddress)
-            .withRemoteAddress(remoteAddress);
+            .withLocalAddress(localAddress);
+        clone.remoteAddress = remoteAddress;
+        clone.clientIp = clientIp;
         clone.withReceivedTimestamp(getReceivedTimestamp());
         clone.bodyAsReceived = bodyAsReceived;
         clone.contentEncodingAsReceived = contentEncodingAsReceived;
@@ -1711,9 +1813,10 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
             Objects.equals(clientCertificateChain, that.clientCertificateChain) &&
             Objects.equals(clientCertificate, that.clientCertificate) &&
             Objects.equals(jwt, that.jwt) &&
+            Objects.equals(clientIp, that.clientIp) &&
             Objects.equals(socketAddress, that.socketAddress) &&
             Objects.equals(localAddress, that.localAddress) &&
-            Objects.equals(remoteAddress, that.remoteAddress);
+            Objects.equals(getRemoteAddress(), that.getRemoteAddress());
     }
 
     @Override
@@ -1721,7 +1824,11 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         // need to call isSecure because getter can change the hashcode
         isSecure();
         if (hashCode == 0) {
-            int computed = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, body, headers, cookies, keepAlive, secure, respondBeforeBody, protocol, streamId, clientCertificateChain, clientCertificate, jwt, socketAddress, localAddress, remoteAddress);
+            int computed = Objects.hash(super.hashCode(), method, path, pathParameters, queryStringParameters, body, headers, cookies, keepAlive, secure, respondBeforeBody, protocol, streamId, clientCertificateChain, clientCertificate, jwt, socketAddress, localAddress, getRemoteAddress());
+            // mixed in separately so a request without one hashes, and allocates, exactly as before
+            if (clientIp != null) {
+                computed = 31 * computed + clientIp.hashCode();
+            }
             hashCode = computed != 0 ? computed : 1;
         }
         return hashCode;

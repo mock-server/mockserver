@@ -940,3 +940,27 @@ fn conditional_matcher_builders_match_wire_form() {
     let back: HttpRequest = serde_json::from_value(out).unwrap();
     assert_eq!(back, request);
 }
+
+#[test]
+fn client_ip_round_trip() {
+    for client_ip in ["10.0.0.0/8", "!2001:db8::/32"] {
+        let exp = round_trip_expectation(
+            &json!({
+                "httpRequest": { "path": "/x", "clientIp": client_ip },
+                "httpResponse": { "statusCode": 200 }
+            })
+            .to_string(),
+        );
+        assert_eq!(
+            exp.http_request.as_ref().and_then(|r| r.client_ip_value()),
+            Some(client_ip)
+        );
+    }
+    let built = HttpRequest::new().path("/x").client_ip("!10.0.0.0/8");
+    assert_eq!(
+        serde_json::to_value(&built).unwrap(),
+        json!({ "path": "/x", "clientIp": "!10.0.0.0/8" })
+    );
+    let unset = serde_json::to_value(HttpRequest::new().path("/x")).unwrap();
+    assert!(unset.get("clientIp").is_none());
+}

@@ -454,8 +454,8 @@ foreach ($result-&gt;results as $expectation) {
   "totalExpectations": 2,
   "closestMatch": {
     "expectationId": "abc-123",
-    "matchedFields": 17,
-    "totalFields": 18
+    "matchedFields": 18,
+    "totalFields": 19
   },
   "results": [
     {
@@ -463,8 +463,8 @@ foreach ($result-&gt;results as $expectation) {
       "expectationPath": "/api/users",
       "expectationMethod": "POST",
       "matches": false,
-      "matchedFieldCount": 17,
-      "totalFieldCount": 18,
+      "matchedFieldCount": 18,
+      "totalFieldCount": 19,
       "differences": {
         "method": [
           "string or regex match failed expected: POST found: GET"
@@ -498,7 +498,7 @@ String analysis = mockServerClient.debugMismatch(
 
 // The response will show:
 // - method didn't match: expected POST, found GET
-// - matchedFieldCount: 17/18 (all fields matched except method)</code></pre></div>
+// - matchedFieldCount: 18/19 (all fields matched except method)</code></pre></div>
     <button class="accordion inner">JavaScript</button>
     <div class="panel"><pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
 var client = mockServerClient("localhost", 1080);
@@ -622,7 +622,7 @@ MismatchDebugResult analysis = client.DebugMismatch(
 
 // analysis.Results shows:
 // - method didn't match: expected POST, found GET
-// - MatchedFieldCount: 17/18 (all fields matched except method)</code></pre></div>
+// - MatchedFieldCount: 18/19 (all fields matched except method)</code></pre></div>
     <button class="accordion inner">Rust</button>
     <div class="panel"><pre class="prettyprint lang-rust code"><code class="code">use mockserver_client::{ClientBuilder, HttpRequest, HttpResponse};
 
@@ -674,7 +674,7 @@ $analysis = $client-&gt;debugMismatch(
 
 // $analysis-&gt;results shows:
 // - method didn't match: expected POST, found GET
-// - matchedFieldCount: 17/18 (all fields matched except method)</code></pre></div>
+// - matchedFieldCount: 18/19 (all fields matched except method)</code></pre></div>
     <button class="accordion inner">REST API</button>
     <div class="panel"><pre class="prettyprint code"><code class="code"># 1. Set up your expectation
 curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{

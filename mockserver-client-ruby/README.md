@@ -210,6 +210,15 @@ body = MockServer::Body.all_of(
 request = MockServer::HttpRequest.new(method: 'POST', path: '/api').with_body(body)
 ```
 
+## Client IP matcher
+
+Match requests by the client IP address or CIDR range, IPv4 or IPv6. The client address is the TCP peer of the connection, not `X-Forwarded-For`; prefix with `!` to match every other address.
+
+```ruby
+MockServer::HttpRequest.new(path: '/internal').with_client_ip('10.0.0.0/8')
+# or MockServer::HttpRequest.new(path: '/internal', client_ip: '!10.0.0.0/8')
+```
+
 ## LLM Mocking
 
 Fluent builders under `MockServer::LLM` mock LLM provider endpoints. They produce

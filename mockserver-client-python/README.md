@@ -257,6 +257,15 @@ client.when(
 HttpRequest.request("/secure").with_jwt(Jwt(claims={"sub": "user-123"}))
 ```
 
+### Client IP matcher
+
+Match requests by the client IP address or CIDR range, IPv4 or IPv6. The client address is the TCP peer of the connection, not `X-Forwarded-For`; prefix with `!` to match every other address.
+
+```python
+HttpRequest.request("/internal").with_client_ip("10.0.0.0/8")
+# or HttpRequest(path="/internal", client_ip="!10.0.0.0/8")
+```
+
 ### allOf body matcher
 
 Require a request body to satisfy **all** of several body matchers at once.

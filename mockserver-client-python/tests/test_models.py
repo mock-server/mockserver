@@ -640,6 +640,13 @@ class TestHttpRequest:
         r = HttpRequest.request().with_respond_before_body(True)
         assert r.respond_before_body is True
 
+    def test_client_ip_round_trips_and_is_omitted_when_unset(self):
+        r = HttpRequest.request("/x").with_client_ip("!10.0.0.0/8")
+        assert r.to_dict() == {"path": "/x", "clientIp": "!10.0.0.0/8"}
+        for data in ({"path": "/x", "clientIp": "10.0.0.0/8"}, {"path": "/x", "clientIp": "!2001:db8::/32"}):
+            assert HttpRequest.from_dict(data).to_dict() == data
+        assert "clientIp" not in HttpRequest.request("/x").to_dict()
+
     def test_builder_chaining_returns_self(self):
         r = HttpRequest.request()
         assert r.with_method("GET") is r

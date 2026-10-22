@@ -44,6 +44,10 @@ type HttpRequest struct {
 	// RespondBeforeBody makes MockServer respond before consuming the request
 	// body (requires no body matcher and a RESPONSE or ERROR action).
 	RespondBeforeBody *bool `json:"respondBeforeBody,omitempty"`
+	// ClientIP matches the client address the request came from: an IP
+	// address or CIDR range, IPv4 or IPv6 (e.g. "10.0.0.0/8"); prefix with "!"
+	// to match any other address. It is the TCP peer, not X-Forwarded-For.
+	ClientIP string `json:"clientIp,omitempty"`
 
 	// --- DNS request definition (RequestDefinition: DnsRequestDefinition) ---
 	// When set, this expectation matches a DNS query rather than an HTTP
@@ -177,6 +181,13 @@ func (b *RequestBuilder) Secure(secure bool) *RequestBuilder {
 // KeepAlive sets whether the request must be keep-alive.
 func (b *RequestBuilder) KeepAlive(keepAlive bool) *RequestBuilder {
 	b.request.KeepAlive = &keepAlive
+	return b
+}
+
+// ClientIP matches only requests from this client IP address or CIDR range
+// (e.g. "10.0.0.0/8"); prefix with "!" to match any other address.
+func (b *RequestBuilder) ClientIP(clientIP string) *RequestBuilder {
+	b.request.ClientIP = clientIP
 	return b
 }
 

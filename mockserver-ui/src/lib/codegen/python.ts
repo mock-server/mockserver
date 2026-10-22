@@ -315,7 +315,7 @@ class PyBuilder {
     this.use('HttpRequest');
     this.known(at, v, [
       'method', 'path', 'headers', 'queryStringParameters', 'cookies', 'pathParameters', 'body', 'jwt', 'secure',
-      'keepAlive', 'respondBeforeBody', 'protocol', 'socketAddress', 'not',
+      'keepAlive', 'respondBeforeBody', 'protocol', 'socketAddress', 'not', 'clientIp',
     ]);
     const kw: Kw[] = [];
     if (v['method'] != null) kw.push(['method', pyStr(v['method'])]);
@@ -333,6 +333,7 @@ class PyBuilder {
     if (v['protocol'] != null) kw.push(['protocol', pyStr(v['protocol'])]);
     if (v['socketAddress'] != null) kw.push(['socket_address', this.socketAddress(v['socketAddress'] as Json, `${at}.socketAddress`)]);
     if (typeof v['not'] === 'boolean') kw.push(['not_request', pyBool(v['not'])]);
+    if (v['clientIp'] != null) kw.push(['client_ip', pyStr(v['clientIp'])]);
     return renderCall('HttpRequest', kw, indent);
   }
 

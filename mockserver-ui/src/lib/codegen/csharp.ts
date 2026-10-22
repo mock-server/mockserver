@@ -288,7 +288,7 @@ function rawTyped(type: string, value: unknown, ctx: Ctx): string {
 
 const KNOWN_REQUEST_KEYS = new Set([
   'method', 'path', 'headers', 'queryStringParameters', 'cookies', 'pathParameters',
-  'body', 'jwt', 'secure', 'dnsName', 'dnsType', 'dnsClass', 'keepAlive',
+  'body', 'jwt', 'secure', 'dnsName', 'dnsType', 'dnsClass', 'keepAlive', 'clientIp',
 ]);
 
 function renderJwt(jwt: Record<string, unknown>, indent: number): string {
@@ -310,7 +310,7 @@ function renderRequest(req: Record<string, unknown>, indent: number, ctx: Ctx): 
     bodyExpr = renderBody(req['body'], indent + 4);
     if (bodyExpr === null) return rawTyped('HttpRequest', req, ctx);
   }
-  if (Object.keys(req).some((k) => !KNOWN_REQUEST_KEYS.has(k))) {
+  if (Object.keys(req).some((k) => !KNOWN_REQUEST_KEYS.has(k)) || ('clientIp' in req && typeof req['clientIp'] !== 'string')) {
     return rawTyped('HttpRequest', req, ctx);
   }
 
@@ -346,6 +346,7 @@ function renderRequest(req: Record<string, unknown>, indent: number, ctx: Ctx): 
   // typeof, not === true: secure:false is an HTTP-only matcher, not an absent field
   if (typeof req['secure'] === 'boolean') props.push(`Secure = ${req['secure'] ? 'true' : 'false'}`);
   if (typeof req['keepAlive'] === 'boolean') props.push(`KeepAlive = ${req['keepAlive'] ? 'true' : 'false'}`);
+  if (typeof req['clientIp'] === 'string') props.push(`ClientIp = ${csStr(req['clientIp'] as string)}`);
   return csObjectInit('HttpRequest', props, indent);
 }
 

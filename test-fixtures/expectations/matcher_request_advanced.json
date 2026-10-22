@@ -5,6 +5,7 @@
     "secure": true,
     "keepAlive": true,
     "protocol": "HTTP_2",
+    "clientIp": "!10.0.0.0/8",
     "socketAddress": {
       "host": "target.example.com",
       "port": 443,

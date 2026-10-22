@@ -5533,6 +5533,17 @@ components:
           $ref: '#/components/schemas/SocketAddress'
         protocol:
           $ref: '#/components/schemas/Protocol'
+        clientIp:
+          description: "client (TCP peer) IP address or CIDR range, IPv4 or IPv6, for example '10.0.0.0/8'; prefix with '!' to negate. This is the connection's peer address, not X-Forwarded-For"
+          oneOf:
+            - type: string
+            - type: object
+              additionalProperties: false
+              properties:
+                not:
+                  type: boolean
+                value:
+                  type: string
         jwt:
           $ref: '#/components/schemas/Jwt'
         not:

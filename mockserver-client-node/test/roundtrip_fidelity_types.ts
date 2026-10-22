@@ -375,6 +375,7 @@ export const requestAdvancedLiteral: Expectation = {
         path: '/adv',
         secure: true,
         keepAlive: true,
+        clientIp: '!10.0.0.0/8',
         socketAddress: { host: 'target.example.com', port: 443, scheme: 'HTTPS' },
         headers: { 'X-Env': ['prod'] },
         cookies: { tenant: 'acme' }

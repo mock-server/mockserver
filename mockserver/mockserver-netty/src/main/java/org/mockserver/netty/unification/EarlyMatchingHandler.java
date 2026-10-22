@@ -15,6 +15,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.netty.responsewriter.EarlyNettyResponseWriter;
+import org.mockserver.socket.SocketAddresses;
 import org.mockserver.socket.tls.SniHandler;
 import org.slf4j.event.Level;
 
@@ -90,7 +91,7 @@ public class EarlyMatchingHandler extends SimpleChannelInboundHandler<HttpObject
                     nettyRequest,
                     Collections.emptyList(),
                     ctx.channel().localAddress(),
-                    ctx.channel().remoteAddress(),
+                    SocketAddresses.clientAddress(ctx.channel()),
                     null
                 );
                 Expectation expectation = httpState.firstMatchingEarlyExpectation(headersOnly);

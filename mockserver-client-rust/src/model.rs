@@ -1222,6 +1222,21 @@ impl HttpRequest {
         self
     }
 
+    /// Match only requests from this client IP address or CIDR range, IPv4 or
+    /// IPv6 (e.g. `"10.0.0.0/8"`); prefix with `!` to match any other address
+    /// (sent as `clientIp`). It is the TCP peer address, not `X-Forwarded-For`.
+    /// Held in [`extra`](Self::extra) so adding it changed no public field.
+    pub fn client_ip(mut self, client_ip: impl Into<String>) -> Self {
+        self.extra
+            .insert("clientIp".into(), serde_json::Value::String(client_ip.into()));
+        self
+    }
+
+    /// The `clientIp` criterion of this matcher, or `None` when it has none.
+    pub fn client_ip_value(&self) -> Option<&str> {
+        self.extra.get("clientIp").and_then(|v| v.as_str())
+    }
+
     /// Add a plain path parameter value (multiple values per key supported).
     ///
     /// For schema/nottable matcher forms, set [`path_parameters`](Self::path_parameters)

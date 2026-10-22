@@ -312,6 +312,15 @@ client.when(
 The JWT matcher serialises under the request's `"jwt"` key, and the composite
 body serialises to `{"type":"ALL_OF","bodyAllOf":[ ... ]}`.
 
+### Client IP matcher
+
+Match requests by the client IP address or CIDR range, IPv4 or IPv6. The client address is the TCP peer of the connection, not `X-Forwarded-For`; prefix with `!` to match every other address. It serialises under the request's `"clientIp"` key and is held in `extra`, so adding it changed no public field.
+
+```rust
+let request = HttpRequest::new().path("/internal").client_ip("10.0.0.0/8");
+assert_eq!(request.client_ip_value(), Some("10.0.0.0/8"));
+```
+
 ### Binary, JSON and file response bodies
 
 `.body(..)` sends a plain string body. For any other body shape, use

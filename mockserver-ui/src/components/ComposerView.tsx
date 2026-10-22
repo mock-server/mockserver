@@ -383,6 +383,8 @@ interface MatcherState {
    * composerSecureTriState.test.ts.
    */
   secure: boolean | undefined;
+  /** Client IP address or CIDR range (httpRequest.clientIp), optionally `!`-negated; blank = any client. */
+  clientIp: string;
   priority: number;
   times: number;         // 0 = unlimited
   ttlSeconds: number;    // 0 = unlimited (auto-expire after N seconds)
@@ -408,6 +410,7 @@ function emptyMatcher(): MatcherState {
     bodyAllOf: [],
     jwt: undefined,
     secure: undefined,
+    clientIp: '',
     priority: 0,
     times: 0,
     ttlSeconds: 0,
@@ -994,6 +997,15 @@ function MatcherPanel({ matcher, setMatcher }: { matcher: MatcherState; setMatch
           <MenuItem value="false">HTTP only</MenuItem>
         </TextField>
         <TextField
+          label="Client IP"
+          size="small"
+          placeholder="10.0.0.0/8"
+          helperText="IP or CIDR, ! to negate; TCP peer, not X-Forwarded-For"
+          sx={{ width: { xs: '100%', sm: 220 } }}
+          value={matcher.clientIp}
+          onChange={(e) => setMatcher({ ...matcher, clientIp: e.target.value })}
+        />
+        <TextField
           label="Priority (higher = wins)"
           size="small"
           type="number"
@@ -1275,6 +1287,7 @@ export function matcherFromExpectation(item: JsonListItem): MatcherState {
     // typeof check, not `=== true`: an explicit `false` is an HTTP-only matcher and must load
     // as false, not collapse into the same state as an absent (match-either) field.
     secure: typeof req['secure'] === 'boolean' ? (req['secure'] as boolean) : undefined,
+    clientIp: typeof req['clientIp'] === 'string' ? (req['clientIp'] as string) : '',
     priority: typeof v['priority'] === 'number' ? (v['priority'] as number) : 0,
     // 0 = unlimited. An explicitly unlimited expectation prefills 0 rather than its
     // (irrelevant) remainingTimes count.

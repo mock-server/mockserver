@@ -129,6 +129,12 @@ public class GeneratedJavaCodeRoundTripTest {
     }
 
     @Test
+    public void shouldRecreateClientIpMatcher() throws Exception {
+        assertRecreated(new Expectation(request().withPath("/internal").withClientIp("10.0.0.0/8")).thenRespond(response().withStatusCode(200)));
+        assertRecreated(new Expectation(request().withPath("/external").withClientIp("!2001:db8::/32")).thenRespond(response().withStatusCode(403)));
+    }
+
+    @Test
     public void shouldRecreateWebSocketResponse() throws Exception {
         assertRecreated(new Expectation(request().withPath("/ws"))
             .thenRespondWithWebSocket(HttpWebSocketResponse.webSocketResponse()

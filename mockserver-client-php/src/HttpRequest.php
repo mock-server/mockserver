@@ -43,6 +43,7 @@ class HttpRequest implements \JsonSerializable
     private ?array $socketAddress = null;
     private ?array $jwt = null;
     private ?bool $not = null;
+    private ?string $clientIp = null;
     private string|array|null $specUrlOrPayload = null;
     private ?string $operationId = null;
     private ?string $contextPathPrefix = null;
@@ -339,6 +340,17 @@ class HttpRequest implements \JsonSerializable
         return $this;
     }
 
+    /**
+     * Match only requests from this client IP address or CIDR range, IPv4 or IPv6
+     * (e.g. "10.0.0.0/8"); prefix with "!" to match any other address. It is the
+     * TCP peer address, not X-Forwarded-For.
+     */
+    public function clientIp(string $clientIp): self
+    {
+        $this->clientIp = $clientIp;
+        return $this;
+    }
+
     public function socketAddress(string $host, int $port, string $scheme = 'HTTP'): self
     {
         $this->socketAddress = ['host' => $host, 'port' => $port, 'scheme' => $scheme];
@@ -565,6 +577,7 @@ class HttpRequest implements \JsonSerializable
         switch ($key) {
             case 'method':
             case 'path':
+            case 'clientIp':
             case 'operationId':
             case 'contextPathPrefix':
                 if (!is_string($value)) {
@@ -716,6 +729,9 @@ class HttpRequest implements \JsonSerializable
         }
         if ($this->not !== null) {
             $data['not'] = $this->not;
+        }
+        if ($this->clientIp !== null) {
+            $data['clientIp'] = $this->clientIp;
         }
         if ($this->specUrlOrPayload !== null) {
             $data['specUrlOrPayload'] = $this->specUrlOrPayload;

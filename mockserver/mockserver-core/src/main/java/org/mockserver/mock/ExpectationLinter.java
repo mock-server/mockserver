@@ -650,6 +650,7 @@ public final class ExpectationLinter {
             && (earlier.getProtocol() == null || Objects.equals(earlier.getProtocol(), later.getProtocol()))
             && (earlier.getClientCertificate() == null || Objects.equals(earlier.getClientCertificate(), later.getClientCertificate()))
             && (earlier.getJwt() == null || Objects.equals(earlier.getJwt(), later.getJwt()))
+            && (earlier.getClientIp() == null || Objects.equals(earlier.getClientIp(), later.getClientIp()))
             && stringCovers(earlier.getMethod(), later.getMethod(), methodPattern, regexBudget)
             && (pathParameters || stringCovers(earlier.getPath(), later.getPath(), pathPattern, regexBudget));
     }

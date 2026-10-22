@@ -287,6 +287,17 @@ client.startChaosExperiment({
 });
 ```
 
+### Client IP matcher
+
+Match requests by the client IP address or CIDR range, IPv4 or IPv6, with `clientIp` in the request matcher. The client address is the TCP peer of the connection, not `X-Forwarded-For`; prefix with `!` to match every other address.
+
+```js
+mockServerClient("localhost", 1080).mockAnyResponse({
+    httpRequest: { path: "/internal", clientIp: "10.0.0.0/8" },
+    httpResponse: { body: "internal client" }
+});
+```
+
 ### Diagnose Matching
 
 `explain(correlationId)` tells you which expectation would serve a recorded request now and why

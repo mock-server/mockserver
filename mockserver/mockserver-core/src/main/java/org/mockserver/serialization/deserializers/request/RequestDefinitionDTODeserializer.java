@@ -52,6 +52,7 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
             List<X509Certificate> clientCertificateChain = null;
             ClientCertificate clientCertificate = null;
             Jwt jwt = null;
+            NottableString clientIp = null;
             SocketAddress socketAddress = null;
             String localAddress = null;
             String remoteAddress = null;
@@ -164,6 +165,11 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                         case "jwt": {
                             jsonParser.nextToken();
                             jwt = ctxt.readValue(jsonParser, Jwt.class);
+                            break;
+                        }
+                        case "clientIp": {
+                            jsonParser.nextToken();
+                            clientIp = ctxt.readValue(jsonParser, NottableString.class);
                             break;
                         }
                         case "localAddress": {
@@ -295,6 +301,7 @@ public class RequestDefinitionDTODeserializer extends StdDeserializer<RequestDef
                     .setClientCertificateChain(clientCertificateChain)
                     .setClientCertificate(clientCertificate)
                     .setJwt(jwt)
+                    .setClientIp(clientIp)
                     .setSocketAddress(socketAddress)
                     .setLocalAddress(localAddress)
                     .setRemoteAddress(remoteAddress)

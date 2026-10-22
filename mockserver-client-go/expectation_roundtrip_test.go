@@ -787,3 +787,19 @@ func TestConditionalRequestWebsiteExample(t *testing.T) {
 		t.Errorf("website example JSON mismatch\ngot: %s", body)
 	}
 }
+
+func TestClientIPRoundTrip(t *testing.T) {
+	assertRoundTrip(t, `{"httpRequest":{"path":"/x","clientIp":"10.0.0.0/8"},"httpResponse":{"statusCode":200}}`)
+	assertRoundTrip(t, `{"httpRequest":{"path":"/x","clientIp":"!2001:db8::/32"},"httpResponse":{"statusCode":200}}`)
+	built, err := json.Marshal(Request().Path("/x").ClientIP("!10.0.0.0/8").Build())
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if got := string(built); got != `{"path":"/x","clientIp":"!10.0.0.0/8"}` {
+		t.Errorf("unexpected JSON: %s", got)
+	}
+	unset, _ := json.Marshal(Request().Path("/x").Build())
+	if string(unset) != `{"path":"/x"}` {
+		t.Errorf("clientIp should be omitted when unset: %s", unset)
+	}
+}

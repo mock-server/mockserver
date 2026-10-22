@@ -113,6 +113,18 @@ $client->when(
 );
 ```
 
+### Client IP Matcher
+
+Match requests by the client IP address or CIDR range, IPv4 or IPv6. The client address is the TCP peer of the connection, not `X-Forwarded-For`; prefix with `!` to match every other address.
+
+```php
+$client->when(
+    HttpRequest::request()->path('/internal')->clientIp('10.0.0.0/8')
+)->respond(
+    HttpResponse::response()->statusCode(200)
+);
+```
+
 ### ALL_OF Body Matcher
 
 Require several body matchers to all match the same request body. Compose any

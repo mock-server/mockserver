@@ -50,6 +50,7 @@ const STRUCTS: Record<string, FieldSpec[]> = {
     ['not', 'Not', 'boolPtr'],
     ['respondBeforeBody', 'RespondBeforeBody', 'boolPtr'],
     ['protocol', 'Protocol', 'string'],
+    ['clientIp', 'ClientIP', 'string'],
     ['socketAddress', 'SocketAddress', 'struct:SocketAddress'],
     ['dnsName', 'DnsName', 'string'],
     ['dnsType', 'DnsType', 'string'],
@@ -504,7 +505,7 @@ const EXPECTATION_SPEC: FieldSpec[] = [
 // Request-matcher wire keys the fluent Request() builder can express directly.
 const BUILDER_REQUEST_KEYS = new Set([
   'method', 'path', 'headers', 'queryStringParameters', 'cookies',
-  'pathParameters', 'body', 'jwt', 'secure', 'keepAlive',
+  'pathParameters', 'body', 'jwt', 'secure', 'keepAlive', 'clientIp',
 ]);
 
 // ---------------------------------------------------------------------------
@@ -843,6 +844,7 @@ function requestBuilderCalls(req: Record<string, unknown>, includePlainBody: boo
   // typeof, not === true: secure:false is an HTTP-only matcher, not an absent field
   if (typeof req['secure'] === 'boolean') calls.push(`Secure(${req['secure']})`);
   if (typeof req['keepAlive'] === 'boolean') calls.push(`KeepAlive(${req['keepAlive']})`);
+  if (typeof req['clientIp'] === 'string') calls.push(`ClientIP(${goStr(req['clientIp'])})`);
   if (includePlainBody && typeof req['body'] === 'string') calls.push(`Body(${goStr(req['body'])})`);
   return calls;
 }
@@ -854,6 +856,7 @@ function requestBuilderable(req: Record<string, unknown>): boolean {
     if (!BUILDER_REQUEST_KEYS.has(key)) return false;
   }
   if ('pathParameters' in req && !pathParametersSimple(req['pathParameters'])) return false;
+  if ('clientIp' in req && typeof req['clientIp'] !== 'string') return false;
   return true;
 }
 

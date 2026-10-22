@@ -542,6 +542,7 @@ export function previewMatch(expectation: unknown, sample: SampleRequest): Previ
     ['secure', 'secure (TLS) flag'],
     ['keepAlive', 'keep-alive flag'],
     ['protocol', 'protocol'],
+    ['clientIp', 'client IP'],
   ] as const) {
     const v = httpRequest[field];
     const isPresent =

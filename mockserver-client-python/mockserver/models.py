@@ -26,6 +26,7 @@ _FIELD_MAP = {
     "reason_phrase": "reasonPhrase",
     "keep_alive": "keepAlive",
     "respond_before_body": "respondBeforeBody",
+    "client_ip": "clientIp",
     "query_string_parameters": "queryStringParameters",
     "path_parameters": "pathParameters",
     "socket_address": "socketAddress",
@@ -1335,6 +1336,10 @@ class HttpRequest:
     headers_key_match_style: str | None = None
     query_string_parameters_key_match_style: str | None = None
     path_parameters_key_match_style: str | None = None
+    # Client IP address or CIDR range the request must come from, IPv4 or IPv6
+    # (e.g. "10.0.0.0/8"); prefix with "!" to match any other address. This is the
+    # TCP peer address, not X-Forwarded-For.
+    client_ip: str | None = None
 
     # headers, query_string_parameters, path_parameters and cookies also accept
     # a dict ({name: [values]} or {name: value}; cookies {name: value}) or a
@@ -1388,6 +1393,7 @@ class HttpRequest:
             "socketAddress": self.socket_address.to_dict() if self.socket_address else None,
             "jwt": self.jwt.to_dict() if self.jwt else None,
             "protocol": self.protocol,
+            "clientIp": self.client_ip,
         })
 
     @classmethod
@@ -1409,6 +1415,7 @@ class HttpRequest:
             jwt=Jwt.from_dict(data.get("jwt")),
             not_request=data.get("not"),
             protocol=data.get("protocol"),
+            client_ip=data.get("clientIp"),
             headers_key_match_style=_key_match_style(data.get("headers")),
             query_string_parameters_key_match_style=_key_match_style(data.get("queryStringParameters")),
             path_parameters_key_match_style=_key_match_style(data.get("pathParameters")),
@@ -1490,6 +1497,12 @@ class HttpRequest:
 
     def with_respond_before_body(self, respond_before_body: bool) -> HttpRequest:
         self.respond_before_body = respond_before_body
+        return self
+
+    def with_client_ip(self, client_ip: str) -> HttpRequest:
+        """Match only requests from this client IP address or CIDR range (e.g. "10.0.0.0/8");
+        prefix with "!" to match any other address."""
+        self.client_ip = client_ip
         return self
 
 

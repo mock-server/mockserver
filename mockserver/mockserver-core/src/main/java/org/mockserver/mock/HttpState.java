@@ -1255,11 +1255,11 @@ public class HttpState {
             String closestMatchId = null;
             int closestMatchedFields = 0;
             // Approximate denominator, deliberately: this is the size of the whole match-field enum,
-            // but HttpRequestPropertiesMatcher gates only 12 of those 18 fields. OPERATION, OPENAPI,
+            // but HttpRequestPropertiesMatcher gates only 13 of those 19 fields. OPERATION, OPENAPI,
             // DNS_NAME, DNS_TYPE, DNS_CLASS and BINARY_BODY belong to other matcher types and are never
             // assessed for an HTTP expectation, yet are counted as matched below. Hard-coding 12 would be
             // no more correct — the evaluated set varies per expectation (PATH_PARAMETERS only when the
-            // expectation declares them, JWT only when configured), so an exact denominator would require
+            // expectation declares them, JWT and CLIENT_IP only when configured), so an exact denominator would require
             // the matcher to report which fields it actually evaluated. matchedFieldCount is therefore
             // meaningful for comparing expectations against each other, not as an absolute score.
             int totalFields = MatchDifference.Field.values().length;

@@ -171,6 +171,14 @@ client.When(
 By default the token is read from the `Authorization` header with the `Bearer`
 scheme; override with `WithHeader(...)` / `WithScheme(...)`.
 
+#### Client IP matcher
+
+Match requests by the client IP address or CIDR range, IPv4 or IPv6. The client address is the TCP peer of the connection, not `X-Forwarded-For`; prefix with `!` to match every other address.
+
+```go
+req := mockserver.Request().Path("/internal").ClientIP("10.0.0.0/8")
+```
+
 #### allOf body matcher
 
 Require every nested body matcher to match with `AllOfBody(...)` (or the standalone

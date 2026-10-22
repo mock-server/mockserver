@@ -10754,6 +10754,185 @@ curl_close($ch);</code></pre>
         <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_match_request_by_client_ip" class="accordion">match request by client IP address or range</button>
+<div class="panel">
+    <p>Match a request by the IP address of the client that sent it. The value is a single address
+        (<span class="inline_code">192.168.1.10</span>) or a CIDR range (<span class="inline_code">10.0.0.0/8</span>),
+        IPv4 or IPv6 (<span class="inline_code">2001:db8::/32</span>). Prefix it with
+        <span class="inline_code">!</span> to match requests from any <em>other</em> address, for example
+        <span class="inline_code">!10.0.0.0/8</span>. Host names are not accepted, and an invalid value is
+        rejected when the expectation is created.</p>
+    <p>The client address is the <strong>TCP peer</strong> of the connection. When requests reach MockServer
+        through a proxy, load balancer or Kubernetes ingress, that is the proxy's address, not the address in an
+        <span class="inline_code">X-Forwarded-For</span> header &mdash; to match the original client in that
+        setup, match the <span class="inline_code">X-Forwarded-For</span> header instead. The one exception is a
+        connection that starts with a PROXY protocol header (sent by HAProxy or an AWS load balancer, and read
+        when <a href="/mock_server/configuration_properties.html#button_configuration_transparent_proxy_enabled">transparentProxyEnabled</a> is on): its client
+        address is the one that header names. MockServer accepts that header from any client, so with
+        transparentProxyEnabled on a client can choose the address it is matched as: treat
+        <span class="inline_code">clientIp</span> as a way to route test traffic, not as access control. An IPv4 client reached
+        over an IPv6 socket (<span class="inline_code">::ffff:10.1.2.3</span>) matches IPv4 ranges. A request
+        whose client address is unknown never matches, even a negated range. HTTP/3 requests do not carry a
+        client address yet, so they never match a <span class="inline_code">clientIp</span>.</p>
+    <p>The same field filters <a href="/mock_server/verification.html">verification</a> and the requests retrieved
+        from the event log. Every MockServer client library supports it: in Java
+        <span class="inline_code">withClientIp(...)</span>, and in the other clients the
+        <span class="inline_code">clientIp</span> field shown below or their own typed setter.</p>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/internal")
+            // the TCP peer address, not X-Forwarded-For
+            .withClientIp("10.0.0.0/8")
+    )
+    .respond(
+        response()
+            .withBody("internal client")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">Node</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/internal",
+        "clientIp": "10.0.0.0/8"
+    },
+    "httpResponse": {
+        "body": "internal client"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver.client import MockServerClient
+from mockserver.models import Expectation
+
+client = MockServerClient("localhost", 1080)
+client.upsert(Expectation.from_dict({
+    "httpRequest": {
+        "path": "/internal",
+        "clientIp": "10.0.0.0/8"
+    },
+    "httpResponse": {
+        "body": "internal client"
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+client.upsert(MockServer::Expectation.from_hash({
+    'httpRequest' =&gt; {
+        'path' =&gt; '/internal',
+        'clientIp' =&gt; '10.0.0.0/8'
+    },
+    'httpResponse' =&gt; {
+        'body' =&gt; 'internal client'
+    }
+}))</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`[{
+    "httpRequest": {
+        "path": "/internal",
+        "clientIp": "10.0.0.0/8"
+    },
+    "httpResponse": {
+        "body": "internal client"
+    }
+}]`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"[{
+    ""httpRequest"": {
+        ""path"": ""/internal"",
+        ""clientIp"": ""10.0.0.0/8""
+    },
+    ""httpResponse"": {
+        ""body"": ""internal client""
+    }
+}]";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use mockserver_client::{ClientBuilder, HttpRequest, HttpResponse};
+
+let client = ClientBuilder::new("localhost", 1080).build().unwrap();
+
+client
+    .when(HttpRequest::new().path("/internal").client_ip("10.0.0.0/8"))
+    .respond(HttpResponse::new().body("internal client"))
+    .unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST =&gt; 'PUT',
+    CURLOPT_HTTPHEADER =&gt; ['Content-Type: application/json'],
+    CURLOPT_POSTFIELDS =&gt; json_encode([[
+        'httpRequest' =&gt; [
+            'path' =&gt; '/internal',
+            'clientIp' =&gt; '10.0.0.0/8',
+        ],
+        'httpResponse' =&gt; [
+            'body' =&gt; 'internal client',
+        ],
+    ]]),
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+  "httpRequest" : {
+    "path" : "/internal",
+    "clientIp" : "10.0.0.0/8"
+  },
+  "httpResponse" : {
+    "body" : "internal client"
+  }
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_match_request_by_jwt_claims" class="accordion">match request by JWT claims</button>
 <div class="panel">
     <p>Match a request by the claims inside a JSON Web Token (JWT) carried in a request header (the

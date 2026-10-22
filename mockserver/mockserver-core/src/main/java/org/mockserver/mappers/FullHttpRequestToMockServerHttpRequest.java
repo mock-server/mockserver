@@ -13,6 +13,7 @@ import org.mockserver.codec.ExpandedParameterDecoder;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.matchers.ClientIpMatcher;
 import org.mockserver.model.*;
 import org.mockserver.url.URLParser;
 import org.slf4j.event.Level;
@@ -25,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
@@ -37,6 +39,7 @@ import static org.mockserver.model.NottableString.headerName;
 public class FullHttpRequestToMockServerHttpRequest {
 
     private static final int MAX_SHARED_HEADERS = 64;
+    private static final BooleanSupplier CLIENT_IP_IN_USE = ClientIpMatcher::isInUse;
     private final MockServerLogger mockServerLogger;
     private final BodyDecoderEncoder bodyDecoderEncoder;
     private final ExpandedParameterDecoder formParameterParser;
@@ -46,6 +49,8 @@ public class FullHttpRequestToMockServerHttpRequest {
     private final JDKCertificateToMockServerX509Certificate jdkCertificateToMockServerX509Certificate;
     private SocketAddress cachedRemoteAddress;
     private String cachedRemoteAddressString;
+    private HttpRequest.RemoteAddress cachedRemoteAddressReceived;
+    private BooleanSupplier clientIpInUse = CLIENT_IP_IN_USE;
     private SocketAddress cachedLocalAddress;
     private String cachedLocalAddressString;
     private final HeaderMemo headerNames = new HeaderMemo(true);
@@ -308,7 +313,7 @@ public class FullHttpRequestToMockServerHttpRequest {
     private void setSocketAddressFromNettyRequest(HttpRequest httpRequest, io.netty.handler.codec.http.HttpRequest nettyHttpRequest, SocketAddress localAddress, SocketAddress remoteAddress) {
         httpRequest.withSocketAddress(isSecure, nettyHttpRequest.headers().get("host"), port);
         if (remoteAddress instanceof InetSocketAddress) {
-            httpRequest.withRemoteAddress(remoteAddressString(remoteAddress));
+            setRemoteAddress(httpRequest, remoteAddress);
         }
         if (localAddress instanceof InetSocketAddress) {
             httpRequest.withLocalAddress(localAddressString(localAddress));
@@ -319,12 +324,26 @@ public class FullHttpRequestToMockServerHttpRequest {
     // connection and its identity is a safe cache key. The mapper is per pipeline, or per HTTP/2
     // connection (shared by its stream child channels, which all run on the connection's event loop),
     // so it is only touched from one event-loop thread and no synchronisation is needed.
-    private String remoteAddressString(SocketAddress remoteAddress) {
+    // Until any expectation uses clientIp a request gets the cached text, exactly as before; after that, a holder
+    // built once per connection that also keeps the peer's InetAddress, so a clientIp comparison never parses.
+    private void setRemoteAddress(HttpRequest httpRequest, SocketAddress remoteAddress) {
         if (remoteAddress != cachedRemoteAddress) {
             cachedRemoteAddress = remoteAddress;
             cachedRemoteAddressString = Strings.CS.removeStart(remoteAddress.toString(), "/");
+            cachedRemoteAddressReceived = null;
         }
-        return cachedRemoteAddressString;
+        if (cachedRemoteAddressReceived == null && clientIpInUse.getAsBoolean()) {
+            cachedRemoteAddressReceived = new HttpRequest.RemoteAddress(cachedRemoteAddressString, ((InetSocketAddress) remoteAddress).getAddress());
+        }
+        if (cachedRemoteAddressReceived != null) {
+            httpRequest.withReceivedRemoteAddress(cachedRemoteAddressReceived);
+        } else {
+            httpRequest.withRemoteAddress(cachedRemoteAddressString);
+        }
+    }
+
+    void clientIpInUseForTesting(BooleanSupplier clientIpInUse) {
+        this.clientIpInUse = clientIpInUse;
     }
 
     private String localAddressString(SocketAddress localAddress) {

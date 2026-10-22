@@ -734,6 +734,15 @@ RSpec.describe 'MockServer models' do
       end
     end
 
+    it 'round-trips clientIp and omits it when unset' do
+      req = MockServer::HttpRequest.new(path: '/x').with_client_ip('!10.0.0.0/8')
+      expect(req.to_h).to eq({ 'path' => '/x', 'clientIp' => '!10.0.0.0/8' })
+      [{ 'path' => '/x', 'clientIp' => '10.0.0.0/8' }, { 'path' => '/x', 'clientIp' => '!2001:db8::/32' }].each do |data|
+        expect(MockServer::HttpRequest.from_hash(data).to_h).to eq(data)
+      end
+      expect(MockServer::HttpRequest.new(path: '/x').to_h).not_to have_key('clientIp')
+    end
+
     it 'serializes respond_before_body as camelCase respondBeforeBody' do
       req = MockServer::HttpRequest.new.with_respond_before_body(true)
       expect(req.to_h).to include('respondBeforeBody' => true)

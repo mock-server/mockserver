@@ -45,6 +45,26 @@
     "protocol": {
       "$ref": "#/definitions/protocol"
     },
+    "clientIp": {
+      "description": "client (TCP peer) IP address or CIDR range, IPv4 or IPv6, prefix with '!' to negate",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "type": "boolean"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
     "localAddress": {
       "type": "string"
     },

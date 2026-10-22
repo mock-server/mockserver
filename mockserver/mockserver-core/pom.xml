@@ -1166,7 +1166,9 @@
                     </execution>
                     <!-- Runs the allocation bounds again with C1 only, which never removes an allocation, so a bound
                          that holds only once C2's escape analysis has compiled the loop fails every run here
-                         rather than now and then in the parallel phase. The flag must stay last to win. -->
+                         rather than now and then in the parallel phase. The flag must stay last to win. A fresh JVM
+                         per class also keeps out Mockito's inline instrumentation of model classes, which a spy in
+                         another test leaves behind and which allocates on every call of the spied class. -->
                     <execution>
                         <id>allocation-tests-without-c2</id>
                         <phase>test</phase>
@@ -1179,7 +1181,7 @@
                             <reuseForks>false</reuseForks>
                             <!-- set here, not as includes, so a -Dtest run does not run its classes here too, and a
                                  rename fails the build rather than running nothing -->
-                            <test>HttpStateRetrieveAllocationTest</test>
+                            <test>HttpStateRetrieveAllocationTest,ClientIpMatcherCostTest,RemoteAddressCaptureCostTest</test>
                             <argLine>@{argLine} -Duser.language=en -Duser.country=GB -Dmockserver.testOutput=${mockserver.testOutput} -Dmockserver.maxLogEntries=1000 ${mockserver.leakArgLine} ${mockserver.testArgLine} -XX:TieredStopAtLevel=1</argLine>
                             <!-- its own report files, so the parallel phase's report of the class is kept -->
                             <reportNameSuffix>without-c2</reportNameSuffix>

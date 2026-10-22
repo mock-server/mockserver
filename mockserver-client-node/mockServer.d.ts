@@ -159,6 +159,11 @@ export interface HttpRequest {
   respondBeforeBody?: boolean;
   /** HTTP protocol version the request was received over */
   protocol?: Protocol;
+  /**
+   * client IP address or CIDR range the request must come from, IPv4 or IPv6 (e.g. "10.0.0.0/8");
+   * prefix with "!" to match any other address. The TCP peer address, not X-Forwarded-For.
+   */
+  clientIp?: string;
   method?: StringOrJsonSchema;
   path?: StringOrJsonSchema;
   pathParameters?: KeyToMultiValue;
