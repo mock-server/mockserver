@@ -76,10 +76,10 @@ public class HttpActionHandlerStaticFilesTest {
     }
 
     @Test
-    public void shouldReadOnStaticFilePoolWhenCalledSynchronouslyOnAChannelAsHttp3Does() throws Exception {
+    public void shouldReadOnFileReadPoolWhenCalledSynchronouslyOnAChannelAsHttp3Does() throws Exception {
         actionHandler.processAction(request("/hello.json").withMethod("GET"), responseWriter, mock(ChannelHandlerContext.class), Collections.emptySet(), false, true);
 
-        assertThat(writingThread.get(10, TimeUnit.SECONDS), startsWith("MockServer-StaticFile"));
+        assertThat(writingThread.get(10, TimeUnit.SECONDS), startsWith("MockServer-FileRead"));
         assertThat(written.get(10, TimeUnit.SECONDS).getStatusCode(), is(200));
     }
 
@@ -94,7 +94,7 @@ public class HttpActionHandlerStaticFilesTest {
 
     @Test
     public void shouldAnswerServiceUnavailableWhenStaticFileReadQueueIsFull() throws Exception {
-        scheduler.maxQueuedStaticFileReads(0);
+        scheduler.maxQueuedFileReads(0);
 
         actionHandler.processAction(request("/hello.json").withMethod("GET"), responseWriter, mock(ChannelHandlerContext.class), Collections.emptySet(), false, false);
 

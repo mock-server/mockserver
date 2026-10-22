@@ -320,11 +320,16 @@ public class HttpActionHandler {
                 final RateLimit rateLimit = expectation.getRateLimit();
                 // recovery: apply the same fail-then-succeed selection as the main RESPONSE path (RecoverAfter)
                 final HttpResponse selectedResponse = selectRecoveryResponse((HttpResponse) action, expectation, request, capturedMatchCount);
-                scheduler.schedule(() -> handleAnyException(request, earlyResponseWriter, synchronous, action, () -> {
+                final Runnable dispatch = () -> handleAnyException(request, earlyResponseWriter, synchronous, action, () -> {
                     final HttpResponse response = getHttpResponseActionHandler().handle(selectedResponse, request, expectation.getHttpRequest());
                     // chaos: inject HTTP chaos faults on early mocked responses
                     writeResponseActionResponse(response, earlyResponseWriter, request, action, synchronous, expectation.getHttpRequest(), expectationPostProcessor, effectiveChaos, capturedMatchCount, ctx, rateLimit);
-                }, expectationPostProcessor), synchronous);
+                }, expectationPostProcessor);
+                if (hasFileBody(selectedResponse)) {
+                    submitFileBodyResponse(dispatch, request, earlyResponseWriter, ctx, synchronous, expectationPostProcessor);
+                } else {
+                    scheduler.schedule(dispatch, synchronous);
+                }
             }
             case ERROR -> scheduler.schedule(rejectable(() -> handleAnyException(request, earlyResponseWriter, synchronous, action, () -> {
                 dispatchErrorAction((HttpError) action, request, earlyResponseWriter, ctx);
@@ -701,9 +706,14 @@ public class HttpActionHandler {
                 // success response (RecoverAfter). Selection is per-expectation off capturedMatchCount,
                 // or per-(expectationId, idempotency-key) when an idempotencyHeader is configured.
                 final HttpResponse selectedResponse = selectRecoveryResponse((HttpResponse) action, expectation, request, capturedMatchCount);
-                scheduler.schedule(() -> handleAnyException(request, responseWriter, synchronous, action, () ->
+                final Runnable dispatch = () -> handleAnyException(request, responseWriter, synchronous, action, () ->
                     dispatchMockResponseWithBreakpoint(request, action, synchronous, responseWriter, expectation.getHttpRequest(), expectationPostProcessor, effectiveChaos, capturedMatchCount, ctx, rateLimit,
-                        req -> getHttpResponseActionHandler().handle(selectedResponse, req, expectation.getHttpRequest())), expectationPostProcessor), synchronous);
+                        req -> getHttpResponseActionHandler().handle(selectedResponse, req, expectation.getHttpRequest())), expectationPostProcessor);
+                if (hasFileBody(selectedResponse)) {
+                    submitFileBodyResponse(dispatch, request, responseWriter, ctx, synchronous, expectationPostProcessor);
+                } else {
+                    scheduler.schedule(dispatch, synchronous);
+                }
             }
             // RESPONSE_TEMPLATE rendering is a synchronous, CPU-bound computation. Dispatch via
             // scheduleTemplateAction so it runs on the dedicated BOUNDED template pool in asynchronous mode
@@ -2813,6 +2823,31 @@ public class HttpActionHandler {
         };
         // only a delayed write can be refused, so the undelayed hot path allocates no fallback
         scheduler.schedule(delays.length == 0 ? write : rejectable(write, overloadResponse(request, responseWriter, postProcessor)), synchronous, delays);
+    }
+
+    private static boolean hasFileBody(final HttpResponse response) {
+        return response != null && response.getBody() instanceof FileBody;
+    }
+
+    /**
+     * Runs the dispatch of a RESPONSE action whose body is a FILE body on the scheduler's bounded file read pool,
+     * so the disk read never blocks an event loop (HTTP/3 calls this synchronously on its stream's loop, so it
+     * hops too). Only a synchronous caller with no channel, a servlet, reads inline, as before.
+     */
+    private void submitFileBodyResponse(final Runnable dispatch, final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, final boolean synchronous, final Runnable postProcessor) {
+        scheduler.submitFileBodyRead(dispatch, () -> {
+            try {
+                responseWriter.writeResponse(request, response()
+                    .withStatusCode(503)
+                    .withReasonPhrase("Service Unavailable")
+                    .withHeader("Retry-After", "1")
+                    .withBody("MockServer is overloaded, too many file reads are already waiting"), false);
+            } finally {
+                if (postProcessor != null) {
+                    postProcessor.run();
+                }
+            }
+        }, synchronous && ctx == null);
     }
 
     /**
