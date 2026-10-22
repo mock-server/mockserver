@@ -521,11 +521,11 @@ public class ExtensionListenersTest {
         assertThat(listened.getRetainedBytes(), is(plain.getRetainedBytes()));
     }
 
-    private static void awaitRetained(MockServerEventLog eventLog, int entries) throws InterruptedException {
-        long deadline = System.currentTimeMillis() + 10_000;
-        while (eventLog.size() < entries && System.currentTimeMillis() < deadline) {
-            Thread.sleep(10);
-        }
+    private static void awaitRetained(MockServerEventLog eventLog, int entries) throws Exception {
+        // a query runs on the consumer after every entry published before it, so its answer means all are retained
+        CompletableFuture<List<LogEntry>> processed = new CompletableFuture<>();
+        eventLog.retrieveMessageLogEntries(null, processed::complete);
+        processed.get(10, SECONDS);
         assertThat(eventLog.size(), is(entries));
     }
 
@@ -611,12 +611,12 @@ public class ExtensionListenersTest {
         assertThat(requestMatchers.size(), is(0));
         assertThat(registry.listenerDispatch().queue("listeners-event-loop").dropped(ListenerQueue.DropReason.COUNT) >= 50, is(true));
 
+        // the queue held exactly ten events (its count bound, the one in delivery included): take every one, so none
+        // can arrive after the changes asserted below
         blocked.gate.countDown();
-        long deadline = System.currentTimeMillis() + 10_000;
-        while (blocked.events.size() < 10 && System.currentTimeMillis() < deadline) {
-            Thread.sleep(10);
+        for (int i = 0; i < 10; i++) {
+            blocked.nextChange();
         }
-        blocked.events.clear();
         requestMatchers.add(expectation("loop-after", Times.once(), TimeToLive.unlimited()), Cause.API);
         assertChange(blocked.nextChange(), ExpectationChange.Type.ADDED, ChangeCause.API, "loop-after");
         Expectation last = requestMatchers.firstMatchingExpectation(request("/loop-after"));
@@ -691,6 +691,9 @@ public class ExtensionListenersTest {
         queue.offer(first, 0);
         queue.offer(second, 0);
         assertThat(recorder.nextChange(), sameInstance(second));
+        // the listener records the event before it returns, and the queue counts a delivery only after that; flush
+        // returns once nothing is pending, which is after the count is updated
+        queue.flush(10_000);
         assertThat(queue.errors(), is(1L));
         assertThat(queue.delivered(), is(1L));
     }
@@ -709,11 +712,7 @@ public class ExtensionListenersTest {
         registry.stop();
         assertThat(slow.events.size(), is(offered.get()));
         ListenerQueue queue = registry.listenerDispatch().queue("listeners-flush");
-        long deadline = System.currentTimeMillis() + 5_000;
-        while (queue.isAlive() && System.currentTimeMillis() < deadline) {
-            Thread.sleep(10);
-        }
-        assertThat("the listener thread ends once stopped", queue.isAlive(), is(false));
+        assertThat("the listener thread ends once stopped", queue.awaitTermination(5_000), is(true));
         assertThat(registry.maximumStopMillis(), is(10_000L + configuration.extensionStartTimeoutMillis()));
     }
 

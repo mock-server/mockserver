@@ -189,6 +189,16 @@ final class ListenerQueue {
         return thread.isAlive();
     }
 
+    /**
+     * Waits up to {@code millis} for the delivery thread to end after {@link #shutdown()}.
+     *
+     * @return true when it has ended
+     */
+    boolean awaitTermination(long millis) throws InterruptedException {
+        thread.join(Math.max(1, millis));
+        return !thread.isAlive();
+    }
+
     private void deliverUntilStopped() {
         while (running) {
             Object event = queue.poll();
