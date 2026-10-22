@@ -537,7 +537,7 @@ class TestRegisterWebSocketCallback:
             assert client_id == "test-ws-id"
             mock_ws.connect.assert_called_once_with(
                 "localhost", 1080, "", False, None, tls_verify=True,
-                bearer_token_supplier=client._control_plane_bearer,
+                authorization_supplier=client._control_plane_authorization,
                 ssl_context=None,
             )
             mock_ws.register_response_callback.assert_called_once_with(callback)

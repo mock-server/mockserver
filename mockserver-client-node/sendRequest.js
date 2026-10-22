@@ -31,6 +31,8 @@
         //   bearerToken           static control-plane JWT (string)
         //   bearerTokenSupplier   function() => string, evaluated per-request
         //                         (so the token can be refreshed)
+        //   basicAuthUsername     control-plane Basic username (with basicAuthPassword)
+        //   basicAuthPassword     control-plane Basic password; a bearer token wins when both are set
         //   clientCertPemFilePath path to a PEM client certificate (mTLS)
         //   clientKeyPemFilePath  path to a PEM private key (mTLS)
 
@@ -54,6 +56,19 @@
             return String(token);
         };
 
+        // The control-plane Authorization header value: the bearer token when one is configured, else the Basic
+        // credentials, else null.
+        var resolveAuthorization = function (clientOptions) {
+            var token = resolveBearerToken(clientOptions);
+            if (token) {
+                return 'Bearer ' + token;
+            }
+            if (clientOptions && typeof clientOptions.basicAuthUsername === 'string' && clientOptions.basicAuthUsername !== '' && clientOptions.basicAuthPassword !== undefined && clientOptions.basicAuthPassword !== null) {
+                return 'Basic ' + Buffer.from(clientOptions.basicAuthUsername + ':' + String(clientOptions.basicAuthPassword), 'utf8').toString('base64');
+            }
+            return null;
+        };
+
         // The mTLS client cert/key TLS options ({cert, key}) for every connection
         // to MockServer, its HTTP requests and its callback WebSocket alike.
         var clientCertificateOptions = function (clientOptions) {
@@ -72,12 +87,12 @@
         // Attach the control-plane Authorization header and mTLS client cert/key
         // to a Node http(s) request options object. Mutates and returns options.
         var applyControlPlaneAuth = function (options, clientOptions) {
-            var token = resolveBearerToken(clientOptions);
-            if (token) {
+            var authorization = resolveAuthorization(clientOptions);
+            if (authorization) {
                 if (!options.headers) {
                     options.headers = {};
                 }
-                options.headers['Authorization'] = 'Bearer ' + token;
+                options.headers['Authorization'] = authorization;
             }
             return Object.assign(options, clientCertificateOptions(clientOptions));
         };
@@ -441,6 +456,7 @@
             sendDeleteRequest: sendDeleteRequest,
             sendRawRequest: sendRawRequest,
             resolveBearerToken: resolveBearerToken,
+            resolveAuthorization: resolveAuthorization,
             clientCertificateOptions: clientCertificateOptions
         };
     }

@@ -84,6 +84,63 @@ class MockServerClientAuthTlsTest extends TestCase
         $this->assertSame('Bearer setter-token', $request->getHeaderLine('Authorization'));
     }
 
+    public function testControlPlaneRequestCarriesBasicCredentials(): void
+    {
+        $history = [];
+        $client = new MockServerClient('localhost', 1080);
+        $client->withControlPlaneBasicAuthentication('admin', 'pä:ss');
+        $this->createClientWithMock($client, [new Response(200, [], '')], $history);
+
+        $client->reset();
+
+        $this->assertSame('Basic ' . base64_encode('admin:pä:ss'), $history[0]['request']->getHeaderLine('Authorization'));
+    }
+
+    public function testBearerTokenWinsOverBasicCredentials(): void
+    {
+        $history = [];
+        $client = new MockServerClient('localhost', 1080, controlPlaneBearerToken: 'jwt');
+        $client->withControlPlaneBasicAuthentication('admin', 's3cret');
+        $this->createClientWithMock($client, [new Response(200, [], '')], $history);
+
+        $client->reset();
+
+        $this->assertSame('Bearer jwt', $history[0]['request']->getHeaderLine('Authorization'));
+    }
+
+    public function testBasicCredentialsWarnWithoutTlsAndStayOutOfErrors(): void
+    {
+        $log = tempnam(sys_get_temp_dir(), 'mockserver-basic');
+        $previous = ini_set('error_log', $log);
+        try {
+            $history = [];
+            $client = new MockServerClient('localhost', 1080);
+            $client->withControlPlaneBasicAuthentication('admin', 'pa55-near-miss');
+            $this->createClientWithMock($client, [new Response(500, [], 'failed')], $history);
+
+            try {
+                $client->reset();
+                $this->fail('a 500 should fail the request');
+            } catch (\Throwable $failure) {
+                $this->assertStringNotContainsString('pa55-near-miss', (string) $failure);
+                $this->assertStringNotContainsString(base64_encode('admin:pa55-near-miss'), (string) $failure);
+            }
+            $logged = (string) file_get_contents($log);
+            $this->assertStringContainsString('without TLS', $logged);
+            $this->assertStringNotContainsString('pa55-near-miss', $logged);
+        } finally {
+            ini_set('error_log', $previous === false ? '' : $previous);
+            @unlink($log);
+        }
+    }
+
+    public function testBasicCredentialsRefuseAUsernameThatCannotBeSent(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new MockServerClient('localhost', 1080))->withControlPlaneBasicAuthentication('a:b', 'x');
+    }
+
     public function testBearerTokenSupplierIsEvaluatedPerRequest(): void
     {
         $history = [];

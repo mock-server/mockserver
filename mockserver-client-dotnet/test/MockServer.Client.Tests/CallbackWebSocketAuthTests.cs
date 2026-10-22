@@ -136,6 +136,17 @@ public class CallbackWebSocketAuthTests
     }
 
     [Fact]
+    public async Task Client_Sends_Its_ControlPlane_Basic_Credentials_On_The_Callback_WebSocket()
+    {
+        using var server = new RecordingCallbackServer();
+        using var client = MockServerClient.Builder("127.0.0.1", server.Port).WithControlPlaneBasicAuthentication("admin", "s3cret").Build();
+        await client.EnsureBreakpointWsAsync();
+        var headers = await server.UpgradeHeaders.WaitAsync(TimeSpan.FromSeconds(5));
+        server.Dispose();
+        headers.Should().ContainKey("Authorization").WhoseValue.Should().Be("Basic YWRtaW46czNjcmV0");
+    }
+
+    [Fact]
     public async Task Client_Without_A_Token_Sends_No_Authorization_On_The_Callback_WebSocket()
     {
         using var server = new RecordingCallbackServer();

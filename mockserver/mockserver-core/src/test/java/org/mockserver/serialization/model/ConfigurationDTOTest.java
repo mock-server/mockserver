@@ -638,7 +638,12 @@ public class ConfigurationDTOTest {
         "forwardProxyAllowedHosts",
         "forwardProxyDeniedHosts",
         // writes every connection's traffic, credentials and bodies included, to the log
-        "logRawNetworkTraffic"
+        "logRawNetworkTraffic",
+        // decide who may use the control plane, so a control-plane request must not change them
+        "controlPlaneBasicAuthenticationRequired",
+        "controlPlaneBasicAuthenticationCredentials",
+        "controlPlaneBasicAuthenticationUsersFile",
+        "controlPlaneBasicAuthenticationAllowInsecure"
     ));
 
     @Test
@@ -825,6 +830,7 @@ public class ConfigurationDTOTest {
             case "forwardProxyTLSCustomTrustX509Certificates":
             case "forwardProxyPrivateKey":
             case "forwardProxyCertificateChain":
+            case "controlPlaneBasicAuthenticationUsersFile":
                 return existingFilePath();
             default:
                 break;

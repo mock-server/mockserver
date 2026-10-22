@@ -196,6 +196,7 @@ public class MockServer extends LifeCycle {
         // boss/worker event-loop groups by the time we get here; hoisting alone would not release those.
         try {
             ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(configuration);
+            ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneBasicAuthentication(configuration, mockServerLogger);
             DataPlaneMutualTlsTrust.requireUsableDataPlaneMutualTls(configuration, mockServerLogger);
         } catch (Throwable throwable) {
             stopRefusedStart();

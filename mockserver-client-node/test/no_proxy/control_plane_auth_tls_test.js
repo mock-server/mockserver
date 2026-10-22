@@ -159,6 +159,86 @@ describe('control-plane bearer token', function () {
     });
 });
 
+describe('control-plane basic credentials', function () {
+
+    it('attaches Authorization: Basic <base64 username:password> when basic credentials are configured', async function () {
+        var client = mockServerClient('localhost', 1080, undefined, false, undefined, {
+            basicAuthUsername: 'admin',
+            basicAuthPassword: 'pä:ss'
+        });
+        await client.reset();
+
+        assert.equal(capturedOptions.length, 1);
+        assert.equal(capturedOptions[0].headers['Authorization'], 'Basic ' + Buffer.from('admin:pä:ss', 'utf8').toString('base64'));
+    });
+
+    it('sends the bearer token instead when both are configured', async function () {
+        var client = mockServerClient('localhost', 1080, undefined, false, undefined, {
+            bearerToken: 'jwt',
+            basicAuthUsername: 'admin',
+            basicAuthPassword: 's3cret'
+        });
+        await client.reset();
+
+        assert.equal(capturedOptions[0].headers['Authorization'], 'Bearer jwt');
+    });
+
+    it('warns once that basic credentials without tls can be read on the network', async function () {
+        var originalWarn = console.warn;
+        var warnings = [];
+        console.warn = function (message) { warnings.push(message); };
+        try {
+            var client = mockServerClient('localhost', 1080, undefined, false, undefined, {basicAuthUsername: 'admin', basicAuthPassword: 's3cret'});
+            await client.reset();
+            await client.reset();
+            mockServerClient('localhost', 1080, undefined, true, '/no/download/needed.pem', {basicAuthUsername: 'admin', basicAuthPassword: 's3cret'});
+        } finally {
+            console.warn = originalWarn;
+        }
+
+        assert.equal(warnings.length, 1);
+        assert.match(warnings[0], /without tls/);
+        assert.doesNotMatch(warnings[0], /s3cret/);
+    });
+
+    it('does NOT put the credentials in the error of a failed request', async function () {
+        var failing = function (options) {
+            capturedOptions.push(options);
+            var responseHandler = null;
+            return {
+                once: function (event, handler) { if (event === 'response') { responseHandler = handler; } return this; },
+                write: function () {},
+                end: function () {
+                    var handlers = {};
+                    setImmediate(function () {
+                        responseHandler({statusCode: 500, on: function (event, handler) { handlers[event] = handler; return this; }});
+                        if (handlers.data) { handlers.data(Buffer.from('failed')); }
+                        if (handlers.end) { handlers.end(); }
+                    });
+                }
+            };
+        };
+        http.request = failing;
+        https.request = failing;
+        var client = mockServerClient('localhost', 1080, undefined, false, undefined, {basicAuthUsername: 'admin', basicAuthPassword: 'pa55-near-miss'});
+
+        var failure = await client.reset().then(function () { return null; }, function (error) { return error; });
+
+        assert.ok(failure !== null);
+        assert.doesNotMatch(String(failure), /pa55-near-miss/);
+        assert.doesNotMatch(String(failure), new RegExp(Buffer.from('admin:pa55-near-miss').toString('base64')));
+    });
+
+    it('does NOT attach an Authorization header for a username without a password', async function () {
+        var client = mockServerClient('localhost', 1080, undefined, false, undefined, {
+            basicAuthUsername: 'admin'
+        });
+        await client.reset();
+
+        assert.equal(capturedOptions[0].headers && capturedOptions[0].headers['Authorization'], undefined);
+    });
+});
+
 // ---------------------------------------------------------------------------
 // mTLS client certificate / key
 // ---------------------------------------------------------------------------

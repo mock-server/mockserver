@@ -157,6 +157,7 @@ class MockServerClient:
         client_key_path: str | None = None,
         control_plane_bearer_token: str | None = None,
         control_plane_bearer_token_supplier: Callable[[], str] | None = None,
+        control_plane_basic_auth: tuple[str, str] | None = None,
     ) -> None:
         self._loop = asyncio.new_event_loop()
         self._thread = threading.Thread(
@@ -174,6 +175,7 @@ class MockServerClient:
             client_key_path=client_key_path,
             control_plane_bearer_token=control_plane_bearer_token,
             control_plane_bearer_token_supplier=control_plane_bearer_token_supplier,
+            control_plane_basic_auth=control_plane_basic_auth,
         )
 
     def _run(self, coro):

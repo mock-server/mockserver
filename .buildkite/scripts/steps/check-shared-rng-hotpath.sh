@@ -102,6 +102,7 @@ ALLOWLIST=(
   "mockserver/mockserver-core/src/main/java/org/mockserver/templates/engine/TemplateFunctions.java|new SecureRandom(...)|rand() exposed to user response templates; must stay unpredictable and is user-invoked, not an internal hot-path id"
   "mockserver/mockserver-core/src/main/java/org/mockserver/socket/tls/KeyAndCertificateFactory.java|new SecureRandom(...)|X.509 certificate serial number; per generated cert (rare) and its unpredictability is a security property"
   "mockserver/mockserver-netty/src/main/java/org/mockserver/netty/http3/SourceAddressQuicTokenHandler.java|new SecureRandom(...)|QUIC source-address retry-token secret; unguessability is the anti-spoofing property"
+  "mockserver/mockserver-core/src/main/java/org/mockserver/authentication/basic/PasswordHash.java|new SecureRandom(...)|password-hash salts and the control-plane Basic handler's HMAC key; unguessability is the security property, used once per handler build or hash generated, never per request"
 
   # ── UUID.randomUUID() ────────────────────────────────────────────────
   "mockserver/mockserver-core/src/main/java/org/mockserver/oidc/OidcKeyProvider.java|UUID.randomUUID()|OIDC signing-key id fallback, only when no keyId is configured; per-provider setup, cold"

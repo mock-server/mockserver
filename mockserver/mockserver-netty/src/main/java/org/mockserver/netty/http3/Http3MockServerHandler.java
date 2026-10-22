@@ -259,6 +259,11 @@ public class Http3MockServerHandler extends Http3RequestStreamInboundHandler {
                 // as HTTP/1.1 and HTTP/2 do, so an unchanged forward sends the bytes the client sent
                 request.markBodyAsReceived();
             }
+            java.net.SocketAddress peer = Http3ExceptionHandler.peerAddress(ctx.channel());
+            if (peer != null) {
+                // as HTTP/1.1 and HTTP/2 record it; control-plane Basic throttles guesses per peer
+                request.withRemoteAddress(org.apache.commons.lang3.Strings.CS.removeStart(peer.toString(), "/"));
+            }
 
             // mTLS client-certificate capture: extract the peer certificate chain
             // from the QUIC SSLEngine (analogous to the TCP path's
@@ -679,6 +684,7 @@ public class Http3MockServerHandler extends Http3RequestStreamInboundHandler {
      * authenticated-but-anonymous result by its default method, so behaviour is unchanged for them.
      */
     private org.mockserver.authentication.ControlPlaneAuthentication authenticateMcpRequestResult(HttpRequest request) {
+        request.markControlPlaneRequest();
         org.mockserver.configuration.ControlPlaneAuthenticationSettings settings = httpState.controlPlaneAuthenticationSettings();
         AuthenticationHandler authHandler = httpState.getControlPlaneAuthenticationHandler(settings);
         if (authHandler == null) {
@@ -693,7 +699,7 @@ public class Http3MockServerHandler extends Http3RequestStreamInboundHandler {
                 mockServerLogger.logEvent(
                     new LogEntry()
                         .setLogLevel(Level.WARN)
-                        .setHttpRequest(request)
+                        .setHttpRequest(org.mockserver.authentication.CredentialRedaction.withoutCredentials(request))
                         .setMessageFormat("MCP-over-H3 authentication failed: {}")
                         .setArguments(e.getMessage())
                         .setThrowable(e)

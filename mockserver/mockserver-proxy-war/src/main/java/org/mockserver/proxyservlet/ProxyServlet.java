@@ -69,6 +69,7 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
         // read before anything is allocated: an invalid combination (SOCKS with HTTP) throws
         List<ProxyConfiguration> proxyConfigurations = proxyConfiguration(this.configuration);
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
+        ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneBasicAuthentication(this.configuration, this.mockServerLogger);
         // extensions start before anything else is built, so a refused start leaks no thread or event loop
         this.extensionRegistry = this.configuration.extensionsConfigured() ? ExtensionRegistry.start(this.configuration, this.mockServerLogger) : null;
         Scheduler createdScheduler = null;

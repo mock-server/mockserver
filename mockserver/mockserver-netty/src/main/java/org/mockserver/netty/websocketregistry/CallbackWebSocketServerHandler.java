@@ -72,7 +72,7 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         boolean release = true;
         try {
-            if (msg instanceof FullHttpRequest && new QueryStringDecoder(((FullHttpRequest) msg).uri()).path().equals(UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI)) {
+            if (msg instanceof FullHttpRequest && isCallbackUpgradeUri(((FullHttpRequest) msg).uri())) {
                 if (isHttp2Enabled(ctx.channel())) {
                     if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
                         mockServerLogger.logEvent(
@@ -105,6 +105,23 @@ public class CallbackWebSocketServerHandler extends ChannelInboundHandlerAdapter
                 ReferenceCountUtil.release(msg);
             }
         }
+    }
+
+    /**
+     * Whether {@code uri} is the callback WebSocket path, compared undecoded as {@code DashboardWebSocketHandler}
+     * compares its own: an encoded form such as {@code /%5Fmockserver_callback_websocket} is not the control plane
+     * to the router or the log redaction, so it must not be upgraded here either.
+     */
+    static boolean isCallbackUpgradeUri(String uri) {
+        int pathLength = UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI.length();
+        if (uri == null || uri.length() < pathLength || !uri.regionMatches(0, UPGRADE_CHANNEL_FOR_CALLBACK_WEB_SOCKET_URI, 0, pathLength)) {
+            return false;
+        }
+        if (uri.length() == pathLength) {
+            return true;
+        }
+        char next = uri.charAt(pathLength);
+        return next == '?' || next == '#';
     }
 
     @Override
