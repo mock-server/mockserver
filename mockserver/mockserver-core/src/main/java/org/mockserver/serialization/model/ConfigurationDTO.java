@@ -237,6 +237,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Long extensionAdminTimeoutMillis;
     private Integer extensionListenerQueueSize;
     private Long extensionListenerMaxBytes;
+    private Long extensionHelperTimeoutMillis;
+    private Integer extensionHelperMaxInFlight;
     private Boolean redactSecretsInRecordedExpectations;
     private Boolean redactSecretsInLog;
     private Double llmCostBudgetUsd;
@@ -627,6 +629,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.extensionAdminTimeoutMillis = configuration.extensionAdminTimeoutMillis();
             this.extensionListenerQueueSize = configuration.extensionListenerQueueSize();
             this.extensionListenerMaxBytes = configuration.extensionListenerMaxBytes();
+            this.extensionHelperTimeoutMillis = configuration.extensionHelperTimeoutMillis();
+            this.extensionHelperMaxInFlight = configuration.extensionHelperMaxInFlight();
             this.redactSecretsInRecordedExpectations = configuration.redactSecretsInRecordedExpectations();
             this.redactSecretsInLog = configuration.redactSecretsInLog();
             this.llmCostBudgetUsd = configuration.llmCostBudgetUsd();
@@ -1114,6 +1118,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.extensionAdminTimeoutMillis(extensionAdminTimeoutMillis);
         configuration.extensionListenerQueueSize(extensionListenerQueueSize);
         configuration.extensionListenerMaxBytes(extensionListenerMaxBytes);
+        configuration.extensionHelperTimeoutMillis(extensionHelperTimeoutMillis);
+        configuration.extensionHelperMaxInFlight(extensionHelperMaxInFlight);
         configuration.redactSecretsInRecordedExpectations(redactSecretsInRecordedExpectations);
         configuration.redactSecretsInLog(redactSecretsInLog);
         configuration.llmCostBudgetUsd(llmCostBudgetUsd);
@@ -1978,9 +1984,10 @@ public class ConfigurationDTO implements DTO<Configuration> {
         // recordedBodyFilesDirectory is deliberately not applied: it decides where the server writes files, so it is
         // fixed at startup (see HttpState.applyConfigurationUpdate)
         // extensions, extensionScanning, extensionStartTimeoutMillis, extensionAdminMaxInFlight,
-        // extensionAdminTimeoutMillis, extensionListenerQueueSize and extensionListenerMaxBytes are deliberately not
-        // applied: extensions are trusted code loaded once at startup, so a control-plane request must not add, remove
-        // or reconfigure them (see HttpState.applyConfigurationUpdate)
+        // extensionAdminTimeoutMillis, extensionListenerQueueSize, extensionListenerMaxBytes,
+        // extensionHelperTimeoutMillis and extensionHelperMaxInFlight are deliberately not applied: extensions are
+        // trusted code loaded once at startup, so a control-plane request must not add, remove or reconfigure them
+        // (see HttpState.applyConfigurationUpdate)
         // staticFilesDirectory is deliberately not applied: it decides which server files requests can read, so it
         // is fixed at startup (see HttpState.applyConfigurationUpdate)
         if (redactSecretsInRecordedExpectations != null) {
@@ -4224,6 +4231,24 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setExtensionListenerMaxBytes(Long extensionListenerMaxBytes) {
         this.extensionListenerMaxBytes = extensionListenerMaxBytes;
+        return this;
+    }
+
+    public Long getExtensionHelperTimeoutMillis() {
+        return extensionHelperTimeoutMillis;
+    }
+
+    public ConfigurationDTO setExtensionHelperTimeoutMillis(Long extensionHelperTimeoutMillis) {
+        this.extensionHelperTimeoutMillis = extensionHelperTimeoutMillis;
+        return this;
+    }
+
+    public Integer getExtensionHelperMaxInFlight() {
+        return extensionHelperMaxInFlight;
+    }
+
+    public ConfigurationDTO setExtensionHelperMaxInFlight(Integer extensionHelperMaxInFlight) {
+        this.extensionHelperMaxInFlight = extensionHelperMaxInFlight;
         return this;
     }
 

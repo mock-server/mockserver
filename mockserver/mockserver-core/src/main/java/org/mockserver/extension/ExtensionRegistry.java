@@ -12,7 +12,9 @@ import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeoutException;
@@ -43,6 +45,11 @@ public final class ExtensionRegistry {
     private final AtomicBoolean stopped = new AtomicBoolean(false);
     private final AtomicBoolean notifying = new AtomicBoolean(false);
     private volatile boolean startedNotified;
+    // null unless a started extension offers template helpers and the hook is enabled
+    private volatile TemplateHelpers templateHelpers;
+    // the stub this registry put on the configuration, removed again when it stops
+    private volatile Configuration stubbedConfiguration;
+    private volatile Object templateHelperStub;
 
     private ExtensionRegistry(List<LoadedExtension> extensions, Configuration configuration, MockServerLogger mockServerLogger) {
         this.extensions = Collections.unmodifiableList(extensions);
@@ -63,11 +70,23 @@ public final class ExtensionRegistry {
         registry.logLoaded();
         registry.startAll();
         registry.listenerDispatch = ListenerDispatch.create(registry.startedExtensions(), configuration, mockServerLogger);
+        registry.prepareTemplateHelpers(configuration);
         return registry;
     }
 
+    static final String HELPERS_NOT_AVAILABLE_HERE = "extension template helpers ($ext) can only be called from an httpResponseTemplate or httpForwardTemplate,"
+        + " not from a webhook, secondary action, delay, file body, stream, load scenario or template dry run";
+
     public List<LoadedExtension> extensions() {
         return extensions;
+    }
+
+    /**
+     * @return the {@code ext} template namespace and its executor, or {@code null} when no started extension offers
+     * template helpers or the hook is disabled
+     */
+    public TemplateHelpers templateHelpers() {
+        return templateHelpers;
     }
 
     /**
@@ -215,6 +234,11 @@ public final class ExtensionRegistry {
         if (!stopped.compareAndSet(false, true)) {
             return;
         }
+        TemplateHelpers helpers = templateHelpers;
+        if (helpers != null) {
+            helpers.shutdown();
+        }
+        clearStub();
         List<LoadedExtension> toStop = startedExtensions();
         Collections.reverse(toStop);
         // an interrupted caller (such as a refused start) must still wait for each stop
@@ -275,6 +299,80 @@ public final class ExtensionRegistry {
                 stop();
                 throw new ExtensionException("extension " + extension.name() + " failed to start: " + throwable, throwable);
             }
+        }
+    }
+
+    /**
+     * Collects each started provider's helpers and builds the {@code ext} namespace. Every other template engine of
+     * this configuration binds {@code ext} to a stub that fails with the reason helpers cannot be called there; with
+     * HTTP/3 enabled the hook is disabled and every engine, response and forward templates included, gets the stub.
+     */
+    private void prepareTemplateHelpers(Configuration configuration) {
+        List<LoadedExtension> providers = new ArrayList<>();
+        for (LoadedExtension extension : startedExtensions()) {
+            if (extension.isHookEnabled(ExtensionHook.TEMPLATE_HELPER)) {
+                providers.add(extension);
+            }
+        }
+        if (providers.isEmpty()) {
+            // a configuration reused from a server that had template helpers must not keep its stub
+            configuration.extensionTemplateHelperStub(null);
+            return;
+        }
+        Integer http3Port = configuration.http3Port();
+        if (http3Port != null && http3Port > 0) {
+            String reason = "HTTP/3 is enabled (http3Port " + http3Port + ") and HTTP/3 renders templates on its event loop, where waiting for a helper would block other requests";
+            disableHook(ExtensionHook.TEMPLATE_HELPER, reason);
+            setStub(configuration, ExtensionHelperNamespace.unavailable("extension template helpers ($ext) are disabled because " + reason));
+            return;
+        }
+        Map<String, Map<Class<?>, Object>> helpers = new LinkedHashMap<>();
+        Map<String, Map<String, MustacheHelper>> mustacheHelpers = new LinkedHashMap<>();
+        for (LoadedExtension extension : providers) {
+            TemplateHelperProvider provider = (TemplateHelperProvider) extension.extension();
+            Object[] offered = new Object[2];
+            try {
+                callBounded("helpers", extension, () -> {
+                    offered[0] = provider.helpers();
+                    offered[1] = provider.mustacheHelpers();
+                });
+            } catch (TimeoutException e) {
+                stop();
+                throw new ExtensionException("extension " + extension.name() + " did not return its template helpers within " + timeoutMillis + "ms (extensionStartTimeoutMillis)");
+            } catch (Throwable throwable) {
+                stop();
+                throw new ExtensionException("extension " + extension.name() + " failed to return its template helpers: " + throwable, throwable);
+            }
+            @SuppressWarnings("unchecked")
+            Map<Class<?>, Object> offeredHelpers = offered[0] != null ? new LinkedHashMap<>((Map<Class<?>, Object>) offered[0]) : Map.of();
+            @SuppressWarnings("unchecked")
+            Map<String, MustacheHelper> offeredMustacheHelpers = offered[1] != null ? new LinkedHashMap<>((Map<String, MustacheHelper>) offered[1]) : Map.of();
+            helpers.put(extension.name(), offeredHelpers);
+            mustacheHelpers.put(extension.name(), offeredMustacheHelpers);
+        }
+        try {
+            templateHelpers = TemplateHelpers.create(mockServerLogger, configuration.extensionHelperTimeoutMillis(), configuration.extensionHelperMaxInFlight(), helpers, mustacheHelpers);
+        } catch (ExtensionException e) {
+            stop();
+            throw e;
+        } catch (RuntimeException e) {
+            stop();
+            throw new ExtensionException("the extension template helpers are not valid: " + e, e);
+        }
+        setStub(configuration, ExtensionHelperNamespace.unavailable(HELPERS_NOT_AVAILABLE_HERE));
+    }
+
+    private void setStub(Configuration configuration, Object stub) {
+        stubbedConfiguration = configuration;
+        templateHelperStub = stub;
+        configuration.extensionTemplateHelperStub(stub);
+    }
+
+    private void clearStub() {
+        Configuration configuration = stubbedConfiguration;
+        // only if no later server on the same configuration has replaced it
+        if (configuration != null && configuration.extensionTemplateHelperStub() == templateHelperStub) {
+            configuration.extensionTemplateHelperStub(null);
         }
     }
 

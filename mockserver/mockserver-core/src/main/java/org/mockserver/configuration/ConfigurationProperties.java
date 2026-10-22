@@ -334,6 +334,8 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_EXTENSION_ADMIN_TIMEOUT_MILLIS = "mockserver.extensionAdminTimeoutMillis";
     private static final String MOCKSERVER_EXTENSION_LISTENER_QUEUE_SIZE = "mockserver.extensionListenerQueueSize";
     private static final String MOCKSERVER_EXTENSION_LISTENER_MAX_BYTES = "mockserver.extensionListenerMaxBytes";
+    private static final String MOCKSERVER_EXTENSION_HELPER_TIMEOUT_MILLIS = "mockserver.extensionHelperTimeoutMillis";
+    private static final String MOCKSERVER_EXTENSION_HELPER_MAX_IN_FLIGHT = "mockserver.extensionHelperMaxInFlight";
 
     // mock initialization
     private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
@@ -5093,6 +5095,35 @@ public class ConfigurationProperties {
     static long defaultExtensionListenerMaxBytes(long heapAvailableInKB) {
         long fraction = heapFraction(heapAvailableInKB, 20);
         return fraction > 0 ? fraction : 16L * 1024 * 1024;
+    }
+
+    public static long extensionHelperTimeoutMillis() {
+        return Math.max(1L, readLongProperty(MOCKSERVER_EXTENSION_HELPER_TIMEOUT_MILLIS, "MOCKSERVER_EXTENSION_HELPER_TIMEOUT_MILLIS", 1_000L));
+    }
+
+    /**
+     * How long one response or forward template render waits for its extension template helper calls, in total. A
+     * call still running at the end is interrupted and the template fails. Default 1000; values below 1 are read as
+     * 1. Fixed at startup.
+     *
+     * @param millis the budget for every helper call one render makes, in milliseconds
+     */
+    public static void extensionHelperTimeoutMillis(long millis) {
+        setProperty(MOCKSERVER_EXTENSION_HELPER_TIMEOUT_MILLIS, "" + millis);
+    }
+
+    public static int extensionHelperMaxInFlight() {
+        return Math.max(1, readIntegerProperty(MOCKSERVER_EXTENSION_HELPER_MAX_IN_FLIGHT, "MOCKSERVER_EXTENSION_HELPER_MAX_IN_FLIGHT", 32));
+    }
+
+    /**
+     * The most extension template helper calls that run at once; a call beyond it fails its template at once.
+     * Default 32; values below 1 are read as 1. Fixed at startup.
+     *
+     * @param maxInFlight the most helper calls running at once
+     */
+    public static void extensionHelperMaxInFlight(int maxInFlight) {
+        setProperty(MOCKSERVER_EXTENSION_HELPER_MAX_IN_FLIGHT, "" + maxInFlight);
     }
 
     // mock initialization

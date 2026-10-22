@@ -69,6 +69,8 @@ public class Http3PortFindThenBindGuardTest {
      * {@code module/File.java}, with how many the file has.
      */
     private static final List<Allowed> ALLOWED = List.of(
+        allowed("mockserver-core/TemplateHelpersTest.java", 1,
+            "sets http3Port on a Configuration only the extension registry reads; no server starts, so nothing binds it"),
         allowed("mockserver-integration-testing/TestPortFactory.java", 1,
             "declares findFreeUdpPort"),
         allowed("mockserver-netty/Http3TestServer.java", 2,

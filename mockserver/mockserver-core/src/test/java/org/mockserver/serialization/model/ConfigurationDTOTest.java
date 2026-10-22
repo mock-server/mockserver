@@ -153,7 +153,9 @@ public class ConfigurationDTOTest {
             .extensionScanning(false)
             .extensionStartTimeoutMillis(1000L)
             .extensionListenerQueueSize(100)
-            .extensionListenerMaxBytes(1_000_000L);
+            .extensionListenerMaxBytes(1_000_000L)
+            .extensionHelperTimeoutMillis(500L)
+            .extensionHelperMaxInFlight(8);
 
         target.extensionAdminMaxInFlight(8).extensionAdminTimeoutMillis(2000L);
         new ConfigurationDTO()
@@ -164,6 +166,8 @@ public class ConfigurationDTOTest {
             .setExtensionAdminTimeoutMillis(5L)
             .setExtensionListenerQueueSize(1)
             .setExtensionListenerMaxBytes(1L)
+            .setExtensionHelperTimeoutMillis(60_000L)
+            .setExtensionHelperMaxInFlight(10_000)
             .applyTo(target);
 
         assertThat(target.extensions(), is("com.example.Loaded"));
@@ -173,6 +177,10 @@ public class ConfigurationDTOTest {
         assertThat(target.extensionAdminTimeoutMillis(), is(2000L));
         assertThat(target.extensionListenerQueueSize(), is(100));
         assertThat(target.extensionListenerMaxBytes(), is(1_000_000L));
+        assertThat(target.extensionHelperTimeoutMillis(), is(500L));
+        assertThat(target.extensionHelperMaxInFlight(), is(8));
+        assertThat(new ConfigurationDTO(target).getExtensionHelperTimeoutMillis(), is(500L));
+        assertThat(new ConfigurationDTO().setExtensionHelperMaxInFlight(4).buildObject().extensionHelperMaxInFlight(), is(4));
         // still shown, read-only, by GET /mockserver/configuration
         assertThat(new ConfigurationDTO(target).getExtensions(), is("com.example.Loaded"));
         // and still settable at startup from a DTO
@@ -537,6 +545,8 @@ public class ConfigurationDTOTest {
         "binaryProxyListener",
         "rebuildTLSContext",
         "rebuildServerTLSContext",
+        // set by a running server whose extensions offer template helpers; internal state, never a property
+        "extensionTemplateHelperStub",
         // ringBufferSize() is a DERIVED, rounded-to-the-next-power-of-two EFFECTIVE getter (the
         // disruptor requires a power-of-two ring), not a faithfully round-trippable raw setting:
         // ringBufferSize(N) then ringBufferSize() returns nextPowerOfTwo(N) >= N, so value-equality
@@ -608,6 +618,8 @@ public class ConfigurationDTOTest {
         "extensionAdminTimeoutMillis",
         "extensionListenerQueueSize",
         "extensionListenerMaxBytes",
+        "extensionHelperTimeoutMillis",
+        "extensionHelperMaxInFlight",
         // decide where the server may send requests, so a control-plane request must not widen them
         "forwardProxyBlockPrivateNetworks",
         "forwardProxyAllowedHosts",

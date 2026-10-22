@@ -78,9 +78,19 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
     // per-engine replacements for TemplateFunctions.ON_DEMAND_HELPERS: the systemValue helper reading this
     // configuration's allow list and, when templateFakerSeed is set, a seeded lists helper for pickRandom
     private final Map<String, Object> onDemandOverrides;
+    // bound as ext in a template that names it; null unless an extension offers template helpers
+    private final Object extensionHelpers;
 
     public JavaScriptTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
         this(mockServerLogger, configuration, POLYGLOT_AVAILABLE);
+    }
+
+    /**
+     * An engine whose templates can call extension template helpers: {@code extensionHelpers} is bound as
+     * {@code ext}. Only the response and forward template handlers build one.
+     */
+    public JavaScriptTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration, Object extensionHelpers) {
+        this(mockServerLogger, configuration, POLYGLOT_AVAILABLE, 0L, true, extensionHelpers);
     }
 
     /**
@@ -89,14 +99,15 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
      * constructor, which pins {@code polyglotAvailable} to the real classpath probe {@link #POLYGLOT_AVAILABLE}.
      */
     JavaScriptTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration, boolean polyglotAvailable) {
-        this(mockServerLogger, configuration, polyglotAvailable, 0L, true);
+        this(mockServerLogger, configuration, polyglotAvailable, 0L, true, null);
     }
 
-    private JavaScriptTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration, boolean polyglotAvailable, long timeoutWhenDisabledMillis, boolean cacheParsedSources) {
+    private JavaScriptTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration, boolean polyglotAvailable, long timeoutWhenDisabledMillis, boolean cacheParsedSources, Object extensionHelpers) {
         this.timeoutWhenDisabledMillis = timeoutWhenDisabledMillis;
         this.cacheParsedSources = cacheParsedSources;
         this.polyglotAvailable = polyglotAvailable;
         this.configuration = (configuration == null) ? configuration() : configuration;
+        this.extensionHelpers = extensionHelpers != null ? extensionHelpers : this.configuration.extensionTemplateHelperStub();
         this.mockServerLogger = mockServerLogger;
         this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(mockServerLogger);
         this.objectMapper = ObjectMapperFactory.createObjectMapper();
@@ -164,7 +175,7 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
      * {@code timeoutWhenDisabledMillis}, and it does not cache the scripts it parses.
      */
     public static JavaScriptTemplateEngine forDryRun(MockServerLogger mockServerLogger, Configuration configuration, long timeoutWhenDisabledMillis) {
-        return new JavaScriptTemplateEngine(mockServerLogger, configuration, POLYGLOT_AVAILABLE, timeoutWhenDisabledMillis, false);
+        return new JavaScriptTemplateEngine(mockServerLogger, configuration, POLYGLOT_AVAILABLE, timeoutWhenDisabledMillis, false, null);
     }
 
     /**
@@ -318,7 +329,8 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 seededFaker,
                 onDemandOverrides,
                 null,
-                cacheParsedSources
+                cacheParsedSources,
+                extensionHelpers
             );
         } catch (JavaScriptTemplateTimeoutException e) {
             throw explainDryRunTimeout(e);
@@ -374,7 +386,8 @@ public class JavaScriptTemplateEngine implements TemplateEngine {
                 seededFaker,
                 onDemandOverrides,
                 parameters,
-                cacheParsedSources
+                cacheParsedSources,
+                extensionHelpers
             );
         } catch (JavaScriptTemplateTimeoutException e) {
             // Surface the timeout as-is (with its clear, already-logged message) rather than wrapping

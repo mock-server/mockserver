@@ -9,6 +9,8 @@ import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.SourceSection;
 import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.proxy.ProxyArray;
+import org.graalvm.polyglot.proxy.ProxyObject;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -32,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import static org.mockserver.log.model.LogEntry.LogMessageType.TEMPLATE_GENERATED;
 import static org.mockserver.log.model.LogEntryMessages.TEMPLATE_GENERATED_MESSAGE_FORMAT;
@@ -128,10 +131,78 @@ final class PolyglotRunner {
      * A parsed script and the {@link TemplateFunctions#ON_DEMAND_HELPERS} its template names, found once per script
      * so a template binds only the helpers it names, and one that names none binds nothing extra.
      */
-    private record CachedScript(Source source, List<String> namedOnDemandHelpers) {
+    private static final class CachedScript {
+        private final String script;
+        private final Source source;
+        private final List<String> namedOnDemandHelpers;
+        // whether the template names ext, found on first ask, which only an engine with extension helpers makes
+        private volatile Boolean namesExtensionHelpers;
+
+        private CachedScript(String script, Source source, List<String> namedOnDemandHelpers) {
+            this.script = script;
+            this.source = source;
+            this.namedOnDemandHelpers = namedOnDemandHelpers;
+        }
+
+        Source source() {
+            return source;
+        }
+
+        List<String> namedOnDemandHelpers() {
+            return namedOnDemandHelpers;
+        }
+
+        boolean namesExtensionHelpers() {
+            Boolean names = namesExtensionHelpers;
+            if (names == null) {
+                names = script.contains("ext") && EXTENSION_HELPERS_REFERENCE.matcher(script).find();
+                namesExtensionHelpers = names;
+            }
+            return names;
+        }
     }
 
+    // ext as an identifier, not a member (request.ext) or part of a longer name (text)
+    private static final Pattern EXTENSION_HELPERS_REFERENCE = Pattern.compile("(?<![\\w$.])ext\\b");
+
     private PolyglotRunner() {
+    }
+
+    /**
+     * A level of the {@code ext} namespace (a Map whose lookups throw for a missing name) as a JavaScript object, so
+     * {@code ext.acme.Strings} reads each level through the map; a helper itself is passed as a host object.
+     */
+    private static Object guestValue(Object value) {
+        return value instanceof Map<?, ?> map ? new NamespaceObject(map) : value;
+    }
+
+    private static final class NamespaceObject implements ProxyObject {
+        private final Map<?, ?> namespace;
+
+        private NamespaceObject(Map<?, ?> namespace) {
+            this.namespace = namespace;
+        }
+
+        @Override
+        public Object getMember(String key) {
+            return guestValue(namespace.get(key));
+        }
+
+        @Override
+        public Object getMemberKeys() {
+            return ProxyArray.fromList(new ArrayList<>(namespace.keySet()));
+        }
+
+        // every name, so reading one always asks the namespace and a missing helper fails loudly
+        @Override
+        public boolean hasMember(String key) {
+            return true;
+        }
+
+        @Override
+        public void putMember(String key, org.graalvm.polyglot.Value value) {
+            throw new UnsupportedOperationException("ext is read-only");
+        }
     }
 
     /**
@@ -159,7 +230,7 @@ final class PolyglotRunner {
                 named.add(name);
             }
         }
-        return new CachedScript(Source.create("js", fullScript), named.isEmpty() ? List.of() : List.copyOf(named));
+        return new CachedScript(script, Source.create("js", fullScript), named.isEmpty() ? List.of() : List.copyOf(named));
     }
 
     static boolean sourceCacheContains(String scriptFragment) {
@@ -239,7 +310,8 @@ final class PolyglotRunner {
         Object fakerOverride,
         Map<String, Object> onDemandOverrides,
         Map<String, Object> parameters,
-        boolean cacheSource
+        boolean cacheSource,
+        Object extensionHelpers
     ) {
         // rawText (streaming payload templating): coerce the handle(request) return value to text — a
         // returned string is emitted verbatim, any other value is JSON.stringify'd — instead of always
@@ -344,7 +416,7 @@ final class PolyglotRunner {
             try {
                 return evaluate(
                     script, fullScript, includeResponse, request, response, iteration,
-                    objectMapper, mockServerLogger, httpTemplateOutputDeserializer, dtoClass, context, rawText, fakerOverride, onDemandOverrides, parameters, cacheSource
+                    objectMapper, mockServerLogger, httpTemplateOutputDeserializer, dtoClass, context, rawText, fakerOverride, onDemandOverrides, parameters, cacheSource, extensionHelpers
                 );
             } catch (PolyglotException polyglotException) {
                 if (watchdogFired.get() && (polyglotException.isCancelled() || polyglotException.isInterrupted())) {
@@ -389,7 +461,8 @@ final class PolyglotRunner {
         Object fakerOverride,
         Map<String, Object> onDemandOverrides,
         Map<String, Object> parameters,
-        boolean cacheSource
+        boolean cacheSource,
+        Object extensionHelpers
     ) {
         {
             // In GraalVM Polyglot, context.getBindings("js") returns the JavaScript global scope
@@ -422,6 +495,9 @@ final class PolyglotRunner {
                     helper = TemplateFunctions.ON_DEMAND_HELPERS.get(name);
                 }
                 jsBindings.putMember(name, helper instanceof TemplateFunctions function ? function.get() : helper);
+            }
+            if (extensionHelpers != null && cachedScript.namesExtensionHelpers()) {
+                jsBindings.putMember("ext", guestValue(extensionHelpers));
             }
             if (parameters != null && !parameters.isEmpty()) {
                 try {

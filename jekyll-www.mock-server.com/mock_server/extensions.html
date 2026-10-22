@@ -1,6 +1,6 @@
 ---
 title: Extensions
-description: Load your own Java code into MockServer at startup to seed expectations, serve your own control-plane routes, listen to requests and expectation changes, and run start-up and shut-down logic.
+description: Load your own Java code into MockServer at startup to seed expectations, serve your own control-plane routes, listen to requests and expectation changes, add template helpers, and run start-up and shut-down logic.
 layout: page
 pageOrder: 7
 section: 'Protocols & Advanced'
@@ -159,6 +159,52 @@ public class TrafficRecorder implements ServeEventListener, ExpectationLifecycle
 
 <p>An expectation that runs out of matches is reported as soon as the response that used its last match completes. An expectation whose time to live passes with no traffic is reported when a later request or a retrieve next finds it. The expectation in a change is MockServer's own, not a copy, so read it but do not change it.</p>
 
+<a id="template_helpers" class="anchor" href="#template_helpers">&nbsp;</a>
+
+<h3>Template helpers</h3>
+
+<p>An extension that also implements <span class="inline_code">org.mockserver.extension.TemplateHelperProvider</span> adds its own helpers to <a href="/mock_server/response_templates.html#extension_helpers">response and forward templates</a>, under <span class="inline_code">ext.&lt;extension name&gt;</span>. Velocity and JavaScript templates call the methods of a public interface you choose; Mustache templates use a section helper, which receives the section after it has been rendered:</p>
+
+<pre class="prettyprint lang-java code">
+public class AcmeHelpers implements TemplateHelperProvider {
+
+    public interface Strings {          // must be a public interface
+        String upper(String value);
+    }
+
+    @Override
+    public String name() {
+        return "acme";
+    }
+
+    @Override
+    public Map&lt;Class&lt;?&gt;, Object&gt; helpers() {
+        // Velocity: $ext.acme.Strings.upper($request.path)
+        // JavaScript: ext.acme.Strings.upper(request.path)
+        return Map.of(Strings.class, (Strings) value -&gt; value.toUpperCase());
+    }
+
+    @Override
+    public Map&lt;String, MustacheHelper&gt; mustacheHelpers() {
+        // Mustache: {{#ext.acme.upper}}{{request.path}}{{/ext.acme.upper}}
+        return Map.of("upper", section -&gt; section.toUpperCase());
+    }
+}
+</pre>
+
+<p>How helpers run:</p>
+<ul>
+    <li>Only a response template (<span class="inline_code">httpResponseTemplate</span>) or a forward template (<span class="inline_code">httpForwardTemplate</span>) can call a helper. Any other template that calls one (a webhook, a secondary action, a delay, a templated file body, a stream, a load scenario or the template dry run) fails with an error saying so.</li>
+    <li>Each call runs on a helper thread of its own, never on a thread that handles network traffic, so a slow helper cannot hold up other requests.</li>
+    <li>All the helper calls one template makes share one time budget, <a href="/mock_server/configuration_properties.html#button_configuration_extension_helper_timeout_millis"><span class="inline_code">extensionHelperTimeoutMillis</span></a> (default 1 second). A call still running when it is used up is interrupted and the template fails, like any other failing template.</li>
+    <li>At most <a href="/mock_server/configuration_properties.html#button_configuration_extension_helper_max_in_flight"><span class="inline_code">extensionHelperMaxInFlight</span></a> calls (default 32) run at once; a call over that limit fails its template at once. A helper cannot call another helper.</li>
+    <li>When HTTP/3 is enabled (<span class="inline_code">http3Port</span>), helpers are switched off and MockServer logs a warning at start-up, because HTTP/3 renders templates on a thread that handles network traffic. A template that calls a helper then fails with that reason; everything else about the extension still works.</li>
+</ul>
+
+<p>Give helper methods string, number or boolean parameters. A JavaScript object or array passed to a helper cannot be read on the helper's thread, so pass it as <span class="inline_code">JSON.stringify(...)</span> and parse it in the helper. When a helper throws, the template's error names only the exception's type, so a client never sees what the exception says; the MockServer log has the full exception.</p>
+
+<p>Keep helpers short and non-blocking. Anyone who can create an expectation can call them, so a helper must not return an object that exposes reflection or class loading, which would get round <span class="inline_code">velocityDisallowClassLoading</span> and the JavaScript class allow-list: return strings, numbers, booleans or plain data.</p>
+
 <h2>Loading extensions</h2>
 
 <p>Name the extension classes in the <a href="/mock_server/configuration_properties.html#button_configuration_extensions"><span class="inline_code">extensions</span></a> property, as a comma-separated list, and put their JARs on MockServer's classpath.</p>
@@ -213,6 +259,7 @@ ClientAndServer mockServer = ClientAndServer.startClientAndServer(
     <li>an extension class cannot be found, does not implement <span class="inline_code">Extension</span>, or has no public no-argument constructor;</li>
     <li>two extensions have the same name, or a name is not lower-case letters, digits and <span class="inline_code">-</span>;</li>
     <li><span class="inline_code">start</span> or <span class="inline_code">onStarted</span> throws, or does not return within <a href="/mock_server/configuration_properties.html#button_configuration_extension_start_timeout_millis"><span class="inline_code">extensionStartTimeoutMillis</span></a> (default 30 seconds);</li>
+    <li>a template helper is not a public interface with an implementation of it, two helpers of one extension share an interface name, or a Mustache helper key is not letters, digits, <span class="inline_code">_</span> or <span class="inline_code">-</span>;</li>
     <li>an extension that seeds expectations throws from <span class="inline_code">initializeExpectations</span>. This is stricter than <span class="inline_code">initializationClass</span>, which only stops start-up when <span class="inline_code">failOnInitializationError</span> is set.</li>
 </ul>
 

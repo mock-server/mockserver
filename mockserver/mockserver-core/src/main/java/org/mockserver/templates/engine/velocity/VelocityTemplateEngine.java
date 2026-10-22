@@ -173,10 +173,18 @@ public class VelocityTemplateEngine implements TemplateEngine {
     }
 
     public VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
-        this(mockServerLogger, configuration, 0L);
+        this(mockServerLogger, configuration, 0L, configuration.extensionTemplateHelperStub());
     }
 
-    private VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration, long timeoutWhenDisabledMillis) {
+    /**
+     * An engine whose templates can call extension template helpers: {@code extensionHelpers} is bound as
+     * {@code $ext}. Only the response and forward template handlers build one.
+     */
+    public VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration, Object extensionHelpers) {
+        this(mockServerLogger, configuration, 0L, extensionHelpers);
+    }
+
+    private VelocityTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration, long timeoutWhenDisabledMillis, Object extensionHelpers) {
         this.mockServerLogger = mockServerLogger;
         this.configuration = configuration;
         this.timeoutWhenDisabledMillis = timeoutWhenDisabledMillis;
@@ -198,6 +206,10 @@ public class VelocityTemplateEngine implements TemplateEngine {
             functionsAndHelpers.put("lists", TemplateFunctions.resolveLists(configuration.templateFakerSeed()));
         }
         functionsAndHelpers.put("systemValue", new SystemValueTemplateHelper(configuration.templateSystemValueAllowList(), mockServerLogger));
+        // null unless an extension offers template helpers, so with none the bindings are unchanged
+        if (extensionHelpers != null) {
+            functionsAndHelpers.put("ext", extensionHelpers);
+        }
         this.sharedFunctionsAndHelpers = Collections.unmodifiableMap(functionsAndHelpers);
     }
 
@@ -207,7 +219,7 @@ public class VelocityTemplateEngine implements TemplateEngine {
      * {@code timeoutWhenDisabledMillis}.
      */
     public static VelocityTemplateEngine forDryRun(MockServerLogger mockServerLogger, Configuration configuration, long timeoutWhenDisabledMillis) {
-        return new VelocityTemplateEngine(mockServerLogger, configuration, timeoutWhenDisabledMillis);
+        return new VelocityTemplateEngine(mockServerLogger, configuration, timeoutWhenDisabledMillis, configuration.extensionTemplateHelperStub());
     }
 
     private long executionTimeoutMillis() {

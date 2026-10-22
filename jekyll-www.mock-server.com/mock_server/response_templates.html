@@ -4074,6 +4074,20 @@ curl_close($ch);{% endraw %}</code></pre>
     </div>
 </div>
 
+<a id="extension_helpers" class="anchor" href="#extension_helpers">&nbsp;</a>
+
+<h3>Your Own Helpers (<code>ext</code>)</h3>
+
+<p>An <a href="/mock_server/extensions.html#template_helpers">extension</a> can add its own helpers, under <code class="inline code">ext.&lt;extension name&gt;</code>. They can be called from a response template (<code class="inline code">httpResponseTemplate</code>) or a forward template (<code class="inline code">httpForwardTemplate</code>) only; any other template that calls one (a webhook, a secondary action, a delay, a templated file body, a stream, a load scenario or the dry run) fails with an error that says so. Without such an extension, <code class="inline code">ext</code> is not defined and templates behave exactly as before.</p>
+
+<ul>
+    <li><strong>Velocity:</strong> <code class="inline code">$ext.acme.Strings.upper($request.path)</code></li>
+    <li><strong>JavaScript:</strong> <code class="inline code">ext.acme.Strings.upper(request.path)</code></li>
+    <li><strong>Mustache:</strong> <code class="inline code">&lbrace;&lbrace;#ext.acme.upper&rbrace;&rbrace;&lbrace;&lbrace;request.path&rbrace;&rbrace;&lbrace;&lbrace;/ext.acme.upper&rbrace;&rbrace;</code> (the section is rendered first and the helper receives the result)</li>
+</ul>
+
+<p>All the helper calls one template makes share one time budget, <a href="/mock_server/configuration_properties.html#button_configuration_extension_helper_timeout_millis"><code class="inline code">extensionHelperTimeoutMillis</code></a> (default 1 second): a call still running when it is used up is stopped, and the template fails the same way as any other failing template (see <a href="#response_template_failures">When a Template Fails or Runs Too Long</a>). A name that does not exist, such as a mistyped helper, also fails the template rather than rendering as written. When HTTP/3 is enabled, helpers are switched off, with a warning at start-up, and a template that calls one fails with that reason.</p>
+
 <a id="mustache_templates" class="anchor" href="#mustache_templates">&nbsp;</a>
 
 <h2>Mustache Response Templates</h2>

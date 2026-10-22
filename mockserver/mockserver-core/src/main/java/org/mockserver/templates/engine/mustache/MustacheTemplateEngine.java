@@ -108,6 +108,14 @@ public class MustacheTemplateEngine implements TemplateEngine {
     });
 
     public MustacheTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration) {
+        this(mockServerLogger, configuration, configuration.extensionTemplateHelperStub());
+    }
+
+    /**
+     * An engine whose templates can call extension template helpers: {@code extensionHelpers} is bound as
+     * {@code ext}. Only the response and forward template handlers build one.
+     */
+    public MustacheTemplateEngine(MockServerLogger mockServerLogger, Configuration configuration, Object extensionHelpers) {
         this.mockServerLogger = mockServerLogger;
         this.configuration = configuration;
         this.httpTemplateOutputDeserializer = new HttpTemplateOutputDeserializer(mockServerLogger);
@@ -141,6 +149,10 @@ public class MustacheTemplateEngine implements TemplateEngine {
         }
         base.put("scenario", scenarioMustacheHelper);
         base.put("systemValue", systemValueMustacheHelper(new SystemValueTemplateHelper(configuration.templateSystemValueAllowList(), mockServerLogger)));
+        // null unless an extension offers template helpers, so with none the bindings are unchanged
+        if (extensionHelpers != null) {
+            base.put("ext", extensionHelpers);
+        }
         this.baseBindings = Collections.unmodifiableMap(base);
     }
 

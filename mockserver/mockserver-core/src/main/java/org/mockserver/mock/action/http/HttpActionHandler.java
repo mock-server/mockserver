@@ -126,6 +126,12 @@ public class HttpActionHandler {
     private HttpResponseObjectCallbackActionHandler httpResponseObjectCallbackActionHandler;
     private HttpForwardActionHandler httpForwardActionHandler;
     private HttpForwardTemplateActionHandler httpForwardTemplateActionHandler;
+    // the handlers of matched RESPONSE_TEMPLATE / FORWARD_TEMPLATE actions: the shared handlers unless an extension
+    // offers template helpers, when they are dedicated handlers whose engines bind the real ext namespace
+    private HttpResponseTemplateActionHandler primaryResponseTemplateActionHandler;
+    private HttpForwardTemplateActionHandler primaryForwardTemplateActionHandler;
+    // null unless a started extension offers template helpers
+    private final org.mockserver.extension.TemplateHelpers templateHelpers;
     private HttpForwardClassCallbackActionHandler httpForwardClassCallbackActionHandler;
     private HttpForwardObjectCallbackActionHandler httpForwardObjectCallbackActionHandler;
     private HttpOverrideForwardedRequestActionHandler httpOverrideForwardedRequestCallbackActionHandler;
@@ -183,6 +189,8 @@ public class HttpActionHandler {
         this.nettySslContextFactory = nettySslContextFactory;
         this.metrics = new org.mockserver.metrics.Metrics(configuration);
         this.staticFileDirectory = openStaticFileDirectory(configuration);
+        org.mockserver.extension.ExtensionRegistry extensionRegistry = httpStateHandler.getExtensionRegistry();
+        this.templateHelpers = extensionRegistry != null ? extensionRegistry.templateHelpers() : null;
     }
 
     private StaticFileDirectory openStaticFileDirectory(Configuration configuration) {
@@ -483,7 +491,7 @@ public class HttpActionHandler {
 
             // breakpoint: REQUEST-phase pause on the unmatched-404 path — lets a registered matcher
             // pause / modify / abort even though nothing matched and the server is not proxying.
-            if (attemptRequestBreakpoint(request, synchronous, responseWriter, null, null,
+            if (attemptRequestBreakpoint(request, synchronous, responseWriter, null, null, null,
                 req -> serveStaticFileOrReturnNotFound(responseWriter, req, ctx, synchronous))) {
                 return;
             }
@@ -722,7 +730,7 @@ public class HttpActionHandler {
             // breakpoint/chaos/rate-limit wrapping and the action delay are unchanged.
             case RESPONSE_TEMPLATE -> scheduler.scheduleTemplateAction(rejectable(() -> handleAnyException(request, responseWriter, synchronous, action, () ->
                 dispatchMockResponseWithBreakpoint(request, action, synchronous, responseWriter, expectation.getHttpRequest(), expectationPostProcessor, effectiveChaos, capturedMatchCount, ctx, rateLimit,
-                    req -> getHttpResponseTemplateActionHandler().handle((HttpTemplate) action, req)), expectationPostProcessor), overloadResponse(request, responseWriter, expectationPostProcessor)), synchronous, actionDelay);
+                    req -> getPrimaryResponseTemplateActionHandler().handle((HttpTemplate) action, req)), expectationPostProcessor), overloadResponse(request, responseWriter, expectationPostProcessor)), synchronous, actionDelay);
             // RESPONSE_CLASS_CALLBACK is always a LOCAL (in-JVM, reflection-invoked) callback whose user
             // code may make a BLOCKING loopback call back to this server. Dispatch via scheduleLocalCallback
             // so it runs off the server worker event loop (on the dedicated unbounded local-callback pool)
@@ -756,7 +764,7 @@ public class HttpActionHandler {
                     return;
                 }
                 dispatchForwardWithBreakpoint(request, action, synchronous, responseWriter, expectationPostProcessor, forwardChaos, capturedMatchCount, ctx, rateLimit,
-                    req -> getHttpForwardTemplateActionHandler().handle((HttpTemplate) action, req));
+                    req -> getPrimaryForwardTemplateActionHandler().handle((HttpTemplate) action, req));
             }, expectationPostProcessor), overloadResponse(request, responseWriter, expectationPostProcessor)), synchronous, combineWithGlobalDelay(actionDelay));
             // FORWARD_CLASS_CALLBACK is always a LOCAL (in-JVM, reflection-invoked) callback whose user code
             // may make a BLOCKING loopback call back to this server. Dispatch via scheduleLocalCallback so it
@@ -3578,6 +3586,7 @@ public class HttpActionHandler {
         final ResponseWriter responseWriter,
         final Runnable postProcessor,
         final String expectationId,
+        final Action action,
         final java.util.function.Consumer<HttpRequest> onProceed
     ) {
         if (synchronous) {
@@ -3608,9 +3617,7 @@ public class HttpActionHandler {
                     .setArguments(request)
             );
         }
-        final java.util.concurrent.Executor continuationExecutor = scheduler.getExecutorService() != null
-            ? scheduler.getExecutorService()
-            : Runnable::run;
+        final java.util.concurrent.Executor continuationExecutor = continuationExecutorFor(action);
         decisionFuture.thenAcceptAsync(decision -> {
             try {
                 switch (decision.getAction()) {
@@ -3642,6 +3649,20 @@ public class HttpActionHandler {
     }
 
     /**
+     * A continued response or forward template renders on the template pool when extension template helpers are
+     * loaded, so a render waiting on a helper never holds a shared scheduler thread; anything else continues on the
+     * shared scheduler, as before.
+     */
+    private java.util.concurrent.Executor continuationExecutorFor(Action action) {
+        if (templateHelpers != null && action != null && (action.getType() == Action.Type.RESPONSE_TEMPLATE || action.getType() == Action.Type.FORWARD_TEMPLATE)) {
+            return command -> scheduler.scheduleTemplateAction(command, false);
+        }
+        return scheduler.getExecutorService() != null
+            ? scheduler.getExecutorService()
+            : Runnable::run;
+    }
+
+    /**
      * Dispatches a matched forward expectation through the REQUEST-phase breakpoint gate. {@code forwarder}
      * computes the {@link HttpForwardActionResult} from the (possibly modified) request; the RESPONSE-phase
      * breakpoint and logging continue to key off the original {@code request} (mirroring the unmatched-proxy
@@ -3659,7 +3680,7 @@ public class HttpActionHandler {
         final RateLimit rateLimit,
         final java.util.function.Function<HttpRequest, HttpForwardActionResult> forwarder
     ) {
-        if (attemptRequestBreakpoint(request, synchronous, responseWriter, expectationPostProcessor, action.getExpectationId(),
+        if (attemptRequestBreakpoint(request, synchronous, responseWriter, expectationPostProcessor, action.getExpectationId(), action,
             req -> writeForwardActionResponse(forwarder.apply(req), responseWriter, request, action, synchronous, expectationPostProcessor, forwardChaos, capturedMatchCount, ctx, rateLimit))) {
             return;
         }
@@ -3685,7 +3706,7 @@ public class HttpActionHandler {
         final RateLimit rateLimit,
         final java.util.function.Function<HttpRequest, HttpResponse> responder
     ) {
-        if (attemptRequestBreakpoint(request, synchronous, responseWriter, expectationPostProcessor, action.getExpectationId(),
+        if (attemptRequestBreakpoint(request, synchronous, responseWriter, expectationPostProcessor, action.getExpectationId(), action,
             req -> writeResponseActionResponse(responder.apply(req), responseWriter, request, action, synchronous, requestDefinition, expectationPostProcessor, effectiveChaos, capturedMatchCount, ctx, rateLimit))) {
             return;
         }
@@ -4273,6 +4294,15 @@ public class HttpActionHandler {
         return httpResponseTemplateActionHandler;
     }
 
+    private HttpResponseTemplateActionHandler getPrimaryResponseTemplateActionHandler() {
+        if (primaryResponseTemplateActionHandler == null) {
+            primaryResponseTemplateActionHandler = templateHelpers != null
+                ? new HttpResponseTemplateActionHandler(mockServerLogger, configuration, templateHelpers)
+                : getHttpResponseTemplateActionHandler();
+        }
+        return primaryResponseTemplateActionHandler;
+    }
+
     private HttpResponseClassCallbackActionHandler getHttpResponseClassCallbackActionHandler() {
         if (httpResponseClassCallbackActionHandler == null) {
             httpResponseClassCallbackActionHandler = new HttpResponseClassCallbackActionHandler(mockServerLogger);
@@ -4329,6 +4359,20 @@ public class HttpActionHandler {
             httpForwardTemplateActionHandler.setForwardLoopGuard(forwardLoopGuard);
         }
         return httpForwardTemplateActionHandler;
+    }
+
+    private HttpForwardTemplateActionHandler getPrimaryForwardTemplateActionHandler() {
+        if (primaryForwardTemplateActionHandler == null) {
+            if (templateHelpers != null) {
+                HttpForwardTemplateActionHandler handler = new HttpForwardTemplateActionHandler(mockServerLogger, configuration, httpClient, templateHelpers);
+                handler.setGrpcDescriptorStore(httpStateHandler.getGrpcDescriptorStore());
+                handler.setForwardLoopGuard(forwardLoopGuard);
+                primaryForwardTemplateActionHandler = handler;
+            } else {
+                primaryForwardTemplateActionHandler = getHttpForwardTemplateActionHandler();
+            }
+        }
+        return primaryForwardTemplateActionHandler;
     }
 
     private HttpForwardClassCallbackActionHandler getHttpForwardClassCallbackActionHandler() {

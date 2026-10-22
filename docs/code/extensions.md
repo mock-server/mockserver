@@ -15,8 +15,8 @@
   expectation-initializer hook. **U11b** adds admin routes: an `AdminApiExtension` serves
   `/mockserver/extensions/<name>/…` behind the control-plane gate, on a capped pool of its own with a timeout.
   **U11d** adds three listeners: served requests (H3), expectation lifecycle (H7) and configuration updates (H8),
-  each delivered on the extension's own thread through a queue that never waits. `$ext` template helpers (U11c)
-  build on the same core. A global request filter and response transformer are deliberately out of phase 1.
+  each delivered on the extension's own thread through a queue that never waits. **U11c** adds `$ext` template
+  helpers (see [Template helpers](#template-helpers-h6)), each call on a capped helper executor. A global request filter and response transformer are deliberately out of phase 1.
 - **With listeners loaded, no listener code runs on a server thread.** The thread that logs, removes or changes
   something only builds a small event and makes a lock-free, bounded offer; when the queue is full the event is
   dropped and counted, never waited on.
@@ -48,7 +48,11 @@ sequenceDiagram
 |---|---|
 | `Extension` | Public API: `name()`, `priority()`, `start(ExtensionContext)`, `onStarted(List<Integer>)`, `stop()` |
 | `ExtensionContext` | The server's live `Configuration` and `MockServerLogger` |
-| `ExtensionHook` | The optional capabilities an extension adds by implementing a hook interface: `EXPECTATION_INITIALIZER` (U11a), `ADMIN_API` (U11b), `SERVE_EVENT_LISTENER`, `EXPECTATION_LIFECYCLE_LISTENER`, `SETTINGS_LISTENER` (U11d); later units add theirs |
+| `ExtensionHook` | The optional capabilities an extension adds by implementing a hook interface: `EXPECTATION_INITIALIZER` (U11a), `ADMIN_API` (U11b), `SERVE_EVENT_LISTENER`, `EXPECTATION_LIFECYCLE_LISTENER`, `SETTINGS_LISTENER` (U11d), `TEMPLATE_HELPER` (U11c); later units add theirs |
+| `TemplateHelperProvider`, `MustacheHelper` | Public API of the template-helper hook: `helpers()` (public interface → implementation, for Velocity and JavaScript) and `mustacheHelpers()` (key → `String apply(String renderedSection)`) |
+| `TemplateHelpers` | One server's `ext` namespace, helper executor, admission cap and per-render budget |
+| `ExtensionHelperNamespace` | A read-only level of `ext`; a missing name throws. A stub with no entries is what every non-primary engine binds |
+| `ExtensionHelperException` | Every helper failure thrown into a render: timeout, budget used, cap reached, nested call, event loop, stub, stopping |
 | `AdminApiExtension` | Public API (U11b): `handle(request, subPath)` and `isReadOnly(method, subPath)` |
 | `ExtensionAdminRoutes` | Built by `ExtensionRegistry.createAdminRoutes` only when a started extension implements `ADMIN_API`: route lookup, admission cap, admin pool, timeout, response-once writer, start-up shadow WARN |
 | `ServeEventListener`, `ServeEvent` | H3: each answered request (`MOCKED`, `FORWARDED`, `NOT_MATCHED`) with request, response, expectation id, correlation id and time |
@@ -79,6 +83,10 @@ sequenceDiagram
   without unloading the extension: `ExtensionRegistry.disableHook(hook, reason)` records the reason on each
   `LoadedExtension` and logs a WARN. U11c uses this to turn off `$ext` template helpers when HTTP/3 is enabled
   (an owner decision: warn and disable rather than refuse to start).
+- **Helpers never on an event loop.** HTTP/3 renders template actions inline on its QUIC loop, so helpers are
+  disabled there. Everywhere else a helper runs on its own executor while the render waits on the template pool
+  (Netty) or the servlet thread (WAR); `TemplateHelpers.call` also refuses outright when the caller is an event loop
+  thread (`ThreadExecutorMap.currentExecutor() instanceof EventLoop`).
 
 ## Detailed behaviour
 
@@ -264,25 +272,97 @@ dropped and errors counters do. They are a tracked U11 follow-up.
 | `applyConfigurationUpdate` | `if (extensionRegistry != null)` |
 | Class loading | None: `ExtensionClassLoadingTest`'s fresh-JVM probe adds, serves to exhaustion, logs, PUTs configuration and resets, and loads no `org.mockserver.extension` class |
 
+### Template helpers (H6)
+
+```mermaid
+flowchart LR
+    PA["processAction\nRESPONSE_TEMPLATE / FORWARD_TEMPLATE"] --> TP["template pool\n(servlet thread in a WAR)"]
+    TP --> PH["primary handler\nengines bind real ext"]
+    PH -->|"each call: slot + remaining budget"| HE["helper executor\nMockServer-ext-helper-N"]
+    OTHER["webhooks, secondary actions, delays,\nfile bodies, streams, load, dry run"] --> STUB["engines bind stub ext\n(throws)"]
+```
+
+**Binding, by call site.** `ExtensionRegistry.start` collects each started provider's `helpers()` and
+`mustacheHelpers()` (each bounded like `start`) and builds `TemplateHelpers`. `HttpActionHandler` reads
+`registry.templateHelpers()` once in its constructor; when non-null, matched `RESPONSE_TEMPLATE` and
+`FORWARD_TEMPLATE` actions use **dedicated** `HttpResponseTemplateActionHandler` / `HttpForwardTemplateActionHandler`
+instances whose engines get the real namespace through the three-argument engine constructors. When null, the
+`getPrimary…` getters return the shared handlers, so the dispatch is the same single lazy null check as before. The
+registry also sets `Configuration.extensionTemplateHelperStub()`; every engine built by the two-argument constructor
+(or `forDryRun`) binds that stub as `ext`, so a webhook, secondary action, delay, file body, stream, load scenario
+or dry-run template that calls a helper fails loudly instead of rendering the reference as written. With no helper
+extension the stub is null and no engine binds anything. The registry clears the stub when a reused configuration's
+extensions offer no helpers, and on `stop()` when the stub is still the one it set.
+
+**Zero per-render cost.** `ext` goes into the engines' shared, build-once bindings (Velocity
+`sharedFunctionsAndHelpers`, Mustache `baseBindings`); JavaScript binds it only for scripts that name `ext`, decided
+once per parsed script (`CachedScript.namesExtensionHelpers`, computed lazily and only when the engine has helpers, so
+an engine without helpers never scans). The only per-render addition is in the dedicated
+primary handlers, which exist only when helpers are loaded: one `ThreadLocal.remove()` (`TemplateHelpers.endRender`)
+after each render.
+
+**One call.** `TemplateHelpers.call` refuses a call from a helper thread (nested) or an event loop, starts the
+render's deadline on the first call (`extensionHelperTimeoutMillis`), refuses once it has passed, takes a slot of
+`extensionHelperMaxInFlight` with `tryAcquire`, and hands the call to a cached daemon executor carrying the caller's
+`HttpState` port thread-local. It waits for the remaining budget; on timeout it cancels with interrupt. A helper that throws is logged at WARN with
+its exception, and the `ExtensionHelperException` thrown into the render names only the exception's type, because a
+template failure's message reaches the client in the 500 body. The slot is
+released by a wrapper around the task, so it is held until the helper's thread really returns, even for a call
+cancelled before it started. After `registry.stop()` the executor is shut down and calls fail as "the server is
+stopping".
+
+**JavaScript arguments.** A JS object or array passed to a helper arrives as a polyglot value bound to the render
+thread's context and cannot be read on the helper thread; parameters should be strings, numbers or booleans
+(`JSON.stringify` for structured data).
+
+**Velocity and JavaScript** call a JDK proxy of each declared public interface, at
+`ext.<extension>.<InterfaceSimpleName>`; `Object` methods are answered locally. JavaScript reads each namespace level
+through a `ProxyObject`; the proxy itself is a host object. The proxy works under `SecureUberspector`.
+
+**Mustache** (resolving design review 5's MINOR on `Mustache.Lambda`): the API is MockServer's own
+`MustacheHelper.apply(String)`, not `Mustache.Lambda`. The wrapping lambda runs `fragment.execute()` on the render
+thread first (so nested `{{...}}` and any `ext` section inside it run in order on the render thread, are not refused,
+and count against the same budget), passes the
+text to the helper on the helper executor, and writes the result only if it returned in time.
+
+**Breakpoint continuations.** A REQUEST-phase breakpoint continuation of a `RESPONSE_TEMPLATE` or
+`FORWARD_TEMPLATE` is executed through `scheduler.scheduleTemplateAction` when helpers are loaded
+(`continuationExecutorFor`), so it never waits on a helper from the shared scheduler. Without helpers it continues on
+the shared scheduler as before.
+
+**HTTP/3.** With `http3Port > 0` the registry calls `disableHook(TEMPLATE_HELPER, …)` (a WARN per extension), does
+not call `helpers()`, builds no executor, and sets a stub whose message gives the HTTP/3 reason; response and forward
+templates then use the shared handlers and get that stub.
+
+**Start-up refusal.** A `helpers()` key that is not a public interface, a value that does not implement its key, two
+interfaces of one extension with the same simple name, a Mustache key outside `[A-Za-z0-9_-]+`, a null helper, or a
+throw or timeout from `helpers()` / `mustacheHelpers()`.
+
+Not in U11c: the `mock_server_extension_*` metrics of the design's §5.7 and a `TemplateRenderAllocationBenchmark` arm
+with a no-op helper.
+
 ## Appendix: configuration
 
 | Property | Default | Notes |
 |---|---|---|
 | `mockserver.extensions` / `--extensions` | empty | Comma-separated class names |
 | `mockserver.extensionScanning` | `false` | Also load `META-INF/services/org.mockserver.extension.Extension` entries |
-| `mockserver.extensionStartTimeoutMillis` | `30000` | Per `start`, `onStarted` and `stop`; values below 1 read as 1 |
+| `mockserver.extensionStartTimeoutMillis` | `30000` | Per `start`, `onStarted` and `stop` (and `helpers()`); values below 1 read as 1 |
 | `mockserver.extensionAdminMaxInFlight` | `32` | Admin route calls in flight; beyond it a `503` counted as `extension_admin`; values below 1 read as 1 |
 | `mockserver.extensionAdminTimeoutMillis` | `30000` | Per admin route call on Netty; values below 1 read as 1 |
 | `mockserver.extensionListenerQueueSize` | `10000` | Events per listener queue; values below 1 read as 1 |
 | `mockserver.extensionListenerMaxBytes` | `heapFraction(heapAvailableInKB(), 20)`, or 16 MB with no heap ceiling | Shared equally by the H3 and H7 queues; values below 1 use the default, so it is never unbounded |
+| `mockserver.extensionHelperTimeoutMillis` | `1000` | One budget for all the helper calls of one render; values below 1 read as 1 |
+| `mockserver.extensionHelperMaxInFlight` | `32` | Helper calls running at once; a call beyond it fails at once; values below 1 read as 1 |
 
-All seven are startup-only (skipped by `ConfigurationDTO.applyTo`, warned about by `applyConfigurationUpdate`).
+All nine are startup-only (skipped by `ConfigurationDTO.applyTo`, warned about by `applyConfigurationUpdate`).
 
-Spring: `MockServerPropertyCustomizer.applyProperty` maps all seven, so `@MockServerInstance(properties = ...)`
+Spring: `MockServerPropertyCustomizer.applyProperty` maps all nine, so `@MockServerInstance(properties = ...)`
 gives each named instance its own extensions.
 
-Tests: `ExtensionRegistryTest`, `ExtensionAdminRoutesTest`, `ExtensionListenersTest`,
+Tests: `ExtensionRegistryTest`, `TemplateHelpersTest`, `ExtensionAdminRoutesTest`, `ExtensionListenersTest`,
 `ExpectationRemovalNoListenerCostTest` and the extension case in `HttpStateAuditTest` (core), `ExtensionLifecycleTest`,
-`ExtensionAdminRouteTest`, `ExtensionListenersIntegrationTest` and `ExtensionClassLoadingTest` (netty),
+`ExtensionAdminRouteTest`, `ExtensionListenersIntegrationTest`, `ExtensionTemplateHelpersTest`,
+`ExtensionHelperBreakpointIntegrationTest` and `ExtensionClassLoadingTest` (netty),
 `MockServerServletExtensionTest`, `ProxyServletExtensionTest`, `MockServerInstanceExtensionsTest` (Spring), plus
 the startup-only cases in `HttpStateConfigurationUpdateTest` and `ConfigurationDTOTest`.
