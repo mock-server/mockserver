@@ -280,6 +280,41 @@ registry is process-wide and bounded by `maxWebSocketExpectations`, so a stale e
 the callback (and what it captured) in memory and take a slot, evicting the entry of a live callback,
 whose calls would then go over its WebSocket instead of in-process.
 
+## InProcessMockServer (no HTTP server)
+
+`InProcessMockServer` (`mockserver-core`, package `org.mockserver.inprocess`) runs MockServer's request handling with no
+socket: `handle(HttpRequest)` returns the `HttpResponse`, and `handleAsync(HttpRequest)` returns it as a
+`CompletableFuture`. It is the equivalent of WireMock's `DirectCallHttpServer`, for AWS Lambda and similar hosts. It is
+new code beside the Netty server, which it does not touch.
+
+```mermaid
+flowchart LR
+    caller["Caller\nhandle / handleAsync"] --> state["HttpState.handle\n(control plane, warDeployment=true)"]
+    state -- "not a control-plane path" --> action["HttpActionHandler.processAction\n(ctx = null)"]
+    action --> writer["InProcessResponseWriter\ncompletes a CompletableFuture"]
+    state --> writer
+    action -. "forward (lazy)" .-> client["NettyHttpClient\nown event-loop group"]
+```
+
+**Precedent.** It follows `MockServerServlet` (the WAR): it builds a `Scheduler`, an `HttpState` and an
+`HttpActionHandler`, calls `HttpState.handle(request, writer, true)` for the control plane and otherwise
+`processAction(request, writer, null, localAddresses, false, synchronous)`. A `null` `ChannelHandlerContext` is the WAR's
+contract, so every path that needs a channel already answers without one (SSE, WebSocket and gRPC streaming answer
+`501`). Failures are answered with `ControlPlaneFailureResponse`, as in the servlet.
+
+| Aspect | Behaviour |
+|---|---|
+| `handle` | `processAction(..., synchronous = true)`: delays sleep on the caller and a forward is awaited inline (at most `maxSocketTimeoutInMillis`). After it returns, the response future is read with the same bound, so a path that never answers fails with `IllegalStateException` rather than hanging. |
+| `handleAsync` | `synchronous = false`: matching runs on the caller, and a delay is scheduled on the shared `Scheduler` and is subject to `maxPendingDelayedResponses`, as on the Netty path. |
+| Forward client | The event-loop group is created on the first forward, as `LifeCycle.getForwardClientEventLoopGroup()` creates it, with the same guard against a forward racing `close()`. It uses a client `NettySslContextFactory` and `ProxyConfiguration.proxyConfiguration(configuration)`, so `forwardHttpProxy`, `forwardHttpsProxy`, `forwardSocksProxy` and their credentials apply, as on the Netty server. That list is read first in the constructor, so an invalid SOCKS-with-HTTP combination throws before anything is allocated. Both servlets passed `null` here until this change, and now pass the same list. `installRequestSender` wires it to replay, load scenarios and drift alerts, as `HttpRequestHandler` does. |
+| Local addresses | `localhost`, `127.0.0.1` and the request's own `Host`, so `attemptToProxyIfNoMatchingExpectation` never proxies an in-process request to the host it names. `proxyRemoteHost` still applies. |
+| Request copy | The request is `clone()`d before `HttpState.handle` sets its correlation id and timestamp. `keepAlive` defaults to `true`, as an HTTP/1.1 client's would. |
+| Response | The writer fills in what `MockServerHttpResponseToFullHttpResponse` would put on the wire: status `200` when absent, the standard reason phrase, and `Content-Type` from the body. It edits the per-write copy that `ResponseWriter.addConnectionHeader` makes. `Content-Length` and other framing headers are not added. |
+| Not supported | Object callbacks (no WebSocket client can register; `/_mockserver_callback_websocket` answers `501`), `HttpError` connection faults, and `ConnectionOptions`. Expectations with these sent through the REST path are refused, as the WAR refuses them (the message names the WAR). Added with `upsert`, they are not checked, and a matching `HttpError` is answered `404` by `handleAnyException`. `PUT /status` answers with no ports, and `bind`/`stop` answer `501`. Routes that only Netty's `HttpRequestHandler` serves fall through to the data plane and answer `404`: `/configuration`, `/ready`, `/metrics`, the dashboard, `/openapi.yaml`, `/llm/optimisationReport`, `/llm/diffRuns` and `/http3status`. The `LifeCycle`-only integrations are not started: `DriftWiring`, `OtelMetricsExporter`, `GenAiSpanExporter` and `PrometheusRemoteWriteExporter`. |
+| Security | REST requests through `handle` go through `HttpState`'s control-plane authentication and authorisation, as in the WAR (JWT and basic work, but mTLS cannot because there is no client certificate). The Java methods (`upsert`, `verify`, `retrieveRecordedRequests`, `reset`, `getHttpState`) are in-JVM calls with no authentication or audit entry: the trust boundary is the JVM. |
+| Isolation | Expectations, recorded requests and the log belong to the instance. `reset()` is `HttpState.reset()`, which also resets the process-wide registries (rate limits, chaos, quotas, LLM stores and others), as a Netty server's reset does; `InProcessMockServerResetTest` runs in the sequential surefire phase for that reason. |
+| `close()` | `HttpState.stop()` (event log, persistence, registries), `Scheduler.shutdown()`, then the forward group's `shutdownGracefully(0, 5ms)`, awaited. `Scheduler.shutdown()` lets an already-scheduled delayed response run, so its future completes and its thread ends when the delay elapses. After `close()` every public method throws `IllegalStateException`. A constructor that fails after the scheduler and state exist stops them before rethrowing. `InProcessMockServerTest.shouldLeaveNoThreadsBehindWhenClosed` runs the server inside its own `ThreadGroup` and asserts that every thread in it has ended. The JDK's shared `CompletableFutureDelayScheduler` is exempt. |
+
 ## Test Framework Integrations
 
 ### JUnit 4 Rule

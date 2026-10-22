@@ -11,6 +11,7 @@ import org.mockserver.mappers.HttpServletRequestToMockServerHttpRequestDecoder;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.responsewriter.ControlPlaneFailureResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
@@ -23,6 +24,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.List;
+
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.rtsp.RtspResponseStatuses.NOT_IMPLEMENTED;
@@ -31,6 +34,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.mock.HttpState.PATH_PREFIX;
 import static org.mockserver.model.PortBinding.portBinding;
+import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 
 /**
  * @author jamesdbloom
@@ -53,8 +57,14 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
 
     @SuppressWarnings("WeakerAccess")
     public ProxyServlet() {
-        this.configuration = configuration();
+        this(configuration());
+    }
+
+    ProxyServlet(Configuration configuration) {
+        this.configuration = configuration;
         ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(this.configuration);
+        // read before anything is allocated: an invalid combination (SOCKS with HTTP) throws
+        List<ProxyConfiguration> proxyConfigurations = proxyConfiguration(this.configuration);
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
         this.httpServletRequestToMockServerRequestDecoder = new HttpServletRequestToMockServerHttpRequestDecoder(this.configuration, this.mockServerLogger);
         this.scheduler = new Scheduler(this.configuration, mockServerLogger);
@@ -62,7 +72,7 @@ public class ProxyServlet extends HttpServlet implements ServletContextListener 
         this.mockServerLogger = httpStateHandler.getMockServerLogger();
         this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
         this.workerGroup = new NioEventLoopGroup(configuration.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
-        this.actionHandler = new HttpActionHandler(this.configuration, () -> workerGroup, httpStateHandler, null, new NettySslContextFactory(this.configuration, this.mockServerLogger, true));
+        this.actionHandler = new HttpActionHandler(this.configuration, () -> workerGroup, httpStateHandler, proxyConfigurations, new NettySslContextFactory(this.configuration, this.mockServerLogger, true));
     }
 
     @Override

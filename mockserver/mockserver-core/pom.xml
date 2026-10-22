@@ -969,6 +969,8 @@
                         <exclude>**/CustomKeyAndCertificateFactorySupplierTest.java</exclude>
                         <!-- Asserts exact deltas on the process-wide TemplateFileContentCache disk-read counter -->
                         <exclude>**/TemplateFileContentCacheTest.java</exclude>
+                        <!-- reset() resets the process-wide registries (rate limits, chaos, quotas) every HttpState shares -->
+                        <exclude>**/InProcessMockServerResetTest.java</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -1161,6 +1163,7 @@
                                 <!-- Mutates the static KeyAndCertificateFactoryFactory.customKeyAndCertificateFactorySupplier -->
                                 <include>**/CustomKeyAndCertificateFactorySupplierTest.java</include>
                                 <include>**/TemplateFileContentCacheTest.java</include>
+                                <include>**/InProcessMockServerResetTest.java</include>
                             </includes>
                         </configuration>
                     </execution>
