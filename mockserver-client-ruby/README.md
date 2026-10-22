@@ -56,6 +56,15 @@ end
 # Client is automatically closed when the block exits
 ```
 
+## Control-Plane Basic Authentication
+
+When MockServer accepts control-plane Basic authentication, pass `control_plane_basic_auth: [username, password]` with `secure: true` (MockServer refuses Basic credentials without TLS). They are sent on every control-plane request and on the callback and breakpoint WebSockets.
+
+```ruby
+client = MockServer::Client.new('localhost', 1080, secure: true,
+                                control_plane_basic_auth: ['admin', ENV.fetch('MOCKSERVER_PASSWORD')])
+```
+
 ## WebSocket Callbacks
 
 ```ruby

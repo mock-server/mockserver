@@ -118,8 +118,11 @@ module MockServer
       @connected && !@stopped
     end
 
+    # +authorization+, when given, is sent as the +Authorization+ header on every
+    # (re)connect, so the upgrade passes control-plane authentication.
     def connect(host, port, context_path: '', secure: false,
-                ca_cert_path: nil, client_id: nil, tls_verify: true)
+                ca_cert_path: nil, client_id: nil, tls_verify: true, authorization: nil)
+      @authorization = authorization
       @host = host
       @port = port
       @context_path = context_path
@@ -199,6 +202,7 @@ module MockServer
       uri = "#{scheme}://#{@host}:#{@port}#{path}"
 
       headers = { CLIENT_REGISTRATION_ID_HEADER => registration_id }
+      headers['Authorization'] = @authorization if @authorization
 
       @registration_queue = Queue.new
       @connected = false

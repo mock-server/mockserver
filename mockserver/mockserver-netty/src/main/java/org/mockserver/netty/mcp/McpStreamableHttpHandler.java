@@ -198,6 +198,18 @@ public class McpStreamableHttpHandler extends ChannelInboundHandlerAdapter {
         response.headers().set(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, "300");
     }
 
+    /**
+     * Whether the connection carrying {@code channel} is TLS: an HTTP/2 stream channel takes its parent's state.
+     */
+    static boolean isSecure(io.netty.channel.Channel channel) {
+        for (io.netty.channel.Channel current = channel; current != null; current = current.parent()) {
+            if (org.mockserver.netty.unification.PortUnificationHandler.isSslEnabledUpstream(current)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean authenticateRequest(ChannelHandlerContext ctx, FullHttpRequest request, Integer streamId) {
         return authenticate(ctx, request, streamId) != null;
     }
@@ -218,7 +230,12 @@ public class McpStreamableHttpHandler extends ChannelInboundHandlerAdapter {
         try {
             HttpRequest mockRequest = HttpRequest.request()
                 .withMethod(request.method().name())
-                .withPath(request.uri());
+                .withPath(request.uri())
+                .withSecure(isSecure(ctx.channel()))
+                .markControlPlaneRequest();
+            if (ctx.channel().remoteAddress() != null) {
+                mockRequest.withRemoteAddress(org.apache.commons.lang3.Strings.CS.removeStart(ctx.channel().remoteAddress().toString(), "/"));
+            }
             mockRequest.withLogCorrelationId(org.mockserver.uuid.UUIDService.getNonSecureUUID());
             for (Map.Entry<String, String> header : request.headers()) {
                 mockRequest.withHeader(header.getKey(), header.getValue());

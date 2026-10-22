@@ -524,6 +524,50 @@ public class Http3McpIntegrationTest {
      * Required for integration tests that need to install a control-plane auth handler
      * on a live server instance.
      */
+    @Test
+    public void shouldAuthenticateMcpWithBasicOverHttp3AndTrackGuessesByPeer() throws Exception {
+        startMockServer(configuration()
+            .controlPlaneBasicAuthenticationRequired(true)
+            .controlPlaneBasicAuthenticationCredentials("admin:" + org.mockserver.authentication.basic.PasswordHash.bcrypt("s3cret", 4)));
+        String initBody = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{}}";
+        String correct = basic("admin", "s3cret");
+
+        assertThat("HTTP/3 is always TLS, so Basic is accepted", sendMcpRequest("POST", initBody, null, correct).status, is("200"));
+        for (int i = 0; i < 5; i++) {
+            assertThat(sendMcpRequest("POST", initBody, null, basic("admin", "near-miss-" + i)).status, is("401"));
+        }
+        org.mockserver.authentication.AuthenticationHandler handler = getHttpState(mockServer).getControlPlaneAuthenticationHandler();
+        java.lang.reflect.Method trackedSourceKeys = handler.getClass().getDeclaredMethod("trackedSourceKeys");
+        trackedSourceKeys.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        java.util.Set<String> tracked = (java.util.Set<String>) trackedSourceKeys.invoke(handler);
+        assertThat("the guesses were recorded under one source", tracked.size(), is(1));
+        String source = tracked.iterator().next();
+        assertThat("the guesses were recorded against the client's address, not the shared record for requests with no peer", source, org.hamcrest.Matchers.not("unknown"));
+        assertThat("the recorded source is the client's loopback address", java.net.InetAddress.getByName(source).isLoopbackAddress(), is(true));
+        assertThat("an already verified credential is not locked out", sendMcpRequest("POST", initBody, null, correct).status, is("200"));
+
+        java.util.concurrent.CompletableFuture<java.util.List<org.mockserver.log.model.LogEntry>> logged = new java.util.concurrent.CompletableFuture<>();
+        getHttpState(mockServer).getMockServerLog().retrieveMessageLogEntries(null, logged::complete);
+        for (org.mockserver.log.model.LogEntry entry : logged.get(30, java.util.concurrent.TimeUnit.SECONDS)) {
+            String text = entry.getMessage() + java.util.Arrays.toString(entry.getHttpRequests());
+            assertThat(text, org.hamcrest.Matchers.not(containsString("near-miss")));
+            assertThat(text, org.hamcrest.Matchers.not(containsString(basic("admin", "near-miss-0").substring("Basic ".length()))));
+            assertThat(text, org.hamcrest.Matchers.not(containsString(correct.substring("Basic ".length()))));
+        }
+    }
+
+    private static String basic(String username, String password) {
+        return "Basic " + java.util.Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
+    }
+
+    private Http3ResponseCapture sendMcpRequest(String method, String body, String sessionId, String authorization) throws Exception {
+        Map<String, String> extraHeaders = new ConcurrentHashMap<>();
+        extraHeaders.put("content-type", "application/json");
+        extraHeaders.put("authorization", authorization);
+        return doSendHttp3Request(mockServer.getHttp3Port(), method, "/mockserver/mcp", body.getBytes(StandardCharsets.UTF_8), extraHeaders);
+    }
+
     private static HttpState getHttpState(MockServer server) {
         try {
             java.lang.reflect.Field field = server.getClass().getSuperclass().getDeclaredField("httpState");

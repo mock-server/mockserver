@@ -177,6 +177,26 @@ public class MockServerClientBuilderTest {
     }
 
     @Test
+    public void shouldApplyControlPlaneBasicAuthentication() {
+        MockServerClient built = MockServerClient.builder().controlPlaneBasicAuthentication("admin", "pa:ss word").build();
+
+        assertThat(built.webSocketAuthorization(), is("Basic " + java.util.Base64.getEncoder().encodeToString("admin:pa:ss word".getBytes(java.nio.charset.StandardCharsets.UTF_8))));
+    }
+
+    @Test
+    public void shouldPreferTheControlPlaneJWTOverBasicCredentials() {
+        MockServerClient built = MockServerClient.builder().controlPlaneBasicAuthentication("admin", "secret").controlPlaneJWT("some-token").build();
+
+        assertThat(built.webSocketAuthorization(), is("Bearer some-token"));
+    }
+
+    @Test
+    public void shouldRefuseBasicCredentialsWhoseUsernameCannotBeSent() {
+        assertThrows(IllegalArgumentException.class, () -> MockServerClient.builder().controlPlaneBasicAuthentication("a:b", "secret").build());
+        assertThrows(IllegalArgumentException.class, () -> MockServerClient.builder().controlPlaneBasicAuthentication("", "secret").build());
+    }
+
+    @Test
     public void shouldApplyRequestOverride() {
         HttpRequest override = request().withHeader("X-Test", "value");
         MockServerClient built = MockServerClient.builder().requestOverride(override).build();

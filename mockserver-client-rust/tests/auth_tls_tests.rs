@@ -92,6 +92,52 @@ fn test_bearer_token_attached_to_control_plane_request() {
 }
 
 #[test]
+fn test_basic_credentials_attached_to_control_plane_request() {
+    let (port, rx) = header_stub("{\"ports\":[1080]}");
+
+    let client = ClientBuilder::new("127.0.0.1", port)
+        .control_plane_basic_authentication("admin", "s3cret")
+        .build()
+        .expect("build client");
+
+    client.status().expect("status call");
+
+    let captured = rx.recv().expect("captured request");
+    assert_eq!(
+        captured.header("authorization"),
+        Some("Basic YWRtaW46czNjcmV0"),
+        "control-plane request must carry the basic credentials"
+    );
+}
+
+#[test]
+fn test_basic_credentials_stay_out_of_the_error_of_a_failed_request() {
+    let server = tiny_http::Server::http("127.0.0.1:0").expect("bind stub server");
+    let port = match server.server_addr() {
+        tiny_http::ListenAddr::IP(addr) => addr.port(),
+        #[allow(unreachable_patterns)]
+        _ => panic!("expected IP listen address"),
+    };
+    thread::spawn(move || {
+        if let Ok(request) = server.recv() {
+            request
+                .respond(tiny_http::Response::from_string("failed").with_status_code(tiny_http::StatusCode(500)))
+                .ok();
+        }
+    });
+
+    let client = ClientBuilder::new("127.0.0.1", port)
+        .control_plane_basic_authentication("admin", "pa55-near-miss")
+        .build()
+        .expect("build client");
+    let error = client.reset().expect_err("a 500 fails");
+    let failure = format!("{error:?} {error}");
+
+    assert!(!failure.contains("pa55-near-miss"), "{failure}");
+    assert!(!failure.contains("YWRtaW46cGE1NS1uZWFyLW1pc3M="), "{failure}");
+}
+
+#[test]
 fn test_no_bearer_token_means_no_authorization_header() {
     let (port, rx) = header_stub("{\"ports\":[1080]}");
 

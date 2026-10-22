@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -24,6 +27,10 @@ type Client struct {
 	// bearerTokenSupplier, when non-nil, is invoked for every control-plane
 	// request to obtain the token attached as "Authorization: Bearer <token>".
 	bearerTokenSupplier func() string
+
+	// basicAuthorization, when non-empty, is the "Basic <credentials>" value
+	// attached when no bearer token is supplied.
+	basicAuthorization string
 
 	// tlsConfig accumulates CA roots and client certificates from the
 	// WithCACert*/WithClientCert* options. It is applied to the http.Client's
@@ -74,6 +81,36 @@ func WithControlPlaneBearerTokenSupplier(supplier func() string) Option {
 	return func(client *Client) {
 		client.bearerTokenSupplier = supplier
 	}
+}
+
+// WithControlPlaneBasicAuthentication attaches "Authorization: Basic ..." with
+// the given username and password to every control-plane request and to the
+// callback/breakpoint WebSocket upgrade. Use this when MockServer is started
+// with mockserver.controlPlaneBasicAuthenticationRequired; MockServer refuses
+// Basic credentials without TLS, so compose with WithTLS. A bearer token, when
+// also configured and non-empty, is sent instead. An empty username, or one
+// containing ':', cannot be sent in Basic credentials: every request then
+// fails with that error.
+func WithControlPlaneBasicAuthentication(username, password string) Option {
+	return func(client *Client) {
+		if username == "" || strings.Contains(username, ":") {
+			client.basicAuthorization = ""
+			client.setTLSConfigErr(fmt.Errorf("mockserver: WithControlPlaneBasicAuthentication needs a non-empty username without ':'"))
+			return
+		}
+		client.basicAuthorization = "Basic " + base64.StdEncoding.EncodeToString([]byte(username+":"+password))
+	}
+}
+
+// authorization is the control-plane Authorization header value: the bearer
+// token when one is supplied, else the Basic credentials, else "".
+func (c *Client) authorization() string {
+	if c.bearerTokenSupplier != nil {
+		if token := c.bearerTokenSupplier(); token != "" {
+			return "Bearer " + token
+		}
+	}
+	return c.basicAuthorization
 }
 
 // WithCACertPEMPath trusts the CA certificate(s) in the given PEM file when
@@ -158,6 +195,7 @@ func New(host string, port int, opts ...Option) *Client {
 		opt(c)
 	}
 	c.applyTLSConfig()
+	c.warnIfBasicWithoutTLS()
 	return c
 }
 
@@ -177,7 +215,16 @@ func NewFromURL(baseURL string, opts ...Option) *Client {
 		opt(c)
 	}
 	c.applyTLSConfig()
+	c.warnIfBasicWithoutTLS()
 	return c
+}
+
+// warnIfBasicWithoutTLS warns, once per client, that Basic credentials would
+// cross the network readable and that MockServer refuses them without TLS.
+func (c *Client) warnIfBasicWithoutTLS() {
+	if c.basicAuthorization != "" && strings.HasPrefix(strings.ToLower(c.baseURL), "http://") {
+		log.Printf("mockserver: control-plane Basic credentials are configured without TLS, so the password can be read on the network, and MockServer refuses them unless controlPlaneBasicAuthenticationAllowInsecure is set (tests only); use WithTLS")
+	}
 }
 
 // ensureTLSConfig lazily creates the accumulating tls.Config used by the
@@ -1017,10 +1064,8 @@ func (c *Client) doRequestWithContentType(method, path string, body []byte, para
 	// Attach the control-plane bearer token (if configured) to every
 	// control-plane request. All requests this client sends are control-plane
 	// (/mockserver/*); the data plane is never driven through this method.
-	if c.bearerTokenSupplier != nil {
-		if token := c.bearerTokenSupplier(); token != "" {
-			req.Header.Set("Authorization", "Bearer "+token)
-		}
+	if authorization := c.authorization(); authorization != "" {
+		req.Header.Set("Authorization", authorization)
 	}
 
 	resp, err := c.httpClient.Do(req)

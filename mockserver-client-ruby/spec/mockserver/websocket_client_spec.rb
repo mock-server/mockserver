@@ -462,6 +462,32 @@ RSpec.describe 'MockServer WebSocket helpers' do
       end
     end
 
+    describe 'control-plane authorization' do
+      it 'sends the Authorization header on the upgrade' do
+        ws_client = MockServer::WebSocketClient.new
+        ws_client.instance_variable_set(:@host, 'localhost')
+        ws_client.instance_variable_set(:@port, 1080)
+        ws_client.instance_variable_set(:@context_path, '')
+        ws_client.instance_variable_set(:@authorization, 'Basic YWRtaW46czNjcmV0')
+
+        require 'websocket-client-simple'
+        sent_headers = nil
+        allow(::WebSocket::Client::Simple).to receive(:connect) do |_uri, **opts|
+          sent_headers = opts[:headers]
+          fake_ws = double('ws')
+          allow(fake_ws).to receive(:on)
+          allow(fake_ws).to receive(:close)
+          fake_ws
+        end
+
+        expect {
+          ws_client.send(:do_connect, 'test-id')
+        }.to raise_error(MockServer::WebSocketError, /timed out/)
+        expect(sent_headers['Authorization']).to eq('Basic YWRtaW46czNjcmV0')
+        expect(sent_headers[MockServer::CLIENT_REGISTRATION_ID_HEADER]).to eq('test-id')
+      end
+    end
+
     describe 'TLS options' do
       it 'passes verify_mode VERIFY_NONE when tls_verify is false' do
         ws_client = MockServer::WebSocketClient.new

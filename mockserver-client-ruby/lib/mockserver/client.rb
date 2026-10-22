@@ -4,6 +4,7 @@ require 'net/http'
 require 'uri'
 require 'json'
 require 'openssl'
+require 'base64'
 
 module MockServer
   # Synchronous MockServer client.
@@ -39,8 +40,17 @@ module MockServer
     # @param secure [Boolean]
     # @param ca_cert_path [String, nil]
     # @param tls_verify [Boolean]
+    # @param control_plane_basic_auth [Array(String, String), nil] control-plane HTTP Basic
+    #   +[username, password]+, sent on every control-plane request and on the callback and
+    #   breakpoint WebSockets; MockServer refuses Basic credentials without TLS, so use +secure: true+
     def initialize(host, port, context_path: '', secure: false,
-                   ca_cert_path: nil, tls_verify: true)
+                   ca_cert_path: nil, tls_verify: true, control_plane_basic_auth: nil)
+      @control_plane_authorization = basic_authorization(control_plane_basic_auth)
+      if @control_plane_authorization && !secure
+        warn 'MockServer::Client: control-plane Basic credentials are configured without secure: true, so the password ' \
+             'can be read on the network, and MockServer refuses them unless controlPlaneBasicAuthenticationAllowInsecure ' \
+             'is set (tests only)'
+      end
       @host = host
       @port = port
       @context_path = context_path
@@ -1721,7 +1731,8 @@ module MockServer
           context_path: @context_path,
           secure: @secure,
           ca_cert_path: @ca_cert_path,
-          tls_verify: @tls_verify
+          tls_verify: @tls_verify,
+          authorization: @control_plane_authorization
         )
         ws_client.instance_variable_set(:@is_breakpoint_ws, true)
         ws_client.listen
@@ -1738,7 +1749,8 @@ module MockServer
         context_path: @context_path,
         secure: @secure,
         ca_cert_path: @ca_cert_path,
-        tls_verify: @tls_verify
+        tls_verify: @tls_verify,
+        authorization: @control_plane_authorization
       )
 
       case callback_type
@@ -1870,8 +1882,21 @@ module MockServer
         req = Net::HTTP::Put.new(request_path)
       end
       req['Content-Type'] = content_type
+      req['Authorization'] = @control_plane_authorization if @control_plane_authorization
       req.body = body if body
       req
+    end
+
+    # @api private
+    def basic_authorization(credentials)
+      return nil if credentials.nil?
+
+      username, password = credentials
+      if username.nil? || username.to_s.empty? || username.to_s.include?(':') || password.nil?
+        raise ArgumentError, 'control_plane_basic_auth needs [username, password] with a username without ":"'
+      end
+
+      "Basic #{Base64.strict_encode64("#{username}:#{password}".encode('UTF-8'))}"
     end
 
     # @api private

@@ -289,7 +289,7 @@ client.ClearBreakpointMatchers();
 
 **Stream frame decisions:** `StreamFrameDecision.Continue`, `.Modify`, `.Drop`, `.Inject`, `.Close`.
 
-When MockServer requires a control-plane JWT, configure it with `WithControlPlaneBearerToken(token)` (or a `Func<string>` supplier). The token is sent as `Authorization: Bearer <token>` on every control-plane request and on the breakpoint/callback WebSocket upgrade. A client certificate and CA certificate set with `MockServerClient.Builder(host, port).WithTls(...)` (or `WithClientCertificate` / `WithCaCertificate`) are used on that WebSocket too, so it passes control-plane mTLS; with your own `HttpClient`, the WebSocket gets no TLS settings from it.
+When MockServer requires a control-plane JWT, configure it with `WithControlPlaneBearerToken(token)` (or a `Func<string>` supplier); when it accepts control-plane Basic authentication, use `WithControlPlaneBasicAuthentication(username, password)` with a secure client (a bearer token, when also set, is sent instead). The token is sent as `Authorization: Bearer <token>` on every control-plane request and on the breakpoint/callback WebSocket upgrade. A client certificate and CA certificate set with `MockServerClient.Builder(host, port).WithTls(...)` (or `WithClientCertificate` / `WithCaCertificate`) are used on that WebSocket too, so it passes control-plane mTLS; with your own `HttpClient`, the WebSocket gets no TLS settings from it.
 
 ## Mocking LLM providers
 

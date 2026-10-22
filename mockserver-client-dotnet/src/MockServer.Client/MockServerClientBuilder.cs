@@ -27,6 +27,7 @@ public sealed class MockServerClientBuilder
     private bool _secure;
     private TimeSpan _timeout = TimeSpan.FromSeconds(60);
     private Func<string>? _bearerTokenSupplier;
+    private string? _basicAuthorization;
     private readonly MockServerTlsOptions _tlsOptions = new();
 
     /// <summary>
@@ -89,6 +90,18 @@ public sealed class MockServerClientBuilder
     }
 
     /// <summary>
+    /// Attach <c>Authorization: Basic ...</c> with <paramref name="username"/> and
+    /// <paramref name="password"/> to every control-plane request and WebSocket upgrade.
+    /// MockServer refuses Basic credentials without TLS, so also call <see cref="Secure"/>.
+    /// A bearer token, when also configured, is sent instead.
+    /// </summary>
+    public MockServerClientBuilder WithControlPlaneBasicAuthentication(string username, string password)
+    {
+        _basicAuthorization = MockServerClient.BasicAuthorization(username, password);
+        return this;
+    }
+
+    /// <summary>
     /// Configure TLS options (CA trust and/or mutual-TLS client certificate). Implies <see cref="Secure"/>.
     /// </summary>
     public MockServerClientBuilder WithTls(Action<MockServerTlsOptions> configure)
@@ -140,6 +153,6 @@ public sealed class MockServerClientBuilder
 
         return MockServerClient.CreateConfigured(
             _host, _port, _contextPath, _secure, httpClient, ownsHttpClient: true, _bearerTokenSupplier,
-            _tlsOptions.HasTlsConfiguration ? _tlsOptions : null);
+            _tlsOptions.HasTlsConfiguration ? _tlsOptions : null, _basicAuthorization);
     }
 }

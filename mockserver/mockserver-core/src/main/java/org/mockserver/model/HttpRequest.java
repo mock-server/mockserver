@@ -90,6 +90,14 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
     // the wire, so it cannot reach an upstream target and silently disable that target's logging.
     @JsonIgnore
     private transient boolean loadGenerated;
+    // Set once the control-plane gate has seen this request: LogEntry then attaches it, and passes it as an
+    // argument, only with its credential headers masked. In-process only, never part of request identity.
+    @JsonIgnore
+    private transient boolean controlPlaneRequest;
+    // The credential values a masked copy no longer shows, kept in process only so redactSecretsInLog can still
+    // scrub them from an entry's other text (a raw message or exception that quotes them). Never serialized.
+    @JsonIgnore
+    private transient List<String> maskedCredentialValues;
     // The body instance and Content-Encoding values a transport built this request with, so a forward can
     // tell that neither was changed and send the bytes the client sent. Identity, not equality: any
     // withBody replaces the instance. In-process only: excluded from equals/hashCode/JSON.
@@ -157,6 +165,32 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
 
     public HttpRequest withUndecodableQueryString(String undecodableQueryString) {
         this.undecodableQueryString = undecodableQueryString;
+        return this;
+    }
+
+    /**
+     * Mark this request as a control-plane request, so every log entry it is attached to carries it with its
+     * credential headers masked (see {@link org.mockserver.authentication.CredentialRedaction}).
+     */
+    @JsonIgnore
+    public HttpRequest markControlPlaneRequest() {
+        this.controlPlaneRequest = true;
+        return this;
+    }
+
+    @JsonIgnore
+    public boolean isControlPlaneRequest() {
+        return controlPlaneRequest;
+    }
+
+    @JsonIgnore
+    public List<String> getMaskedCredentialValues() {
+        return maskedCredentialValues;
+    }
+
+    @JsonIgnore
+    public HttpRequest withMaskedCredentialValues(List<String> maskedCredentialValues) {
+        this.maskedCredentialValues = maskedCredentialValues;
         return this;
     }
 
@@ -1710,6 +1744,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         clone.bodyAsReceived = bodyAsReceived;
         clone.contentEncodingAsReceived = contentEncodingAsReceived;
         clone.undecodableQueryString = undecodableQueryString;
+        clone.controlPlaneRequest = controlPlaneRequest;
         return clone;
     }
 
@@ -1740,6 +1775,7 @@ public class HttpRequest extends RequestDefinition implements HttpMessage<HttpRe
         clone.bodyAsReceived = bodyAsReceived;
         clone.contentEncodingAsReceived = contentEncodingAsReceived;
         clone.undecodableQueryString = undecodableQueryString;
+        clone.controlPlaneRequest = controlPlaneRequest;
         return clone;
     }
 

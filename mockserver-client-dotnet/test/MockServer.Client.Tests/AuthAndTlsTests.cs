@@ -56,6 +56,78 @@ public class AuthAndTlsTests
     }
 
     [Fact]
+    public void ControlPlaneBasicAuthentication_IsAttachedToRequests()
+    {
+        var handler = new CapturingHandler();
+        var client = new MockServerClient("http://localhost:1080", new HttpClient(handler))
+            .WithControlPlaneBasicAuthentication("admin", "pä:ss");
+
+        client.Reset();
+
+        handler.LastAuthorization.Should().NotBeNull();
+        handler.LastAuthorization!.Scheme.Should().Be("Basic");
+        handler.LastAuthorization!.Parameter.Should().Be(Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin:pä:ss")));
+    }
+
+    [Fact]
+    public void ControlPlaneBearerToken_WinsOverBasicAuthentication()
+    {
+        var handler = new CapturingHandler();
+        var client = new MockServerClient("http://localhost:1080", new HttpClient(handler))
+            .WithControlPlaneBasicAuthentication("admin", "s3cret")
+            .WithControlPlaneBearerToken("jwt");
+
+        client.Reset();
+
+        handler.LastAuthorization!.Scheme.Should().Be("Bearer");
+        handler.LastAuthorization!.Parameter.Should().Be("jwt");
+    }
+
+    private sealed class CapturingTraceListener : System.Diagnostics.TraceListener
+    {
+        public List<string> Messages { get; } = new();
+        public override void Write(string? message) { }
+        public override void WriteLine(string? message) { if (message != null) Messages.Add(message); }
+        public override void TraceEvent(System.Diagnostics.TraceEventCache? eventCache, string source, System.Diagnostics.TraceEventType eventType, int id, string? message)
+        {
+            if (message != null) Messages.Add(message);
+        }
+    }
+
+    [Fact]
+    public void ControlPlaneBasicAuthentication_WarnsWithoutTlsAndKeepsCredentialsOutOfErrors()
+    {
+        var listener = new CapturingTraceListener();
+        System.Diagnostics.Trace.Listeners.Add(listener);
+        try
+        {
+            var handler = new CapturingHandler { ResponseStatusCode = HttpStatusCode.InternalServerError, ResponseBody = "failed" };
+            var client = new MockServerClient("http://localhost:1080", new HttpClient(handler))
+                .WithControlPlaneBasicAuthentication("admin", "pa55-near-miss");
+
+            var failure = FluentActions.Invoking(() => client.Reset()).Should().Throw<Exception>().Which;
+
+            listener.Messages.Should().Contain(m => m.Contains("without TLS"));
+            listener.Messages.Should().NotContain(m => m.Contains("pa55-near-miss"));
+            failure.ToString().Should().NotContain("pa55-near-miss");
+            failure.ToString().Should().NotContain(Convert.ToBase64String(Encoding.UTF8.GetBytes("admin:pa55-near-miss")));
+        }
+        finally
+        {
+            System.Diagnostics.Trace.Listeners.Remove(listener);
+        }
+    }
+
+    [Fact]
+    public void ControlPlaneBasicAuthentication_RefusesAUsernameThatCannotBeSent()
+    {
+        var client = new MockServerClient("http://localhost:1080", new HttpClient(new CapturingHandler()));
+
+        FluentActions.Invoking(() => client.WithControlPlaneBasicAuthentication("a:b", "x")).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => MockServerClient.Builder("localhost").WithControlPlaneBasicAuthentication("", "x")).Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void WithoutBearerToken_NoAuthorizationHeader()
     {
         var handler = new CapturingHandler();

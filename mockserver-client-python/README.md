@@ -518,6 +518,12 @@ client = MockServerClient("localhost", 1080, control_plane_bearer_token=jwt)
 client = MockServerClient("localhost", 1080, control_plane_bearer_token_supplier=fetch_jwt)
 ```
 
+When MockServer accepts control-plane Basic authentication, pass `control_plane_basic_auth=(username, password)` with `secure=True` (MockServer refuses Basic credentials without TLS). They are sent on the same requests and WebSocket; a bearer token, when also set, is sent instead.
+
+```python
+client = MockServerClient("localhost", 1080, secure=True, control_plane_basic_auth=("admin", os.environ["MOCKSERVER_PASSWORD"]))
+```
+
 When MockServer requires mutual TLS for the control plane, pass `client_cert_path` and `client_key_path` (with `secure=True` and, for a private CA, `ca_cert_path`). The client presents that certificate, and trusts that CA, on every control-plane request and on the callback WebSocket.
 
 ```python

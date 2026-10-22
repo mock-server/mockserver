@@ -81,6 +81,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderNames.ACCESS_CONTROL_REQUEST_METHOD;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpHeaderNames.ORIGIN;
+import static io.netty.handler.codec.http.HttpHeaderNames.WWW_AUTHENTICATE;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -106,6 +107,7 @@ public class HttpState {
     public static final String LOG_SEPARATOR = NEW_LINE + "------------------------------------" + NEW_LINE;
     public static final String PATH_PREFIX = "/mockserver";
     private static final String PATH_PREFIX_SLASH = PATH_PREFIX + "/";
+    private static final String BASIC_CHALLENGE = "Basic realm=\"MockServer control plane\", charset=\"UTF-8\"";
 
     // Every control-plane route lives under PATH_PREFIX but also accepts a bare-path alias without
     // it (legacy), so this gate over-approximates both forms as a cheap per-request fast reject.
@@ -319,6 +321,15 @@ public class HttpState {
      * method the control plane serves there. A CORS preflight for such a request is answered under the
      * control-plane origin policy, before expectation matching.
      */
+    /**
+     * {@link #isControlPlaneRoute(String, String)} for a request-target as a transport received it, which may be in
+     * absolute form ({@code http://host:port/mockserver/...}): its path is derived exactly as
+     * {@code FullHttpRequestToMockServerHttpRequest} derives the path the router dispatches on.
+     */
+    public static boolean isControlPlaneRequestTarget(String method, String requestTarget) {
+        return requestTarget != null && isControlPlaneRoute(method, org.mockserver.url.URLParser.returnPath(requestTarget));
+    }
+
     public static boolean isControlPlaneRoute(String method, String path) {
         if (path == null) {
             return false;
@@ -2840,8 +2851,19 @@ public class HttpState {
             request.withReceivedTimestamp(org.mockserver.time.EpochService.currentTimeMillis());
         }
         setPort(request);
+        String requestPath = request.getPath() == null ? null : request.getPath().getValue();
+        boolean controlPlanePathCandidate = requestPath == null || isControlPlanePathCandidate(requestPath);
+        if (controlPlanePathCandidate && isControlPlaneRequest(request)) {
+            // before ANY entry is made: a LogEntry masks a marked request when the request is set on it, so an
+            // entry made first would hold the live request and be masked only if the event log copied it late
+            request.markControlPlaneRequest();
+        }
 
         if (mockServerLogger.isEnabledForInstance(Level.TRACE)) {
+            if (!controlPlanePathCandidate && isControlPlaneRequest(request)) {
+                // the configured liveness path: only this entry can log it, so it is checked only when it does
+                request.markControlPlaneRequest();
+            }
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.TRACE)
@@ -2860,8 +2882,7 @@ public class HttpState {
         // scan below and is declined (false) exactly as it would be after falling through it, so the
         // caller proceeds to data-plane handling. Only fast-reject a definitely-non-candidate path;
         // a null path keeps the original chain so its behaviour is unchanged.
-        String requestPath = request.getPath() == null ? null : request.getPath().getValue();
-        if (requestPath != null && !isControlPlanePathCandidate(requestPath)) {
+        if (!controlPlanePathCandidate) {
             return false;
         }
 
@@ -6893,7 +6914,16 @@ public class HttpState {
                 String message = decision.clientSafeMessage() != null
                     ? "Unauthorized for control plane - " + decision.clientSafeMessage()
                     : "Unauthorized for control plane";
-                responseWriter.writeResponse(request, UNAUTHORIZED, message, MediaType.create("text", "plain").toString());
+                if (decision.basicChallenge()) {
+                    responseWriter.writeResponse(request, response()
+                        .withStatusCode(UNAUTHORIZED.code())
+                        .withReasonPhrase(UNAUTHORIZED.reasonPhrase())
+                        .withHeader(WWW_AUTHENTICATE.toString(), BASIC_CHALLENGE)
+                        .withHeader(CONTENT_TYPE.toString(), MediaType.create("text", "plain").toString() + "; charset=utf-8")
+                        .withBody(message), true);
+                } else {
+                    responseWriter.writeResponse(request, UNAUTHORIZED, message, MediaType.create("text", "plain").toString());
+                }
                 return false;
         }
     }
@@ -6921,15 +6951,29 @@ public class HttpState {
         private final ControlPlaneAuthOutcome outcome;
         private final String clientSafeMessage;
         private final java.util.function.Supplier<String> principalIdentity;
+        private final boolean basicChallenge;
 
         private ControlPlaneAuthDecision(ControlPlaneAuthOutcome outcome, String clientSafeMessage) {
-            this(outcome, clientSafeMessage, null);
+            this(outcome, clientSafeMessage, null, false);
         }
 
         private ControlPlaneAuthDecision(ControlPlaneAuthOutcome outcome, String clientSafeMessage, java.util.function.Supplier<String> principalIdentity) {
+            this(outcome, clientSafeMessage, principalIdentity, false);
+        }
+
+        private ControlPlaneAuthDecision(ControlPlaneAuthOutcome outcome, String clientSafeMessage, java.util.function.Supplier<String> principalIdentity, boolean basicChallenge) {
             this.outcome = outcome;
             this.clientSafeMessage = clientSafeMessage;
             this.principalIdentity = principalIdentity;
+            this.basicChallenge = basicChallenge;
+        }
+
+        /**
+         * @return whether an unauthenticated caller may answer with HTTP Basic credentials, so the 401 carries a
+         * {@code WWW-Authenticate: Basic} challenge
+         */
+        public boolean basicChallenge() {
+            return basicChallenge;
         }
 
         /**
@@ -6991,11 +7035,18 @@ public class HttpState {
      *                     {@code null} to classify it from its method and path
      */
     private ControlPlaneAuthDecision evaluateControlPlaneAuthentication(HttpRequest request, java.util.function.BooleanSupplier readOverride) {
+        if (request != null) {
+            // every later log entry for this control-plane request carries it without credentials
+            request.markControlPlaneRequest();
+        }
+        // Resolve through the getter, NOT the raw field: the handler may be derived from the live
+        // configuration, so reading the field directly would miss a control-plane authentication
+        // mechanism enabled after startup and fall through to the null => "authenticated" branch.
+        ControlPlaneAuthenticationSettings settings = controlPlaneAuthenticationSettings();
+        // never invite a browser to send a password over a connection without TLS
+        boolean basicChallenge = controlPlaneAuthenticationHandler == null && Boolean.TRUE.equals(settings.controlPlaneBasicAuthenticationRequired())
+            && (Boolean.TRUE.equals(request.isSecure()) || Boolean.TRUE.equals(settings.controlPlaneBasicAuthenticationAllowInsecure()));
         try {
-            // Resolve through the getter, NOT the raw field: the handler may be derived from the live
-            // configuration, so reading the field directly would miss a control-plane authentication
-            // mechanism enabled after startup and fall through to the null => "authenticated" branch.
-            ControlPlaneAuthenticationSettings settings = controlPlaneAuthenticationSettings();
             AuthenticationHandler resolvedControlPlaneAuthenticationHandler = getControlPlaneAuthenticationHandler(settings);
             org.mockserver.authentication.AuthenticationResult authenticationResult =
                 resolvedControlPlaneAuthenticationHandler == null
@@ -7014,7 +7065,7 @@ public class HttpState {
             }
         } catch (AuthenticationException authenticationException) {
             if (authenticationException.isClientSafeMessage()) {
-                return new ControlPlaneAuthDecision(ControlPlaneAuthOutcome.UNAUTHENTICATED, authenticationException.getMessage());
+                return new ControlPlaneAuthDecision(ControlPlaneAuthOutcome.UNAUTHENTICATED, authenticationException.getMessage(), null, basicChallenge);
             }
             // OIDC path: log the detailed reason server-side only and withhold detail from
             // the client so the expected issuer/audience/scopes are not disclosed.
@@ -7022,15 +7073,15 @@ public class HttpState {
                 mockServerLogger.logEvent(
                     new org.mockserver.log.model.LogEntry()
                         .setLogLevel(org.slf4j.event.Level.INFO)
-                        .setHttpRequest(request)
+                        .setHttpRequest(org.mockserver.authentication.CredentialRedaction.withoutCredentials(request))
                         .setMessageFormat("control plane request failed authentication:{}")
                         .setArguments(authenticationException.getMessage())
                         .setThrowable(authenticationException)
                 );
             }
-            return new ControlPlaneAuthDecision(ControlPlaneAuthOutcome.UNAUTHENTICATED, null);
+            return new ControlPlaneAuthDecision(ControlPlaneAuthOutcome.UNAUTHENTICATED, null, null, basicChallenge);
         }
-        return new ControlPlaneAuthDecision(ControlPlaneAuthOutcome.UNAUTHENTICATED, null);
+        return new ControlPlaneAuthDecision(ControlPlaneAuthOutcome.UNAUTHENTICATED, null, null, basicChallenge);
     }
 
     /**
@@ -7107,7 +7158,7 @@ public class HttpState {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.INFO)
-                    .setHttpRequest(request)
+                    .setHttpRequest(org.mockserver.authentication.CredentialRedaction.withoutCredentials(request))
                     .setMessageFormat("control plane request forbidden:{}")
                     .setArguments("principal granted roles " + authorizer.grantedRoles(scopes) + " do not satisfy required role " + authorizer.requiredRole(isRead) + " for " + method + " " + operation)
             );
@@ -7536,6 +7587,27 @@ public class HttpState {
         if (suppliedControlPlaneTrustedHostSuffixes != null && !suppliedControlPlaneTrustedHostSuffixes.equals(configuration.controlPlaneTrustedHostSuffixes())) {
             warnInitOnlyProperty("controlPlaneTrustedHostSuffixes", "\"" + suppliedControlPlaneTrustedHostSuffixes + "\"", "\"" + configuration.controlPlaneTrustedHostSuffixes() + "\"",
                 "it decides which web sites may use the control plane, so a request to the control plane cannot widen it");
+        }
+        ControlPlaneAuthenticationSettings basicInForce = controlPlaneAuthenticationSettings();
+        Boolean suppliedBasicRequired = suppliedConfiguration.getControlPlaneBasicAuthenticationRequired();
+        if (suppliedBasicRequired != null && !suppliedBasicRequired.equals(basicInForce.controlPlaneBasicAuthenticationRequired())) {
+            warnInitOnlyProperty("controlPlaneBasicAuthenticationRequired", String.valueOf(suppliedBasicRequired), String.valueOf(basicInForce.controlPlaneBasicAuthenticationRequired()),
+                "it decides who may use the control plane, so a request to the control plane cannot change it");
+        }
+        Boolean suppliedBasicAllowInsecure = suppliedConfiguration.getControlPlaneBasicAuthenticationAllowInsecure();
+        if (suppliedBasicAllowInsecure != null && !suppliedBasicAllowInsecure.equals(basicInForce.controlPlaneBasicAuthenticationAllowInsecure())) {
+            warnInitOnlyProperty("controlPlaneBasicAuthenticationAllowInsecure", String.valueOf(suppliedBasicAllowInsecure), String.valueOf(basicInForce.controlPlaneBasicAuthenticationAllowInsecure()),
+                "it lets control plane passwords cross the network without TLS, so a request to the control plane cannot enable it");
+        }
+        String suppliedBasicUsersFile = suppliedConfiguration.getControlPlaneBasicAuthenticationUsersFile();
+        if (suppliedBasicUsersFile != null && !suppliedBasicUsersFile.equals(basicInForce.controlPlaneBasicAuthenticationUsersFile())) {
+            warnInitOnlyProperty("controlPlaneBasicAuthenticationUsersFile", "\"" + suppliedBasicUsersFile + "\"", "\"" + basicInForce.controlPlaneBasicAuthenticationUsersFile() + "\"",
+                "it decides who may use the control plane, so a request to the control plane cannot change it");
+        }
+        String suppliedBasicCredentials = suppliedConfiguration.getControlPlaneBasicAuthenticationCredentials();
+        if (suppliedBasicCredentials != null && !suppliedBasicCredentials.equals(basicInForce.controlPlaneBasicAuthenticationCredentials())) {
+            warnInitOnlyProperty("controlPlaneBasicAuthenticationCredentials", "(not shown)", "(not shown)",
+                "it decides who may use the control plane, so a request to the control plane cannot change it");
         }
         Boolean suppliedForwardProxyBlockPrivateNetworks = suppliedConfiguration.getForwardProxyBlockPrivateNetworks();
         if (suppliedForwardProxyBlockPrivateNetworks != null && !suppliedForwardProxyBlockPrivateNetworks.equals(configuration.forwardProxyBlockPrivateNetworks())) {

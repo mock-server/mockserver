@@ -59,7 +59,8 @@ public final class ControlPlaneAuthenticationSettings {
     public boolean authenticationRequired() {
         return Boolean.TRUE.equals(resolved.tlsMutualAuthenticationRequired)
             || Boolean.TRUE.equals(resolved.jwtAuthenticationRequired)
-            || Boolean.TRUE.equals(resolved.oidcAuthenticationRequired);
+            || Boolean.TRUE.equals(resolved.oidcAuthenticationRequired)
+            || Boolean.TRUE.equals(resolved.basicAuthenticationRequired);
     }
 
     /**
@@ -92,8 +93,24 @@ public final class ControlPlaneAuthenticationSettings {
             .append(controlPlaneOidcIssuer()).append('|')
             .append(controlPlaneOidcAudience()).append('|')
             .append(controlPlaneOidcScopeClaim()).append('|')
-            .append(sorted(controlPlaneOidcRequiredScopes()))
+            .append(sorted(controlPlaneOidcRequiredScopes())).append('|')
+            .append(controlPlaneBasicAuthenticationRequired()).append('|')
+            .append(digest(controlPlaneBasicAuthenticationCredentials())).append('|')
+            .append(controlPlaneBasicAuthenticationUsersFile()).append('|')
+            .append(controlPlaneBasicAuthenticationAllowInsecure())
             .toString();
+    }
+
+    // the signature is compared, never shown, but it still carries no password hash
+    private static String digest(String value) {
+        if (value == null) {
+            return "null";
+        }
+        try {
+            return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        } catch (java.security.NoSuchAlgorithmException noSha256) {
+            throw new IllegalStateException(noSha256);
+        }
     }
 
     private static String sorted(Map<String, String> map) {
@@ -167,9 +184,25 @@ public final class ControlPlaneAuthenticationSettings {
         return resolved.scopeMapping;
     }
 
+    public Boolean controlPlaneBasicAuthenticationRequired() {
+        return resolved.basicAuthenticationRequired;
+    }
+
+    public String controlPlaneBasicAuthenticationCredentials() {
+        return resolved.basicAuthenticationCredentials;
+    }
+
+    public String controlPlaneBasicAuthenticationUsersFile() {
+        return resolved.basicAuthenticationUsersFile;
+    }
+
+    public Boolean controlPlaneBasicAuthenticationAllowInsecure() {
+        return resolved.basicAuthenticationAllowInsecure;
+    }
+
     static final class Values {
 
-        static final Values UNSET = new Values(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        static final Values UNSET = new Values(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
         final Boolean tlsMutualAuthenticationRequired;
         final String tlsMutualAuthenticationCAChain;
@@ -186,6 +219,10 @@ public final class ControlPlaneAuthenticationSettings {
         final String oidcScopeClaim;
         final Boolean authorizationEnabled;
         final Map<String, ControlPlaneRole> scopeMapping;
+        final Boolean basicAuthenticationRequired;
+        final String basicAuthenticationCredentials;
+        final String basicAuthenticationUsersFile;
+        final Boolean basicAuthenticationAllowInsecure;
 
         @SuppressWarnings("java:S107")
         Values(Boolean tlsMutualAuthenticationRequired, String tlsMutualAuthenticationCAChain,
@@ -193,7 +230,9 @@ public final class ControlPlaneAuthenticationSettings {
                Map<String, String> jwtAuthenticationMatchingClaims, Set<String> jwtAuthenticationRequiredClaims,
                Boolean oidcAuthenticationRequired, String oidcIssuer, String oidcJwksUri, String oidcAudience,
                Set<String> oidcRequiredScopes, String oidcScopeClaim,
-               Boolean authorizationEnabled, Map<String, ControlPlaneRole> scopeMapping) {
+               Boolean authorizationEnabled, Map<String, ControlPlaneRole> scopeMapping,
+               Boolean basicAuthenticationRequired, String basicAuthenticationCredentials,
+               String basicAuthenticationUsersFile, Boolean basicAuthenticationAllowInsecure) {
             this.tlsMutualAuthenticationRequired = tlsMutualAuthenticationRequired;
             this.tlsMutualAuthenticationCAChain = tlsMutualAuthenticationCAChain;
             this.jwtAuthenticationRequired = jwtAuthenticationRequired;
@@ -209,6 +248,10 @@ public final class ControlPlaneAuthenticationSettings {
             this.oidcScopeClaim = oidcScopeClaim;
             this.authorizationEnabled = authorizationEnabled;
             this.scopeMapping = scopeMapping;
+            this.basicAuthenticationRequired = basicAuthenticationRequired;
+            this.basicAuthenticationCredentials = basicAuthenticationCredentials;
+            this.basicAuthenticationUsersFile = basicAuthenticationUsersFile;
+            this.basicAuthenticationAllowInsecure = basicAuthenticationAllowInsecure;
         }
     }
 }
