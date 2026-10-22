@@ -6,6 +6,7 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
 import org.mockserver.mock.RequestMatchers;
 import org.mockserver.mock.listeners.MockServerMatcherNotifier.Cause;
+import org.mockserver.scheduler.Scheduler;
 import org.mockserver.server.initialize.ExpectationInitializer;
 import org.slf4j.event.Level;
 
@@ -101,6 +102,31 @@ public final class ExtensionRegistry {
                 requestMatchers.update(expectations != null ? expectations : new Expectation[0], new Cause("extension:" + extension.name(), Cause.Type.CLASS_INITIALISER));
             }
         }
+    }
+
+    /**
+     * Builds the routes of every started extension that implements {@link AdminApiExtension}, or returns
+     * {@code null} when none does, so a server with no such extension routes nothing and starts no thread.
+     *
+     * @param gate the control-plane authentication, authorization and audit decision each call must pass
+     */
+    public ExtensionAdminRoutes createAdminRoutes(Configuration configuration, Scheduler scheduler, ExtensionAdminRoutes.ControlPlaneGate gate) {
+        List<LoadedExtension> adminExtensions = new ArrayList<>();
+        for (LoadedExtension extension : startedExtensions()) {
+            if (extension.isHookEnabled(ExtensionHook.ADMIN_API)) {
+                adminExtensions.add(extension);
+            }
+        }
+        if (adminExtensions.isEmpty()) {
+            return null;
+        }
+        ExtensionAdminRoutes routes = new ExtensionAdminRoutes(adminExtensions, configuration, mockServerLogger, scheduler, gate);
+        if (isEnabled(Level.INFO)) {
+            mockServerLogger.logEvent(entry(Level.INFO)
+                .setMessageFormat("serving extension admin routes under:{}for:{}with at most:{}calls in flight")
+                .setArguments(ExtensionAdminRoutes.PATH, routes.names(), configuration.extensionAdminMaxInFlight()));
+        }
+        return routes;
     }
 
     /**
