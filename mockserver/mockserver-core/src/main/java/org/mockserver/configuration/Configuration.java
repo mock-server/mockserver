@@ -412,6 +412,10 @@ public class Configuration {
     private volatile String controlPlaneOidcScopeClaim;
     private volatile Boolean controlPlaneAuthorizationEnabled;
     private volatile Map<String, org.mockserver.authentication.authorization.ControlPlaneRole> controlPlaneScopeMapping;
+    private volatile Boolean controlPlaneBasicAuthenticationRequired;
+    private volatile String controlPlaneBasicAuthenticationCredentials;
+    private volatile String controlPlaneBasicAuthenticationUsersFile;
+    private volatile Boolean controlPlaneBasicAuthenticationAllowInsecure;
     // The control-plane authentication and server TLS inputs, each also published as one immutable snapshot
     // that a multi-field update replaces only once it is complete, so a reader never sees it half-applied.
     private volatile ControlPlaneAuthenticationSettings controlPlaneAuthenticationSettings = ControlPlaneAuthenticationSettings.UNSET;
@@ -6043,6 +6047,99 @@ public class Configuration {
         return this;
     }
 
+    public Boolean controlPlaneBasicAuthenticationRequired() {
+        if (controlPlaneBasicAuthenticationRequired == null) {
+            return ConfigurationProperties.controlPlaneBasicAuthenticationRequired();
+        }
+        return controlPlaneBasicAuthenticationRequired;
+    }
+
+    /**
+     * <p>
+     * Accept HTTP Basic credentials on control plane requests, as an alternative to any other configured control plane
+     * authentication. The users are configured with {@link #controlPlaneBasicAuthenticationCredentials(String)} or
+     * {@link #controlPlaneBasicAuthenticationUsersFile(String)}. Basic credentials are refused on a connection
+     * without TLS. Fixed at startup: {@code PUT /mockserver/configuration} cannot change it.
+     * </p>
+     *
+     * @param controlPlaneBasicAuthenticationRequired accept HTTP Basic credentials for control plane requests
+     */
+    public Configuration controlPlaneBasicAuthenticationRequired(Boolean controlPlaneBasicAuthenticationRequired) {
+        this.controlPlaneBasicAuthenticationRequired = controlPlaneBasicAuthenticationRequired;
+        publishControlPlaneAuthenticationSettings();
+        return this;
+    }
+
+    public String controlPlaneBasicAuthenticationCredentials() {
+        if (controlPlaneBasicAuthenticationCredentials == null) {
+            return ConfigurationProperties.controlPlaneBasicAuthenticationCredentials();
+        }
+        return controlPlaneBasicAuthenticationCredentials;
+    }
+
+    /**
+     * <p>
+     * The control plane Basic authentication users, each as {@code username:passwordHash} or
+     * {@code username:passwordHash:scopes}, separated by {@code ;} or new lines. The password hash must be a bcrypt
+     * ({@code $2a$}, {@code $2b$}, {@code $2y$}), argon2 ({@code $argon2id$}, {@code $argon2i$}, {@code $argon2d$}) or
+     * PBKDF2 ({@code $pbkdf2-sha256$}, {@code $pbkdf2-sha512$}) hash; plain text passwords are refused. The optional
+     * scopes (space or comma separated) are mapped to roles by {@code controlPlaneScopeMapping}. Fixed at startup.
+     * </p>
+     *
+     * @param controlPlaneBasicAuthenticationCredentials the users and their password hashes
+     */
+    public Configuration controlPlaneBasicAuthenticationCredentials(String controlPlaneBasicAuthenticationCredentials) {
+        this.controlPlaneBasicAuthenticationCredentials = controlPlaneBasicAuthenticationCredentials;
+        publishControlPlaneAuthenticationSettings();
+        return this;
+    }
+
+    public String controlPlaneBasicAuthenticationUsersFile() {
+        if (controlPlaneBasicAuthenticationUsersFile == null) {
+            return ConfigurationProperties.controlPlaneBasicAuthenticationUsersFile();
+        }
+        return controlPlaneBasicAuthenticationUsersFile;
+    }
+
+    /**
+     * <p>
+     * Path to a file of control plane Basic authentication users (it holds password hashes, so restrict who can read it), one {@code username:passwordHash[:scopes]} per line
+     * (the format {@code htpasswd -B} writes); blank lines and lines starting with {@code #} are ignored. Fixed at startup.
+     * </p>
+     *
+     * @param controlPlaneBasicAuthenticationUsersFile path to the users file
+     */
+    public Configuration controlPlaneBasicAuthenticationUsersFile(String controlPlaneBasicAuthenticationUsersFile) {
+        if (isNotBlank(controlPlaneBasicAuthenticationUsersFile)) {
+            fileExists(controlPlaneBasicAuthenticationUsersFile);
+        }
+        this.controlPlaneBasicAuthenticationUsersFile = controlPlaneBasicAuthenticationUsersFile;
+        publishControlPlaneAuthenticationSettings();
+        return this;
+    }
+
+    public Boolean controlPlaneBasicAuthenticationAllowInsecure() {
+        if (controlPlaneBasicAuthenticationAllowInsecure == null) {
+            return ConfigurationProperties.controlPlaneBasicAuthenticationAllowInsecure();
+        }
+        return controlPlaneBasicAuthenticationAllowInsecure;
+    }
+
+    /**
+     * <p>
+     * FOR TESTS ONLY: accept control plane Basic credentials sent without TLS. By default a Basic authorization header
+     * on a plain text connection is refused, because the password can be read by anyone on the network path. Fixed at
+     * startup.
+     * </p>
+     *
+     * @param controlPlaneBasicAuthenticationAllowInsecure accept control plane Basic credentials over plain text connections
+     */
+    public Configuration controlPlaneBasicAuthenticationAllowInsecure(Boolean controlPlaneBasicAuthenticationAllowInsecure) {
+        this.controlPlaneBasicAuthenticationAllowInsecure = controlPlaneBasicAuthenticationAllowInsecure;
+        publishControlPlaneAuthenticationSettings();
+        return this;
+    }
+
     public Boolean proactivelyInitialiseTLS() {
         if (proactivelyInitialiseTLS == null) {
             return ConfigurationProperties.proactivelyInitialiseTLS();
@@ -6150,6 +6247,10 @@ public class Configuration {
         controlPlaneOidcScopeClaim = values.oidcScopeClaim;
         controlPlaneAuthorizationEnabled = values.authorizationEnabled;
         controlPlaneScopeMapping = values.scopeMapping;
+        controlPlaneBasicAuthenticationRequired = values.basicAuthenticationRequired;
+        controlPlaneBasicAuthenticationCredentials = values.basicAuthenticationCredentials;
+        controlPlaneBasicAuthenticationUsersFile = values.basicAuthenticationUsersFile;
+        controlPlaneBasicAuthenticationAllowInsecure = values.basicAuthenticationAllowInsecure;
     }
 
     private void restoreServerTlsValues(ServerTlsSettings.Values values) {
@@ -6225,7 +6326,11 @@ public class Configuration {
             controlPlaneOidcRequiredScopes,
             controlPlaneOidcScopeClaim,
             controlPlaneAuthorizationEnabled,
-            controlPlaneScopeMapping
+            controlPlaneScopeMapping,
+            controlPlaneBasicAuthenticationRequired,
+            controlPlaneBasicAuthenticationCredentials,
+            controlPlaneBasicAuthenticationUsersFile,
+            controlPlaneBasicAuthenticationAllowInsecure
         );
     }
 
@@ -6255,7 +6360,11 @@ public class Configuration {
             raw.oidcRequiredScopes != null ? raw.oidcRequiredScopes : ConfigurationProperties.controlPlaneOidcRequiredScopes(),
             raw.oidcScopeClaim != null ? raw.oidcScopeClaim : ConfigurationProperties.controlPlaneOidcScopeClaim(),
             raw.authorizationEnabled != null ? raw.authorizationEnabled : ConfigurationProperties.controlPlaneAuthorizationEnabled(),
-            raw.scopeMapping != null ? raw.scopeMapping : ConfigurationProperties.controlPlaneScopeMapping()
+            raw.scopeMapping != null ? raw.scopeMapping : ConfigurationProperties.controlPlaneScopeMapping(),
+            raw.basicAuthenticationRequired != null ? raw.basicAuthenticationRequired : ConfigurationProperties.controlPlaneBasicAuthenticationRequired(),
+            raw.basicAuthenticationCredentials != null ? raw.basicAuthenticationCredentials : ConfigurationProperties.controlPlaneBasicAuthenticationCredentials(),
+            raw.basicAuthenticationUsersFile != null ? raw.basicAuthenticationUsersFile : ConfigurationProperties.controlPlaneBasicAuthenticationUsersFile(),
+            raw.basicAuthenticationAllowInsecure != null ? raw.basicAuthenticationAllowInsecure : ConfigurationProperties.controlPlaneBasicAuthenticationAllowInsecure()
         );
         return new ControlPlaneAuthenticationSettings(raw, resolved, matchingClaimsFailure, generation);
     }

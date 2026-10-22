@@ -165,10 +165,10 @@ func newBreakpointWSClient() *breakpointWSClient {
 }
 
 // connect establishes the WebSocket connection and performs registration.
-// bearerTokenSupplier, when non-nil and returning a non-empty token, adds
-// "Authorization: Bearer <token>" to the upgrade request. tlsConfig, when
-// non-nil, is used for a wss connection.
-func (ws *breakpointWSClient) connect(baseURL string, bearerTokenSupplier func() string, tlsConfig *tls.Config) error {
+// authorizationSupplier, when non-nil and returning a non-empty value, adds it
+// as the Authorization header of the upgrade request (a bearer token or Basic
+// credentials). tlsConfig, when non-nil, is used for a wss connection.
+func (ws *breakpointWSClient) connect(baseURL string, authorizationSupplier func() string, tlsConfig *tls.Config) error {
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		return fmt.Errorf("mockserver: parse base URL: %w", err)
@@ -186,9 +186,9 @@ func (ws *breakpointWSClient) connect(baseURL string, bearerTokenSupplier func()
 		TLSClientConfig:  tlsConfig,
 	}
 	var header http.Header
-	if bearerTokenSupplier != nil {
-		if token := bearerTokenSupplier(); token != "" {
-			header = http.Header{"Authorization": []string{"Bearer " + token}}
+	if authorizationSupplier != nil {
+		if authorization := authorizationSupplier(); authorization != "" {
+			header = http.Header{"Authorization": []string{authorization}}
 		}
 	}
 	conn, _, err := dialer.Dial(wsURL, header)
@@ -500,7 +500,7 @@ func (c *Client) ensureBreakpointWS() error {
 		return c.tlsConfigErr
 	}
 	ws := newBreakpointWSClient()
-	if err := ws.connect(c.baseURL, c.bearerTokenSupplier, c.webSocketTLSConfig()); err != nil {
+	if err := ws.connect(c.baseURL, c.authorization, c.webSocketTLSConfig()); err != nil {
 		return err
 	}
 	c.breakpointWS = ws

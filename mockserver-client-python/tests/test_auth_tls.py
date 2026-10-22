@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import ssl
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -14,13 +15,14 @@ from mockserver.client import MockServerClient
 class AuthCaptureHandler(BaseHTTPRequestHandler):
     last_authorization = None
     response_body = b"[]"
+    response_status = 200
 
     def _record_and_respond(self):
         AuthCaptureHandler.last_authorization = self.headers.get("Authorization")
         content_length = int(self.headers.get("Content-Length", 0))
         if content_length > 0:
             self.rfile.read(content_length)
-        self.send_response(200)
+        self.send_response(AuthCaptureHandler.response_status)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
         self.wfile.write(AuthCaptureHandler.response_body)
@@ -44,6 +46,7 @@ def auth_server():
     thread.start()
     AuthCaptureHandler.last_authorization = None
     AuthCaptureHandler.response_body = b"[]"
+    AuthCaptureHandler.response_status = 200
     yield port
     server.shutdown()
 
@@ -110,6 +113,64 @@ class TestControlPlaneBearerToken:
         try:
             client.reset()
             assert AuthCaptureHandler.last_authorization == "Bearer sync-token"
+        finally:
+            client.close()
+
+
+class TestControlPlaneBasicAuthentication:
+    @pytest.mark.asyncio
+    async def test_basic_credentials_header_attached(self, auth_server):
+        client = AsyncMockServerClient(
+            "127.0.0.1", auth_server, control_plane_basic_auth=("admin", "pä:ss")
+        )
+        await client.reset()
+        expected = "Basic " + base64.b64encode("admin:pä:ss".encode("utf-8")).decode("ascii")
+        assert AuthCaptureHandler.last_authorization == expected
+
+    @pytest.mark.asyncio
+    async def test_bearer_token_wins_when_both_are_configured(self, auth_server):
+        client = AsyncMockServerClient(
+            "127.0.0.1",
+            auth_server,
+            control_plane_bearer_token="jwt",
+            control_plane_basic_auth=("admin", "s3cret"),
+        )
+        await client.reset()
+        assert AuthCaptureHandler.last_authorization == "Bearer jwt"
+
+    def test_warns_once_when_basic_credentials_are_sent_without_tls(self, caplog):
+        with caplog.at_level("WARNING", logger="mockserver.async_client"):
+            AsyncMockServerClient("127.0.0.1", 1080, control_plane_basic_auth=("admin", "s3cret"))
+            AsyncMockServerClient("127.0.0.1", 1080, secure=True, tls_verify=False, control_plane_basic_auth=("admin", "s3cret"))
+        warnings = [r.getMessage() for r in caplog.records if "Basic" in r.getMessage()]
+        assert len(warnings) == 1
+        assert "s3cret" not in warnings[0]
+
+    @pytest.mark.asyncio
+    async def test_failed_request_error_does_not_carry_the_credentials(self, auth_server):
+        AuthCaptureHandler.response_status = 500
+        AuthCaptureHandler.response_body = b"failed"
+        client = AsyncMockServerClient(
+            "127.0.0.1", auth_server, control_plane_basic_auth=("admin", "pa55-near-miss")
+        )
+        with pytest.raises(Exception) as failure:
+            await client.reset()
+        assert "pa55-near-miss" not in str(failure.value)
+        assert base64.b64encode(b"admin:pa55-near-miss").decode("ascii") not in str(failure.value)
+
+    def test_refuses_a_username_that_cannot_be_sent(self):
+        with pytest.raises(ValueError):
+            AsyncMockServerClient("127.0.0.1", 1080, control_plane_basic_auth=("a:b", "s3cret"))
+        with pytest.raises(ValueError):
+            AsyncMockServerClient("127.0.0.1", 1080, control_plane_basic_auth=("", "s3cret"))
+
+    def test_sync_client_attaches_basic_credentials(self, auth_server):
+        client = MockServerClient(
+            "127.0.0.1", auth_server, control_plane_basic_auth=("sync", "pass")
+        )
+        try:
+            client.reset()
+            assert AuthCaptureHandler.last_authorization == "Basic " + base64.b64encode(b"sync:pass").decode("ascii")
         finally:
             client.close()
 

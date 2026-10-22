@@ -1,5 +1,7 @@
 package org.mockserver.authentication;
 
+import org.mockserver.authentication.basic.BasicAuthenticationCredentials;
+import org.mockserver.authentication.basic.BasicAuthenticationHandler;
 import org.mockserver.authentication.jwt.JWTAuthenticationHandler;
 import org.mockserver.authentication.mtls.MTLSAuthenticationHandler;
 import org.mockserver.authentication.oidc.OidcAuthenticationHandler;
@@ -103,10 +105,18 @@ public class ControlPlaneAuthenticationHandlerFactory {
                     settings.controlPlaneOidcRequiredScopes()
                 ));
             }
-            if (handlers.size() == 1) {
-                return handlers.get(0);
+            AuthenticationHandler others = handlers.isEmpty() ? null
+                : handlers.size() == 1 ? handlers.get(0)
+                : new ChainedAuthenticationHandler(handlers.toArray(new AuthenticationHandler[0]));
+            if (Boolean.TRUE.equals(settings.controlPlaneBasicAuthenticationRequired())) {
+                BasicAuthenticationHandler basic = new BasicAuthenticationHandler(
+                    mockServerLogger,
+                    BasicAuthenticationCredentials.parse(settings.controlPlaneBasicAuthenticationCredentials(), settings.controlPlaneBasicAuthenticationUsersFile()),
+                    Boolean.TRUE.equals(settings.controlPlaneBasicAuthenticationAllowInsecure())
+                );
+                return others == null ? basic : new AnyOfAuthenticationHandler(basic, others);
             }
-            return new ChainedAuthenticationHandler(handlers.toArray(new AuthenticationHandler[0]));
+            return others;
         } catch (Throwable throwable) {
             // Authentication IS required but could not be constructed. Returning null here would map to
             // "authenticated" at the enforcement point and silently open the control plane, so deny
@@ -191,6 +201,42 @@ public class ControlPlaneAuthenticationHandlerFactory {
             }
         } else if (!Boolean.TRUE.equals(dynamicallyCreateCertificateAuthorityCertificate) && BundledCertificateAuthority.isBundledCertificateAuthority(certificateAuthorityCertificate)) {
             throw new ControlPlaneMutualTlsConfigurationException();
+        }
+    }
+
+    /**
+     * Refuses a configuration that requires control-plane Basic authentication but whose users cannot be used: none
+     * configured, a malformed entry, a plain text password, a work factor out of bounds or an unreadable users file.
+     * Every start path calls this before binding a port. It warns about each hash below current OWASP work factors and
+     * when {@code controlPlaneBasicAuthenticationAllowInsecure} is set.
+     *
+     * @throws IllegalArgumentException naming the entry and the fix, never the password hash
+     */
+    public static void requireUsableControlPlaneBasicAuthentication(Configuration configuration, MockServerLogger mockServerLogger) {
+        ControlPlaneAuthenticationSettings settings = ControlPlaneAuthenticationSettings.of(configuration);
+        if (!Boolean.TRUE.equals(settings.controlPlaneBasicAuthenticationRequired())) {
+            return;
+        }
+        BasicAuthenticationCredentials credentials = BasicAuthenticationCredentials.parse(settings.controlPlaneBasicAuthenticationCredentials(), settings.controlPlaneBasicAuthenticationUsersFile());
+        for (String username : credentials.usernames()) {
+            String weakness = credentials.user(username).passwordHash().weakness();
+            if (weakness != null && mockServerLogger != null) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(LogEntry.LogMessageType.SERVER_CONFIGURATION)
+                        .setLogLevel(Level.WARN)
+                        .setMessageFormat("control plane Basic authentication user {} has a weak password hash: {}, so a leaked hash is cheap to crack - re-hash the password with a higher work factor")
+                        .setArguments(username, weakness)
+                );
+            }
+        }
+        if (Boolean.TRUE.equals(settings.controlPlaneBasicAuthenticationAllowInsecure()) && mockServerLogger != null) {
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.SERVER_CONFIGURATION)
+                    .setLogLevel(Level.WARN)
+                    .setMessageFormat("controlPlaneBasicAuthenticationAllowInsecure is true, so control plane Basic passwords are accepted without TLS where anyone on the network path can read them - use this only in tests")
+            );
         }
     }
 

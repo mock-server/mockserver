@@ -130,6 +130,8 @@ public class MockServerClient implements Stoppable {
     private ClientConfiguration configuration;
     private ProxyConfiguration proxyConfiguration;
     private Supplier<String> controlPlaneJWTSupplier;
+    private String controlPlaneBasicAuthorization;
+    private final java.util.concurrent.atomic.AtomicBoolean warnedBasicWithoutTls = new java.util.concurrent.atomic.AtomicBoolean();
     private volatile NettyHttpClient nettyHttpClient;
     private NettySslContextFactory controlPlaneSslContextFactory;
     // not this client's monitor: a WebSocket reconnect on an event loop reads the factory while
@@ -327,6 +329,7 @@ public class MockServerClient implements Stoppable {
      *     <li>{@link #secure(boolean)} — TLS, delegates to {@link MockServerClient#withSecure(boolean)}</li>
      *     <li>{@link #proxyConfiguration(ProxyConfiguration)} — delegates to {@link MockServerClient#withProxyConfiguration(ProxyConfiguration)}</li>
      *     <li>{@link #controlPlaneJWT(String)} / {@link #controlPlaneJWT(Supplier)} — delegates to {@link MockServerClient#withControlPlaneJWT(Supplier)}</li>
+     *     <li>{@link #controlPlaneBasicAuthentication(String, String)} — delegates to {@link MockServerClient#withControlPlaneBasicAuthentication(String, String)}</li>
      *     <li>{@link #requestOverride(HttpRequest)} — delegates to {@link MockServerClient#withRequestOverride(HttpRequest)}</li>
      * </ul>
      * The builder performs no construction work until {@link #build()} is called, at which
@@ -344,6 +347,7 @@ public class MockServerClient implements Stoppable {
         private Boolean secure;
         private ProxyConfiguration proxyConfiguration;
         private Supplier<String> controlPlaneJWTSupplier;
+        private String[] controlPlaneBasicAuthentication;
         private HttpRequest requestOverride;
         private boolean hostSet;
         private boolean portSet;
@@ -446,6 +450,15 @@ public class MockServerClient implements Stoppable {
         }
 
         /**
+         * HTTP Basic credentials for control plane authentication. Delegates to
+         * {@link MockServerClient#withControlPlaneBasicAuthentication(String, String)}.
+         */
+        public Builder controlPlaneBasicAuthentication(String username, String password) {
+            this.controlPlaneBasicAuthentication = new String[]{username, password};
+            return this;
+        }
+
+        /**
          * A request override applied to every control plane request. Delegates to
          * {@link MockServerClient#withRequestOverride(HttpRequest)}.
          */
@@ -482,6 +495,9 @@ public class MockServerClient implements Stoppable {
             if (controlPlaneJWTSupplier != null) {
                 client.withControlPlaneJWT(controlPlaneJWTSupplier);
             }
+            if (controlPlaneBasicAuthentication != null) {
+                client.withControlPlaneBasicAuthentication(controlPlaneBasicAuthentication[0], controlPlaneBasicAuthentication[1]);
+            }
             if (requestOverride != null) {
                 client.withRequestOverride(requestOverride);
             }
@@ -517,6 +533,19 @@ public class MockServerClient implements Stoppable {
      */
     public MockServerClient withControlPlaneJWT(Supplier<String> controlPlaneJWTSupplier) {
         this.controlPlaneJWTSupplier = controlPlaneJWTSupplier;
+        return this;
+    }
+
+    /**
+     * Specify HTTP Basic credentials to use for control plane authentication, sent on every control plane request
+     * and on the callback WebSocket. MockServer refuses Basic credentials without TLS, so use {@link #withSecure(boolean)}.
+     * A control plane JWT, when also set, is sent instead.
+     */
+    public MockServerClient withControlPlaneBasicAuthentication(String username, String password) {
+        if (isBlank(username) || username.contains(":") || password == null) {
+            throw new IllegalArgumentException("control plane basic authentication needs a username without \":\" and a password");
+        }
+        this.controlPlaneBasicAuthorization = "Basic " + java.util.Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
         return this;
     }
 
@@ -657,7 +686,7 @@ public class MockServerClient implements Stoppable {
     /**
      * The {@code Authorization} header value for a callback WebSocket upgrade, so it passes control-plane
      * authentication as this client's HTTP requests do: the control-plane JWT as a bearer token, else the
-     * request override's {@code Authorization} header, else null.
+     * control-plane Basic credentials, else the request override's {@code Authorization} header, else null.
      */
     String webSocketAuthorization() {
         Supplier<String> supplier = controlPlaneJWTSupplier;
@@ -666,6 +695,10 @@ public class MockServerClient implements Stoppable {
             if (isNotBlank(jwt)) {
                 return "Bearer " + jwt;
             }
+        }
+        if (controlPlaneBasicAuthorization != null) {
+            warnOnceIfBasicWithoutTls();
+            return controlPlaneBasicAuthorization;
         }
         HttpRequest override = requestOverride;
         if (override != null) {
@@ -706,6 +739,9 @@ public class MockServerClient implements Stoppable {
                     } else {
                         throw new IllegalArgumentException("Control plane jwt supplier returned invalid JWT \"" + jwt + "\"");
                     }
+                } else if (controlPlaneBasicAuthorization != null) {
+                    warnOnceIfBasicWithoutTls();
+                    request.replaceHeader(Header.header(AUTHORIZATION.toString(), controlPlaneBasicAuthorization));
                 }
                 HttpResponse response = getNettyHttpClient().sendRequest(
                     request.withHeader(HOST.toString(), this.host + ":" + port()),
@@ -722,7 +758,7 @@ public class MockServerClient implements Stoppable {
                             throw new AuthenticationException(response.getBodyAsString());
                         } else if (response.getStatusCode() == INTERNAL_SERVER_ERROR.code()) {
                             // a failure inside MockServer, never a result: raised whatever the caller passed as throwClientException
-                            throw new ClientException(formatLogMessage("error:{}while sending request:{}", response, request));
+                            throw new ClientException(formatLogMessage("error:{}while sending request:{}", response, org.mockserver.authentication.CredentialRedaction.withoutCredentials(request)));
                         }
                     }
                     String serverVersion = response.getFirstHeader("version");
@@ -733,7 +769,7 @@ public class MockServerClient implements Stoppable {
                 }
 
                 if (throwClientException && response != null && response.getStatusCode() != null && response.getStatusCode() >= 400) {
-                    throw new ClientException(formatLogMessage("error:{}while sending request:{}", response, request));
+                    throw new ClientException(formatLogMessage("error:{}while sending request:{}", response, org.mockserver.authentication.CredentialRedaction.withoutCredentials(request)));
                 }
 
                 return response;
@@ -746,6 +782,16 @@ public class MockServerClient implements Stoppable {
             }
         } else {
             throw new IllegalStateException(this.getClass().getSimpleName() + " has already been stopped, please create new " + this.getClass().getSimpleName() + " instance");
+        }
+    }
+
+    private void warnOnceIfBasicWithoutTls() {
+        if (!Boolean.TRUE.equals(secure) && warnedBasicWithoutTls.compareAndSet(false, true)) {
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setLogLevel(WARN)
+                    .setMessageFormat("control plane Basic credentials are being sent without TLS, so the password can be read on the network and MockServer refuses them unless controlPlaneBasicAuthenticationAllowInsecure is set (tests only) - use withSecure(true)")
+            );
         }
     }
 

@@ -357,4 +357,24 @@ public class Http3ExceptionHandlerTest {
             }
         };
     }
+    @Test
+    public void shouldReportTheConnectionsPeerForAQuicStream() {
+        java.net.InetSocketAddress client = new java.net.InetSocketAddress("127.0.0.1", 54321);
+        io.netty.handler.codec.quic.QuicChannel connection = mock(io.netty.handler.codec.quic.QuicChannel.class);
+        when(connection.remoteSocketAddress()).thenReturn(client);
+        QuicStreamChannel stream = mock(QuicStreamChannel.class);
+        when(stream.parent()).thenReturn(connection);
+
+        assertThat(Http3ExceptionHandler.peerAddress(stream), is(client));
+        assertThat(Http3ExceptionHandler.peerAddress(connection), is(client));
+    }
+
+    @Test
+    public void shouldReportNoPeerRatherThanAStreamIdForAQuicStreamWithNoConnection() {
+        QuicStreamChannel stream = mock(QuicStreamChannel.class);
+        when(stream.remoteAddress()).thenReturn(new io.netty.handler.codec.quic.QuicStreamAddress(4));
+
+        assertThat(Http3ExceptionHandler.peerAddress(stream), nullValue());
+        assertThat(Http3ExceptionHandler.peerAddress(null), nullValue());
+    }
 }

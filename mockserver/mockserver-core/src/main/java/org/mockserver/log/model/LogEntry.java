@@ -592,6 +592,15 @@ public class LogEntry implements EventTranslator<LogEntry> {
 
     @JsonIgnore
     public LogEntry setHttpRequests(RequestDefinition[] httpRequests) {
+        if (httpRequests != null) {
+            for (int i = 0; i < httpRequests.length; i++) {
+                RequestDefinition redacted = org.mockserver.authentication.CredentialRedaction.forLog(httpRequests[i]);
+                if (redacted != httpRequests[i]) {
+                    httpRequests = httpRequests.clone();
+                    httpRequests[i] = redacted;
+                }
+            }
+        }
         this.httpRequests = httpRequests;
         // a redacted message memo was scrubbed of the previous requests' credential values
         this.renderedMessage = null;
@@ -624,7 +633,7 @@ public class LogEntry implements EventTranslator<LogEntry> {
             if (isNotBlank(httpRequest.getLogCorrelationId())) {
                 setCorrelationId(httpRequest.getLogCorrelationId());
             }
-            this.httpRequests = new RequestDefinition[]{httpRequest};
+            this.httpRequests = new RequestDefinition[]{org.mockserver.authentication.CredentialRedaction.forLog(httpRequest)};
         } else {
             this.httpRequests = DEFAULT_REQUESTS_DEFINITIONS;
         }
@@ -1403,6 +1412,11 @@ public class LogEntry implements EventTranslator<LogEntry> {
                 }
                 // most important first: the matcher keeps values in this order while they fit its bounds
                 Set<String> collected = new LinkedHashSet<>(redactor.sensitiveValues(requests, responses));
+                for (RequestDefinition request : requests) {
+                    if (request instanceof HttpRequest && ((HttpRequest) request).getMaskedCredentialValues() != null) {
+                        collected.addAll(((HttpRequest) request).getMaskedCredentialValues());
+                    }
+                }
                 collected.addAll(texts);
                 collected.removeIf(text -> text.length() < org.mockserver.fixture.FixtureRedactor.MIN_SCRUBBED_VALUE_LENGTH);
                 values = new ArrayList<>(collected);
@@ -1625,12 +1639,21 @@ public class LogEntry implements EventTranslator<LogEntry> {
         return arguments;
     }
 
+    private static Object argumentForLog(Object argument) {
+        if (argument instanceof DeferredLogArgument && ((DeferredLogArgument) argument).getRequest() != null) {
+            HttpRequest request = ((DeferredLogArgument) argument).getRequest();
+            RequestDefinition redacted = org.mockserver.authentication.CredentialRedaction.forLog(request);
+            return redacted != request ? ((DeferredLogArgument) argument).withRequest((HttpRequest) redacted) : argument;
+        }
+        return org.mockserver.authentication.CredentialRedaction.argumentForLog(argument);
+    }
+
     public LogEntry setArguments(Object... arguments) {
         if (arguments != null) {
             Object[] normalised = new Object[arguments.length];
             for (int i = 0; i < arguments.length; i++) {
                 Object argument = arguments[i];
-                normalised[i] = argument == null ? "" : argument;
+                normalised[i] = argument == null ? "" : argumentForLog(argument);
             }
             this.arguments = normalised;
         } else {

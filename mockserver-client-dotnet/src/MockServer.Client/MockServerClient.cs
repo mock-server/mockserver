@@ -28,6 +28,7 @@ public sealed class MockServerClient : IDisposable
     private readonly string _baseUrl;
     private readonly bool _ownsHttpClient;
     private Func<string>? _controlPlaneBearerTokenSupplier;
+    private string? _controlPlaneBasicAuthorization;
     private readonly MockServerTlsOptions? _tlsOptions;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -76,13 +77,15 @@ public sealed class MockServerClient : IDisposable
     /// </summary>
     private MockServerClient(
         string baseUrl, HttpClient httpClient, bool ownsHttpClient, Func<string>? controlPlaneBearerTokenSupplier,
-        MockServerTlsOptions? tlsOptions)
+        MockServerTlsOptions? tlsOptions, string? controlPlaneBasicAuthorization = null)
     {
         _baseUrl = baseUrl.TrimEnd('/');
         _httpClient = httpClient;
         _ownsHttpClient = ownsHttpClient;
         _controlPlaneBearerTokenSupplier = controlPlaneBearerTokenSupplier;
+        _controlPlaneBasicAuthorization = controlPlaneBasicAuthorization;
         _tlsOptions = tlsOptions;
+        WarnIfBasicWithoutTls();
     }
 
     /// <summary>
@@ -96,14 +99,14 @@ public sealed class MockServerClient : IDisposable
     internal static MockServerClient CreateConfigured(
         string host, int port, string contextPath, bool secure,
         HttpClient httpClient, bool ownsHttpClient, Func<string>? controlPlaneBearerTokenSupplier,
-        MockServerTlsOptions? tlsOptions = null)
+        MockServerTlsOptions? tlsOptions = null, string? controlPlaneBasicAuthorization = null)
     {
         var scheme = secure ? "https" : "http";
         var ctxPath = string.IsNullOrEmpty(contextPath)
             ? ""
             : (contextPath.StartsWith("/") ? contextPath : "/" + contextPath);
         var baseUrl = $"{scheme}://{host}:{port}{ctxPath}";
-        return new MockServerClient(baseUrl, httpClient, ownsHttpClient, controlPlaneBearerTokenSupplier, tlsOptions);
+        return new MockServerClient(baseUrl, httpClient, ownsHttpClient, controlPlaneBearerTokenSupplier, tlsOptions, controlPlaneBasicAuthorization);
     }
 
     // -------------------------------------------------------------------
@@ -135,17 +138,56 @@ public sealed class MockServerClient : IDisposable
     }
 
     /// <summary>
-    /// Apply the configured control-plane bearer token (if any) to an outgoing request.
-    /// Evaluated per request so a supplier can return a rotating token.
+    /// Attach <c>Authorization: Basic ...</c> with <paramref name="username"/> and
+    /// <paramref name="password"/> to every control-plane request and to the callback/breakpoint
+    /// WebSocket upgrade. MockServer refuses Basic credentials without TLS, so use a secure client.
+    /// A bearer token, when also configured, is sent instead. Returns this client for chaining.
+    /// </summary>
+    public MockServerClient WithControlPlaneBasicAuthentication(string username, string password)
+    {
+        _controlPlaneBasicAuthorization = BasicAuthorization(username, password);
+        WarnIfBasicWithoutTls();
+        return this;
+    }
+
+    private void WarnIfBasicWithoutTls()
+    {
+        if (_controlPlaneBasicAuthorization != null && _baseUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+        {
+            System.Diagnostics.Trace.TraceWarning(
+                "MockServer client: control-plane Basic credentials are configured without TLS, so the password can be read on the network, " +
+                "and MockServer refuses them unless controlPlaneBasicAuthenticationAllowInsecure is set (tests only); use a secure client");
+        }
+    }
+
+    internal static string BasicAuthorization(string username, string password)
+    {
+        if (string.IsNullOrEmpty(username) || username.IndexOf(':') >= 0)
+            throw new ArgumentException("username is required and must not contain ':'", nameof(username));
+        if (password == null)
+            throw new ArgumentNullException(nameof(password));
+        return "Basic " + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(username + ":" + password));
+    }
+
+    /// <summary>
+    /// Apply the configured control-plane bearer token, else the Basic credentials, to an
+    /// outgoing request. Evaluated per request so a supplier can return a rotating token.
     /// </summary>
     private void ApplyControlPlaneAuth(HttpRequestMessage request)
     {
-        var supplier = _controlPlaneBearerTokenSupplier;
-        if (supplier == null) return;
-        var token = supplier();
-        if (string.IsNullOrEmpty(token)) return;
-        request.Headers.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        var token = _controlPlaneBearerTokenSupplier?.Invoke();
+        if (!string.IsNullOrEmpty(token))
+        {
+            request.Headers.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            return;
+        }
+        var basic = _controlPlaneBasicAuthorization;
+        if (basic != null)
+        {
+            request.Headers.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", basic.Substring("Basic ".Length));
+        }
     }
 
     // -------------------------------------------------------------------
@@ -1167,7 +1209,7 @@ public sealed class MockServerClient : IDisposable
             // Dispose old dead connection if present
             _breakpointWs?.Dispose();
             var ws = new BreakpointWebSocketClient();
-            await ws.ConnectAsync(_baseUrl, _controlPlaneBearerTokenSupplier, _tlsOptions).ConfigureAwait(false);
+            await ws.ConnectAsync(_baseUrl, _controlPlaneBearerTokenSupplier, _tlsOptions, _controlPlaneBasicAuthorization).ConfigureAwait(false);
             _breakpointWs = ws;
         }
         finally

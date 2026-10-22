@@ -218,6 +218,33 @@ public class ExtensionAdminRouteTest {
     }
 
     @Test
+    public void appliesControlPlaneBasicAuthenticationAndKeepsItsCredentialsOutOfTheLog() throws Exception {
+        Admin admin = new Admin();
+        String basic = "Basic " + java.util.Base64.getEncoder().encodeToString("admin:s3cret".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        // TRACE, so the route's request is logged at all ("received request"), and is masked
+        int port = start(configuration()
+            .logLevel("TRACE")
+            .controlPlaneTLSMutualAuthenticationRequired(false)
+            .controlPlaneJWTAuthenticationRequired(false)
+            .controlPlaneOidcAuthenticationRequired(false)
+            .controlPlaneBasicAuthenticationRequired(true)
+            .controlPlaneBasicAuthenticationAllowInsecure(true)
+            .controlPlaneBasicAuthenticationCredentials("admin:" + org.mockserver.authentication.basic.PasswordHash.pbkdf2Sha256("s3cret", 10_000)), admin);
+
+        assertThat("no credentials", get(port, "/mockserver/extensions/acme/hello").statusCode(), is(401));
+        assertThat(admin.threads, empty());
+        HttpResponse<String> served = HTTP_CLIENT.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/mockserver/extensions/acme/hello"))
+            .timeout(Duration.ofSeconds(30)).header("Authorization", basic).GET().build(), HttpResponse.BodyHandlers.ofString());
+        assertThat(served.statusCode(), is(200));
+        assertThat(admin.threads, hasSize(1));
+
+        String logs = HTTP_CLIENT.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/mockserver/retrieve?type=LOGS&format=LOG_ENTRIES"))
+            .timeout(Duration.ofSeconds(30)).header("Authorization", basic).PUT(HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString()).body();
+        assertThat(logs, org.hamcrest.Matchers.containsString("/mockserver/extensions/acme/hello"));
+        assertThat(logs, org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString(basic.substring("Basic ".length()))));
+    }
+
+    @Test
     public void servesNoRouteWithoutAnExtension() throws Exception {
         int port = start(configuration(), null);
         assertThat(get(port, "/mockserver/extensions/acme/hello").statusCode(), is(404));

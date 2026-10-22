@@ -887,6 +887,13 @@ func TestCallbackWebSocket_UsesBearerTokenSupplier(t *testing.T) {
 	}
 }
 
+func TestCallbackWebSocket_SendsControlPlaneBasicCredentials(t *testing.T) {
+	header := callbackWebSocketUpgradeHeader(t, WithControlPlaneBasicAuthentication("admin", "s3cret"))
+	if got := header.Get("Authorization"); got != "Basic YWRtaW46czNjcmV0" {
+		t.Errorf("expected Basic credentials on the upgrade, got %q", got)
+	}
+}
+
 func TestCallbackWebSocket_NoAuthorizationWithoutToken(t *testing.T) {
 	for name, opts := range map[string][]Option{
 		"no token":    nil,

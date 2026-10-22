@@ -74,6 +74,13 @@ client := mockserver.New("localhost", 1080,
     mockserver.WithControlPlaneBearerToken(jwt),
 )
 
+// With control-plane Basic authentication (over TLS only): sent on the same
+// requests and WebSocket; a bearer token, when also set, is sent instead
+client := mockserver.New("localhost", 1080,
+    mockserver.WithTLS(),
+    mockserver.WithControlPlaneBasicAuthentication("admin", password),
+)
+
 // With control-plane mutual TLS: the client certificate is presented, and the
 // CA trusted, on every control-plane request and on the callback/breakpoint
 // WebSocket (an http.Client passed with WithHTTPClient supplies its own TLS settings)
