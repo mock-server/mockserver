@@ -182,7 +182,7 @@ RUN GOOS="${TARGETOS:-$(go env GOOS)}" \
     fi
 
 # runtime image https://console.cloud.google.com/gcr/images/distroless/global/java25
-FROM gcr.io/distroless/java25:nonroot@sha256:69514ce1edfe8759f5169870e8f9d4c9f2b831fb0b305a6809a269a25c515a2f
+FROM gcr.io/distroless/java25:nonroot@sha256:f7ef4e6822a6f57b90cdc91ad19e7e02923f3f491eccda918fd0be012d3bd8ac
 
 # maintainer details
 LABEL org.opencontainers.image.authors="James Bloom <jamesdbloom@gmail.com>"
