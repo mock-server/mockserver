@@ -149,6 +149,7 @@ class MockServerWebSocketClient:
         self._secure: bool = False
         self._ssl_context: Any = None
         self._bearer_token_supplier: Callable[[], str | None] | None = None
+        self._authorization_supplier: Callable[[], str | None] | None = None
         # Per-breakpoint-id handlers for matcher-driven breakpoints
         self._breakpoint_request_handlers: dict[str, Callable] = {}
         self._breakpoint_response_handlers: dict[str, Callable] = {}
@@ -173,17 +174,22 @@ class MockServerWebSocketClient:
         tls_verify: bool = True,
         bearer_token_supplier: Callable[[], str | None] | None = None,
         ssl_context: Any = None,
+        authorization_supplier: Callable[[], str | None] | None = None,
     ) -> str:
         """Open the callback WebSocket and wait for MockServer's client id.
 
         ``bearer_token_supplier`` is called on every (re)connect; a non-empty
         result is sent as ``Authorization: Bearer <token>`` on the upgrade.
+        ``authorization_supplier``, when given, is used instead and its result
+        is sent as the whole ``Authorization`` value (a bearer token or Basic
+        credentials).
         ``ssl_context``, when given, is used for a secure connection in place of
         one built from ``ca_cert_path`` and ``tls_verify``, so the WebSocket
         trusts the same certificates and presents the same mTLS client
         certificate as the client's HTTP requests.
         """
         self._bearer_token_supplier = bearer_token_supplier
+        self._authorization_supplier = authorization_supplier
         self._host = host
         self._port = port
         self._context_path = context_path
@@ -211,7 +217,11 @@ class MockServerWebSocketClient:
         uri = f"{scheme}://{self._host}:{self._port}{path}"
 
         registration_headers = {CLIENT_REGISTRATION_ID_HEADER: registration_id}
-        if self._bearer_token_supplier is not None:
+        if self._authorization_supplier is not None:
+            authorization = self._authorization_supplier()
+            if authorization:
+                registration_headers["Authorization"] = authorization
+        elif self._bearer_token_supplier is not None:
             bearer = self._bearer_token_supplier()
             if bearer:
                 registration_headers["Authorization"] = f"Bearer {bearer}"

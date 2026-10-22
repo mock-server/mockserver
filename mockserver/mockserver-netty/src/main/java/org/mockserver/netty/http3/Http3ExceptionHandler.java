@@ -172,10 +172,17 @@ public class Http3ExceptionHandler extends ChannelInboundHandlerAdapter {
     }
 
     /**
-     * The client's socket address: a QUIC channel's {@code remoteAddress()} is its connection id.
+     * The client's socket address: a QUIC channel's {@code remoteAddress()} is its connection id. Null when neither
+     * the connection nor the stream knows it, as for a stream whose connection is gone.
      */
     static SocketAddress peerAddress(Channel channel) {
+        if (channel == null) {
+            return null;
+        }
         Channel connection = channel instanceof QuicStreamChannel ? channel.parent() : channel;
-        return connection instanceof QuicChannel ? ((QuicChannel) connection).remoteSocketAddress() : connection.remoteAddress();
+        if (connection instanceof QuicChannel) {
+            return ((QuicChannel) connection).remoteSocketAddress();
+        }
+        return connection != null ? connection.remoteAddress() : channel.remoteAddress();
     }
 }

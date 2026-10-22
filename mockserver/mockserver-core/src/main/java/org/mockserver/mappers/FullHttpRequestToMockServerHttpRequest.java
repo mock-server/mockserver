@@ -87,7 +87,7 @@ public class FullHttpRequestToMockServerHttpRequest {
                     .setLogLevel(Level.ERROR)
                     .setHttpRequestIfPresent(NettyMessageForLog.request(fullHttpRequest))
                     .setMessageFormat("exception decoding request{}")
-                    .setArguments(fullHttpRequest)
+                    .setArguments(NettyMessageForLog.request(fullHttpRequest))
                     .setThrowable(throwable)
             );
         }
@@ -110,7 +110,7 @@ public class FullHttpRequestToMockServerHttpRequest {
                     .setLogLevel(Level.ERROR)
                     .setHttpRequestIfPresent(NettyMessageForLog.request(nettyHttpRequest))
                     .setMessageFormat("exception decoding request headers{}")
-                    .setArguments(nettyHttpRequest)
+                    .setArguments(NettyMessageForLog.request(nettyHttpRequest))
                     .setThrowable(throwable)
             );
         }

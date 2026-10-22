@@ -33,9 +33,10 @@ public class ConfigurationSecuritySnapshotTest {
     public void controlPlaneAuthenticationSnapshotShouldMatchTheGettersForEveryValue() throws Exception {
         List<String> checked = assertSnapshotMatchesGetters(ControlPlaneAuthenticationSettings.class,
             configuration -> ControlPlaneAuthenticationSettings.of(configuration));
-        assertThat(checked, hasSize(15));
+        assertThat(checked, hasSize(19));
         assertThat(checked, hasItems("controlPlaneTLSMutualAuthenticationRequired", "controlPlaneJWTAuthenticationRequired",
-            "controlPlaneOidcAuthenticationRequired", "controlPlaneAuthorizationEnabled", "controlPlaneScopeMapping"));
+            "controlPlaneOidcAuthenticationRequired", "controlPlaneAuthorizationEnabled", "controlPlaneScopeMapping",
+            "controlPlaneBasicAuthenticationRequired", "controlPlaneBasicAuthenticationCredentials"));
     }
 
     @Test
@@ -92,8 +93,8 @@ public class ConfigurationSecuritySnapshotTest {
             return !Boolean.TRUE.equals(current);
         }
         if (type == String.class) {
-            // the two chain setters check the file exists
-            return name.endsWith("Chain") ? EXISTING_PEM : "distinctive-" + name;
+            // the chain and users file setters check the file exists
+            return name.endsWith("Chain") || name.endsWith("File") ? EXISTING_PEM : "distinctive-" + name;
         }
         if (type == Set.class) {
             return Collections.singleton("distinctive-" + name);

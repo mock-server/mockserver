@@ -8,6 +8,7 @@ import org.mockserver.authentication.AuthenticationException;
 import org.mockserver.authentication.BoundedResourceRetriever;
 import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.authentication.AuthenticationResult;
+import org.mockserver.authentication.CredentialRedaction;
 import org.mockserver.file.FilePath;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -118,9 +119,9 @@ public class JWTAuthenticationHandler implements AuthenticationHandler {
             mockServerLogger.logEvent(
                 new LogEntry()
                     .setLogLevel(Level.ERROR)
-                    .setHttpRequest(request)
+                    .setHttpRequest(CredentialRedaction.withoutCredentials(request))
                     .setMessageFormat("JWT control plane request failed authentication because JWT validator is not initialised:{}")
-                    .setArguments(request)
+                    .setArguments(CredentialRedaction.withoutCredentials(request))
                     .setThrowable(jwtValidatorInitialisationException)
             );
         } else {
@@ -151,9 +152,9 @@ public class JWTAuthenticationHandler implements AuthenticationHandler {
         mockServerLogger.logEvent(
             new LogEntry()
                 .setLogLevel(Level.ERROR)
-                .setHttpRequest(request)
+                .setHttpRequest(CredentialRedaction.withoutCredentials(request))
                 .setMessageFormat("JWT control plane request failed:{}for request:{}")
-                .setArguments(failureReason, request)
+                .setArguments(failureReason, CredentialRedaction.withoutCredentials(request))
         );
         throw new AuthenticationException(failureReason);
     }

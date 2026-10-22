@@ -70,6 +70,7 @@ pub struct ClientBuilder {
     secure: bool,
     tls_verify: bool,
     control_plane_bearer_token: Option<String>,
+    control_plane_basic_authentication: Option<(String, String)>,
     ca_cert_pem: Option<Vec<u8>>,
     /// Client identity for mTLS as `(certificate PEM, private key PEM)`.
     client_identity_pem: Option<(Vec<u8>, Vec<u8>)>,
@@ -85,6 +86,7 @@ impl ClientBuilder {
             secure: false,
             tls_verify: true,
             control_plane_bearer_token: None,
+            control_plane_basic_authentication: None,
             ca_cert_pem: None,
             client_identity_pem: None,
         }
@@ -130,6 +132,32 @@ impl ClientBuilder {
     /// ```
     pub fn control_plane_bearer_token(mut self, token: impl Into<String>) -> Self {
         self.control_plane_bearer_token = Some(token.into());
+        self
+    }
+
+    /// Attach `Authorization: Basic ...` with the given username and password to
+    /// **every control-plane request** the built client sends, including the
+    /// callback WebSocket upgrade used by breakpoints and callbacks.
+    ///
+    /// Use this when the server accepts HTTP Basic on the control plane
+    /// (`mockserver.controlPlaneBasicAuthenticationRequired=true`). MockServer
+    /// refuses Basic credentials without TLS, so also use
+    /// [`secure(true)`](Self::secure). A bearer token, when also configured, is
+    /// sent instead. [`build`](Self::build) fails for an empty username or one
+    /// containing `:`.
+    ///
+    /// # Example
+    /// ```no_run
+    /// use mockserver_client::ClientBuilder;
+    ///
+    /// let client = ClientBuilder::new("localhost", 1080)
+    ///     .secure(true)
+    ///     .control_plane_basic_authentication("admin", "s3cret")
+    ///     .build()
+    ///     .unwrap();
+    /// ```
+    pub fn control_plane_basic_authentication(mut self, username: impl Into<String>, password: impl Into<String>) -> Self {
+        self.control_plane_basic_authentication = Some((username.into(), password.into()));
         self
     }
 
@@ -202,10 +230,31 @@ impl ClientBuilder {
         // Attach the control-plane bearer token as a default header so it rides
         // on every control-plane request this client issues (this client only
         // ever talks to the `/mockserver/*` control plane).
-        if let Some(token) = &self.control_plane_bearer_token {
+        let basic_authorization = match &self.control_plane_basic_authentication {
+            Some((username, _)) if username.is_empty() || username.contains(':') => {
+                return Err(Error::InvalidRequest(
+                    "control-plane basic authentication needs a username without ':'".to_string(),
+                ));
+            }
+            Some((username, password)) => Some(format!(
+                "Basic {}",
+                base64::Engine::encode(&base64::engine::general_purpose::STANDARD, format!("{username}:{password}"))
+            )),
+            None => None,
+        };
+        // a configured bearer token wins; the WebSocket upgrade, as before, never sends an empty one
+        let http_authorization = match &self.control_plane_bearer_token {
+            Some(token) => Some(format!("Bearer {token}")),
+            None => basic_authorization.clone(),
+        };
+        let control_plane_authorization = match &self.control_plane_bearer_token {
+            Some(token) if !token.is_empty() => Some(format!("Bearer {token}")),
+            _ => basic_authorization.clone(),
+        };
+        if let Some(authorization) = &http_authorization {
             let mut headers = reqwest::header::HeaderMap::new();
-            let mut value = reqwest::header::HeaderValue::from_str(&format!("Bearer {token}"))
-                .map_err(|e| Error::InvalidRequest(format!("invalid bearer token: {e}")))?;
+            let mut value = reqwest::header::HeaderValue::from_str(authorization)
+                .map_err(|e| Error::InvalidRequest(format!("invalid control-plane authorization: {e}")))?;
             value.set_sensitive(true);
             headers.insert(reqwest::header::AUTHORIZATION, value);
             builder = builder.default_headers(headers);
@@ -221,6 +270,12 @@ impl ClientBuilder {
             builder = builder.identity(identity);
         }
 
+        if basic_authorization.is_some() && !self.secure {
+            eprintln!(
+                "mockserver: control-plane basic credentials are configured without TLS, so the password can be read on the network, \
+                 and MockServer refuses them unless controlPlaneBasicAuthenticationAllowInsecure is set (tests only); use secure(true)"
+            );
+        }
         let http_client = builder.build()?;
         let ws_tls = if self.secure {
             Some(ws_tls_connector(
@@ -235,7 +290,7 @@ impl ClientBuilder {
         Ok(MockServerClient {
             base_url,
             http: http_client,
-            control_plane_bearer_token: self.control_plane_bearer_token,
+            control_plane_authorization,
             ws_tls,
             breakpoint_ws: std::sync::Mutex::new(None),
         })
@@ -270,7 +325,7 @@ fn ws_tls_connector(
 pub struct MockServerClient {
     pub(crate) base_url: String,
     http: Client,
-    control_plane_bearer_token: Option<String>,
+    control_plane_authorization: Option<String>,
     ws_tls: Option<native_tls::TlsConnector>,
     breakpoint_ws: std::sync::Mutex<Option<BreakpointWebSocketClient>>,
 }
@@ -1084,7 +1139,7 @@ impl MockServerClient {
             }
             let ws = BreakpointWebSocketClient::connect(
                 &self.base_url,
-                self.control_plane_bearer_token.as_deref(),
+                self.control_plane_authorization.as_deref(),
                 self.ws_tls.as_ref(),
             )?;
             *guard = Some(ws);
@@ -2858,6 +2913,26 @@ mod tests {
         recorded
             .recv_timeout(Duration::from_secs(3))
             .expect("no upgrade recorded")
+    }
+
+    #[test]
+    fn callback_websocket_sends_control_plane_basic_credentials() {
+        assert_eq!(
+            callback_upgrade_authorization(|b| b.control_plane_basic_authentication("admin", "s3cret")),
+            Some("Basic YWRtaW46czNjcmV0".to_string())
+        );
+        assert_eq!(
+            callback_upgrade_authorization(|b| b
+                .control_plane_basic_authentication("admin", "s3cret")
+                .control_plane_bearer_token("client-token")),
+            Some("Bearer client-token".to_string())
+        );
+    }
+
+    #[test]
+    fn build_refuses_basic_credentials_whose_username_cannot_be_sent() {
+        assert!(ClientBuilder::new("localhost", 1080).control_plane_basic_authentication("a:b", "x").build().is_err());
+        assert!(ClientBuilder::new("localhost", 1080).control_plane_basic_authentication("", "x").build().is_err());
     }
 
     #[test]

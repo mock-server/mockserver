@@ -445,6 +445,12 @@ When MockServer requires a control-plane JWT, pass `bearerToken` or `bearerToken
 var client = mockServerClient("localhost", 1080, undefined, false, undefined, { bearerToken: process.env.MOCKSERVER_JWT });
 ```
 
+When MockServer accepts control-plane Basic authentication, pass `basicAuthUsername` and `basicAuthPassword` instead, with `tls` true because MockServer refuses Basic credentials without TLS. They are sent on the same requests and WebSocket; a bearer token, when also set, is sent instead.
+
+```js
+var client = mockServerClient("localhost", 1080, undefined, true, undefined, { basicAuthUsername: "admin", basicAuthPassword: process.env.MOCKSERVER_PASSWORD });
+```
+
 When MockServer requires mutual TLS for the control plane, pass `clientCertPemFilePath` and `clientKeyPemFilePath` (with `tls` true and, for a private CA, the CA certificate path). In Node the client presents that certificate, and trusts that CA, on every control-plane request and on the callback WebSocket.
 
 ```js

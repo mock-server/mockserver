@@ -67,6 +67,9 @@ class MockServerClient
      */
     private $controlPlaneBearerToken;
 
+    /** The control-plane {@code Basic ...} Authorization value, or null when not configured. */
+    private ?string $controlPlaneBasicAuthorization = null;
+
     /** Path to a PEM CA bundle used to verify the MockServer HTTPS certificate. */
     private ?string $caCertPath = null;
 
@@ -155,6 +158,32 @@ class MockServerClient
     }
 
     /**
+     * Configure control-plane HTTP Basic credentials.
+     *
+     * They are sent as {@code Authorization: Basic ...} on every control-plane
+     * request this client issues, when no bearer token is configured (a bearer
+     * token wins). MockServer refuses Basic credentials without TLS, so use a
+     * secure client.
+     *
+     * @param string $username The username; it must not be empty or contain ':'
+     * @param string $password The password
+     * @return $this
+     * @throws \InvalidArgumentException when the username cannot be sent
+     */
+    public function withControlPlaneBasicAuthentication(string $username, string $password): self
+    {
+        if ($username === '' || str_contains($username, ':')) {
+            throw new \InvalidArgumentException('control-plane basic authentication needs a username without ":"');
+        }
+        $this->controlPlaneBasicAuthorization = 'Basic ' . base64_encode($username . ':' . $password);
+        if (str_starts_with($this->baseUri, 'http://')) {
+            error_log('MockServer client: control-plane Basic credentials are configured without TLS, so the password can be read on the network, '
+                . 'and MockServer refuses them unless controlPlaneBasicAuthenticationAllowInsecure is set (tests only); use a secure client');
+        }
+        return $this;
+    }
+
+    /**
      * Trust a specific CA certificate when connecting to MockServer over HTTPS.
      *
      * @param string|null $caCertPath Path to a PEM CA bundle (Guzzle
@@ -188,7 +217,7 @@ class MockServerClient
      * Build the per-request Guzzle options carrying control-plane auth + TLS/mTLS.
      *
      * The returned array contains an {@code Authorization} header (when a bearer
-     * token is configured) and {@see RequestOptions::VERIFY} /
+     * token or Basic credentials are configured) and {@see RequestOptions::VERIFY} /
      * {@see RequestOptions::CERT} / {@see RequestOptions::SSL_KEY} (when CA /
      * client-cert paths are configured).
      *
@@ -205,6 +234,10 @@ class MockServerClient
         if (is_string($token) && $token !== '') {
             $options[RequestOptions::HEADERS] = [
                 'Authorization' => 'Bearer ' . $token,
+            ];
+        } elseif ($this->controlPlaneBasicAuthorization !== null) {
+            $options[RequestOptions::HEADERS] = [
+                'Authorization' => $this->controlPlaneBasicAuthorization,
             ];
         }
 

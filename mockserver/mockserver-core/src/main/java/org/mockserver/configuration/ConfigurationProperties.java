@@ -446,6 +446,10 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_CONTROL_PLANE_OIDC_SCOPE_CLAIM = "mockserver.controlPlaneOidcScopeClaim";
     private static final String MOCKSERVER_CONTROL_PLANE_AUTHORIZATION_ENABLED = "mockserver.controlPlaneAuthorizationEnabled";
     private static final String MOCKSERVER_CONTROL_PLANE_SCOPE_MAPPING = "mockserver.controlPlaneScopeMapping";
+    private static final String MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_REQUIRED = "mockserver.controlPlaneBasicAuthenticationRequired";
+    private static final String MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_CREDENTIALS = "mockserver.controlPlaneBasicAuthenticationCredentials";
+    private static final String MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_USERS_FILE = "mockserver.controlPlaneBasicAuthenticationUsersFile";
+    private static final String MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_ALLOW_INSECURE = "mockserver.controlPlaneBasicAuthenticationAllowInsecure";
 
     // TLS
     private static final String MOCKSERVER_PROACTIVELY_INITIALISE_TLS = "mockserver.proactivelyInitialiseTLS";
@@ -6626,6 +6630,69 @@ public class ConfigurationProperties {
             }
         }
         setProperty(MOCKSERVER_CONTROL_PLANE_SCOPE_MAPPING, serialized.toString());
+    }
+
+    public static boolean controlPlaneBasicAuthenticationRequired() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_REQUIRED, "MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_REQUIRED", "false"));
+    }
+
+    /**
+     * <p>
+     * Accept HTTP Basic credentials on control plane requests, as an alternative to any other configured control plane authentication; the users are configured with controlPlaneBasicAuthenticationCredentials or controlPlaneBasicAuthenticationUsersFile. Fixed at startup.
+     * </p>
+     *
+     * @param enable accept HTTP Basic credentials for control plane requests
+     */
+    public static void controlPlaneBasicAuthenticationRequired(boolean enable) {
+        setProperty(MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_REQUIRED, "" + enable);
+    }
+
+    public static String controlPlaneBasicAuthenticationCredentials() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_CREDENTIALS, "MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_CREDENTIALS", "");
+    }
+
+    /**
+     * <p>
+     * The control plane Basic authentication users, each as username:passwordHash or username:passwordHash:scopes, separated by ";" or new lines. The password hash must be a bcrypt ($2a$, $2b$, $2y$), argon2 ($argon2id$, $argon2i$, $argon2d$) or PBKDF2 ($pbkdf2-sha256$, $pbkdf2-sha512$) hash; plain text passwords are refused. The optional scopes (space or comma separated) are mapped to roles by controlPlaneScopeMapping. Fixed at startup.
+     * </p>
+     *
+     * @param controlPlaneBasicAuthenticationCredentials the users and their password hashes
+     */
+    public static void controlPlaneBasicAuthenticationCredentials(String controlPlaneBasicAuthenticationCredentials) {
+        setProperty(MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_CREDENTIALS, "" + controlPlaneBasicAuthenticationCredentials);
+    }
+
+    public static String controlPlaneBasicAuthenticationUsersFile() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_USERS_FILE, "MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_USERS_FILE", "");
+    }
+
+    /**
+     * <p>
+     * Path to a file of control plane Basic authentication users (it holds password hashes, so restrict who can read it), one username:passwordHash[:scopes] per line (the format htpasswd -B writes); blank lines and lines starting with # are ignored. Fixed at startup.
+     * </p>
+     *
+     * @param controlPlaneBasicAuthenticationUsersFile path to the users file
+     */
+    public static void controlPlaneBasicAuthenticationUsersFile(String controlPlaneBasicAuthenticationUsersFile) {
+        if (isNotBlank(controlPlaneBasicAuthenticationUsersFile)) {
+            fileExists(controlPlaneBasicAuthenticationUsersFile);
+        }
+        setProperty(MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_USERS_FILE, "" + controlPlaneBasicAuthenticationUsersFile);
+    }
+
+    public static boolean controlPlaneBasicAuthenticationAllowInsecure() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_ALLOW_INSECURE, "MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_ALLOW_INSECURE", "false"));
+    }
+
+    /**
+     * <p>
+     * FOR TESTS ONLY: accept control plane Basic credentials sent without TLS. By default a Basic authorization header on a plain text connection is refused, because the password can be read by anyone on the network path. Fixed at startup.
+     * </p>
+     *
+     * @param enable accept control plane Basic credentials over plain text connections
+     */
+    public static void controlPlaneBasicAuthenticationAllowInsecure(boolean enable) {
+        setProperty(MOCKSERVER_CONTROL_PLANE_BASIC_AUTHENTICATION_ALLOW_INSECURE, "" + enable);
     }
 
     // TLS

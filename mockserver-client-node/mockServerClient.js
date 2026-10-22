@@ -349,6 +349,8 @@ var mockServerClient;
      *        {
      *            bearerToken,            // static control-plane JWT attached as `Authorization: Bearer <token>`
      *            bearerTokenSupplier,    // function() => string, evaluated per-request (overrides bearerToken)
+     *            basicAuthUsername,      // control-plane HTTP Basic username, sent with basicAuthPassword (needs tls)
+     *            basicAuthPassword,      // control-plane HTTP Basic password; a bearer token wins when both are set
      *            clientCertPemFilePath,  // PEM client certificate for mutual TLS
      *            clientKeyPemFilePath,   // PEM private key for mutual TLS
      *            callbackWebSocketTimeoutMillis // how long a callback or breakpoint waits for its WebSocket's client id (default 10000)
@@ -373,6 +375,10 @@ var mockServerClient;
         // require, in the browser fall back to the global set by a2aMockBuilder.js.
         var _a2aMock = (typeof require !== 'undefined') ? require('./a2aMockBuilder').a2aMock : (typeof window !== 'undefined' ? (window.mockServerA2a && window.mockServerA2a.a2aMock) : undefined);
 
+        if (options && typeof options.basicAuthUsername === 'string' && options.basicAuthUsername !== '' && !tls && typeof console !== 'undefined') {
+            console.warn('mockserver-client: control-plane Basic credentials are configured without tls, so the password can be read on the network, and MockServer refuses them unless controlPlaneBasicAuthenticationAllowInsecure is set (tests only)');
+        }
+
         // Resolve the control-plane bearer token (static or supplier) for the
         // browser (XMLHttpRequest) transport path. The Node transport resolves
         // it per-request inside sendRequest.js.
@@ -395,6 +401,9 @@ var mockServerClient;
             var token = _resolveBrowserBearerToken();
             if (token) {
                 xmlhttp.setRequestHeader("Authorization", "Bearer " + token);
+            } else if (options && typeof options.basicAuthUsername === 'string' && options.basicAuthUsername !== '' && options.basicAuthPassword !== undefined && options.basicAuthPassword !== null) {
+                // UTF-8 bytes as a binary string, which is what btoa encodes
+                xmlhttp.setRequestHeader("Authorization", "Basic " + window.btoa(unescape(encodeURIComponent(options.basicAuthUsername + ':' + String(options.basicAuthPassword)))));
             }
         };
 
