@@ -1,6 +1,6 @@
 ---
 title: Extensions
-description: Load your own Java code into MockServer when it starts, to seed expectations and run start-up and shut-down logic, configured only at startup.
+description: Load your own Java code into MockServer when it starts, to seed expectations, serve your own control-plane routes and run start-up and shut-down logic, configured only at startup.
 layout: page
 pageOrder: 7
 section: 'Protocols & Advanced'
@@ -74,6 +74,53 @@ public class SeedExtension implements Extension, ExpectationInitializer {
     }
 }
 </pre>
+
+<a id="admin_routes" class="anchor" href="#admin_routes">&nbsp;</a>
+<h3>Serving your own control-plane routes</h3>
+
+<p>An extension that also implements <span class="inline_code">org.mockserver.extension.AdminApiExtension</span> answers every request under <span class="inline_code">/mockserver/extensions/&lt;name&gt;/</span>, where <span class="inline_code">&lt;name&gt;</span> is its <span class="inline_code">name()</span>. Use it to add your own operations next to MockServer's, for example to reload test data or report the state your extension keeps:</p>
+
+<pre class="prettyprint lang-java code">
+public class TestDataExtension implements Extension, AdminApiExtension {
+
+    @Override
+    public String name() {
+        return "test-data";
+    }
+
+    @Override
+    public HttpResponse handle(HttpRequest request, String subPath) {
+        // PUT /mockserver/extensions/test-data/reload has subPath "/reload"
+        if (subPath.equals("/reload")) {
+            reload();
+            return response().withStatusCode(200).withBody("reloaded");
+        }
+        return null; // answered 404
+    }
+
+    @Override
+    public boolean isReadOnly(String method, String subPath) {
+        return subPath.equals("/status"); // only /status can be called with the read role
+    }
+}
+</pre>
+
+<p>These routes are part of the control plane, so they are protected exactly like MockServer's own:</p>
+<ul>
+    <li>the same <a href="/mock_server/control_plane_authorisation.html">control-plane authentication</a> (JWT, mTLS or OIDC) applies, so a caller without valid credentials gets <span class="inline_code">401</span> and your code is never called;</li>
+    <li>with <span class="inline_code">controlPlaneAuthorizationEnabled</span>, every route needs the role that may change state, <span class="inline_code">GET</span> included, unless <span class="inline_code">isReadOnly</span> returns true for it; a caller without the role gets <span class="inline_code">403</span>. <span class="inline_code">isReadOnly</span> is only asked once the caller has been authenticated;</li>
+    <li>the same browser-origin check and CORS headers apply, and calls are recorded in the control-plane audit log when it is on.</li>
+</ul>
+
+<p>Your code never runs on MockServer's network threads, so a slow route cannot hold up mocked responses:</p>
+<ul>
+    <li>at most <a href="/mock_server/configuration_properties.html#button_configuration_extension_admin_max_in_flight"><span class="inline_code">extensionAdminMaxInFlight</span></a> calls (default 32) run at once; a call beyond that gets <span class="inline_code">503</span> with <span class="inline_code">Retry-After: 1</span>, including a call your route makes back into MockServer while the limit is reached;</li>
+    <li>a call that has not answered within <a href="/mock_server/configuration_properties.html#button_configuration_extension_admin_timeout_millis"><span class="inline_code">extensionAdminTimeoutMillis</span></a> (default 30 seconds) gets <span class="inline_code">500</span>, and your code is interrupted; what it returns afterwards is discarded. The call keeps its place in the limit until your code returns, so code that ignores the interrupt makes later calls get <span class="inline_code">503</span>;</li>
+    <li>an exception gets <span class="inline_code">500</span> with a correlation id that you can find in the MockServer log; the exception's message is not sent to the caller;</li>
+    <li>in a WAR your code runs on the servlet container's request thread, with the same limit but no timeout.</li>
+</ul>
+
+<p>Only the names of loaded extensions are taken. Any other path under <span class="inline_code">/mockserver/extensions/</span> behaves as it did before, so an expectation for it still matches. An expectation for a path under a loaded extension's name no longer matches, and MockServer logs a warning at start-up for each such expectation it loads then.</p>
 
 <h2>Loading extensions</h2>
 

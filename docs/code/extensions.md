@@ -11,9 +11,11 @@
   properties and `HttpState.applyConfigurationUpdate` warns via `warnInitOnlyProperty`.
 - **With nothing configured, nothing changes:** no `ServiceLoader` call, no `org.mockserver.extension` class
   loaded, and the request path is byte-for-byte unchanged. `ExtensionClassLoadingTest` pins this in a fresh JVM.
-- Phase 1 is delivered in units. **U11a (this code)** is the core: API, loader, registry, lifecycle and the
-  expectation-initializer hook. Admin routes (U11b), `$ext` template helpers (U11c) and listeners (U11d) build on
-  it. A global request filter and response transformer are deliberately out of phase 1.
+- Phase 1 is delivered in units. **U11a** is the core: API, loader, registry, lifecycle and the
+  expectation-initializer hook. **U11b** adds admin routes: an `AdminApiExtension` serves
+  `/mockserver/extensions/<name>/…` behind the control-plane gate, on a capped pool of its own with a timeout.
+  `$ext` template helpers (U11c) and listeners (U11d) build on it. A global request filter and response transformer
+  are deliberately out of phase 1.
 
 ## Lifecycle
 
@@ -42,7 +44,9 @@ sequenceDiagram
 |---|---|
 | `Extension` | Public API: `name()`, `priority()`, `start(ExtensionContext)`, `onStarted(List<Integer>)`, `stop()` |
 | `ExtensionContext` | The server's live `Configuration` and `MockServerLogger` |
-| `ExtensionHook` | The optional capabilities an extension adds by implementing a hook interface. U11a has `EXPECTATION_INITIALIZER`; later units add theirs |
+| `ExtensionHook` | The optional capabilities an extension adds by implementing a hook interface: `EXPECTATION_INITIALIZER` (U11a), `ADMIN_API` (U11b); later units add theirs |
+| `AdminApiExtension` | Public API (U11b): `handle(request, subPath)` and `isReadOnly(method, subPath)` |
+| `ExtensionAdminRoutes` | Built by `ExtensionRegistry.createAdminRoutes` only when a started extension implements `ADMIN_API`: route lookup, admission cap, admin pool, timeout, response-once writer, start-up shadow WARN |
 | `LoadedExtension` | One loaded extension: instance, name, priority, class, source JAR, implemented hooks and **disabled hooks with their reasons** |
 | `ExtensionLoader` | Package-private. Resolves classes through `CallbackClassLoaderResolver`, validates and de-duplicates, sorts by priority then name |
 | `ExtensionRegistry` | Starts, notifies and stops extensions; disables hooks; runs the initializer hook |
@@ -103,6 +107,57 @@ started extension that implements `ExpectationInitializer` (and whose hook is en
 applied with `requestMatchers.update(..., new Cause("extension:<name>", CLASS_INITIALISER))`. A throw refuses
 start-up.
 
+### Admin routes (H5)
+
+**Outcome.** A started `AdminApiExtension` named `acme` answers every method on `/mockserver/extensions/acme` and
+`/mockserver/extensions/acme/…`. The call passes the same origin refusal, authentication, authorization, audit and
+control-plane CORS headers as a built-in route, runs on `MockServer-ext-admin-<n>-<m>` threads (never an event loop
+or the shared scheduler), takes one of `extensionAdminMaxInFlight` slots or gets a `503`, and on Netty gets a `500`
+if it has not answered within `extensionAdminTimeoutMillis`.
+
+```mermaid
+sequenceDiagram
+    participant EL as "Event loop (HttpState.handle)"
+    participant R as ExtensionAdminRoutes
+    participant P as "Admin pool thread"
+    participant T as "Scheduler timer"
+    EL->>EL: origin refusal, isControlPlanePathCandidate
+    EL->>R: handle (only when extensionAdminRoutes != null)
+    R->>R: loaded name? preflight? (else return false)
+    R->>R: slots.tryAcquire (else 503, extension_admin)
+    R->>P: execute(call)
+    R->>T: schedule timeout
+    P->>P: control-plane gate (401/403/audit), isReadOnly only after authentication
+    P->>P: extension.handle, write once
+    T-->>P: on timeout: write 500 once, interrupt only extension code
+    P->>R: finally: slot released when the thread returns
+```
+
+| Aspect | Behaviour |
+|---|---|
+| Routing | `HttpState.handle` checks `extensionAdminRoutes != null` after the origin refusal and the `isControlPlanePathCandidate` fast reject, so data-plane paths never reach it. Only loaded names are taken (an owner decision): `/mockserver/extensions/other/…`, `/mockserver/extensions/` and bare `/extensions/…` fall through exactly as before. `subPath` is `/` for the bare name |
+| CORS | A preflight returns `false` and is answered by the existing control-plane preflight path in `HttpActionHandler`; responses are written with `apiResponse=true`, so they get the control-plane CORS policy and the `version` header |
+| Gate | `HttpState.extensionAdminRouteAllowed` = `controlPlaneRequestAuthenticated` with a read override: `controlPlaneAuthorized` and `recordAudit` use `isReadOnly(method, subPath)` instead of the method, so every route needs MUTATE (GET included) unless the extension says it only reads. The override is a memoised `BooleanSupplier` evaluated only after authentication succeeds, so an unauthenticated caller runs no extension code at all. Any throw from `isReadOnly`, an `Error` included, is answered `500` without calling `handle` (`recordAudit` swallows its own failures, so `serve` rethrows the recorded failure) |
+| Threads | `ThreadPoolExecutor(cap, cap)` with core time-out: never more threads than slots. The slot is released in the task's `finally`, so a handler that ignores the interrupt keeps its slot and no extra thread is made; hung handlers turn into `503`s |
+| Timeout | Netty only, on the scheduler's timer. The timer writes one `500` (correlation id; the logged exception carries the stuck thread's stack) and interrupts the thread only while it is inside extension code (`isReadOnly` or `handle`), never MockServer's gate, audit or response writing (an interrupt there could close the audit file sink's channel and disable it). The interrupt flag is cleared as each extension call returns. `OnceResponseWriter` makes the timeout and a late handler mutually exclusive; a late result is discarded and counted (`lateResultCount`) |
+| Loopback | A handler calling its own server at the cap gets a `503` (non-blocking `tryAcquire`), not a deadlock |
+| Errors | A throw is answered `500` with a correlation id through `ControlPlaneFailureResponse.writeUnexpectedFailure`; `null` is answered `404` |
+| WAR | Runs inline on the servlet thread, inside the cap, with no timeout |
+| Shutdown | `HttpState.stop` stops the routes first, which `LifeCycle` runs after the drain and before `ExtensionRegistry.stop`: `shutdown()` (not `shutdownNow`), then an interrupt only for the live calls that are inside extension code, so MockServer's own authentication, audit and response writing are never interrupted. A call that has not reached `handle` yet is answered `503` |
+| Shadowing | After the initialisers, `warnOnShadowedExpectations` logs a WARN for each start-up expectation whose literal or regex path falls under a loaded name. Expectations added later are not checked; they simply never match there |
+| Ordering | On pipelined HTTP/1.1 an admin reply can overtake an earlier response, as with `dispatchOffTheEventLoop` |
+
+**Cost with no admin extension.** `createAdminRoutes` returns `null` and starts nothing. A control-plane request
+pays one null check of a final field; a data-plane request returns at `isControlPlanePathCandidate` first and pays
+nothing. `ExtensionClassLoadingTest` sends a control-plane request, a `/mockserver/extensions/…` request and a
+data-plane request in a fresh JVM and still sees no `org.mockserver.extension` class load.
+
+**Follow-up (not in U11b):** the design's §5.7 per-extension metrics (`mock_server_extension_invocations_total`,
+`_errors_total`, `_timeouts_total`, `_duration_seconds` and the `mock_server_extension_stuck` gauge) are not
+registered yet. They span every hook, so they are owned by the listener unit (U11d), which adds the listener drop
+counter anyway. Until then H5 failures show as ERROR log entries with correlation ids and as the `extension_admin`
+overload reason, and `ExtensionAdminRoutes` keeps `timeoutCount`, `lateResultCount` and `errorCount` for them.
+
 ### Store factory overload
 
 `ExpectationStoreFactory.Factory` gained a default five-argument `create(..., ExtensionRegistry)` that delegates to
@@ -116,10 +171,15 @@ five-argument form; U11d uses it to give the store its listener dispatch.
 | `mockserver.extensions` / `--extensions` | empty | Comma-separated class names |
 | `mockserver.extensionScanning` | `false` | Also load `META-INF/services/org.mockserver.extension.Extension` entries |
 | `mockserver.extensionStartTimeoutMillis` | `30000` | Per `start`, `onStarted` and `stop`; values below 1 read as 1 |
+| `mockserver.extensionAdminMaxInFlight` | `32` | Admin route calls in flight; beyond it a `503` counted as `extension_admin`; values below 1 read as 1 |
+| `mockserver.extensionAdminTimeoutMillis` | `30000` | Per admin route call on Netty; values below 1 read as 1 |
 
-Spring: `MockServerPropertyCustomizer.applyProperty` maps all three, so `@MockServerInstance(properties = ...)`
+All five are startup-only (skipped by `ConfigurationDTO.applyTo`, warned about by `applyConfigurationUpdate`).
+
+Spring: `MockServerPropertyCustomizer.applyProperty` maps all five, so `@MockServerInstance(properties = ...)`
 gives each named instance its own extensions.
 
-Tests: `ExtensionRegistryTest` (core), `ExtensionLifecycleTest` and `ExtensionClassLoadingTest` (netty),
+Tests: `ExtensionRegistryTest`, `ExtensionAdminRoutesTest` and the extension case in `HttpStateAuditTest` (core),
+`ExtensionLifecycleTest`, `ExtensionAdminRouteTest` and `ExtensionClassLoadingTest` (netty),
 `MockServerServletExtensionTest`, `ProxyServletExtensionTest`, `MockServerInstanceExtensionsTest` (Spring), plus
 the startup-only cases in `HttpStateConfigurationUpdateTest` and `ConfigurationDTOTest`.

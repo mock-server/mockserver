@@ -62,12 +62,16 @@ public class MockServerPropertyCustomizerConfigurationTest {
             Arrays.asList(
                 "mockserver.extensions=com.example.First,com.example.Second",
                 "mockserver.extensionScanning=true",
-                "mockserver.extensionStartTimeoutMillis=5000"
+                "mockserver.extensionStartTimeoutMillis=5000",
+                "mockserver.extensionAdminMaxInFlight=4",
+                "mockserver.extensionAdminTimeoutMillis=2500"
             )
         );
         assertThat(config.extensions(), is("com.example.First,com.example.Second"));
         assertThat(config.extensionScanning(), is(true));
         assertThat(config.extensionStartTimeoutMillis(), is(5000L));
+        assertThat(config.extensionAdminMaxInFlight(), is(4));
+        assertThat(config.extensionAdminTimeoutMillis(), is(2500L));
     }
 
     @Test

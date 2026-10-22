@@ -233,6 +233,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private String extensions;
     private Boolean extensionScanning;
     private Long extensionStartTimeoutMillis;
+    private Integer extensionAdminMaxInFlight;
+    private Long extensionAdminTimeoutMillis;
     private Boolean redactSecretsInRecordedExpectations;
     private Boolean redactSecretsInLog;
     private Double llmCostBudgetUsd;
@@ -619,6 +621,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.extensions = configuration.extensions();
             this.extensionScanning = configuration.extensionScanning();
             this.extensionStartTimeoutMillis = configuration.extensionStartTimeoutMillis();
+            this.extensionAdminMaxInFlight = configuration.extensionAdminMaxInFlight();
+            this.extensionAdminTimeoutMillis = configuration.extensionAdminTimeoutMillis();
             this.redactSecretsInRecordedExpectations = configuration.redactSecretsInRecordedExpectations();
             this.redactSecretsInLog = configuration.redactSecretsInLog();
             this.llmCostBudgetUsd = configuration.llmCostBudgetUsd();
@@ -1102,6 +1106,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.extensions(extensions);
         configuration.extensionScanning(extensionScanning);
         configuration.extensionStartTimeoutMillis(extensionStartTimeoutMillis);
+        configuration.extensionAdminMaxInFlight(extensionAdminMaxInFlight);
+        configuration.extensionAdminTimeoutMillis(extensionAdminTimeoutMillis);
         configuration.redactSecretsInRecordedExpectations(redactSecretsInRecordedExpectations);
         configuration.redactSecretsInLog(redactSecretsInLog);
         configuration.llmCostBudgetUsd(llmCostBudgetUsd);
@@ -1965,7 +1971,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         // recordedBodyFilesDirectory is deliberately not applied: it decides where the server writes files, so it is
         // fixed at startup (see HttpState.applyConfigurationUpdate)
-        // extensions, extensionScanning and extensionStartTimeoutMillis are deliberately not applied: extensions are
+        // extensions, extensionScanning, extensionStartTimeoutMillis, extensionAdminMaxInFlight and
+        // extensionAdminTimeoutMillis are deliberately not applied: extensions are
         // trusted code loaded once at startup, so a control-plane request must not add, remove or reconfigure them
         // (see HttpState.applyConfigurationUpdate)
         // staticFilesDirectory is deliberately not applied: it decides which server files requests can read, so it
@@ -4175,6 +4182,24 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setExtensionStartTimeoutMillis(Long extensionStartTimeoutMillis) {
         this.extensionStartTimeoutMillis = extensionStartTimeoutMillis;
+        return this;
+    }
+
+    public Integer getExtensionAdminMaxInFlight() {
+        return extensionAdminMaxInFlight;
+    }
+
+    public ConfigurationDTO setExtensionAdminMaxInFlight(Integer extensionAdminMaxInFlight) {
+        this.extensionAdminMaxInFlight = extensionAdminMaxInFlight;
+        return this;
+    }
+
+    public Long getExtensionAdminTimeoutMillis() {
+        return extensionAdminTimeoutMillis;
+    }
+
+    public ConfigurationDTO setExtensionAdminTimeoutMillis(Long extensionAdminTimeoutMillis) {
+        this.extensionAdminTimeoutMillis = extensionAdminTimeoutMillis;
         return this;
     }
 

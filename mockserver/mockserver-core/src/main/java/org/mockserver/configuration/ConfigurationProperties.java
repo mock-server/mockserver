@@ -330,6 +330,8 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_EXTENSIONS = "mockserver.extensions";
     private static final String MOCKSERVER_EXTENSION_SCANNING = "mockserver.extensionScanning";
     private static final String MOCKSERVER_EXTENSION_START_TIMEOUT_MILLIS = "mockserver.extensionStartTimeoutMillis";
+    private static final String MOCKSERVER_EXTENSION_ADMIN_MAX_IN_FLIGHT = "mockserver.extensionAdminMaxInFlight";
+    private static final String MOCKSERVER_EXTENSION_ADMIN_TIMEOUT_MILLIS = "mockserver.extensionAdminTimeoutMillis";
 
     // mock initialization
     private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
@@ -5023,6 +5025,36 @@ public class ConfigurationProperties {
      */
     public static void extensionStartTimeoutMillis(long millis) {
         setProperty(MOCKSERVER_EXTENSION_START_TIMEOUT_MILLIS, "" + millis);
+    }
+
+    public static int extensionAdminMaxInFlight() {
+        return Math.max(1, readIntegerProperty(MOCKSERVER_EXTENSION_ADMIN_MAX_IN_FLIGHT, "MOCKSERVER_EXTENSION_ADMIN_MAX_IN_FLIGHT", 32));
+    }
+
+    /**
+     * The most extension admin route calls a server runs at once; a call beyond it is answered {@code 503}. Each call
+     * holds its place until the extension's handler returns, even after it timed out. Default 32; values below 1 are
+     * read as 1. Fixed at startup.
+     *
+     * @param maxInFlight the most extension admin route calls in flight
+     */
+    public static void extensionAdminMaxInFlight(int maxInFlight) {
+        setProperty(MOCKSERVER_EXTENSION_ADMIN_MAX_IN_FLIGHT, "" + maxInFlight);
+    }
+
+    public static long extensionAdminTimeoutMillis() {
+        return Math.max(1L, readLongProperty(MOCKSERVER_EXTENSION_ADMIN_TIMEOUT_MILLIS, "MOCKSERVER_EXTENSION_ADMIN_TIMEOUT_MILLIS", 30_000L));
+    }
+
+    /**
+     * How long the Netty server waits for an extension admin route to answer before it answers {@code 500} itself and
+     * interrupts the handler. Not applied in a WAR, where the handler runs on the servlet container's request thread.
+     * Default 30000; values below 1 are read as 1. Fixed at startup.
+     *
+     * @param millis the time to wait for each call, in milliseconds
+     */
+    public static void extensionAdminTimeoutMillis(long millis) {
+        setProperty(MOCKSERVER_EXTENSION_ADMIN_TIMEOUT_MILLIS, "" + millis);
     }
 
     // mock initialization

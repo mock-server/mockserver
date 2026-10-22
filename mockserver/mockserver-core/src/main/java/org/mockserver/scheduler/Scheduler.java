@@ -123,7 +123,8 @@ public class Scheduler {
         WEBSOCKET_REPLIES("websocket_replies", "maxPendingDelayedResponses", "WebSocket reply frames waiting for their delays", "refused a whole reply set at a time, closing the WebSocket with 1013 Try Again Later"),
         TEMPLATE_ACTIONS("template_actions", "maxQueuedTemplateActions", "template renders waiting for a template thread", "answered 503 Service Unavailable"),
         STATIC_FILES("static_files", "the file read queue", true, "static file reads waiting for a file read thread", "answered 503 Service Unavailable"),
-        FILE_BODIES("file_bodies", "the file read queue", true, "FILE response body reads waiting for a file read thread", "answered 503 Service Unavailable");
+        FILE_BODIES("file_bodies", "the file read queue", true, "FILE response body reads waiting for a file read thread", "answered 503 Service Unavailable"),
+        EXTENSION_ADMIN("extension_admin", "extensionAdminMaxInFlight", "extension admin route calls in flight", "answered 503 Service Unavailable");
 
         private final String metricLabel;
         private final String property;
@@ -447,6 +448,14 @@ public class Scheduler {
             }
         } while (!budget.compareAndSet(current, current + permits));
         return true;
+    }
+
+    /**
+     * Refuses a task that a bound outside this scheduler turned away: counts it under {@code reason}, logs it at most
+     * every 10 seconds, then runs {@code onRejected} on the calling thread, which must answer the request.
+     */
+    public void refuseForOverload(OverloadReason reason, int limit, Runnable onRejected) {
+        rejectForOverload(reason, limit, onRejected, getPort());
     }
 
     private void rejectForOverload(OverloadReason reason, int limit, Runnable onRejected, Integer port) {

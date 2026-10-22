@@ -12,7 +12,12 @@ public enum ExtensionHook {
     /**
      * Expectations loaded once when the server starts, after the configured initialisers.
      */
-    EXPECTATION_INITIALIZER("expectationInitializer", ExpectationInitializer.class);
+    EXPECTATION_INITIALIZER("expectationInitializer", ExpectationInitializer.class),
+
+    /**
+     * Control-plane routes under {@code /mockserver/extensions/<name>/}, served on a pool of their own.
+     */
+    ADMIN_API("adminApi", AdminApiExtension.class);
 
     private final String label;
     private final Class<?> hookType;
