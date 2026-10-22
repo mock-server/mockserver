@@ -244,6 +244,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_RECORDED_BODY_FILES_DIRECTORY = "mockserver.recordedBodyFilesDirectory";
     private static final String MOCKSERVER_STATIC_FILES_DIRECTORY = "mockserver.staticFilesDirectory";
     private static final String MOCKSERVER_REDACT_SECRETS_IN_LOG = "mockserver.redactSecretsInLog";
+    private static final String MOCKSERVER_LOG_RAW_NETWORK_TRAFFIC = "mockserver.logRawNetworkTraffic";
     private static final String MOCKSERVER_LLM_COST_BUDGET_USD = "mockserver.llmCostBudgetUsd";
     private static final String MOCKSERVER_USE_SEMICOLON_AS_QUERY_PARAMETER_SEPARATOR = "mockserver.useSemicolonAsQueryParameterSeparator";
     private static final String MOCKSERVER_STARTUP_WARMUP = "mockserver.startupWarmup";
@@ -4271,6 +4272,26 @@ public class ConfigurationProperties {
      */
     public static void redactSecretsInLog(boolean enable) {
         setProperty(MOCKSERVER_REDACT_SECRETS_IN_LOG, "" + enable);
+    }
+
+    public static boolean logRawNetworkTraffic() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_LOG_RAW_NETWORK_TRAFFIC, "MOCKSERVER_LOG_RAW_NETWORK_TRAFFIC", "" + false));
+    }
+
+    /**
+     * Log the raw bytes of the connections the server accepts and of the HTTP connections its forward client opens
+     * (forwarded and proxied requests, webhooks), at {@code INFO} on the {@code org.mockserver.logging.RawNetworkTrafficLog}
+     * logger, for debugging. HTTP/1.1 is logged as text and other protocols as a hex dump (after TLS decryption),
+     * HTTP/2 as decoded frames. Sensitive header values ({@code Authorization}, {@code Cookie} and the like) are
+     * masked and at most 4096 bytes of each message are shown, but bodies, query strings and the hex dump are logged
+     * raw and may hold secrets: use it only while debugging, not in production.
+     * <p>
+     * Read once when the server starts: a request to the control plane cannot turn it on. Default is false.
+     *
+     * @param enable log raw network traffic
+     */
+    public static void logRawNetworkTraffic(boolean enable) {
+        setProperty(MOCKSERVER_LOG_RAW_NETWORK_TRAFFIC, "" + enable);
     }
 
     /**

@@ -20,6 +20,7 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingHandler;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.logging.RawNetworkTrafficLog;
 import org.mockserver.metrics.Metrics;
 import org.mockserver.model.Protocol;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
@@ -54,8 +55,10 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
     // the upstream proxies this connection goes through: none for a host on noProxyHosts
     private final Map<ProxyConfiguration.Type, ProxyConfiguration> proxyConfigurations;
     private final NettySslContextFactory nettySslContextFactory;
+    private final RawNetworkTrafficLog rawNetworkTrafficLog;
 
-    HttpClientInitializer(Map<ProxyConfiguration.Type, ProxyConfiguration> proxyConfigurations, MockServerLogger mockServerLogger, boolean forwardProxyClient, NettySslContextFactory nettySslContextFactory, Protocol httpProtocol, Configuration configuration) {
+    HttpClientInitializer(Map<ProxyConfiguration.Type, ProxyConfiguration> proxyConfigurations, MockServerLogger mockServerLogger, boolean forwardProxyClient, NettySslContextFactory nettySslContextFactory, Protocol httpProtocol, Configuration configuration, RawNetworkTrafficLog rawNetworkTrafficLog) {
+        this.rawNetworkTrafficLog = rawNetworkTrafficLog;
         this.proxyConfigurations = proxyConfigurations;
         this.configuration = configuration;
         this.mockServerLogger = mockServerLogger;
@@ -201,6 +204,9 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
     }
 
     private void configureHttp1Pipeline(ChannelPipeline pipeline) {
+        if (rawNetworkTrafficLog != null) {
+            rawNetworkTrafficLog.addTo(pipeline, false);
+        }
         addReadTimeoutHandlerIfNotPooled(pipeline);
         int maxHeaderSize = maxHeaderSize();
         // a status line is short, so it and each chunk-size line keep Netty's limit
@@ -289,7 +295,9 @@ public class HttpClientInitializer extends ChannelInitializer<SocketChannel> {
         Http2FrameCodecBuilder frameCodecBuilder = Http2FrameCodecBuilder.forClient()
             .initialSettings(forwardClientSettings(maxFrameSize, maxHeaderSize))
             .encoderIgnoreMaxHeaderListSize(true);
-        if (mockServerLogger.isEnabledForInstance(TRACE)) {
+        if (rawNetworkTrafficLog != null) {
+            frameCodecBuilder.frameLogger(rawNetworkTrafficLog.http2FrameLogger());
+        } else if (mockServerLogger.isEnabledForInstance(TRACE)) {
             frameCodecBuilder.frameLogger(new Http2FrameLogger(LogLevel.TRACE, HttpClientHandler.class.getName()));
         }
         pipeline.addLast(frameCodecBuilder.build());

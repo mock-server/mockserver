@@ -188,6 +188,19 @@ public class ConfigurationDTOTest {
     }
 
     @Test
+    public void shouldNotApplyLogRawNetworkTrafficToARunningServer() {
+        Configuration target = configuration().logRawNetworkTraffic(false);
+
+        ConfigurationDTO dto = new ConfigurationDTO();
+        dto.setLogRawNetworkTraffic(true);
+        dto.applyTo(target);
+
+        assertThat(target.logRawNetworkTraffic(), is(false));
+        assertThat(new ConfigurationDTO(target).getLogRawNetworkTraffic(), is(false));
+        assertThat(new ConfigurationDTO().setLogRawNetworkTraffic(true).buildObject().logRawNetworkTraffic(), is(true));
+    }
+
+    @Test
     public void shouldRoundTripDataPlaneAuthenticationFields() {
         Configuration original = configuration()
             .dataPlaneAuthenticationRequired(true)
@@ -623,7 +636,9 @@ public class ConfigurationDTOTest {
         // decide where the server may send requests, so a control-plane request must not widen them
         "forwardProxyBlockPrivateNetworks",
         "forwardProxyAllowedHosts",
-        "forwardProxyDeniedHosts"
+        "forwardProxyDeniedHosts",
+        // writes every connection's traffic, credentials and bodies included, to the log
+        "logRawNetworkTraffic"
     ));
 
     @Test

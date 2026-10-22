@@ -241,6 +241,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private Integer extensionHelperMaxInFlight;
     private Boolean redactSecretsInRecordedExpectations;
     private Boolean redactSecretsInLog;
+    private Boolean logRawNetworkTraffic;
     private Double llmCostBudgetUsd;
     private Boolean otelPropagateTraceContext;
     private Boolean otelGenerateTraceId;
@@ -633,6 +634,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
             this.extensionHelperMaxInFlight = configuration.extensionHelperMaxInFlight();
             this.redactSecretsInRecordedExpectations = configuration.redactSecretsInRecordedExpectations();
             this.redactSecretsInLog = configuration.redactSecretsInLog();
+            this.logRawNetworkTraffic = configuration.logRawNetworkTraffic();
             this.llmCostBudgetUsd = configuration.llmCostBudgetUsd();
             this.otelPropagateTraceContext = configuration.otelPropagateTraceContext();
             this.otelGenerateTraceId = configuration.otelGenerateTraceId();
@@ -1122,6 +1124,7 @@ public class ConfigurationDTO implements DTO<Configuration> {
         configuration.extensionHelperMaxInFlight(extensionHelperMaxInFlight);
         configuration.redactSecretsInRecordedExpectations(redactSecretsInRecordedExpectations);
         configuration.redactSecretsInLog(redactSecretsInLog);
+        configuration.logRawNetworkTraffic(logRawNetworkTraffic);
         configuration.llmCostBudgetUsd(llmCostBudgetUsd);
         configuration.otelPropagateTraceContext(otelPropagateTraceContext);
         configuration.otelGenerateTraceId(otelGenerateTraceId);
@@ -1996,6 +1999,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (redactSecretsInLog != null) {
             target.redactSecretsInLog(redactSecretsInLog);
         }
+        // logRawNetworkTraffic is deliberately not applied: it would write request credentials and bodies to the
+        // server's log, so it is fixed at startup (see HttpState.applyConfigurationUpdate)
         if (llmCostBudgetUsd != null) {
             target.llmCostBudgetUsd(llmCostBudgetUsd);
         }
@@ -4276,6 +4281,15 @@ public class ConfigurationDTO implements DTO<Configuration> {
 
     public ConfigurationDTO setRedactSecretsInLog(Boolean redactSecretsInLog) {
         this.redactSecretsInLog = redactSecretsInLog;
+        return this;
+    }
+
+    public Boolean getLogRawNetworkTraffic() {
+        return logRawNetworkTraffic;
+    }
+
+    public ConfigurationDTO setLogRawNetworkTraffic(Boolean logRawNetworkTraffic) {
+        this.logRawNetworkTraffic = logRawNetworkTraffic;
         return this;
     }
 

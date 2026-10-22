@@ -452,6 +452,21 @@ public class HttpStateConfigurationUpdateTest {
     }
 
     @Test
+    public void shouldNotLetAPutTurnOnRawNetworkTrafficLogging() {
+        // given
+        configuration.logRawNetworkTraffic(false);
+
+        // when
+        put(new ConfigurationDTO().setLogRawNetworkTraffic(true));
+
+        // then
+        assertThat(configuration.logRawNetworkTraffic(), is(false));
+        List<String> warnings = logger.warnings();
+        assertThat(warnings, hasSize(1));
+        assertThat(warnings.get(0), containsString("logRawNetworkTraffic is fixed at startup"));
+    }
+
+    @Test
     public void shouldNotWarnWhenInitOnlyPropertiesAreEchoedBackUnchanged() {
         // given - the whole-blob PUT case: a client GETs the configuration and PUTs it back
         // verbatim, including the init-only properties. That must not produce noise.
