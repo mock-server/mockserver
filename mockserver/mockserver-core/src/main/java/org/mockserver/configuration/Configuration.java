@@ -6575,6 +6575,8 @@ public class Configuration {
      * The default is false so that the common case of forwarding to localhost / Docker
      * bridge / Kubernetes service IPs continues to work. Enable this in hardened or
      * multi-tenant deployments where untrusted callers can register expectations.
+     * <p>
+     * Fixed at startup: a request to the control plane cannot change it.
      *
      * @param forwardProxyBlockPrivateNetworks if true, block forwarding to private or metadata addresses
      */

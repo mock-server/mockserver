@@ -1896,7 +1896,7 @@ public class HttpState {
                 // captured as a recorded expectation, which the same/next retrieve returns (deduplicated and
                 // templatized when deduplicateRecordedExpectations is on) in the requested format. Recording
                 // is inherently traffic-driven: this call only arms recording — it does not synthesise traffic.
-                final String forwardUnmatchedTo = request.getFirstQueryStringParameter("forwardUnmatchedTo");
+                final String forwardUnmatchedTo = request.getFirstQueryStringParameter(FORWARD_UNMATCHED_TO_PARAMETER);
                 if (isNotBlank(forwardUnmatchedTo)) {
                     final HttpResponse forwardSetupError = enableRecordAndForward(forwardUnmatchedTo, logCorrelationId);
                     if (forwardSetupError != null) {
@@ -7219,12 +7219,15 @@ public class HttpState {
     }
 
     /**
-     * As {@link #isControlPlaneRead(String, String)}, except that a retrieve asking for recorded bodies to be written
-     * to files ({@code extractBodiesLargerThan}) writes to the server's filesystem, so it needs the role that may
-     * change state.
+     * As {@link #isControlPlaneRead(String, String)}, except that a retrieve that changes server state needs the role
+     * that may change state: one asking for recorded bodies to be written to files ({@code extractBodiesLargerThan})
+     * writes to the server's filesystem, and one with {@code forwardUnmatchedTo} repoints where unmatched requests are
+     * forwarded.
      */
     private static boolean isControlPlaneRead(HttpRequest request, String method, String operation) {
-        if ("retrieve".equals(operation) && isNotBlank(request.getFirstQueryStringParameter(EXTRACT_BODIES_PARAMETER))) {
+        if ("retrieve".equals(operation)
+            && (isNotBlank(request.getFirstQueryStringParameter(EXTRACT_BODIES_PARAMETER))
+            || isNotBlank(request.getFirstQueryStringParameter(FORWARD_UNMATCHED_TO_PARAMETER)))) {
             return false;
         }
         return isControlPlaneRead(method, operation);
@@ -7472,6 +7475,11 @@ public class HttpState {
         if (suppliedControlPlaneTrustedHostSuffixes != null && !suppliedControlPlaneTrustedHostSuffixes.equals(configuration.controlPlaneTrustedHostSuffixes())) {
             warnInitOnlyProperty("controlPlaneTrustedHostSuffixes", "\"" + suppliedControlPlaneTrustedHostSuffixes + "\"", "\"" + configuration.controlPlaneTrustedHostSuffixes() + "\"",
                 "it decides which web sites may use the control plane, so a request to the control plane cannot widen it");
+        }
+        Boolean suppliedForwardProxyBlockPrivateNetworks = suppliedConfiguration.getForwardProxyBlockPrivateNetworks();
+        if (suppliedForwardProxyBlockPrivateNetworks != null && !suppliedForwardProxyBlockPrivateNetworks.equals(configuration.forwardProxyBlockPrivateNetworks())) {
+            warnInitOnlyProperty("forwardProxyBlockPrivateNetworks", String.valueOf(suppliedForwardProxyBlockPrivateNetworks), String.valueOf(configuration.forwardProxyBlockPrivateNetworks()),
+                "it decides whether the server may send requests to private-network and cloud-metadata addresses, so a request to the control plane cannot widen it");
         }
         String suppliedForwardProxyAllowedHosts = suppliedConfiguration.getForwardProxyAllowedHosts();
         if (suppliedForwardProxyAllowedHosts != null && !suppliedForwardProxyAllowedHosts.equals(configuration.forwardProxyAllowedHosts())) {
@@ -8016,6 +8024,7 @@ public class HttpState {
     }
 
     private static final String EXTRACT_BODIES_PARAMETER = "extractBodiesLargerThan";
+    private static final String FORWARD_UNMATCHED_TO_PARAMETER = "forwardUnmatchedTo";
 
     /**
      * Whether this request is a retrieve that writes recorded response bodies to files.

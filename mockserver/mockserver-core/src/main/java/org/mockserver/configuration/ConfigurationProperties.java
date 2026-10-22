@@ -6868,6 +6868,8 @@ public class ConfigurationProperties {
      * localhost), so blocking those targets by default would break the common case.
      * Enable this in hardened or multi-tenant deployments where untrusted callers can
      * register expectations.
+     * <p>
+     * Fixed at startup: a request to the control plane cannot change it.
      *
      * @param block if true, block forwarding to private or metadata addresses
      */

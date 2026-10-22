@@ -298,6 +298,9 @@ module MockServer
     #
     # +config_json+ is a ConfigurationDTO JSON document; only the fields present
     # are applied (partial update). A nil value is sent as an empty body.
+    # Properties fixed at startup, such as forwardProxyBlockPrivateNetworks,
+    # forwardProxyAllowedHosts and forwardProxyDeniedHosts, are ignored and the
+    # server logs a warning.
     #
     # @param config_json [String, nil] the ConfigurationDTO JSON
     # @return [String] the serialized updated configuration JSON

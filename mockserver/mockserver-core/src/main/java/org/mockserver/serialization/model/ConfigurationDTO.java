@@ -2163,11 +2163,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (forwardDefaultHostHeader != null) {
             target.forwardDefaultHostHeader(forwardDefaultHostHeader);
         }
-        if (forwardProxyBlockPrivateNetworks != null) {
-            target.forwardProxyBlockPrivateNetworks(forwardProxyBlockPrivateNetworks);
-        }
-        // forwardProxyAllowedHosts and forwardProxyDeniedHosts are deliberately not applied: a runtime update could
-        // widen where the server sends requests, so they are fixed at startup (see HttpState.applyConfigurationUpdate)
+        // forwardProxyBlockPrivateNetworks, forwardProxyAllowedHosts and forwardProxyDeniedHosts are deliberately not
+        // applied: a runtime update could widen where the server sends requests, so they are fixed at startup (see
+        // HttpState.applyConfigurationUpdate)
         if (forwardProxyTLSHostnameVerificationEnabled != null) {
             target.forwardProxyTLSHostnameVerificationEnabled(forwardProxyTLSHostnameVerificationEnabled);
         }

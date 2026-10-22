@@ -1906,7 +1906,9 @@ class MockServerClient
      *
      * Wraps {@code PUT /mockserver/configuration} with a {@code ConfigurationDTO}
      * JSON document; only the fields present are applied. Returns the serialized
-     * updated configuration JSON document verbatim.
+     * updated configuration JSON document verbatim. Properties fixed at startup,
+     * such as forwardProxyBlockPrivateNetworks, forwardProxyAllowedHosts and
+     * forwardProxyDeniedHosts, are ignored and the server logs a warning.
      *
      * @param string $configJson The {@code ConfigurationDTO} JSON document.
      * @return string The updated configuration JSON document.

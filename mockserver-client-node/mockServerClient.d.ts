@@ -515,7 +515,9 @@ export interface MockServerClient {
     /**
      * Update the live configuration (PUT /mockserver/configuration). Only fields
      * present in the supplied document are applied (partial update). Resolves to
-     * the updated configuration.
+     * the updated configuration. Properties fixed at startup, such as
+     * forwardProxyBlockPrivateNetworks, forwardProxyAllowedHosts and
+     * forwardProxyDeniedHosts, are ignored and the server logs a warning.
      */
     updateConfiguration(configuration: object | string): Promise<any>;
 

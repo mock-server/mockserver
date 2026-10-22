@@ -2,6 +2,9 @@ package org.mockserver.mock;
 
 import org.junit.After;
 import org.junit.Test;
+import org.mockserver.authentication.AuthenticationHandler;
+import org.mockserver.authentication.AuthenticationResult;
+import org.mockserver.authentication.authorization.ControlPlaneRole;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -16,7 +19,10 @@ import org.mockserver.serialization.ExpectationSerializer;
 import org.mockserver.serialization.RequestDefinitionSerializer;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -204,6 +210,64 @@ public class RecordAndForwardRoundTripHttpStateTest {
         assertThat(response.getBodyAsString(), containsString("SSRF"));
         assertThat(configuration.proxyRemoteHost(), is(""));
         assertThat(configuration.proxyRemotePort(), nullValue());
+    }
+
+    // ---- authorization: arming changes server state, so it is not a read ----
+
+    private void authenticateAs(HttpState httpState, Set<String> scopes) {
+        httpState.setControlPlaneAuthenticationHandler(new AuthenticationHandler() {
+            @Override
+            public boolean controlPlaneRequestAuthenticated(HttpRequest request) {
+                return true;
+            }
+
+            @Override
+            public AuthenticationResult authenticate(HttpRequest request) {
+                return AuthenticationResult.authenticated("tester", "verified-oidc", Map.of("sub", "tester"), scopes);
+            }
+        });
+    }
+
+    private Configuration authorizationEnabledConfiguration() {
+        Map<String, ControlPlaneRole> mapping = new LinkedHashMap<>();
+        mapping.put("qa-team", ControlPlaneRole.MUTATE);
+        mapping.put("viewers", ControlPlaneRole.READ);
+        return configuration().controlPlaneAuthorizationEnabled(true).controlPlaneScopeMapping(mapping);
+    }
+
+    @Test
+    public void shouldForbidAReadOnlyPrincipalFromArmingRecordAndForward() {
+        // given - a principal granted only the READ role
+        Configuration configuration = authorizationEnabledConfiguration();
+        HttpState httpState = newHttpState(configuration);
+        authenticateAs(httpState, Set.of("viewers"));
+
+        // when - it tries to arm forwarding with forwardUnmatchedTo
+        HttpResponse response = retrieveRecorded(httpState, "JSON", "upstream.example.com:9090");
+
+        // then - refused, and nothing was armed
+        assertThat(response.getStatusCode(), is(403));
+        assertThat(configuration.proxyRemoteHost(), is(""));
+        assertThat(configuration.proxyRemotePort(), nullValue());
+
+        // and - a retrieve without forwardUnmatchedTo is still a read it may make
+        assertThat(retrieveRecorded(httpState, "JSON", null).getStatusCode(), is(200));
+    }
+
+    @Test
+    public void shouldLetAPrincipalThatMayChangeStateArmRecordAndForward() {
+        // given - a principal granted the MUTATE role
+        Configuration configuration = authorizationEnabledConfiguration();
+        HttpState httpState = newHttpState(configuration);
+        authenticateAs(httpState, Set.of("qa-team"));
+
+        // when
+        HttpResponse response = retrieveRecorded(httpState, "JSON", "upstream.example.com:9090");
+
+        // then
+        assertThat(response.getStatusCode(), is(200));
+        assertThat(configuration.proxyRemoteHost(), is("upstream.example.com"));
+        assertThat(configuration.proxyRemotePort(), is(9090));
     }
 
     // ---- full round-trip: arm + record -> retrieve as code/JSON -> re-import ----

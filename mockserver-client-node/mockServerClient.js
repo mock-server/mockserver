@@ -2458,6 +2458,9 @@ var mockServerClient;
         /**
          * Update the live configuration (PUT /mockserver/configuration). Only the
          * fields present in the supplied document are applied (partial update).
+         * Properties fixed at startup, such as forwardProxyBlockPrivateNetworks,
+         * forwardProxyAllowedHosts and forwardProxyDeniedHosts, are ignored and the
+         * server logs a warning.
          *
          * @param configuration  a ConfigurationDTO object (or JSON string)
          * @return promise resolving to the parsed updated Configuration object

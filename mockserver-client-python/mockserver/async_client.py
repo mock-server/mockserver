@@ -460,7 +460,9 @@ class AsyncMockServerClient:
         Issues ``PUT /mockserver/configuration`` with *config_json* (a
         ``ConfigurationDTO`` JSON document; only the present fields are applied)
         and returns the serialized updated configuration JSON. A ``None`` body is
-        sent as an empty string.
+        sent as an empty string. Properties fixed at startup, such as
+        ``forwardProxyBlockPrivateNetworks``, ``forwardProxyAllowedHosts`` and
+        ``forwardProxyDeniedHosts``, are ignored and the server logs a warning.
         """
         body = config_json if config_json is not None else ""
         status, response_body = await self._request(

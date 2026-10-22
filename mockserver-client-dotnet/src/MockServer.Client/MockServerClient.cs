@@ -2164,6 +2164,8 @@ public sealed class MockServerClient : IDisposable
     /// Update the live configuration with a partial ConfigurationDTO JSON document
     /// (PUT /mockserver/configuration). Only the fields present are applied. Returns the
     /// serialized updated-configuration JSON body. A null body is sent as an empty document.
+    /// Properties fixed at startup, such as forwardProxyBlockPrivateNetworks, forwardProxyAllowedHosts
+    /// and forwardProxyDeniedHosts, are ignored and the server logs a warning.
     /// </summary>
     public string UpdateConfiguration(string? configJson)
         => UpdateConfigurationAsync(configJson).GetAwaiter().GetResult();

@@ -558,7 +558,9 @@ paths:
             arms record-and-forward for the session - subsequent requests matching no expectation are
             forwarded to this upstream and captured as recorded expectations, which this and later
             retrievals return in the requested format. Only arms recording; it does not synthesise
-            traffic, so a retrieval made before any traffic arrives returns nothing.
+            traffic, so a retrieval made before any traffic arrives returns nothing. Changes where
+            unmatched requests are forwarded, so it needs the MUTATE role when control-plane
+            authorization is enabled.
         - in: query
           name: consolidate
           schema:

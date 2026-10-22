@@ -2112,7 +2112,9 @@ impl MockServerClient {
     ///
     /// `config_json` is a `ConfigurationDTO` JSON document — only the fields
     /// present are applied (partial update). Returns the serialized *updated*
-    /// configuration JSON.
+    /// configuration JSON. Properties fixed at startup, such as
+    /// `forwardProxyBlockPrivateNetworks`, `forwardProxyAllowedHosts` and
+    /// `forwardProxyDeniedHosts`, are ignored and the server logs a warning.
     pub fn update_configuration(&self, config_json: &str) -> Result<String> {
         let resp = self
             .http

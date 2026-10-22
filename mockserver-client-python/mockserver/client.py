@@ -255,6 +255,10 @@ class MockServerClient:
     def update_configuration(self, config_json: str) -> str:
         """Update the live configuration (partial update) and return the updated
         configuration JSON (``PUT /mockserver/configuration``).
+
+        Properties fixed at startup, such as ``forwardProxyBlockPrivateNetworks``,
+        ``forwardProxyAllowedHosts`` and ``forwardProxyDeniedHosts``, are ignored
+        and the server logs a warning.
         """
         return self._run(self._async_client.update_configuration(config_json))
 

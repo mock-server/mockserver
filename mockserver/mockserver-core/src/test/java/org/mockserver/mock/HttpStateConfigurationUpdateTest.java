@@ -312,6 +312,22 @@ public class HttpStateConfigurationUpdateTest {
     }
 
     @Test
+    public void shouldNotLetAPutSwitchOffForwardProxyBlockPrivateNetworks() {
+        // given - the SSRF guard is on
+        configuration.forwardProxyBlockPrivateNetworks(true);
+
+        // when - a PUT tries to switch it off
+        put(new ConfigurationDTO().setForwardProxyBlockPrivateNetworks(false));
+
+        // then - it stays on, and the ignored value is reported
+        assertThat(configuration.forwardProxyBlockPrivateNetworks(), is(true));
+        List<String> warnings = logger.warnings();
+        assertThat(warnings, hasSize(1));
+        assertThat(warnings.get(0), containsString("forwardProxyBlockPrivateNetworks is fixed at startup"));
+        assertThat(warnings.get(0), containsString("the supplied value false has been IGNORED"));
+    }
+
+    @Test
     public void shouldNotLetAPutRepointTheStaticFilesDirectory() {
         // given
         configuration.staticFilesDirectory("__files");

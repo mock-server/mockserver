@@ -3377,6 +3377,14 @@ public class MockServerClient implements Stoppable {
         return httpResponse.getBodyAsString();
     }
 
+    /**
+     * Update the live configuration (PUT /mockserver/configuration); only the fields present are applied.
+     * Properties fixed at startup, such as {@code forwardProxyBlockPrivateNetworks}, {@code forwardProxyAllowedHosts}
+     * and {@code forwardProxyDeniedHosts}, are ignored and the server logs a warning.
+     *
+     * @param configurationJson a ConfigurationDTO JSON document
+     * @return the updated configuration JSON
+     */
     public String updateConfiguration(String configurationJson) {
         HttpResponse httpResponse = sendRequest(
             request()

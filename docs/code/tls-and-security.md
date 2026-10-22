@@ -307,6 +307,8 @@ swagger-parser's `ParseOptions.setSafelyResolveURL` (with `setRemoteRefAllowList
 
 The feature is opt-in because MockServer is most commonly used to mock services running on localhost, Docker bridge networks, or Kubernetes service IPs, where blocking private addresses would prevent normal usage.
 
+The setting is startup-only, like the allow and deny lists below: `ConfigurationDTO.applyTo` never applies it and `HttpState.applyConfigurationUpdate` warns about a differing value, so a control-plane caller cannot switch SSRF protection off. It is read through the server's `Configuration` (`InetAddressValidator.isEnabled`), falling back to `ConfigurationProperties` only when there is no instance.
+
 ### Forward Target Allow and Deny Lists
 
 `forwardProxyAllowedHosts` and `forwardProxyDeniedHosts` are applied at the same choke point, in every `InetAddressValidator.validateForwardTarget` overload, so they reach every route listed above, with the same refusal (`ForwardTargetBlockedException`: `502`, a closed connection, an unsent webhook) and the same warnings. OpenAPI spec fetches are covered too: `OpenAPIParser` arms `SpecFetchGuard` when either check is on, fixing `forwardProxyBlockPrivateNetworks` and the parsed `ForwardTargetHostPolicy` when the parse starts (`InetAddressValidator.validateForwardTarget(boolean, ForwardTargetHostPolicy, String)`), and both are part of the parsed-spec cache key (the policy compares by its two source strings), so a spec parsed under other lists never answers this one. Only network fetches reach the `ProxySelector`, so a spec or `$ref` read from a file or the classpath (`initializationOpenAPIPath`, local multi-file specs) is never checked.
@@ -548,7 +550,7 @@ Off by default: with `controlPlaneAuthorizationEnabled=false` (the default) no a
 
 | Role | Grants |
 |------|--------|
-| `read` | Read-only control-plane operations (every `GET`, plus the read `PUT`s: `retrieve`, `verify`, `verifySequence`, `verifySLO`, `diff`, `explainUnmatched`, `explain`, `debugMismatch`, `lint`, `files/retrieve`, `files/list`) |
+| `read` | Read-only control-plane operations (every `GET`, plus the read `PUT`s: `retrieve`, `verify`, `verifySequence`, `verifySLO`, `diff`, `explainUnmatched`, `explain`, `debugMismatch`, `lint`, `files/retrieve`, `files/list`). A `retrieve` with `extractBodiesLargerThan` (writes body files) or `forwardUnmatchedTo` (repoints where unmatched requests are forwarded) changes server state, so `isControlPlaneRead(HttpRequest, …)` classifies it as a mutation, whichever method carries it |
 | `mutate` | Everything `read` grants **plus** all mutations (creating expectations, clearing, resetting, binding ports, etc.) |
 | `admin` | Everything `mutate` grants (ceiling for future admin-only operations; currently a strict superset of `mutate`) |
 

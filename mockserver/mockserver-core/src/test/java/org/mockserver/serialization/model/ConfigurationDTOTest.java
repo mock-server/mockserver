@@ -96,6 +96,19 @@ public class ConfigurationDTOTest {
     }
 
     @Test
+    public void shouldNotApplyForwardProxyBlockPrivateNetworksToARunningServer() {
+        Configuration target = configuration().forwardProxyBlockPrivateNetworks(true);
+
+        ConfigurationDTO dto = new ConfigurationDTO();
+        dto.setForwardProxyBlockPrivateNetworks(false);
+        dto.applyTo(target);
+
+        assertThat(target.forwardProxyBlockPrivateNetworks(), is(true));
+        assertThat(new ConfigurationDTO(target).getForwardProxyBlockPrivateNetworks(), is(true));
+        assertThat(new ConfigurationDTO().setForwardProxyBlockPrivateNetworks(true).buildObject().forwardProxyBlockPrivateNetworks(), is(true));
+    }
+
+    @Test
     public void shouldNotApplyRecordedBodyFilesDirectoryToARunningServer() {
         Configuration target = configuration().recordedBodyFilesDirectory("recorded-bodies");
 
@@ -539,6 +552,7 @@ public class ConfigurationDTOTest {
         // decides which server files a request can read, so a control-plane request must not repoint it
         "staticFilesDirectory",
         // decide where the server may send requests, so a control-plane request must not widen them
+        "forwardProxyBlockPrivateNetworks",
         "forwardProxyAllowedHosts",
         "forwardProxyDeniedHosts"
     ));

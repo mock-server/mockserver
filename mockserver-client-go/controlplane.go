@@ -148,7 +148,9 @@ func (c *Client) RetrieveConfiguration() (string, error) {
 // UpdateConfiguration applies a partial configuration update (a ConfigurationDTO
 // JSON document — only the fields present are applied) and returns the updated
 // configuration JSON. Mirrors the Java client updateConfiguration(String). Sends
-// PUT /mockserver/configuration.
+// PUT /mockserver/configuration. Properties fixed at startup, such as
+// forwardProxyBlockPrivateNetworks, forwardProxyAllowedHosts and
+// forwardProxyDeniedHosts, are ignored and the server logs a warning.
 func (c *Client) UpdateConfiguration(configJSON string) (string, error) {
 	respBody, statusCode, err := c.doRequest("PUT", "/mockserver/configuration", []byte(configJSON), nil)
 	if err != nil {
