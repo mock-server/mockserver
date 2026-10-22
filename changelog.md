@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - `retrieve` with `forwardUnmatchedTo` now needs a control-plane role that may change state. The parameter repoints where unmatched requests are forwarded, but control-plane authorization treated the call as a read, so with `controlPlaneAuthorizationEnabled` a principal with only the `READ` role could redirect unmatched traffic. Such a principal now gets `403`, as it already did for `extractBodiesLargerThan`; a `retrieve` without either parameter is still a read (see [upgrading to 9](https://www.mock-server.com/mock_server/upgrading_to_9.html#forward_unmatched_to_needs_mutate))
+- Upgraded DOMPurify (dashboard UI dependency) to 3.4.17 to fix GHSA-cg2g-xh64-v4q7
 
 ### Added
 

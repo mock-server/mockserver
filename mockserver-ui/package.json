@@ -68,7 +68,7 @@
   ],
   "overrides": {
     "@babel/core": "^7.29.6",
-    "dompurify": "^3.4.16",
+    "dompurify": "^3.4.17",
     "katex": "^0.18.2",
     "lodash-es": "4.18.1"
   }
