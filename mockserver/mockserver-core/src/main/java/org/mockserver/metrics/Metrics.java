@@ -74,6 +74,10 @@ public class Metrics {
     private static volatile Counter evictedLogEntriesTotal;
     // Counter for drift analyses shed because too many were already queued (best-effort work).
     private static volatile Counter droppedDriftAnalysesTotal;
+    // labels: extension, reason (count, bytes, shutdown)
+    private static volatile Counter extensionListenerDroppedTotal;
+    // labels: extension, hook
+    private static volatile Counter extensionErrorsTotal;
     // Inbound client connections currently open, summed over every MockServer in the JVM. Maintained
     // whether or not metrics are enabled (one atomic per connection open/close) so the gauge is correct
     // from the first scrape rather than from whenever metrics happened to be switched on.
@@ -302,6 +306,16 @@ public class Metrics {
                     droppedDriftAnalysesTotal = Counter.builder()
                         .name("mock_server_dropped_drift_analyses")
                         .help("Number of forwarded responses not analysed for mock drift because the drift-analysis backlog was full")
+                        .register();
+                    extensionListenerDroppedTotal = Counter.builder()
+                        .name("mock_server_extension_listener_dropped")
+                        .help("Events not delivered to an extension listener, by extension and reason (count: its queue was full; bytes: its share of extensionListenerMaxBytes was full; shutdown: still queued when the server stopped)")
+                        .labelNames("extension", "reason")
+                        .register();
+                    extensionErrorsTotal = Counter.builder()
+                        .name("mock_server_extension_errors")
+                        .help("Calls into an extension hook that threw, by extension and hook")
+                        .labelNames("extension", "hook")
                         .register();
                     GaugeWithCallback.builder()
                         .name("mock_server_inbound_connections_open")
@@ -721,6 +735,8 @@ public class Metrics {
             droppedLogEventsTotal = null;
             evictedLogEntriesTotal = null;
             droppedDriftAnalysesTotal = null;
+            extensionListenerDroppedTotal = null;
+            extensionErrorsTotal = null;
             overloadRejectionsTotal = null;
             webSocketReadPausesTotal = null;
             inboundConnectionsRejectedTotal = null;
@@ -913,6 +929,26 @@ public class Metrics {
         Counter counter = droppedDriftAnalysesTotal;
         if (counter != null) {
             counter.inc();
+        }
+    }
+
+    /**
+     * Count an event an extension listener did not receive. No-op unless metrics are enabled.
+     */
+    public static void incrementExtensionListenerDropped(String extension, String reason) {
+        Counter counter = extensionListenerDroppedTotal;
+        if (counter != null) {
+            counter.labelValues(extension, reason).inc();
+        }
+    }
+
+    /**
+     * Count a call into an extension hook that threw. No-op unless metrics are enabled.
+     */
+    public static void incrementExtensionErrors(String extension, String hook) {
+        Counter counter = extensionErrorsTotal;
+        if (counter != null) {
+            counter.labelValues(extension, hook).inc();
         }
     }
 

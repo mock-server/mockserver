@@ -142,6 +142,12 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
             case "extensionAdminTimeoutMillis":
                 config.extensionAdminTimeoutMillis(Long.parseLong(value));
                 break;
+            case "extensionListenerQueueSize":
+                config.extensionListenerQueueSize(Integer.parseInt(value));
+                break;
+            case "extensionListenerMaxBytes":
+                config.extensionListenerMaxBytes(Long.parseLong(value));
+                break;
             case "openAPIContextPathPrefix":
                 config.openAPIContextPathPrefix(value);
                 break;

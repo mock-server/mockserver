@@ -17,7 +17,22 @@ public enum ExtensionHook {
     /**
      * Control-plane routes under {@code /mockserver/extensions/<name>/}, served on a pool of their own.
      */
-    ADMIN_API("adminApi", AdminApiExtension.class);
+    ADMIN_API("adminApi", AdminApiExtension.class),
+
+    /**
+     * Told about each request the server answered, on the extension's own listener thread.
+     */
+    SERVE_EVENT_LISTENER("serveEventListener", ServeEventListener.class),
+
+    /**
+     * Told each time an expectation is added, updated or removed, on the extension's own listener thread.
+     */
+    EXPECTATION_LIFECYCLE_LISTENER("expectationLifecycleListener", ExpectationLifecycleListener.class),
+
+    /**
+     * Told each time the configuration is updated over the control plane, on the extension's own listener thread.
+     */
+    SETTINGS_LISTENER("settingsListener", SettingsListener.class);
 
     private final String label;
     private final Class<?> hookType;

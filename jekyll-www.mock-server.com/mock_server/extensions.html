@@ -1,6 +1,6 @@
 ---
 title: Extensions
-description: Load your own Java code into MockServer when it starts, to seed expectations, serve your own control-plane routes and run start-up and shut-down logic, configured only at startup.
+description: Load your own Java code into MockServer at startup to seed expectations, serve your own control-plane routes, listen to requests and expectation changes, and run start-up and shut-down logic.
 layout: page
 pageOrder: 7
 section: 'Protocols & Advanced'
@@ -121,6 +121,43 @@ public class TestDataExtension implements Extension, AdminApiExtension {
 </ul>
 
 <p>Only the names of loaded extensions are taken. Any other path under <span class="inline_code">/mockserver/extensions/</span> behaves as it did before, so an expectation for it still matches. An expectation for a path under a loaded extension's name no longer matches, and MockServer logs a warning at start-up for each such expectation it loads then.</p>
+
+<h3>Listening to what MockServer does</h3>
+
+<p>An extension can also implement one or more listener interfaces, like WireMock's <span class="inline_code">ServeEventListener</span>, <span class="inline_code">StubLifecycleListener</span> and <span class="inline_code">GlobalSettingsListener</span>:</p>
+
+<table class="table table-bordered">
+    <tr><th>Interface</th><th>Told about</th></tr>
+    <tr><td><span class="inline_code">ServeEventListener</span></td><td>Each request MockServer answered: a mocked response, a forwarded response or the not-matched response, with the request, the response, the id of the expectation that answered it and when. Bodies are cut to <a href="/mock_server/configuration_properties.html#button_configuration_max_logged_body_bytes"><span class="inline_code">maxLoggedBodyBytes</span></a> when that is set; headers are not redacted. Load-test traffic MockServer generates itself is not reported.</td></tr>
+    <tr><td><span class="inline_code">ExpectationLifecycleListener</span></td><td>Each expectation added, updated or removed, and why: <span class="inline_code">API</span>, <span class="inline_code">FILE_INITIALISER</span>, <span class="inline_code">CLASS_INITIALISER</span>, <span class="inline_code">FILE_WATCHER</span>, <span class="inline_code">EXHAUSTED</span> (no matches left), <span class="inline_code">EXPIRED</span> (its time to live passed), <span class="inline_code">EVICTED</span> (to stay within <span class="inline_code">maxExpectations</span>) or <span class="inline_code">CLUSTER</span> (another node changed it).</td></tr>
+    <tr><td><span class="inline_code">SettingsListener</span></td><td>Each <span class="inline_code">PUT /mockserver/configuration</span>, after it has been applied. Calling <span class="inline_code">Configuration</span> setters in your own code does not notify it.</td></tr>
+</table>
+
+<pre class="prettyprint lang-java code">
+public class TrafficRecorder implements ServeEventListener, ExpectationLifecycleListener {
+
+    @Override
+    public String name() {
+        return "traffic-recorder";
+    }
+
+    @Override
+    public void onServed(ServeEvent event) {
+        // event.disposition(), event.request(), event.response(), event.expectationId()
+    }
+
+    @Override
+    public void onChange(ExpectationChange change) {
+        if (change.type() == ExpectationChange.Type.REMOVED &amp;&amp; change.cause() == ChangeCause.EXHAUSTED) {
+            // an expectation has used up its matches
+        }
+    }
+}
+</pre>
+
+<p>Each listener extension gets a thread of its own, so a listener may block or do slow work without slowing MockServer down. Expectation changes wait in a queue in the order MockServer made them; when a listener falls too far behind, further events for it are dropped (see <a href="/mock_server/configuration_properties.html#button_configuration_extension_listener_queue_size"><span class="inline_code">extensionListenerQueueSize</span></a> and <a href="/mock_server/configuration_properties.html#button_configuration_extension_listener_max_bytes"><span class="inline_code">extensionListenerMaxBytes</span></a>) and counted in the <span class="inline_code">mock_server_extension_listener_dropped_total</span> metric. A dropped event never affects the event log or verification. An exception thrown by a listener is logged once and counted in <span class="inline_code">mock_server_extension_errors_total</span>, and later events are still delivered. When MockServer stops, it delivers what is still queued for up to <span class="inline_code">stopDrainMillis</span> before stopping the extensions.</p>
+
+<p>An expectation that runs out of matches is reported as soon as the response that used its last match completes. An expectation whose time to live passes with no traffic is reported when a later request or a retrieve next finds it. The expectation in a change is MockServer's own, not a copy, so read it but do not change it.</p>
 
 <h2>Loading extensions</h2>
 

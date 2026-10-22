@@ -151,7 +151,9 @@ public class ConfigurationDTOTest {
         Configuration target = configuration()
             .extensions("com.example.Loaded")
             .extensionScanning(false)
-            .extensionStartTimeoutMillis(1000L);
+            .extensionStartTimeoutMillis(1000L)
+            .extensionListenerQueueSize(100)
+            .extensionListenerMaxBytes(1_000_000L);
 
         target.extensionAdminMaxInFlight(8).extensionAdminTimeoutMillis(2000L);
         new ConfigurationDTO()
@@ -160,6 +162,8 @@ public class ConfigurationDTOTest {
             .setExtensionStartTimeoutMillis(5L)
             .setExtensionAdminMaxInFlight(1000)
             .setExtensionAdminTimeoutMillis(5L)
+            .setExtensionListenerQueueSize(1)
+            .setExtensionListenerMaxBytes(1L)
             .applyTo(target);
 
         assertThat(target.extensions(), is("com.example.Loaded"));
@@ -167,6 +171,8 @@ public class ConfigurationDTOTest {
         assertThat(target.extensionStartTimeoutMillis(), is(1000L));
         assertThat(target.extensionAdminMaxInFlight(), is(8));
         assertThat(target.extensionAdminTimeoutMillis(), is(2000L));
+        assertThat(target.extensionListenerQueueSize(), is(100));
+        assertThat(target.extensionListenerMaxBytes(), is(1_000_000L));
         // still shown, read-only, by GET /mockserver/configuration
         assertThat(new ConfigurationDTO(target).getExtensions(), is("com.example.Loaded"));
         // and still settable at startup from a DTO
@@ -600,6 +606,8 @@ public class ConfigurationDTOTest {
         "extensionStartTimeoutMillis",
         "extensionAdminMaxInFlight",
         "extensionAdminTimeoutMillis",
+        "extensionListenerQueueSize",
+        "extensionListenerMaxBytes",
         // decide where the server may send requests, so a control-plane request must not widen them
         "forwardProxyBlockPrivateNetworks",
         "forwardProxyAllowedHosts",

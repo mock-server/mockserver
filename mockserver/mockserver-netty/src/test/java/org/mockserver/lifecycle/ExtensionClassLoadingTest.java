@@ -25,9 +25,10 @@ import static org.mockserver.configuration.Configuration.configuration;
 /**
  * With no extension configured a server must load no {@code org.mockserver.extension} class, and so cannot have
  * asked {@code ServiceLoader} for extensions (which needs the {@code Extension} class), not even while it serves a
- * control-plane request, a path under {@code /mockserver/extensions/} and a data-plane request. Runs a server in a fresh JVM
- * that logs every class it loads, since this JVM has loaded the extension classes for other tests; a second run
- * with an extension configured shows the log does see them.
+ * control-plane request, a path under {@code /mockserver/extensions/} and a data-plane request, nor after serving an
+ * expectation to exhaustion, updating the configuration and resetting, the sites the listener hooks sit on. Runs a
+ * server in a fresh JVM that logs every class it loads, since this JVM has loaded the extension classes for other
+ * tests; a second run with an extension configured shows the log does see them.
  */
 public class ExtensionClassLoadingTest {
 
@@ -120,7 +121,7 @@ public class ExtensionClassLoadingTest {
             }
         }
 
-        public static void main(String[] arguments) {
+        public static void main(String[] arguments) throws Exception {
             Configuration configuration = configuration();
             if (arguments.length > 0) {
                 configuration.extensions(arguments[0]);
@@ -135,6 +136,7 @@ public class ExtensionClassLoadingTest {
                 e.printStackTrace();
                 System.exit(1);
             }
+            exerciseTheListenerHookSites(mockServer.getLocalPort());
             mockServer.stop();
             System.out.println(STOPPED);
             System.exit(0);
@@ -149,6 +151,27 @@ public class ExtensionClassLoadingTest {
                 throw new IllegalStateException("no response to " + method + " " + path);
             }
             connection.disconnect();
+        }
+
+        // add, serve to exhaustion (postProcess removal), log a served and a not-matched response, update the
+        // configuration and reset: every site a listener hook sits on
+        private static void exerciseTheListenerHookSites(int port) throws Exception {
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            send(client, port, "PUT", "/mockserver/expectation", "{\"httpRequest\": {\"path\": \"/probe\"}, \"httpResponse\": {\"body\": \"ok\"}, \"times\": {\"remainingTimes\": 1, \"unlimited\": false}}", 201);
+            send(client, port, "GET", "/probe", null, 200);
+            send(client, port, "GET", "/probe", null, 404);
+            send(client, port, "PUT", "/mockserver/configuration", "{\"maxExpectations\": 500}", 200);
+            send(client, port, "PUT", "/mockserver/reset", "", 200);
+        }
+
+        private static void send(java.net.http.HttpClient client, int port, String method, String path, String body, int expectedStatus) throws Exception {
+            java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder(java.net.URI.create("http://127.0.0.1:" + port + path))
+                .timeout(java.time.Duration.ofSeconds(30))
+                .method(method, body != null ? java.net.http.HttpRequest.BodyPublishers.ofString(body) : java.net.http.HttpRequest.BodyPublishers.noBody());
+            int status = client.send(builder.build(), java.net.http.HttpResponse.BodyHandlers.discarding()).statusCode();
+            if (status != expectedStatus) {
+                throw new IllegalStateException(method + " " + path + " returned " + status + " not " + expectedStatus);
+            }
         }
     }
 }

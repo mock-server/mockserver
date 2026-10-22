@@ -417,6 +417,8 @@ The counter advances by **entries**, not eviction episodes: after each processed
 | `mock_server_websocket_read_pauses` | Counter | Times a mocked WebSocket connection stopped reading because more than 128 delayed reply sets were pending on it (one per pause, not per frame); a rising count means clients send faster than their delayed replies drain |
 | `mock_server_pending_delayed_tasks` | Gauge (callback) | All delayed tasks still waiting for their delay: both bounded budgets plus the unbounded per-stream/per-connection delays |
 | `mock_server_dropped_drift_analyses` | Counter | Forwarded responses **not** analysed for mock drift because the drift-analysis backlog was full |
+| `mock_server_extension_listener_dropped` | Counter (`extension`, `reason`) | Events not delivered to a listener extension: `count` (its queue was full), `bytes` (its share of `extensionListenerMaxBytes` was full, for serve-event and lifecycle listeners) or `shutdown` (still queued when the server stopped). Never affects the event log or verification. See [extensions.md](extensions.md#listeners-h3-h7-h8) |
+| `mock_server_extension_errors` | Counter (`extension`, `hook`) | Calls into an extension hook that threw (the listener hooks today); the first is logged at WARN |
 | `mock_server_scheduler_queued_tasks` | Gauge (callback) | Tasks waiting in the shared action scheduler pool's queue, including delayed tasks whose delay has not elapsed |
 | `mock_server_template_action_queued_tasks` | Gauge (callback) | Response/forward template renders waiting for a template-action thread |
 

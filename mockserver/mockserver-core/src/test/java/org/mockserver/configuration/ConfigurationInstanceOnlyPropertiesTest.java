@@ -73,6 +73,8 @@ public class ConfigurationInstanceOnlyPropertiesTest {
         NEWLY_WIRED_PROPERTIES.put("extensionStartTimeoutMillis", Long.class);
         NEWLY_WIRED_PROPERTIES.put("extensionAdminMaxInFlight", Integer.class);
         NEWLY_WIRED_PROPERTIES.put("extensionAdminTimeoutMillis", Long.class);
+        NEWLY_WIRED_PROPERTIES.put("extensionListenerQueueSize", Integer.class);
+        NEWLY_WIRED_PROPERTIES.put("extensionListenerMaxBytes", Long.class);
         // write-only credentials
         NEWLY_WIRED_PROPERTIES.put("llmApiKey", String.class);
         NEWLY_WIRED_PROPERTIES.put("prometheusRemoteWriteBasicAuthPassword", String.class);
@@ -107,7 +109,7 @@ public class ConfigurationInstanceOnlyPropertiesTest {
         assertThat("properties with no Configuration getter/fluent-setter pair — they remain unreachable "
                 + "from the instance, DTO and REST routes: " + missing,
             missing, is(empty()));
-        assertThat(NEWLY_WIRED_PROPERTIES.size(), is(32));
+        assertThat(NEWLY_WIRED_PROPERTIES.size(), is(34));
     }
 
     @Test

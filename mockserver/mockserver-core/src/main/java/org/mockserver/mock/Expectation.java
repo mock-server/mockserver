@@ -1867,7 +1867,7 @@ public class Expectation extends ObjectWithJsonToString {
         return hasRemainingMatches() && isStillAlive();
     }
 
-    private boolean hasRemainingMatches() {
+    boolean hasRemainingMatches() {
         return times == null || times.greaterThenZero();
     }
 

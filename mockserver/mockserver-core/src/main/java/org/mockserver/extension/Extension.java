@@ -11,7 +11,9 @@ import java.util.List;
  * A class loaded by name needs a public no-argument constructor. Each server gets its own instance.
  * <p>
  * An extension that also implements {@link org.mockserver.server.initialize.ExpectationInitializer} has its
- * expectations loaded when the server starts, after the configured initialisers.
+ * expectations loaded when the server starts, after the configured initialisers. One that implements
+ * {@link ServeEventListener}, {@link ExpectationLifecycleListener} or {@link SettingsListener} is told about served
+ * requests, expectation changes or configuration updates on a thread of its own.
  */
 public interface Extension {
 

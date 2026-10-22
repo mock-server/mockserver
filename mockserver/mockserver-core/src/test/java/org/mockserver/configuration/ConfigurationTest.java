@@ -3036,6 +3036,16 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldBoundTheExtensionListenerQueues() {
+        assertThat("clamped to at least 1", Configuration.configuration().extensionListenerQueueSize(0).extensionListenerQueueSize(), equalTo(1));
+        assertThat(Configuration.configuration().extensionListenerQueueSize(50).extensionListenerQueueSize(), equalTo(50));
+        assertThat(Configuration.configuration().extensionListenerMaxBytes(1234L).extensionListenerMaxBytes(), equalTo(1234L));
+        assertThat("never 0 (unbounded): values below 1 use the default", Configuration.configuration().extensionListenerMaxBytes(0L).extensionListenerMaxBytes() > 0, equalTo(true));
+        assertThat("about 5% of the heap", ConfigurationProperties.defaultExtensionListenerMaxBytes(1_048_576L), equalTo((1_048_576L / 20) * 1024));
+        assertThat("16 MB when the heap has no ceiling", ConfigurationProperties.defaultExtensionListenerMaxBytes(0L), equalTo(16L * 1024 * 1024));
+    }
+
+    @Test
     public void shouldSetAndGetStaticFilesDirectory() {
         String original = ConfigurationProperties.staticFilesDirectory();
         try {
