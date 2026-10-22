@@ -1,6 +1,7 @@
 package org.mockserver.mock.action.http;
 
 import org.mockserver.configuration.Configuration;
+import org.mockserver.extension.TemplateHelpers;
 import org.mockserver.serialization.model.HttpResponseDTO;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
@@ -23,13 +24,35 @@ public class HttpResponseTemplateActionHandler {
     private volatile VelocityTemplateEngine velocityTemplateEngine;
     private volatile JavaScriptTemplateEngine javascriptTemplateEngine;
     private volatile MustacheTemplateEngine mustacheTemplateEngine;
+    // non-null only for the handler of primary response templates when an extension offers template helpers
+    private final TemplateHelpers templateHelpers;
 
     public HttpResponseTemplateActionHandler(MockServerLogger mockServerLogger, Configuration configuration) {
+        this(mockServerLogger, configuration, null);
+    }
+
+    /**
+     * A handler whose templates can call the extension template helpers in {@code templateHelpers}; each render ends
+     * the helper budget it used.
+     */
+    public HttpResponseTemplateActionHandler(MockServerLogger mockServerLogger, Configuration configuration, TemplateHelpers templateHelpers) {
         this.mockServerLogger = mockServerLogger;
         this.configuration = configuration;
+        this.templateHelpers = templateHelpers;
     }
 
     public HttpResponse handle(HttpTemplate httpTemplate, HttpRequest httpRequest) {
+        if (templateHelpers == null) {
+            return render(httpTemplate, httpRequest);
+        }
+        try {
+            return render(httpTemplate, httpRequest);
+        } finally {
+            TemplateHelpers.endRender();
+        }
+    }
+
+    private HttpResponse render(HttpTemplate httpTemplate, HttpRequest httpRequest) {
         HttpResponse httpResponse = notFoundResponse();
 
         TemplateEngine templateEngine;
@@ -64,7 +87,9 @@ public class HttpResponseTemplateActionHandler {
             synchronized (this) {
                 engine = velocityTemplateEngine;
                 if (engine == null) {
-                    engine = velocityTemplateEngine = new VelocityTemplateEngine(mockServerLogger, configuration);
+                    engine = velocityTemplateEngine = templateHelpers != null
+                        ? new VelocityTemplateEngine(mockServerLogger, configuration, templateHelpers.namespace())
+                        : new VelocityTemplateEngine(mockServerLogger, configuration);
                 }
             }
         }
@@ -77,7 +102,9 @@ public class HttpResponseTemplateActionHandler {
             synchronized (this) {
                 engine = javascriptTemplateEngine;
                 if (engine == null) {
-                    engine = javascriptTemplateEngine = new JavaScriptTemplateEngine(mockServerLogger, configuration);
+                    engine = javascriptTemplateEngine = templateHelpers != null
+                        ? new JavaScriptTemplateEngine(mockServerLogger, configuration, templateHelpers.namespace())
+                        : new JavaScriptTemplateEngine(mockServerLogger, configuration);
                 }
             }
         }
@@ -90,7 +117,9 @@ public class HttpResponseTemplateActionHandler {
             synchronized (this) {
                 engine = mustacheTemplateEngine;
                 if (engine == null) {
-                    engine = mustacheTemplateEngine = new MustacheTemplateEngine(mockServerLogger, configuration);
+                    engine = mustacheTemplateEngine = templateHelpers != null
+                        ? new MustacheTemplateEngine(mockServerLogger, configuration, templateHelpers.mustacheNamespace())
+                        : new MustacheTemplateEngine(mockServerLogger, configuration);
                 }
             }
         }

@@ -32,7 +32,12 @@ public enum ExtensionHook {
     /**
      * Told each time the configuration is updated over the control plane, on the extension's own listener thread.
      */
-    SETTINGS_LISTENER("settingsListener", SettingsListener.class);
+    SETTINGS_LISTENER("settingsListener", SettingsListener.class),
+
+    /**
+     * Helpers for response and forward templates, under {@code ext}. Disabled when HTTP/3 is enabled.
+     */
+    TEMPLATE_HELPER("templateHelper", TemplateHelperProvider.class);
 
     private final String label;
     private final Class<?> hookType;

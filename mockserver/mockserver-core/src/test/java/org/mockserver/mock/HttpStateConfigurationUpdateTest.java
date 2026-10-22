@@ -381,11 +381,13 @@ public class HttpStateConfigurationUpdateTest {
     public void shouldNotLetAPutAddRemoveOrReconfigureExtensions() {
         // given
         configuration.extensions("com.example.Loaded").extensionScanning(false).extensionStartTimeoutMillis(1000L)
-            .extensionListenerQueueSize(100).extensionListenerMaxBytes(1_000_000L);
+            .extensionListenerQueueSize(100).extensionListenerMaxBytes(1_000_000L)
+            .extensionHelperTimeoutMillis(500L).extensionHelperMaxInFlight(8);
 
         // when
         put(new ConfigurationDTO().setExtensions("com.example.Injected").setExtensionScanning(true).setExtensionStartTimeoutMillis(5L)
-            .setExtensionListenerQueueSize(1).setExtensionListenerMaxBytes(1L));
+            .setExtensionListenerQueueSize(1).setExtensionListenerMaxBytes(1L)
+            .setExtensionHelperTimeoutMillis(60_000L).setExtensionHelperMaxInFlight(10_000));
 
         // then
         assertThat(configuration.extensions(), is("com.example.Loaded"));
@@ -393,13 +395,17 @@ public class HttpStateConfigurationUpdateTest {
         assertThat(configuration.extensionStartTimeoutMillis(), is(1000L));
         assertThat(configuration.extensionListenerQueueSize(), is(100));
         assertThat(configuration.extensionListenerMaxBytes(), is(1_000_000L));
+        assertThat(configuration.extensionHelperTimeoutMillis(), is(500L));
+        assertThat(configuration.extensionHelperMaxInFlight(), is(8));
         List<String> warnings = logger.warnings();
-        assertThat(warnings, hasSize(5));
+        assertThat(warnings, hasSize(7));
         assertThat(warnings.get(0), containsString("extensions is fixed at startup"));
         assertThat(warnings.get(1), containsString("extensionScanning is fixed at startup"));
         assertThat(warnings.get(2), containsString("extensionStartTimeoutMillis is fixed at startup"));
         assertThat(warnings.get(3), containsString("extensionListenerQueueSize is fixed at startup"));
         assertThat(warnings.get(4), containsString("extensionListenerMaxBytes is fixed at startup"));
+        assertThat(warnings.get(5), containsString("extensionHelperTimeoutMillis is fixed at startup"));
+        assertThat(warnings.get(6), containsString("extensionHelperMaxInFlight is fixed at startup"));
     }
 
     @Test

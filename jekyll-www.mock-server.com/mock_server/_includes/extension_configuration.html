@@ -117,3 +117,35 @@
     <p>Example:</p>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionListenerMaxBytes="67108864"</code></pre>
 </div>
+
+<button id="button_configuration_extension_helper_timeout_millis" class="accordion title"><strong>Extension Helper Timeout</strong></button>
+<div class="panel title">
+    <p>The total time, in milliseconds, that one response or forward template waits for the <a href="/mock_server/extensions.html#template_helpers">template helpers</a> it calls from extensions. Every helper call in one template shares this budget, so a template that calls a slow helper in a loop still finishes in time. A call still running when the budget is used up is interrupted and the template fails. Values below 1 are treated as 1.</p>
+    <p>Type: <span class="keyword">long</span> Default: <span class="this_value">1000</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.extensionHelperTimeoutMillis(long millis)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionHelperTimeoutMillis=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_EXTENSION_HELPER_TIMEOUT_MILLIS=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.extensionHelperTimeoutMillis=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionHelperTimeoutMillis="250"</code></pre>
+</div>
+
+<button id="button_configuration_extension_helper_max_in_flight" class="accordion title"><strong>Extension Helper Maximum In Flight</strong></button>
+<div class="panel title">
+    <p>The most extension <a href="/mock_server/extensions.html#template_helpers">template helper</a> calls that run at the same time. A template whose helper call would go over this limit fails at once rather than waiting, so a helper that hangs turns into fast template failures instead of piling up threads. Values below 1 are treated as 1.</p>
+    <p>Type: <span class="keyword">int</span> Default: <span class="this_value">32</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.extensionHelperMaxInFlight(int maxInFlight)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionHelperMaxInFlight=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_EXTENSION_HELPER_MAX_IN_FLIGHT=...</code></pre>
+    <p>Property File:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">mockserver.extensionHelperMaxInFlight=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.extensionHelperMaxInFlight="64"</code></pre>
+</div>

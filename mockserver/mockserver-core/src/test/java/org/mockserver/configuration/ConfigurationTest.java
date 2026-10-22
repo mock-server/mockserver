@@ -2975,6 +2975,8 @@ public class ConfigurationTest {
         String originalExtensions = ConfigurationProperties.extensions();
         boolean originalScanning = ConfigurationProperties.extensionScanning();
         long originalTimeout = ConfigurationProperties.extensionStartTimeoutMillis();
+        long originalHelperTimeout = ConfigurationProperties.extensionHelperTimeoutMillis();
+        int originalHelperMaxInFlight = ConfigurationProperties.extensionHelperMaxInFlight();
         try {
             // then - default values
             ConfigurationProperties.extensions(null);
@@ -2986,25 +2988,35 @@ public class ConfigurationTest {
             ConfigurationProperties.extensions("com.example.A,com.example.B");
             ConfigurationProperties.extensionScanning(true);
             ConfigurationProperties.extensionStartTimeoutMillis(0L);
+            ConfigurationProperties.extensionHelperTimeoutMillis(0L);
+            ConfigurationProperties.extensionHelperMaxInFlight(0);
 
             // then - system property getters
             assertThat(System.getProperty("mockserver.extensions"), equalTo("com.example.A,com.example.B"));
             assertThat(configuration.extensions(), equalTo("com.example.A,com.example.B"));
             assertThat(configuration.extensionScanning(), equalTo(true));
             assertThat("clamped to at least 1", configuration.extensionStartTimeoutMillis(), equalTo(1L));
+            assertThat(System.getProperty("mockserver.extensionHelperTimeoutMillis"), equalTo("0"));
+            assertThat("clamped to at least 1", configuration.extensionHelperTimeoutMillis(), equalTo(1L));
+            assertThat("clamped to at least 1", configuration.extensionHelperMaxInFlight(), equalTo(1));
             assertThat(configuration.extensionsConfigured(), equalTo(true));
 
             // when - setters
-            configuration.extensions("com.example.C").extensionScanning(false).extensionStartTimeoutMillis(-5L);
+            configuration.extensions("com.example.C").extensionScanning(false).extensionStartTimeoutMillis(-5L)
+                .extensionHelperTimeoutMillis(250L).extensionHelperMaxInFlight(-1);
 
             // then - getters
             assertThat(configuration.extensions(), equalTo("com.example.C"));
             assertThat(configuration.extensionScanning(), equalTo(false));
             assertThat(configuration.extensionStartTimeoutMillis(), equalTo(1L));
+            assertThat(configuration.extensionHelperTimeoutMillis(), equalTo(250L));
+            assertThat(configuration.extensionHelperMaxInFlight(), equalTo(1));
         } finally {
             ConfigurationProperties.extensions(originalExtensions);
             ConfigurationProperties.extensionScanning(originalScanning);
             ConfigurationProperties.extensionStartTimeoutMillis(originalTimeout);
+            ConfigurationProperties.extensionHelperTimeoutMillis(originalHelperTimeout);
+            ConfigurationProperties.extensionHelperMaxInFlight(originalHelperMaxInFlight);
         }
     }
 

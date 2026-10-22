@@ -285,6 +285,10 @@ public class Configuration {
     private volatile Long extensionAdminTimeoutMillis;
     private volatile Integer extensionListenerQueueSize;
     private volatile Long extensionListenerMaxBytes;
+    private volatile Long extensionHelperTimeoutMillis;
+    private volatile Integer extensionHelperMaxInFlight;
+    // set by a server whose extensions offer template helpers; never a property
+    private volatile Object extensionTemplateHelperStub;
     private volatile List<Class<? extends org.mockserver.extension.Extension>> extensionClasses = Collections.emptyList();
     private volatile List<Supplier<? extends org.mockserver.extension.Extension>> extensionSuppliers = Collections.emptyList();
 
@@ -4221,6 +4225,63 @@ public class Configuration {
      */
     public Configuration extensionListenerMaxBytes(Long extensionListenerMaxBytes) {
         this.extensionListenerMaxBytes = extensionListenerMaxBytes;
+        return this;
+    }
+
+    public Long extensionHelperTimeoutMillis() {
+        if (extensionHelperTimeoutMillis == null) {
+            return ConfigurationProperties.extensionHelperTimeoutMillis();
+        }
+        return Math.max(1L, extensionHelperTimeoutMillis);
+    }
+
+    /**
+     * How long one response or forward template render waits for its extension template helper calls, in total. A
+     * call still running at the end is interrupted and the template fails. Values below 1 are read as 1. Read once
+     * at startup.
+     *
+     * @param extensionHelperTimeoutMillis the budget for every helper call one render makes, in milliseconds
+     */
+    public Configuration extensionHelperTimeoutMillis(Long extensionHelperTimeoutMillis) {
+        this.extensionHelperTimeoutMillis = extensionHelperTimeoutMillis;
+        return this;
+    }
+
+    public Integer extensionHelperMaxInFlight() {
+        if (extensionHelperMaxInFlight == null) {
+            return ConfigurationProperties.extensionHelperMaxInFlight();
+        }
+        return Math.max(1, extensionHelperMaxInFlight);
+    }
+
+    /**
+     * The most extension template helper calls that run at once; a call beyond it fails its template at once. Values
+     * below 1 are read as 1. Read once at startup.
+     *
+     * @param extensionHelperMaxInFlight the most helper calls running at once
+     */
+    public Configuration extensionHelperMaxInFlight(Integer extensionHelperMaxInFlight) {
+        this.extensionHelperMaxInFlight = extensionHelperMaxInFlight;
+        return this;
+    }
+
+    /**
+     * Internal: what template engines built for this configuration bind as {@code ext}, set when a server's extensions
+     * offer template helpers. It fails every lookup with the reason helpers cannot be called from that template.
+     *
+     * @return the stub, or {@code null} when no extension offers template helpers
+     */
+    public Object extensionTemplateHelperStub() {
+        return extensionTemplateHelperStub;
+    }
+
+    /**
+     * Internal: set by the server when it starts its extensions.
+     *
+     * @param extensionTemplateHelperStub the stub bound as {@code ext} where helpers cannot be called
+     */
+    public Configuration extensionTemplateHelperStub(Object extensionTemplateHelperStub) {
+        this.extensionTemplateHelperStub = extensionTemplateHelperStub;
         return this;
     }
 

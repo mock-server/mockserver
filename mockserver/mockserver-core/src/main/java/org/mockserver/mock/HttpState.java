@@ -7607,6 +7607,16 @@ public class HttpState {
             warnInitOnlyProperty("extensionListenerMaxBytes", String.valueOf(suppliedExtensionListenerMaxBytes), String.valueOf(configuration.extensionListenerMaxBytes()),
                 "the extension listener queues are created when the server starts");
         }
+        Long suppliedExtensionHelperTimeoutMillis = suppliedConfiguration.getExtensionHelperTimeoutMillis();
+        if (suppliedExtensionHelperTimeoutMillis != null && !suppliedExtensionHelperTimeoutMillis.equals(configuration.extensionHelperTimeoutMillis())) {
+            warnInitOnlyProperty("extensionHelperTimeoutMillis", String.valueOf(suppliedExtensionHelperTimeoutMillis), String.valueOf(configuration.extensionHelperTimeoutMillis()),
+                "extension template helpers are set up when the server starts");
+        }
+        Integer suppliedExtensionHelperMaxInFlight = suppliedConfiguration.getExtensionHelperMaxInFlight();
+        if (suppliedExtensionHelperMaxInFlight != null && !suppliedExtensionHelperMaxInFlight.equals(configuration.extensionHelperMaxInFlight())) {
+            warnInitOnlyProperty("extensionHelperMaxInFlight", String.valueOf(suppliedExtensionHelperMaxInFlight), String.valueOf(configuration.extensionHelperMaxInFlight()),
+                "extension template helpers are set up when the server starts");
+        }
         Integer suppliedMaxWebSocketExpectations = suppliedConfiguration.getMaxWebSocketExpectations();
         if (suppliedMaxWebSocketExpectations != null && configuration.maxWebSocketExpectations() != maxWebSocketExpectationsInForce) {
             warnInitOnlyProperty("maxWebSocketExpectations", configuration.maxWebSocketExpectations(), maxWebSocketExpectationsInForce,
