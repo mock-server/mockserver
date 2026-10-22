@@ -272,6 +272,7 @@ public class Configuration {
     private volatile String velocityDisallowedText;
     private volatile String mustacheDisallowedText;
     private volatile Long templateFakerSeed;
+    private volatile String templateSystemValueAllowList;
 
     // mock initialization
     private volatile String initializationClass;
@@ -4022,6 +4023,26 @@ public class Configuration {
      */
     public Configuration templateFakerSeed(Long templateFakerSeed) {
         this.templateFakerSeed = templateFakerSeed;
+        return this;
+    }
+
+    public String templateSystemValueAllowList() {
+        if (templateSystemValueAllowList == null) {
+            return ConfigurationProperties.templateSystemValueAllowList();
+        }
+        return templateSystemValueAllowList;
+    }
+
+    /**
+     * The environment variables and system properties templates may read with the {@code systemValue} helper: a
+     * comma-separated list of exact names, or prefixes ending in {@code *} such as {@code APP_*}. Empty (the default)
+     * lets templates read nothing. Names starting with {@code mockserver.} or {@code MOCKSERVER_} are never readable. Anyone who can create expectations can read the values of the names listed. Read
+     * when a template engine is created, and not changed by {@code PUT /mockserver/configuration}.
+     *
+     * @param templateSystemValueAllowList comma-separated names or prefixes ending in {@code *}
+     */
+    public Configuration templateSystemValueAllowList(String templateSystemValueAllowList) {
+        this.templateSystemValueAllowList = templateSystemValueAllowList;
         return this;
     }
 

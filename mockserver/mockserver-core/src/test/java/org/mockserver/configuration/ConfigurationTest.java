@@ -2998,6 +2998,33 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetTemplateSystemValueAllowList() {
+        String original = ConfigurationProperties.templateSystemValueAllowList();
+        try {
+            // then - default value
+            ConfigurationProperties.templateSystemValueAllowList(null);
+            assertThat(ConfigurationProperties.templateSystemValueAllowList(), equalTo(""));
+            assertThat(configuration.templateSystemValueAllowList(), equalTo(""));
+
+            // when - system property setter
+            ConfigurationProperties.templateSystemValueAllowList("APP_*,HOSTNAME");
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.templateSystemValueAllowList(), equalTo("APP_*,HOSTNAME"));
+            assertThat(System.getProperty("mockserver.templateSystemValueAllowList"), equalTo("APP_*,HOSTNAME"));
+            assertThat(configuration.templateSystemValueAllowList(), equalTo("APP_*,HOSTNAME"));
+
+            // when - setter
+            configuration.templateSystemValueAllowList("REGION");
+
+            // then - getter
+            assertThat(configuration.templateSystemValueAllowList(), equalTo("REGION"));
+        } finally {
+            ConfigurationProperties.templateSystemValueAllowList(original);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetMaximumNumberOfRequestToReturnInVerificationFailure() {
         int original = ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure();
         try {

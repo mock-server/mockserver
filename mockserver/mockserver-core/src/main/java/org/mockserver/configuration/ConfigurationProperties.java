@@ -324,6 +324,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_VELOCITY_DISALLOWED_TEXT = "mockserver.velocityDisallowedText";
     private static final String MOCKSERVER_MUSTACHE_DISALLOWED_TEXT = "mockserver.mustacheDisallowedText";
     private static final String MOCKSERVER_TEMPLATE_FAKER_SEED = "mockserver.templateFakerSeed";
+    private static final String MOCKSERVER_TEMPLATE_SYSTEM_VALUE_ALLOW_LIST = "mockserver.templateSystemValueAllowList";
 
     // mock initialization
     private static final String MOCKSERVER_INITIALIZATION_CLASS = "mockserver.initializationClass";
@@ -4954,6 +4955,22 @@ public class ConfigurationProperties {
      */
     public static void templateFakerSeed(long seed) {
         setProperty(MOCKSERVER_TEMPLATE_FAKER_SEED, "" + seed);
+    }
+
+    public static String templateSystemValueAllowList() {
+        return readPropertyHierarchically(PROPERTIES, MOCKSERVER_TEMPLATE_SYSTEM_VALUE_ALLOW_LIST, "MOCKSERVER_TEMPLATE_SYSTEM_VALUE_ALLOW_LIST", "");
+    }
+
+    /**
+     * The environment variables and system properties templates may read with the {@code systemValue} helper: a
+     * comma-separated list of exact names, or prefixes ending in {@code *} such as {@code APP_*}. A bare {@code *} is
+     * refused. Empty (the default) lets templates read nothing. Names starting with {@code mockserver.} or {@code MOCKSERVER_} are never readable. Anyone who can create expectations can read the
+     * values of the names listed. Fixed at startup.
+     *
+     * @param allowList comma-separated names or prefixes ending in {@code *}
+     */
+    public static void templateSystemValueAllowList(String allowList) {
+        setProperty(MOCKSERVER_TEMPLATE_SYSTEM_VALUE_ALLOW_LIST, allowList == null ? "" : allowList);
     }
 
     // mock initialization

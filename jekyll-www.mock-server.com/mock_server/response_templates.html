@@ -259,6 +259,7 @@ curl_close($ch);</code></pre>
             <li><a href="#xpath_helper">XPath Helper</a> &mdash; evaluate an XPath expression against an XML document and pretty-print XML (XXE-safe)</li>
             <li><a href="#yaml_helper">YAML Helper</a> &mdash; convert YAML to JSON and read a field from a YAML document</li>
             <li><a href="#lists_helper">Lists Helper</a> &mdash; pick a random value, build and join lists, and count through a range</li>
+            <li><a href="#system_value_helper">System Value Helper</a> &mdash; read an allowed environment variable or system property</li>
         </ul>
     </li>
     <li><a href="#response_template_failures"><strong>When a Template Fails or Runs Too Long</strong></a> &mdash; time limits for JavaScript and Velocity, and what the client receives when a template fails</li>
@@ -414,6 +415,11 @@ curl_close($ch);</code></pre>
             <td><code>lists</code></td>
             <td>Pick a random value, build and join lists, and count through a range</td>
             <td><a href="#lists_helper">Lists Helper</a></td>
+        </tr>
+        <tr>
+            <td><code>systemValue</code></td>
+            <td>Read an environment variable or system property named in <code>templateSystemValueAllowList</code></td>
+            <td><a href="#system_value_helper">System Value Helper</a></td>
         </tr>
         <tr>
             <td><code>parameters</code></td>
@@ -3520,6 +3526,552 @@ curl_close($ch);</code></pre>
     <li><strong>Mustache:</strong> <code class="inline code">&lbrace;&lbrace;#lists.pickRandom&rbrace;&rbrace;red|green|blue&lbrace;&lbrace;/lists.pickRandom&rbrace;&rbrace;</code></li>
 </ul>
 
+<a id="system_value_helper" class="anchor" href="#system_value_helper">&nbsp;</a>
+
+<h3>System Value Helper (<code>systemValue</code>)</h3>
+
+<p>Reads an environment variable or a Java system property of the MockServer process, such as the region or version a test environment runs in. This matches WireMock's <code>systemValue</code> helper.</p>
+
+<p><strong>Templates can only read names you allow.</strong> List them in the <a href="/mock_server/configuration_properties.html#button_configuration_template_system_value_allow_list"><code>templateSystemValueAllowList</code></a> property when MockServer starts, as exact names or prefixes ending in <code>*</code>, for example <code class="inline code">-Dmockserver.templateSystemValueAllowList="APP_*,app.version"</code>. It is empty by default, so until you set it every name returns an empty value. One list covers both environment variables and system properties. A name that is not on the list returns an empty value too, exactly like a name that is not set, and is logged as a warning once. There is no way to list all the names or values, and <code>PUT /mockserver/configuration</code> cannot change the list. MockServer's own settings, names starting with <code>mockserver.</code> or <code>MOCKSERVER_</code>, and the <code>javax.net.ssl</code> key and trust store passwords, can never be read, whatever the list says.</p>
+
+<p><strong>Anyone who can create expectations can read the values of the names on the list</strong>, because they can write a template that returns them, and anyone who calls that expectation or reads the log sees them too. Never list passwords, tokens, keys or other secrets.</p>
+
+<table class="table">
+    <thead><tr><th>Method</th><th>Description</th><th>Example</th></tr></thead>
+    <tbody>
+        <tr><td><code>systemValue.env(name)</code></td><td>The value of the environment variable, or an empty value when it is not set or not allowed</td><td><code>systemValue.env("APP_REGION")</code> &rarr; <code>"eu-west-2"</code></td></tr>
+        <tr><td><code>systemValue.property(name)</code></td><td>The value of the Java system property, or an empty value when it is not set or not allowed</td><td><code>systemValue.property("app.version")</code> &rarr; <code>"1.4.2"</code></td></tr>
+    </tbody>
+</table>
+
+<p>Mustache cannot pass arguments to a method, so it writes the name in a section:</p>
+
+<table class="table">
+    <thead><tr><th>Mustache</th><th>Description</th><th>Example Output</th></tr></thead>
+    <tbody>
+        <tr><td><code>&lbrace;&lbrace;#systemValue.env&rbrace;&rbrace;APP_REGION&lbrace;&lbrace;/systemValue.env&rbrace;&rbrace;</code></td><td>The value of the environment variable</td><td><code>eu-west-2</code></td></tr>
+        <tr><td><code>&lbrace;&lbrace;#systemValue.property&rbrace;&rbrace;app.version&lbrace;&lbrace;/systemValue.property&rbrace;&rbrace;</code></td><td>The value of the Java system property</td><td><code>1.4.2</code></td></tr>
+    </tbody>
+</table>
+
+<p>The examples below assume MockServer was started with <code class="inline code">-Dmockserver.templateSystemValueAllowList="APP_REGION,app.version"</code>, and return an <code>X-Region</code> header with the <code>APP_REGION</code> environment variable and a body with the <code>app.version</code> system property, such as <code>version 1.4.2</code>:</p>
+
+<button id="button_system_value_mustache" class="accordion">Mustache: read an environment variable and a system property</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">{% raw %}new ClientAndServer(1080)
+    .when(request().withPath("/region"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.MUSTACHE,
+            "{ 'statusCode': 200, 'headers': { 'X-Region': [ '{{#systemValue.env}}APP_REGION{{/systemValue.env}}' ] }, 'body': 'version {{#systemValue.property}}app.version{{/systemValue.property}}' }"
+        )
+    );{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">{% raw %}var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Region': [ '{{#systemValue.env}}APP_REGION{{/systemValue.env}}' ] }, 'body': 'version {{#systemValue.property}}app.version{{/systemValue.property}}' }",
+        "templateType": "MUSTACHE"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);{% endraw %}</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">{% raw %}import requests
+
+requests.put("http://localhost:1080/mockserver/expectation", json={
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Region': [ '{{#systemValue.env}}APP_REGION{{/systemValue.env}}' ] }, 'body': 'version {{#systemValue.property}}app.version{{/systemValue.property}}' }",
+        "templateType": "MUSTACHE"
+    }
+}){% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">{% raw %}require 'net/http'
+
+uri = URI('http://localhost:1080/mockserver/expectation')
+Net::HTTP.start(uri.host, uri.port) do |http|
+  http.send_request('PUT', uri.path, &lt;&lt;~'JSON', 'Content-Type' =&gt; 'application/json')
+    {
+        "httpRequest": {
+            "path": "/region"
+        },
+        "httpResponseTemplate": {
+            "template": "{ 'statusCode': 200, 'headers': { 'X-Region': [ '{{#systemValue.env}}APP_REGION{{/systemValue.env}}' ] }, 'body': 'version {{#systemValue.property}}app.version{{/systemValue.property}}' }",
+            "templateType": "MUSTACHE"
+        }
+    }
+  JSON
+end{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">{% raw %}package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`{
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Region': [ '{{#systemValue.env}}APP_REGION{{/systemValue.env}}' ] }, 'body': 'version {{#systemValue.property}}app.version{{/systemValue.property}}' }",
+        "templateType": "MUSTACHE"
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">{% raw %}using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"{
+    ""httpRequest"": {
+        ""path"": ""/region""
+    },
+    ""httpResponseTemplate"": {
+        ""template"": ""{ 'statusCode': 200, 'headers': { 'X-Region': [ '{{#systemValue.env}}APP_REGION{{/systemValue.env}}' ] }, 'body': 'version {{#systemValue.property}}app.version{{/systemValue.property}}' }"",
+        ""templateType"": ""MUSTACHE""
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">{% raw %}use reqwest::blocking::Client;
+
+let client = Client::new();
+let body = r#"{
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Region': [ '{{#systemValue.env}}APP_REGION{{/systemValue.env}}' ] }, 'body': 'version {{#systemValue.property}}app.version{{/systemValue.property}}' }",
+        "templateType": "MUSTACHE"
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">{% raw %}$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Region': [ '{{#systemValue.env}}APP_REGION{{/systemValue.env}}' ] }, 'body': 'version {{#systemValue.property}}app.version{{/systemValue.property}}' }",
+        "templateType": "MUSTACHE"
+    }
+}
+JSON;
+
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">{% raw %}curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "{ '\''statusCode'\'': 200, '\''headers'\'': { '\''X-Region'\'': [ '\''{{#systemValue.env}}APP_REGION{{/systemValue.env}}'\'' ] }, '\''body'\'': '\''version {{#systemValue.property}}app.version{{/systemValue.property}}'\'' }",
+        "templateType": "MUSTACHE"
+    }
+}'{% endraw %}</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+
+<button id="button_system_value_velocity" class="accordion">Velocity: read an environment variable and a system property</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">{% raw %}new ClientAndServer(1080)
+    .when(request().withPath("/region"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.VELOCITY,
+            "{ 'statusCode': 200, 'headers': { 'X-Region': [ '$systemValue.env('APP_REGION')' ] }, 'body': 'version $systemValue.property('app.version')' }"
+        )
+    );{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">{% raw %}var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Region': [ '$systemValue.env('APP_REGION')' ] }, 'body': 'version $systemValue.property('app.version')' }",
+        "templateType": "VELOCITY"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);{% endraw %}</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">{% raw %}import requests
+
+requests.put("http://localhost:1080/mockserver/expectation", json={
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Region': [ '$systemValue.env('APP_REGION')' ] }, 'body': 'version $systemValue.property('app.version')' }",
+        "templateType": "VELOCITY"
+    }
+}){% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">{% raw %}require 'net/http'
+
+uri = URI('http://localhost:1080/mockserver/expectation')
+Net::HTTP.start(uri.host, uri.port) do |http|
+  http.send_request('PUT', uri.path, &lt;&lt;~'JSON', 'Content-Type' =&gt; 'application/json')
+    {
+        "httpRequest": {
+            "path": "/region"
+        },
+        "httpResponseTemplate": {
+            "template": "{ 'statusCode': 200, 'headers': { 'X-Region': [ '$systemValue.env('APP_REGION')' ] }, 'body': 'version $systemValue.property('app.version')' }",
+            "templateType": "VELOCITY"
+        }
+    }
+  JSON
+end{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">{% raw %}package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`{
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Region': [ '$systemValue.env('APP_REGION')' ] }, 'body': 'version $systemValue.property('app.version')' }",
+        "templateType": "VELOCITY"
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">{% raw %}using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"{
+    ""httpRequest"": {
+        ""path"": ""/region""
+    },
+    ""httpResponseTemplate"": {
+        ""template"": ""{ 'statusCode': 200, 'headers': { 'X-Region': [ '$systemValue.env('APP_REGION')' ] }, 'body': 'version $systemValue.property('app.version')' }"",
+        ""templateType"": ""VELOCITY""
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">{% raw %}use reqwest::blocking::Client;
+
+let client = Client::new();
+let body = r#"{
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Region': [ '$systemValue.env('APP_REGION')' ] }, 'body': 'version $systemValue.property('app.version')' }",
+        "templateType": "VELOCITY"
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">{% raw %}$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "{ 'statusCode': 200, 'headers': { 'X-Region': [ '$systemValue.env('APP_REGION')' ] }, 'body': 'version $systemValue.property('app.version')' }",
+        "templateType": "VELOCITY"
+    }
+}
+JSON;
+
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">{% raw %}curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "{ '\''statusCode'\'': 200, '\''headers'\'': { '\''X-Region'\'': [ '\''$systemValue.env('\''APP_REGION'\'')'\'' ] }, '\''body'\'': '\''version $systemValue.property('\''app.version'\'')'\'' }",
+        "templateType": "VELOCITY"
+    }
+}'{% endraw %}</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+
+<button id="button_system_value_javascript" class="accordion">JavaScript: read an environment variable and a system property</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">{% raw %}new ClientAndServer(1080)
+    .when(request().withPath("/region"))
+    .respond(
+        template(
+            HttpTemplate.TemplateType.JAVASCRIPT,
+            "return { 'statusCode': 200, 'headers': { 'X-Region': [ systemValue.env('APP_REGION') ] }, 'body': 'version ' + systemValue.property('app.version') };"
+        )
+    );{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">{% raw %}var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'X-Region': [ systemValue.env('APP_REGION') ] }, 'body': 'version ' + systemValue.property('app.version') };",
+        "templateType": "JAVASCRIPT"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);{% endraw %}</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">{% raw %}import requests
+
+requests.put("http://localhost:1080/mockserver/expectation", json={
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'X-Region': [ systemValue.env('APP_REGION') ] }, 'body': 'version ' + systemValue.property('app.version') };",
+        "templateType": "JAVASCRIPT"
+    }
+}){% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">{% raw %}require 'net/http'
+
+uri = URI('http://localhost:1080/mockserver/expectation')
+Net::HTTP.start(uri.host, uri.port) do |http|
+  http.send_request('PUT', uri.path, &lt;&lt;~'JSON', 'Content-Type' =&gt; 'application/json')
+    {
+        "httpRequest": {
+            "path": "/region"
+        },
+        "httpResponseTemplate": {
+            "template": "return { 'statusCode': 200, 'headers': { 'X-Region': [ systemValue.env('APP_REGION') ] }, 'body': 'version ' + systemValue.property('app.version') };",
+            "templateType": "JAVASCRIPT"
+        }
+    }
+  JSON
+end{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">{% raw %}package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    body := []byte(`{
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'X-Region': [ systemValue.env('APP_REGION') ] }, 'body': 'version ' + systemValue.property('app.version') };",
+        "templateType": "JAVASCRIPT"
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">{% raw %}using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+var json = @"{
+    ""httpRequest"": {
+        ""path"": ""/region""
+    },
+    ""httpResponseTemplate"": {
+        ""template"": ""return { 'statusCode': 200, 'headers': { 'X-Region': [ systemValue.env('APP_REGION') ] }, 'body': 'version ' + systemValue.property('app.version') };"",
+        ""templateType"": ""JAVASCRIPT""
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">{% raw %}use reqwest::blocking::Client;
+
+let client = Client::new();
+let body = r#"{
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'X-Region': [ systemValue.env('APP_REGION') ] }, 'body': 'version ' + systemValue.property('app.version') };",
+        "templateType": "JAVASCRIPT"
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">{% raw %}$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "return { 'statusCode': 200, 'headers': { 'X-Region': [ systemValue.env('APP_REGION') ] }, 'body': 'version ' + systemValue.property('app.version') };",
+        "templateType": "JAVASCRIPT"
+    }
+}
+JSON;
+
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);{% endraw %}</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">{% raw %}curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "path": "/region"
+    },
+    "httpResponseTemplate": {
+        "template": "return { '\''statusCode'\'': 200, '\''headers'\'': { '\''X-Region'\'': [ systemValue.env('\''APP_REGION'\'') ] }, '\''body'\'': '\''version '\'' + systemValue.property('\''app.version'\'') };",
+        "templateType": "JAVASCRIPT"
+    }
+}'{% endraw %}</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+
 <a id="mustache_templates" class="anchor" href="#mustache_templates">&nbsp;</a>
 
 <h2>Mustache Response Templates</h2>
@@ -4569,5 +5121,7 @@ return {
 </ul>
 
 <p>For JavaScript templates, a refused class is written to the log at WARN naming the class and the property to set, so a template that stops working tells you exactly what to grant. A Velocity template that is refused a class simply renders that part of the output empty.</p>
+
+<p>With the default class restrictions, templates cannot read the environment variables or system properties of the MockServer process either (apart from the host name, through <a href="#dynamic_model_variables"><code>hostname</code></a>), unless you name them in <a href="/mock_server/configuration_properties.html#button_configuration_template_system_value_allow_list"><code class="inline code">templateSystemValueAllowList</code></a> for the <a href="#system_value_helper"><code>systemValue</code> helper</a>. Anyone who can create expectations, call them or read the log can read the values of the names you list, so never list secrets; MockServer's own <code>mockserver.*</code> and <code>MOCKSERVER_*</code> settings are never readable.</p>
 
 <p>See the <a href="/mock_server/configuration_properties.html">configuration properties</a> page for the full list of equivalent system-property, environment-variable, and Java API forms of these settings. To stop untrusted callers from registering templated expectations in the first place, also enable <a href="/mock_server/control_plane_authorisation.html">control plane authorisation</a>.</p>

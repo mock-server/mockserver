@@ -237,7 +237,7 @@ final class PolyglotRunner {
         long executionTimeoutMillis,
         boolean rawText,
         Object fakerOverride,
-        Object listsOverride,
+        Map<String, Object> onDemandOverrides,
         Map<String, Object> parameters,
         boolean cacheSource
     ) {
@@ -344,7 +344,7 @@ final class PolyglotRunner {
             try {
                 return evaluate(
                     script, fullScript, includeResponse, request, response, iteration,
-                    objectMapper, mockServerLogger, httpTemplateOutputDeserializer, dtoClass, context, rawText, fakerOverride, listsOverride, parameters, cacheSource
+                    objectMapper, mockServerLogger, httpTemplateOutputDeserializer, dtoClass, context, rawText, fakerOverride, onDemandOverrides, parameters, cacheSource
                 );
             } catch (PolyglotException polyglotException) {
                 if (watchdogFired.get() && (polyglotException.isCancelled() || polyglotException.isInterrupted())) {
@@ -387,7 +387,7 @@ final class PolyglotRunner {
         Context context,
         boolean rawText,
         Object fakerOverride,
-        Object listsOverride,
+        Map<String, Object> onDemandOverrides,
         Map<String, Object> parameters,
         boolean cacheSource
     ) {
@@ -417,7 +417,10 @@ final class PolyglotRunner {
             List<String> namedOnDemandHelpers = cachedScript.namedOnDemandHelpers();
             for (int i = 0; i < namedOnDemandHelpers.size(); i++) {
                 String name = namedOnDemandHelpers.get(i);
-                Object helper = "lists".equals(name) && listsOverride != null ? listsOverride : TemplateFunctions.ON_DEMAND_HELPERS.get(name);
+                Object helper = onDemandOverrides.get(name);
+                if (helper == null) {
+                    helper = TemplateFunctions.ON_DEMAND_HELPERS.get(name);
+                }
                 jsBindings.putMember(name, helper instanceof TemplateFunctions function ? function.get() : helper);
             }
             if (parameters != null && !parameters.isEmpty()) {

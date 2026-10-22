@@ -652,6 +652,7 @@ public class HttpState {
             }
             initGrpcDescriptorStore();
             reportTrustedHostSuffixProblems();
+            org.mockserver.templates.engine.helpers.SystemValueTemplateHelper.logAllowList(configuration.templateSystemValueAllowList(), this.mockServerLogger);
             // All synchronous startup work (expectation initializers, OpenAPI seeding, gRPC descriptor
             // loading) is now complete — flip the readiness flag so the /mockserver/ready probe reports
             // ready. Set last so a partially-constructed HttpState never reports ready.
@@ -7497,6 +7498,11 @@ public class HttpState {
         if (suppliedStaticFilesDirectory != null && !suppliedStaticFilesDirectory.equals(configuration.staticFilesDirectory())) {
             warnInitOnlyProperty("staticFilesDirectory", "\"" + suppliedStaticFilesDirectory + "\"", "\"" + configuration.staticFilesDirectory() + "\"",
                 "it decides which server files a request can read, so a request to the control plane cannot change it");
+        }
+        String suppliedTemplateSystemValueAllowList = suppliedConfiguration.getTemplateSystemValueAllowList();
+        if (suppliedTemplateSystemValueAllowList != null && !suppliedTemplateSystemValueAllowList.equals(configuration.templateSystemValueAllowList())) {
+            warnInitOnlyProperty("templateSystemValueAllowList", "\"" + suppliedTemplateSystemValueAllowList + "\"", "\"" + configuration.templateSystemValueAllowList() + "\"",
+                "it decides which environment variables and system properties templates can read, so a request to the control plane cannot widen it");
         }
         Integer suppliedMaxWebSocketExpectations = suppliedConfiguration.getMaxWebSocketExpectations();
         if (suppliedMaxWebSocketExpectations != null && configuration.maxWebSocketExpectations() != maxWebSocketExpectationsInForce) {
