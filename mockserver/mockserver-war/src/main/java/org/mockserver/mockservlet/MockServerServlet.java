@@ -12,6 +12,7 @@ import org.mockserver.mappers.HttpServletRequestToMockServerHttpRequestDecoder;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.responsewriter.ControlPlaneFailureResponse;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
@@ -25,6 +26,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Collections;
+import java.util.List;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -34,6 +36,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.configuration.Configuration.configuration;
 import static org.mockserver.mock.HttpState.PATH_PREFIX;
 import static org.mockserver.model.PortBinding.portBinding;
+import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfiguration;
 
 /**
  * @author jamesdbloom
@@ -57,8 +60,14 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
 
     @SuppressWarnings("WeakerAccess")
     public MockServerServlet() {
-        this.configuration = configuration();
+        this(configuration());
+    }
+
+    MockServerServlet(Configuration configuration) {
+        this.configuration = configuration;
         ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(this.configuration);
+        // read before anything is allocated: an invalid combination (SOCKS with HTTP) throws
+        List<ProxyConfiguration> proxyConfigurations = proxyConfiguration(this.configuration);
         this.mockServerLogger = new MockServerLogger(MockServerEventLog.class);
         // extensions start before anything else is built, so a refused start leaks no thread or event loop
         this.extensionRegistry = this.configuration.extensionsConfigured() ? ExtensionRegistry.start(this.configuration, this.mockServerLogger) : null;
@@ -72,7 +81,7 @@ public class MockServerServlet extends HttpServlet implements ServletContextList
             this.mockServerLogger = httpStateHandler.getMockServerLogger();
             this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
             this.workerGroup = createdWorkerGroup = new NioEventLoopGroup(configuration.nioEventLoopThreadCount(), new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
-            this.actionHandler = new HttpActionHandler(this.configuration, () -> workerGroup, httpStateHandler, null, new NettySslContextFactory(this.configuration, this.mockServerLogger, true));
+            this.actionHandler = new HttpActionHandler(this.configuration, () -> workerGroup, httpStateHandler, proxyConfigurations, new NettySslContextFactory(this.configuration, this.mockServerLogger, true));
             // Wire the replay handler so PUT /mockserver/replay can re-issue
             // requests using the existing NettyHttpClient (forward/proxy client).
             this.httpStateHandler.setReplayHandler(req -> actionHandler.getHttpClient().sendRequest(req));
