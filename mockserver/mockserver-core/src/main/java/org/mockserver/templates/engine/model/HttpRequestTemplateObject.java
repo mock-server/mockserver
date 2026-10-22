@@ -51,16 +51,14 @@ public class HttpRequestTemplateObject extends RequestDefinition {
     private final Map<String, List<String>> headers = new CaseInsensitiveHeaderMap();
     private BodyDTO body = null;
     private Boolean secure = null;
-    private List<X509Certificate> clientCertificateChain = null;
-    private String localAddress = null;
-    private String remoteAddress = null;
-    private Boolean keepAlive = null;
     private String jsonRpcId = null;
     private String jsonRpcRawId = null;
     private String jsonRpcMethod = null;
     // The derived fields are computed from the source request on first read and memoised in a holder allocated
     // only then, so a template that never reads them costs one field store; their getters are @JsonIgnore so
     // toString (which the JavaScript engine parses into its request object) neither computes them nor changes shape.
+    // Plain source values (addresses, keepAlive, certificates) are read through source rather than copied, so
+    // holding source, the logger and the holder does not grow the object a template render allocates.
     private final HttpRequest source;
     private final MockServerLogger mockServerLogger;
     private Derived derived;
@@ -104,10 +102,6 @@ public class HttpRequestTemplateObject extends RequestDefinition {
             }
             body = BodyDTO.createDTO(httpRequest.getBody());
             secure = httpRequest.isSecure();
-            clientCertificateChain = httpRequest.getClientCertificateChain();
-            localAddress = httpRequest.getLocalAddress();
-            remoteAddress = httpRequest.getRemoteAddress();
-            keepAlive = httpRequest.isKeepAlive();
             setNot(httpRequest.getNot());
             extractJsonRpcFields(httpRequest);
         }
@@ -169,19 +163,19 @@ public class HttpRequestTemplateObject extends RequestDefinition {
     }
 
     public List<X509Certificate> getClientCertificateChain() {
-        return clientCertificateChain;
+        return source != null ? source.getClientCertificateChain() : null;
     }
 
     public String getLocalAddress() {
-        return localAddress;
+        return source != null ? source.getLocalAddress() : null;
     }
 
     public String getRemoteAddress() {
-        return remoteAddress;
+        return source != null ? source.getRemoteAddress() : null;
     }
 
     public Boolean getKeepAlive() {
-        return keepAlive;
+        return source != null ? source.isKeepAlive() : null;
     }
 
     public String getJsonRpcId() {
@@ -361,6 +355,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
                 return;
             }
         }
+        String localAddress = getLocalAddress();
         if (localAddress != null && !localAddress.isBlank()) {
             // a resolved InetSocketAddress renders as "hostname/ip:port"; the part after the slash is the address
             String address = localAddress.substring(localAddress.lastIndexOf('/') + 1).trim();
@@ -570,9 +565,9 @@ public class HttpRequestTemplateObject extends RequestDefinition {
             Objects.equals(headers, that.headers) &&
             Objects.equals(body, that.body) &&
             Objects.equals(secure, that.secure) &&
-            Objects.equals(localAddress, that.localAddress) &&
-            Objects.equals(remoteAddress, that.remoteAddress) &&
-            Objects.equals(keepAlive, that.keepAlive) &&
+            Objects.equals(getLocalAddress(), that.getLocalAddress()) &&
+            Objects.equals(getRemoteAddress(), that.getRemoteAddress()) &&
+            Objects.equals(getKeepAlive(), that.getKeepAlive()) &&
             Objects.equals(jsonRpcId, that.jsonRpcId) &&
             Objects.equals(jsonRpcRawId, that.jsonRpcRawId) &&
             Objects.equals(jsonRpcMethod, that.jsonRpcMethod);
@@ -581,7 +576,7 @@ public class HttpRequestTemplateObject extends RequestDefinition {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, pathGroups, namedPathGroups, queryStringParameters, cookies, headers, body, secure, localAddress, remoteAddress, keepAlive, jsonRpcId, jsonRpcRawId, jsonRpcMethod);
+            hashCode = Objects.hash(super.hashCode(), method, path, pathParameters, pathGroups, namedPathGroups, queryStringParameters, cookies, headers, body, secure, getLocalAddress(), getRemoteAddress(), getKeepAlive(), jsonRpcId, jsonRpcRawId, jsonRpcMethod);
         }
         return hashCode;
     }

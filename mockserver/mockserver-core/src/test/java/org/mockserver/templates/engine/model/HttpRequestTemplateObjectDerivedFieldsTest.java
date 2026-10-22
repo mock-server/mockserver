@@ -8,8 +8,11 @@ import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.BinaryBody;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.SegmentedBytes;
+import org.mockserver.model.X509Certificate;
 import org.slf4j.event.Level;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,6 +25,7 @@ import static org.mockito.Mockito.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.Parameter.param;
 import static org.mockserver.model.ParameterBody.params;
+import static org.mockserver.model.X509Certificate.x509Certificate;
 import static org.mockserver.templates.engine.model.RequestModelFixtures.*;
 
 public class HttpRequestTemplateObjectDerivedFieldsTest {
@@ -205,6 +209,50 @@ public class HttpRequestTemplateObjectDerivedFieldsTest {
         for (String derived : Arrays.asList("formData", "parts", "\"host\"", "\"port\"", "scheme", "baseUrl", "bodyAsBase64", "\"id\"")) {
             assertThat(json, not(containsString(derived)));
         }
+    }
+
+    @Test
+    public void shouldReadPlainSourceValuesThroughTheSourceRequest() {
+        List<X509Certificate> chain = Collections.singletonList(x509Certificate().withSerialNumber("123"));
+        HttpRequest request = request()
+            .withLocalAddress("127.0.0.1:1080")
+            .withRemoteAddress("10.0.0.2:51234")
+            .withKeepAlive(true)
+            .withClientCertificateChain(chain);
+        HttpRequestTemplateObject templateObject = new HttpRequestTemplateObject(request);
+        HttpRequestTemplateObject withoutSource = new HttpRequestTemplateObject(null);
+
+        assertThat(templateObject.getLocalAddress(), is("127.0.0.1:1080"));
+        assertThat(templateObject.getRemoteAddress(), is("10.0.0.2:51234"));
+        assertThat(templateObject.getKeepAlive(), is(true));
+        assertThat(templateObject.getClientCertificateChain(), is(chain));
+        assertThat(templateObject.toString(), allOf(containsString("\"localAddress\" : \"127.0.0.1:1080\""), containsString("\"remoteAddress\" : \"10.0.0.2:51234\""), containsString("\"keepAlive\" : true")));
+        assertThat(templateObject, is(new HttpRequestTemplateObject(request)));
+        assertThat(templateObject, not(new HttpRequestTemplateObject(request.clone().withRemoteAddress("10.0.0.3:1"))));
+        assertThat(withoutSource.getLocalAddress(), is(nullValue()));
+        assertThat(withoutSource.getRemoteAddress(), is(nullValue()));
+        assertThat(withoutSource.getKeepAlive(), is(nullValue()));
+        assertThat(withoutSource.getClientCertificateChain(), is(nullValue()));
+    }
+
+    @Test
+    public void shouldNotGrowTheTemplateObjectEveryRenderAllocates() {
+        // every template render allocates one of these; 17 references and one int is the size it had before the
+        // derived fields were added (104 bytes with compressed oops), so holding the source must not add fields
+        int referenceFields = 0;
+        int primitiveFields = 0;
+        for (Field field : HttpRequestTemplateObject.class.getDeclaredFields()) {
+            if (!Modifier.isStatic(field.getModifiers())) {
+                if (field.getType().isPrimitive()) {
+                    primitiveFields++;
+                } else {
+                    referenceFields++;
+                }
+            }
+        }
+
+        assertThat(referenceFields, lessThanOrEqualTo(17));
+        assertThat(primitiveFields, lessThanOrEqualTo(1));
     }
 
     @Test
