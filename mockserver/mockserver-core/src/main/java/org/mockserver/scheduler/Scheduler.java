@@ -73,15 +73,15 @@ public class Scheduler {
     // Null in synchronous mode (renders then run inline, preserving WAR/servlet blocking semantics).
     private final ExecutorService templateActionExecutor;
 
-    // Small BOUNDED pool for blocking staticFilesDirectory reads, kept off the event loops and off the shared
-    // pool that forwards and delays use. Created on first use, so a server that never serves static files has
-    // none; shut down with the other pools.
-    static final int STATIC_FILE_READ_THREADS = 4;
-    static final int MAX_QUEUED_STATIC_FILE_READS = 1000;
-    private volatile ThreadPoolExecutor staticFileReadExecutor;
+    // Small BOUNDED pool for blocking file reads (staticFilesDirectory files and FILE response bodies), kept off
+    // the event loops and off the shared pool that forwards and delays use. Created on first use, so a server
+    // that never reads a file has none; shut down with the other pools. Both kinds share one queue bound.
+    static final int FILE_READ_THREADS = 4;
+    static final int MAX_QUEUED_FILE_READS = 1000;
+    private volatile ThreadPoolExecutor fileReadExecutor;
     private boolean stopped;
-    private final AtomicInteger queuedStaticFileReads = new AtomicInteger();
-    private volatile int maxQueuedStaticFileReads = MAX_QUEUED_STATIC_FILE_READS;
+    private final AtomicInteger queuedFileReads = new AtomicInteger();
+    private volatile int maxQueuedFileReads = MAX_QUEUED_FILE_READS;
 
     private final boolean synchronous;
 
@@ -122,7 +122,8 @@ public class Scheduler {
         SIDE_ACTIONS("side_actions", "maxPendingDelayedResponses", "delayed side actions (after-actions, secondary actions, step side effects)", "dropped"),
         WEBSOCKET_REPLIES("websocket_replies", "maxPendingDelayedResponses", "WebSocket reply frames waiting for their delays", "refused a whole reply set at a time, closing the WebSocket with 1013 Try Again Later"),
         TEMPLATE_ACTIONS("template_actions", "maxQueuedTemplateActions", "template renders waiting for a template thread", "answered 503 Service Unavailable"),
-        STATIC_FILES("static_files", "the static file read queue", true, "static file reads waiting for a static file thread", "answered 503 Service Unavailable");
+        STATIC_FILES("static_files", "the file read queue", true, "static file reads waiting for a file read thread", "answered 503 Service Unavailable"),
+        FILE_BODIES("file_bodies", "the file read queue", true, "FILE response body reads waiting for a file read thread", "answered 503 Service Unavailable");
 
         private final String metricLabel;
         private final String property;
@@ -465,75 +466,87 @@ public class Scheduler {
     }
 
     /**
-     * Runs a blocking static file read on its own bounded pool: inline when {@code inline} is set or this
-     * scheduler is synchronous, and {@code onRejected} instead once {@link #MAX_QUEUED_STATIC_FILE_READS} reads
-     * are waiting or the scheduler has been shut down.
+     * Runs a blocking static file read on the bounded file read pool: inline when {@code inline} is set or this
+     * scheduler is synchronous, and {@code onRejected} instead once {@link #MAX_QUEUED_FILE_READS} reads are
+     * waiting or the scheduler has been shut down.
      */
     public void submitStaticFileRead(Runnable command, Runnable onRejected, boolean inline) {
+        submitFileRead(OverloadReason.STATIC_FILES, command, onRejected, inline);
+    }
+
+    /**
+     * As {@link #submitStaticFileRead}, for the response of a matched expectation whose body is a FILE body,
+     * so the file is read on the same bounded pool and a refusal is counted as {@code file_bodies}.
+     */
+    public void submitFileBodyRead(Runnable command, Runnable onRejected, boolean inline) {
+        submitFileRead(OverloadReason.FILE_BODIES, command, onRejected, inline);
+    }
+
+    private void submitFileRead(OverloadReason reason, Runnable command, Runnable onRejected, boolean inline) {
         Integer port = getPort();
         if (this.synchronous || inline) {
             run(command, port);
             return;
         }
-        ThreadPoolExecutor executor = staticFileReadExecutor();
-        int limit = maxQueuedStaticFileReads;
+        ThreadPoolExecutor executor = fileReadExecutor();
+        int limit = maxQueuedFileReads;
         if (executor == null) {
             run(onRejected, port);
             return;
         }
-        if (!tryAdmit(queuedStaticFileReads, 1, limit)) {
-            rejectForOverload(OverloadReason.STATIC_FILES, limit, onRejected, port);
+        if (!tryAdmit(queuedFileReads, 1, limit)) {
+            rejectForOverload(reason, limit, onRejected, port);
             return;
         }
         try {
             executor.execute(() -> {
-                queuedStaticFileReads.decrementAndGet();
+                queuedFileReads.decrementAndGet();
                 run(command, port);
             });
         } catch (RejectedExecutionException shutDown) {
-            queuedStaticFileReads.decrementAndGet();
+            queuedFileReads.decrementAndGet();
             run(onRejected, port);
         }
     }
 
-    private ThreadPoolExecutor staticFileReadExecutor() {
-        ThreadPoolExecutor executor = staticFileReadExecutor;
+    private ThreadPoolExecutor fileReadExecutor() {
+        ThreadPoolExecutor executor = fileReadExecutor;
         if (executor != null) {
             return executor;
         }
         synchronized (this) {
-            if (staticFileReadExecutor == null && !stopped) {
-                staticFileReadExecutor = new ThreadPoolExecutor(
-                    STATIC_FILE_READ_THREADS, STATIC_FILE_READ_THREADS,
+            if (fileReadExecutor == null && !stopped) {
+                fileReadExecutor = new ThreadPoolExecutor(
+                    FILE_READ_THREADS, FILE_READ_THREADS,
                     0L, TimeUnit.MILLISECONDS,
                     new LinkedBlockingQueue<>(),
-                    new SchedulerThreadFactory("StaticFile")
+                    new SchedulerThreadFactory("FileRead")
                 );
             }
-            return staticFileReadExecutor;
+            return fileReadExecutor;
         }
     }
 
     /**
-     * @return the static file read pool, or {@code null} before the first read is submitted
+     * @return the file read pool, or {@code null} before the first file read is submitted
      */
     @VisibleForTesting
-    public ExecutorService getStaticFileReadExecutor() {
-        return staticFileReadExecutor;
+    public ExecutorService getFileReadExecutor() {
+        return fileReadExecutor;
     }
 
     @VisibleForTesting
-    public void maxQueuedStaticFileReads(int maxQueuedStaticFileReads) {
-        this.maxQueuedStaticFileReads = maxQueuedStaticFileReads;
+    public void maxQueuedFileReads(int maxQueuedFileReads) {
+        this.maxQueuedFileReads = maxQueuedFileReads;
     }
 
     public synchronized void shutdown() {
         stopped = true;
-        if (staticFileReadExecutor != null && !staticFileReadExecutor.isShutdown()) {
+        if (fileReadExecutor != null && !fileReadExecutor.isShutdown()) {
             // a read still waiting would answer a client of a stopped server; their connections are closing
-            staticFileReadExecutor.shutdownNow();
+            fileReadExecutor.shutdownNow();
             try {
-                staticFileReadExecutor.awaitTermination(500, MILLISECONDS);
+                fileReadExecutor.awaitTermination(500, MILLISECONDS);
             } catch (InterruptedException ignore) {
                 // ignore interrupted exception
             }

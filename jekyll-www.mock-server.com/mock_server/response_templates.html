@@ -541,6 +541,8 @@ curl_close($ch);</code></pre>
 
 <p>Body-file templating uses the text-based engines (<span class="inline_code">MUSTACHE</span> and <span class="inline_code">VELOCITY</span>) because they render text directly. JavaScript templates build a full response object rather than a text fragment, so for JavaScript use an <span class="inline_code">httpResponseTemplate</span> (optionally with <span class="inline_code">templateFile</span>) instead.</p>
 
+<p>A <span class="inline_code">FILE</span> body in an <span class="inline_code">httpResponse</span> action, templated or not, is read from disk by a small pool of threads of its own (shared with <a href="/mock_server/configuration_properties.html#button_configuration_static_files_directory">static files</a>), so a slow disk delays only those responses, not other requests. If more than 1,000 file reads are waiting, further ones get <span class="inline_code">503 Service Unavailable</span> with a <span class="inline_code">Retry-After: 1</span> header, counted by the <span class="inline_code">mock_server_overload_rejections</span> metric with <span class="inline_code">reason="file_bodies"</span> when metrics are enabled. When MockServer runs as a WAR, the file is read on the servlet container's request thread instead.</p>
+
 <a id="response_template_testing" class="anchor" href="#response_template_testing">&nbsp;</a>
 
 <h2>Response Template Testing</h2>

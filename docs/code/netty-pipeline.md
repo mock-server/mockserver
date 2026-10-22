@@ -1057,6 +1057,18 @@ graph LR
 
 SOCKS5 is multi-phase: initial handshake → optional password auth → CONNECT command.
 
+## File Reads Off the Event Loop
+
+**A matched `RESPONSE`'s FILE body and a `staticFilesDirectory` file are never read on a Netty or QUIC event loop.** Two cases still read on a loop: a FILE body returned by an object callback over a WebSocket (read on that WebSocket's loop) and an HTTP/3 forward `responseOverride` FILE body (read on the QUIC loop); see request-processing.md. A matched `RESPONSE` whose body is a
+`FileBody` and a `staticFilesDirectory` file are both read on the `Scheduler`'s file read pool (4 threads,
+created on the first file read, shut down with the server), so a slow disk stalls only that pool, not every
+connection sharing a worker thread. The response is then written from the pool thread through the channel's
+own `ResponseWriter`, as delayed and templated responses already are: on HTTP/2 that is the stream's child
+channel, so the stream id is unchanged, and on HTTP/1.1 keep-alive and the one-response-per-request rule
+are unchanged. HTTP/3 dispatches synchronously on its stream's event loop but still hops for a file read;
+only the WAR servlets read inline. Responses without a FILE body pay one `instanceof` and no hop. See
+[request-processing.md](request-processing.md#templated-response-body-files-filebody--templatetype).
+
 ## Outbound Buffering and Backpressure
 
 **A slow reader holds at most about 64 KB of its response in MockServer's outbound buffer, on HTTP/1.1

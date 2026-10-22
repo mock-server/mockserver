@@ -177,13 +177,13 @@ public class StaticFilesIntegrationTest {
         MockServer other = upstream;
         assertThat(send("GET", "/hello.json"), startsWith("HTTP/1.1 200 OK"));
         assertThat(send(other, "GET", "/hello.json"), startsWith("HTTP/1.1 200 OK"));
-        ExecutorService stoppedPool = server.getScheduler().getStaticFileReadExecutor();
+        ExecutorService stoppedPool = server.getScheduler().getFileReadExecutor();
         assertThat(stoppedPool, notNullValue());
 
         server.stop();
 
         assertThat(stoppedPool.awaitTermination(10, TimeUnit.SECONDS), is(true));
-        assertThat(other.getScheduler().getStaticFileReadExecutor().isShutdown(), is(false));
+        assertThat(other.getScheduler().getFileReadExecutor().isShutdown(), is(false));
         assertThat(send(other, "GET", "/hello.json"), startsWith("HTTP/1.1 200 OK"));
     }
 
