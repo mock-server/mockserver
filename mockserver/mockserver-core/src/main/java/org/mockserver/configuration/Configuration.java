@@ -104,6 +104,7 @@ public class Configuration {
     private volatile String staticFilesDirectory;
     private volatile Boolean redactSecretsInRecordedExpectations;
     private volatile Boolean redactSecretsInLog;
+    private volatile Boolean logRawNetworkTraffic;
     private volatile Double llmCostBudgetUsd;
     private volatile Boolean otelPropagateTraceContext;
     private volatile ResolvedDefault<Boolean> resolvedOtelPropagateTraceContext;
@@ -925,6 +926,26 @@ public class Configuration {
      */
     public Configuration redactSecretsInLog(Boolean redactSecretsInLog) {
         this.redactSecretsInLog = redactSecretsInLog;
+        return this;
+    }
+
+    public Boolean logRawNetworkTraffic() {
+        if (logRawNetworkTraffic == null) {
+            return ConfigurationProperties.logRawNetworkTraffic();
+        }
+        return logRawNetworkTraffic;
+    }
+
+    /**
+     * Log the raw bytes of the connections the server accepts and of the HTTP connections its forward client opens,
+     * for debugging, with sensitive header values masked and at most 4096 bytes of each message shown. Bodies, query
+     * strings and binary traffic are logged raw and may hold secrets, so it is not for production. Read once when
+     * the server starts, so it cannot be turned on over the control plane. Off by default.
+     *
+     * @param logRawNetworkTraffic log raw network traffic
+     */
+    public Configuration logRawNetworkTraffic(Boolean logRawNetworkTraffic) {
+        this.logRawNetworkTraffic = logRawNetworkTraffic;
         return this;
     }
 

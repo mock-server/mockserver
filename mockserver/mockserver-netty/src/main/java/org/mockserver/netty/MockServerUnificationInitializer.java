@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.lifecycle.LifeCycle;
+import org.mockserver.logging.RawNetworkTrafficLog;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
 import org.mockserver.netty.connection.InboundConnectionIdleHandler;
@@ -29,8 +30,14 @@ public class MockServerUnificationInitializer extends ChannelHandlerAdapter {
     // Built once and reused for every connection: the handler is @Sharable with no per-connection
     // state, but its McpToolRegistry is a large tool/schema tree. Null when MCP is disabled.
     private final McpStreamableHttpHandler mcpStreamableHttpHandler;
+    // null unless logRawNetworkTraffic was on at startup, so no connection reads the property
+    private final RawNetworkTrafficLog rawNetworkTrafficLog;
 
     public MockServerUnificationInitializer(Configuration configuration, LifeCycle server, HttpState httpState, HttpActionHandler actionHandler, NettySslContextFactory nettySslContextFactory) {
+        this(configuration, server, httpState, actionHandler, nettySslContextFactory, RawNetworkTrafficLog.forConfiguration(configuration, RawNetworkTrafficLog.SERVER_SIDE));
+    }
+
+    public MockServerUnificationInitializer(Configuration configuration, LifeCycle server, HttpState httpState, HttpActionHandler actionHandler, NettySslContextFactory nettySslContextFactory, RawNetworkTrafficLog rawNetworkTrafficLog) {
         this.configuration = configuration;
         this.server = server;
         this.httpState = httpState;
@@ -40,6 +47,7 @@ public class MockServerUnificationInitializer extends ChannelHandlerAdapter {
         this.mcpStreamableHttpHandler = configuration.mcpEnabled()
             ? new McpStreamableHttpHandler(httpState, server, mcpSessionManager)
             : null;
+        this.rawNetworkTrafficLog = rawNetworkTrafficLog;
     }
 
     public McpSessionManager getMcpSessionManager() {
@@ -70,6 +78,6 @@ public class MockServerUnificationInitializer extends ChannelHandlerAdapter {
             ctx.pipeline().addBefore(ctx.name(), "proxy-protocol", new ProxyProtocolOriginalDestinationHandler(httpState.getMockServerLogger()));
             ctx.pipeline().addLast("transparent-proxy", new TransparentProxyHandler(configuration, httpState.getMockServerLogger()));
         }
-        ctx.pipeline().replace(this, null, new PortUnificationHandler(configuration, server, httpState, actionHandler, nettySslContextFactory, mcpStreamableHttpHandler));
+        ctx.pipeline().replace(this, null, new PortUnificationHandler(configuration, server, httpState, actionHandler, nettySslContextFactory, mcpStreamableHttpHandler, rawNetworkTrafficLog));
     }
 }

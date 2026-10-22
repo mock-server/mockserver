@@ -24,6 +24,7 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.filters.HopByHopHeaderFilter;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.logging.RawNetworkTrafficLog;
 import org.mockserver.metrics.Metrics;
 import org.mockserver.model.*;
 import org.mockserver.proxyconfiguration.ForwardTargetBlockedException;
@@ -105,6 +106,8 @@ public class NettyHttpClient {
     private final boolean forwardProxyClient;
     private final NettySslContextFactory nettySslContextFactory;
     private final HttpForwardConnectionPool connectionPool;
+    // null unless logRawNetworkTraffic was on when this client was built
+    private final RawNetworkTrafficLog rawNetworkTrafficLog;
     // upstream proxies already reported as unreachable, so each is logged once
     private final Set<InetSocketAddress> unreachableProxiesReported = ConcurrentHashMap.newKeySet();
 
@@ -131,6 +134,7 @@ public class NettyHttpClient {
         this.proxyConfigurations = proxyConfigurations != null ? proxyConfigurations.stream().collect(Collectors.toMap(ProxyConfiguration::getType, proxyConfiguration -> proxyConfiguration)) : ImmutableMap.of();
         this.forwardProxyClient = forwardProxyClient;
         this.nettySslContextFactory = nettySslContextFactory;
+        this.rawNetworkTrafficLog = RawNetworkTrafficLog.forConfiguration(configuration, RawNetworkTrafficLog.FORWARD_SIDE);
         this.connectionPool = Boolean.TRUE.equals(configuration.forwardConnectionPoolEnabled())
             ? new HttpForwardConnectionPool(
                 configuration.forwardConnectionPoolMaxIdlePerKey(),
@@ -397,7 +401,7 @@ public class NettyHttpClient {
      * byte-identical to the historical behaviour.
      */
     private void connectFresh(HttpRequest httpRequest, InetSocketAddress remoteAddress, InetSocketAddress connectAddress, Map<ProxyConfiguration.Type, ProxyConfiguration> upstreamProxies, Long connectionTimeoutMillis, boolean disableStreaming, boolean secure, Protocol httpProtocol, String poolKey, CompletableFuture<Message> responseFuture, AtomicLong firstByteMillis, AtomicLong connectionEstablishedMillis, CompletableFuture<HttpResponse> httpResponseFuture) {
-        final HttpClientInitializer clientInitializer = new HttpClientInitializer(upstreamProxies, mockServerLogger, forwardProxyClient, nettySslContextFactory, httpProtocol, configuration);
+        final HttpClientInitializer clientInitializer = new HttpClientInitializer(upstreamProxies, mockServerLogger, forwardProxyClient, nettySslContextFactory, httpProtocol, configuration, rawNetworkTrafficLog);
         final EventLoopGroup eventLoopGroup = eventLoopGroup();
         // What the channel's handlers complete. It only becomes the request's outcome once the connection
         // is established: a channel that failed to connect is torn down too, and that teardown must not

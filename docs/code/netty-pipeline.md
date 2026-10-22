@@ -531,6 +531,50 @@ Profiles are managed via the REST API:
 
 Profiles support optional TTL-based auto-expiry (dead-man's switch), identical to the `ServiceChaosRegistry` pattern.
 
+### Raw Network Traffic Log (`logRawNetworkTraffic`)
+
+**Outcome:** `logRawNetworkTraffic=true` (startup-only, default `false`, debugging only) logs every read and write of each connection at `INFO` on the SLF4J logger `org.mockserver.logging.RawNetworkTrafficLog` (not the event log). Sensitive header values are masked; **bodies, query strings and binary hex dumps (including the ASCII column) are logged raw**, up to 4096 bytes per message, and may hold secrets. Off, nothing is added to any pipeline and no connection reads the property: `MockServerUnificationInitializer` and `NettyHttpClient` each resolve it once at construction into a nullable `RawNetworkTrafficLog`, and every install site is `if (rawNetworkTrafficLog != null)`.
+
+```mermaid
+flowchart LR
+    W["Socket"] --> S["SslHandler\n(if TLS)"] --> P["PortUnificationHandler"]
+    P -->|"HTTP/1.1 or binary"| R["raw-network-traffic\n(text or hex dump)"] --> C["codec / binary framer"]
+    P -->|"HTTP/2"| F["Http2FrameCodec\nframeLogger = RawHttp2FrameLogger"]
+```
+
+| Connection | How it is logged | Where it is installed |
+|---|---|---|
+| Server, HTTP/1.1 (incl. WebSocket frames after the upgrade, as raw bytes) | text, sensitive header values masked | `PortUnificationHandler.switchToHttp`, before the codec chain |
+| Server, binary (port forwarding, server-speaks-first, in-band STARTTLS) | hex dump, unmasked | `PortUnificationHandler.addBinaryRequestProxying` |
+| Server, HTTP/2 (h2 and h2c) | decoded frames, header values masked, DATA raw | `frameLogger` on the `Http2FrameCodecBuilder` in `switchToHttp2Multiplex` |
+| `NettyHttpClient`, HTTP/1.1: forwards, proxied requests, webhooks, drift replay, MCP tool calls; also an in-process `MockServerClient` when the property is set JVM-wide, since `toServerConfiguration()` falls back to `ConfigurationProperties` | text, masked, labelled `forward connection` | `HttpClientInitializer.configureHttp1Pipeline` (after ALPN, so after TLS) |
+| `NettyHttpClient`, HTTP/2 | decoded frames, masked | `frameLogger` in `HttpClientInitializer.configureHttp2Pipeline` |
+| CONNECT / SOCKS tunnels | decrypted, on the tunnel's loopback leg (an ordinary server connection); `HttpConnectHandler.removeCodecSupport` removes the handler from the client leg so its encrypted bytes are not logged | |
+
+**Not covered:** HTTP/3 (QUIC); the upstream leg of a proxied WebSocket (`WebSocketProxyRelayHandler` has its own bootstrap); the binary relay's upstream leg (`NettyHttpClient.connectBinaryRelay`; its bytes are the server leg's reads and writes, so they are logged there); the JDK-`HttpClient` users (`HttpClusterPeerAccessor`, `PrometheusRemoteWriteExporter`); the DNS listener; SOCKS handshake bytes; TLS handshakes.
+
+**Why these places.** The handler is added with `addLast` at the moment the protocol is decided and before that protocol's handlers, so it sits between the TLS handler (when there is one) and the codec: it sees decrypted bytes inbound and encoded bytes outbound. It is never added for HTTP/2, because an HTTP/2 header block is HPACK-compressed (a literal header value can be on the wire in clear text or Huffman-coded) and could not be masked as bytes; the frame logger sees the decoded headers instead. Netty's `LoggingHandler` and MockServer's TRACE `LoggingHandler` were not reused: neither masks anything, and the latter is tied to the `TRACE` level.
+
+**Masking.** Header names come from `FixtureRedactor.defaultSensitiveHeaders()`, `X-Auth-Token`, `X-Access-Token`, `X-Amz-Security-Token`, `X-Csrf-Token`, `X-Xsrf-Token`, `X-Goog-Api-Key`, `Ocp-Apim-Subscription-Key`, and `dataPlaneApiKeyAuthenticationHeader`, which is read from the server's `Configuration` each time a header is checked, so a header renamed over the control plane is masked from then on. Control-plane JWT, OIDC and cluster peer tokens travel in `Authorization`, which is covered. A name is sensitive when it **starts with** one of these (fail closed). For HTTP/1.1, `RawNetworkTrafficHandler.HeaderMasker` keeps per-direction line state across reads, and masks:
+- a header split over two reads;
+- `Name : value`, which Netty's decoder accepts;
+- `Set-Cookie junk: value`, which Netty reads as `Set-Cookie`: a sensitive name followed by anything other than `:` masks the rest of the line;
+- a sensitive-looking name cut short by a byte that no header name has, or longer than 256 characters;
+- folded continuation lines of a masked header.
+
+Body lines that start like a sensitive header are masked too; everything else in a body is shown as is.
+
+**Log forging.** Each entry's first line names the connection, and every later line starts with `RawNetworkTrafficLog.CONTINUATION` (`"\n| "`). In the traffic, LF is shown as `\n` followed by a continuation break, CR as `\r`, tab as `\t` and every other byte outside printable ASCII as `\xHH`; HTTP/2 header names and values are kept on one line. The hex dump's ASCII column already prints control bytes as `.`, and its lines are prefixed the same way. Traffic therefore cannot produce a line that looks like a log entry of its own.
+
+**Bounds and buffer lifetime.** At most `RawNetworkTrafficLog.MAX_BYTES_SHOWN` (4096) bytes of each message are rendered, then `... N more bytes not shown`. The bytes past the limit are still scanned (no output) to keep the header state right. Buffers are read with absolute `getByte` / `prettyHexDump(buf, index, length)` only: the handler never retains, releases or moves indexes and passes the same message on. A failure to format or write an entry is caught (the byte handler wraps both, the frame logger the write), so the log never changes what the connection does.
+
+**Cost when on.** Every read and write is copied byte by byte into a `StringBuilder` (up to about seven characters per non-printable byte) and written through JUL, on the event loop, so throughput drops noticeably; it is a debugging aid, not for load tests or production.
+
+**Tests.**
+- `RawNetworkTrafficLogTest` (core): masking, split headers, malformed and prefixed names, a runtime-renamed API-key header, log forging, truncation, reference counts.
+- `HttpClientInitializerRawNetworkTrafficTest` (core): the forward client's logger is present only when on, built through `forConfiguration`.
+- `RawNetworkTrafficPipelineTest` (netty): no handler when off for HTTP/1.1, h2c, binary, TLS (real socket) and WebSocket after the upgrade; no HTTP/2 frame logger when off; the handler's position before the codec; decrypted TLS is logged.
+
 ### Protocol-Specific Pipelines
 
 #### HTTP/1.1 Pipeline

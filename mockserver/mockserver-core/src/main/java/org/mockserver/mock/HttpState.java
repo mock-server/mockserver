@@ -7617,6 +7617,11 @@ public class HttpState {
             warnInitOnlyProperty("extensionHelperMaxInFlight", String.valueOf(suppliedExtensionHelperMaxInFlight), String.valueOf(configuration.extensionHelperMaxInFlight()),
                 "extension template helpers are set up when the server starts");
         }
+        Boolean suppliedLogRawNetworkTraffic = suppliedConfiguration.getLogRawNetworkTraffic();
+        if (suppliedLogRawNetworkTraffic != null && !suppliedLogRawNetworkTraffic.equals(configuration.logRawNetworkTraffic())) {
+            warnInitOnlyProperty("logRawNetworkTraffic", String.valueOf(suppliedLogRawNetworkTraffic), String.valueOf(configuration.logRawNetworkTraffic()),
+                "it writes the traffic of every connection, credentials and bodies included, to the server's log, so a request to the control plane cannot change it");
+        }
         Integer suppliedMaxWebSocketExpectations = suppliedConfiguration.getMaxWebSocketExpectations();
         if (suppliedMaxWebSocketExpectations != null && configuration.maxWebSocketExpectations() != maxWebSocketExpectationsInForce) {
             warnInitOnlyProperty("maxWebSocketExpectations", configuration.maxWebSocketExpectations(), maxWebSocketExpectationsInForce,

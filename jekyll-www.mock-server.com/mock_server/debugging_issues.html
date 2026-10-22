@@ -1281,6 +1281,18 @@ $client-&gt;updateConfiguration('{"logLevel": "DEBUG", "maxExpectations": 5000}'
     <li><code class="code inline">-Droot.logLevel=OFF</code> - to disable all logging from all other classes</li>
 </ul>
 
+<a id="raw_network_traffic" class="anchor" href="#raw_network_traffic">&nbsp;</a>
+
+<h3>Logging raw network traffic</h3>
+
+<p>When the event log does not show enough, for example to find a malformed header, a wrong <code class="code inline">Content-Length</code> or a missing <code class="code inline">\r\n</code>, start MockServer with <a href="/mock_server/configuration_properties.html#button_configuration_log_raw_network_traffic">logRawNetworkTraffic</a> to write the bytes of every connection to the console, including the requests MockServer forwards or proxies:</p>
+
+<pre class="code" style="padding: 2px;"><code class="code">java -Dmockserver.logRawNetworkTraffic=true -jar mockserver-netty-jar-with-dependencies.jar -serverPort 1080</code></pre>
+
+<pre class="code" style="padding: 2px;"><code class="code">docker run -e MOCKSERVER_LOG_RAW_NETWORK_TRAFFIC=true -p 1080:1080 mockserver/mockserver</code></pre>
+
+<p>HTTP/1.1 is shown as text after TLS decryption, HTTP/2 as decoded frames and other protocols as a hex dump, at most 4,096 bytes per read or write. <code class="code inline">Authorization</code>, cookies and other credential headers are masked, but <strong>bodies, query strings and hex dumps are logged as sent</strong>, so the output can hold secrets: use it only while debugging, never in production, and turn it off when you are done. It slows every connection, and can only be turned on when MockServer starts.</p>
+
 <p>The following sections explain how to configure logging when running MockServer via:</p>
 <ul>
     <li><a href="#logging_with_api">JUnit 4 @Rule, JUnit 5 Test Extension or Java API (i.e. maven or gradle project)</a></li>

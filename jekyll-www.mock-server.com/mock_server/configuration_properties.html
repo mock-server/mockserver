@@ -3183,6 +3183,32 @@ mockserver.llmRequestTimeoutMillis=15000</code></pre>
     <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.redactSecretsInLog="true"</code></pre>
 </div>
 
+<button id="button_configuration_log_raw_network_traffic" class="accordion title"><strong>Log Raw Network Traffic</strong></button>
+<div class="panel title">
+    <p>Writes the bytes MockServer receives and sends to its console log, like WireMock's <span class="inline_code">--print-all-network-traffic</span>. Use it when you need to see exactly what a client sent or what MockServer answered, for example a malformed header, a missing <span class="inline_code">Content-Length</span> or a line ending that is not <span class="inline_code">\r\n</span>.</p>
+    <p><strong>This is a debugging aid only: do not use it in production.</strong> Request and response bodies, query strings and the hex dump of non-HTTP traffic (including its text column) are written as they were sent, up to 4,096 bytes per read or write, so the log can hold passwords, tokens and personal data. Only the header values listed below are masked. Turn it on while you debug, treat the output as sensitive, and turn it off afterwards.</p>
+    <p>What is logged:</p>
+    <ul>
+        <li>Every connection to MockServer: HTTP/1.1 (including WebSocket traffic after the upgrade) as text after TLS has been decrypted, HTTP/2 as decoded frames (HEADERS, DATA, SETTINGS and so on, because HTTP/2 compresses headers on the wire), and connections MockServer does not recognise as HTTP as a hex dump.</li>
+        <li>The HTTP requests MockServer sends itself: forwarded and proxied requests and webhooks, labelled <span class="inline_code">forward connection</span>. When the setting is made for the whole JVM (system property, environment variable or properties file), the requests of a <span class="inline_code">MockServerClient</span> running in the same JVM are logged too, also labelled <span class="inline_code">forward connection</span>.</li>
+        <li>Traffic tunnelled through MockServer as an HTTPS (<span class="inline_code">CONNECT</span>) or SOCKS proxy is logged decrypted, on the connection MockServer opens to itself for the tunnel, not on the client's encrypted connection.</li>
+    </ul>
+    <p>Not logged: HTTP/3, the connection MockServer opens upstream for a proxied WebSocket or a relayed binary connection (what it carries is logged on the client's connection), requests between cluster members, metrics export, DNS, and TLS and SOCKS handshakes.</p>
+    <p>How it is shown: at most 4,096 bytes of each read or write, then how many more bytes were left out. Each entry starts with one line naming the connection; every line after it starts with <span class="inline_code">| </span>, and line breaks, carriage returns and other control characters in the traffic are shown as <span class="inline_code">\n</span>, <span class="inline_code">\r</span> and <span class="inline_code">\xHH</span>, so what a client sends cannot pass for a log line of its own.</p>
+    <p>Masked: the values of <span class="inline_code">Authorization</span>, <span class="inline_code">Proxy-Authorization</span>, <span class="inline_code">Cookie</span>, <span class="inline_code">Set-Cookie</span>, <span class="inline_code">x-api-key</span>, <span class="inline_code">api-key</span>, <span class="inline_code">X-Auth-Token</span>, <span class="inline_code">X-Access-Token</span>, <span class="inline_code">X-Amz-Security-Token</span>, <span class="inline_code">X-Csrf-Token</span>, <span class="inline_code">X-Xsrf-Token</span>, <span class="inline_code">X-Goog-Api-Key</span>, <span class="inline_code">Ocp-Apim-Subscription-Key</span> and the header named by <span class="inline_code">dataPlaneApiKeyAuthenticationHeader</span> are replaced with <span class="inline_code">***REDACTED***</span>, as are header lines whose name starts with one of those names. A body line that looks like such a header may be masked too.</p>
+    <p>Entries are written at <span class="inline_code">INFO</span> by the logger <span class="inline_code">org.mockserver.logging.RawNetworkTrafficLog</span>, so they appear when <span class="inline_code">logLevel</span> is <span class="inline_code">INFO</span> or lower and <span class="inline_code">disableSystemOut</span> is not set (or wherever your own SLF4J logging sends them). They are not added to the event log, the dashboard or <span class="inline_code">retrieveLogMessages</span>.</p>
+    <p>It costs time on every read and write, so expect lower throughput while it is on; when it is off (the default) nothing is added to a connection and there is no cost. It can only be set before MockServer starts (system property, environment variable, properties file or startup configuration); <span class="inline_code">PUT /mockserver/configuration</span> ignores it with a warning.</p>
+    <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
+    <p>Java Code:</p>
+    <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.logRawNetworkTraffic(boolean enable)</code></pre>
+    <p>System Property:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.logRawNetworkTraffic=...</code></pre>
+    <p>Environment Variable:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">MOCKSERVER_LOG_RAW_NETWORK_TRAFFIC=...</code></pre>
+    <p>Example:</p>
+    <pre class="code" style="padding: 2px;"><code class="code">-Dmockserver.logRawNetworkTraffic="true"</code></pre>
+</div>
+
 <a id="dashboard_analytics_configuration" class="anchor" href="#dashboard_analytics_configuration">&nbsp;</a>
 
 <h2>Dashboard Analytics Configuration:</h2>

@@ -29,6 +29,7 @@ import org.mockserver.dashboard.DashboardWebSocketHandler;
 import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.LoggingHandler;
+import org.mockserver.logging.RawNetworkTrafficLog;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mappers.MockServerHttpResponseToFullHttpResponse;
 import org.mockserver.mock.HttpState;
@@ -150,6 +151,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private final McpStreamableHttpHandler mcpStreamableHttpHandler;
     private final MockServerHttpResponseToFullHttpResponse mockServerHttpResponseToFullHttpResponse;
     private final ClientTlsHandshakeFailureLog clientTlsHandshakeFailureLog;
+    private final RawNetworkTrafficLog rawNetworkTrafficLog;
     private ScheduledFuture<?> undecidedProtocolWait;
     private ScheduledFuture<?> serverFirstWait;
     private boolean clientSpoke;
@@ -160,6 +162,11 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private int heldAsStartOfHandshake;
 
     public PortUnificationHandler(Configuration configuration, LifeCycle server, HttpState httpState, HttpActionHandler actionHandler, NettySslContextFactory nettySslContextFactory, McpStreamableHttpHandler mcpStreamableHttpHandler) {
+        this(configuration, server, httpState, actionHandler, nettySslContextFactory, mcpStreamableHttpHandler, null);
+    }
+
+    public PortUnificationHandler(Configuration configuration, LifeCycle server, HttpState httpState, HttpActionHandler actionHandler, NettySslContextFactory nettySslContextFactory, McpStreamableHttpHandler mcpStreamableHttpHandler, RawNetworkTrafficLog rawNetworkTrafficLog) {
+        this.rawNetworkTrafficLog = rawNetworkTrafficLog;
         this.configuration = configuration;
         this.server = server;
         this.mockServerLogger = httpState.getMockServerLogger();
@@ -711,7 +718,9 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
                 .maxFrameSize(configuration.maxRequestBodySize() < Http2CodecUtil.MAX_FRAME_SIZE_LOWER_BOUND
                     ? Http2CodecUtil.MAX_FRAME_SIZE_LOWER_BOUND
                     : Math.min(configuration.maxRequestBodySize(), Http2CodecUtil.MAX_FRAME_SIZE_UPPER_BOUND)));
-        if (mockServerLogger.isEnabledForInstance(TRACE)) {
+        if (rawNetworkTrafficLog != null) {
+            frameCodecBuilder.frameLogger(rawNetworkTrafficLog.http2FrameLogger());
+        } else if (mockServerLogger.isEnabledForInstance(TRACE)) {
             frameCodecBuilder.frameLogger(new Http2FrameLogger(LogLevel.TRACE, PortUnificationHandler.class.getName()));
         }
         addLastIfNotPresent(pipeline, frameCodecBuilder.build());
@@ -736,6 +745,9 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
 
             ChannelPipeline pipeline = ctx.pipeline();
 
+            if (rawNetworkTrafficLog != null) {
+                rawNetworkTrafficLog.addTo(pipeline, false);
+            }
             HttpTransportTimer transportTimer = Boolean.TRUE.equals(configuration.metricsEnabled()) ? new HttpTransportTimer() : null;
             if (transportTimer != null) {
                 addLastIfNotPresent(pipeline, transportTimer.readMarker());
@@ -863,6 +875,9 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
     private void addBinaryRequestProxying(ChannelHandlerContext ctx) {
         // a raw TCP protocol (a database, a broker) may legitimately stay silent for long periods
         InboundConnectionActivity.markLongLived(ctx.channel());
+        if (rawNetworkTrafficLog != null) {
+            rawNetworkTrafficLog.addTo(ctx.pipeline(), true);
+        }
         BinaryMessageFramer framer = BinaryMessageFramer.forConfiguration(configuration, mockServerLogger);
         addLastIfNotPresent(ctx.pipeline(), framer != null ? framer : new BinaryMessageGatherer());
         addLastIfNotPresent(ctx.pipeline(), new BinaryRequestProxyingHandler(configuration, httpState.getMockServerLogger(), httpState.getScheduler(), actionHandler.getHttpClient(), httpState));

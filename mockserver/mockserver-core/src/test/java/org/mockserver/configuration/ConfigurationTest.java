@@ -3112,6 +3112,40 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetLogRawNetworkTraffic() {
+        boolean original = ConfigurationProperties.logRawNetworkTraffic();
+        try {
+            // then - default value
+            ConfigurationProperties.logRawNetworkTraffic(false);
+            assertThat(configuration.logRawNetworkTraffic(), equalTo(false));
+
+            // when - system property setter
+            ConfigurationProperties.logRawNetworkTraffic(true);
+
+            // then - system property getter
+            assertThat(ConfigurationProperties.logRawNetworkTraffic(), equalTo(true));
+            assertThat(System.getProperty("mockserver.logRawNetworkTraffic"), equalTo("true"));
+            assertThat(configuration.logRawNetworkTraffic(), equalTo(true));
+
+            // when - setter
+            configuration.logRawNetworkTraffic(false);
+
+            // then - getter
+            assertThat(configuration.logRawNetworkTraffic(), equalTo(false));
+        } finally {
+            ConfigurationProperties.logRawNetworkTraffic(original);
+        }
+    }
+
+    @Test
+    public void shouldRecogniseLogRawNetworkTrafficEnvironmentVariableForm() {
+        assertThat(ConfigurationProperties.recognisedEnvironmentVariableKeys(),
+            org.hamcrest.Matchers.hasItem("MOCKSERVER_LOG_RAW_NETWORK_TRAFFIC"));
+        assertThat(ConfigurationProperties.recognisedSystemPropertyKeys(),
+            org.hamcrest.Matchers.hasItem("mockserver.logRawNetworkTraffic"));
+    }
+
+    @Test
     public void shouldSetAndGetMaximumNumberOfRequestToReturnInVerificationFailure() {
         int original = ConfigurationProperties.maximumNumberOfRequestToReturnInVerificationFailure();
         try {
