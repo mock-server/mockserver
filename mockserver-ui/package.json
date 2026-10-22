@@ -36,14 +36,14 @@
     "@uiw/react-json-view": "^2.0.0-alpha.44",
     "mermaid": "^12.2.0",
     "monaco-editor": "^0.57.0",
-    "posthog-js": "^1.438.9",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
+    "posthog-js": "^1.438.10",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.64.0",
+    "@playwright/test": "^1.64.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
