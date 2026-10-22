@@ -119,6 +119,86 @@ public class HttpStateAuditTest {
         assertThat(AuditStore.getInstance().size(), is(0));
     }
 
+    public static class AuditedAdminExtension implements org.mockserver.extension.AdminApiExtension {
+        @Override
+        public String name() {
+            return "audited";
+        }
+
+        @Override
+        public HttpResponse handle(HttpRequest request, String subPath) {
+            return HttpResponse.response().withStatusCode(200);
+        }
+
+        @Override
+        public boolean isReadOnly(String method, String subPath) {
+            return subPath.equals("/status");
+        }
+    }
+
+    @Test
+    public void auditsAnExtensionRouteByItsOwnReadOrMutateClassification() {
+        httpState.stop();
+        Configuration configuration = configuration().controlPlaneAuditEnabled(true).extensions(AuditedAdminExtension.class);
+        MockServerLogger logger = new MockServerLogger(configuration, HttpStateAuditTest.class);
+        org.mockserver.extension.ExtensionRegistry registry = org.mockserver.extension.ExtensionRegistry.start(configuration, logger);
+        try {
+            httpState = new HttpState(configuration, logger, new Scheduler(configuration, logger, true), registry);
+
+            // a GET that the extension does not declare read-only changes state, so it is audited
+            httpState.handle(request("/mockserver/extensions/audited/reload").withMethod("GET"), new FakeResponseWriter(), true);
+            // a route the extension declares read-only is a read, which is not audited by default
+            httpState.handle(request("/mockserver/extensions/audited/status").withMethod("GET"), new FakeResponseWriter(), true);
+
+            List<AuditEntry> entries = AuditStore.getInstance().getRecent(10);
+            assertThat(entries.size(), is(1));
+            assertThat(entries.get(0).getMethod(), is("GET"));
+            assertThat(entries.get(0).getOperation(), is("extensions/audited/reload"));
+            assertThat(entries.get(0).getOutcome(), is("AUTHORIZED"));
+        } finally {
+            registry.stop();
+        }
+    }
+
+    @Test
+    public void refusesAnExtensionRouteWhoseIsReadOnlyThrowsAnErrorInAuditOnlyMode() {
+        httpState.stop();
+        java.util.concurrent.atomic.AtomicInteger handled = new java.util.concurrent.atomic.AtomicInteger();
+        org.mockserver.extension.AdminApiExtension failing = new org.mockserver.extension.AdminApiExtension() {
+            @Override
+            public String name() {
+                return "failing";
+            }
+
+            @Override
+            public HttpResponse handle(HttpRequest request, String subPath) {
+                handled.incrementAndGet();
+                return HttpResponse.response().withStatusCode(200);
+            }
+
+            @Override
+            public boolean isReadOnly(String method, String subPath) {
+                throw new AssertionError("classifier broke");
+            }
+        };
+        // authorization off and audit on, so only the audit asks isReadOnly, and the audit swallows what it throws
+        Configuration configuration = configuration().controlPlaneAuditEnabled(true)
+            .extensions((java.util.function.Supplier<org.mockserver.extension.Extension>) () -> failing);
+        MockServerLogger logger = new MockServerLogger(configuration, HttpStateAuditTest.class);
+        org.mockserver.extension.ExtensionRegistry registry = org.mockserver.extension.ExtensionRegistry.start(configuration, logger);
+        try {
+            httpState = new HttpState(configuration, logger, new Scheduler(configuration, logger, true), registry);
+            FakeResponseWriter responseWriter = new FakeResponseWriter();
+
+            httpState.handle(request("/mockserver/extensions/failing/x").withMethod("PUT"), responseWriter, true);
+
+            assertThat(responseWriter.response.getStatusCode(), is(500));
+            assertThat(handled.get(), is(0));
+        } finally {
+            registry.stop();
+        }
+    }
+
     @Test
     public void readsAuditedWhenReadsEnabled() {
         rebuild(true, true);

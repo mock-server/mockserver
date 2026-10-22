@@ -471,6 +471,8 @@ public class HttpState {
     private volatile boolean initializationComplete = false;
     // null unless the configuration names, supplies or scans for an extension
     private final org.mockserver.extension.ExtensionRegistry extensionRegistry;
+    // null unless a started extension serves admin routes
+    private final org.mockserver.extension.ExtensionAdminRoutes extensionAdminRoutes;
 
     public static void setPort(final HttpRequest request) {
         if (request != null && request.getSocketAddress() != null) {
@@ -627,6 +629,12 @@ public class HttpState {
             }
             if (extensionRegistry != null) {
                 extensionRegistry.initializeExpectations(requestMatchers);
+                this.extensionAdminRoutes = extensionRegistry.createAdminRoutes(configuration, scheduler, this::extensionAdminRouteAllowed);
+                if (extensionAdminRoutes != null) {
+                    extensionAdminRoutes.warnOnShadowedExpectations(requestMatchers);
+                }
+            } else {
+                this.extensionAdminRoutes = null;
             }
             // G11 follow-up: wire the cross-protocol event bus to the clustered
             // backend for fleet-wide registration replication. When the backend is
@@ -2855,6 +2863,10 @@ public class HttpState {
         String requestPath = request.getPath() == null ? null : request.getPath().getValue();
         if (requestPath != null && !isControlPlanePathCandidate(requestPath)) {
             return false;
+        }
+
+        if (extensionAdminRoutes != null && extensionAdminRoutes.handle(request, responseWriter, warDeployment)) {
+            return true;
         }
 
         // Loading an OpenAPI spec may fetch a URL with blocking I/O. On an event-loop thread that fetch stalls
@@ -6862,7 +6874,10 @@ public class HttpState {
      * dispatched through {@link #handle} already call this internally.
      */
     public boolean controlPlaneRequestAuthenticated(HttpRequest request, ResponseWriter responseWriter) {
-        ControlPlaneAuthDecision decision = evaluateControlPlaneAuthentication(request);
+        return controlPlaneRequestAuthenticated(request, responseWriter, evaluateControlPlaneAuthentication(request));
+    }
+
+    private boolean controlPlaneRequestAuthenticated(HttpRequest request, ResponseWriter responseWriter, ControlPlaneAuthDecision decision) {
         switch (decision.outcome()) {
             case ALLOWED:
                 return true;
@@ -6959,6 +6974,23 @@ public class HttpState {
      * and logs the OIDC failure reason server-side only.
      */
     public ControlPlaneAuthDecision evaluateControlPlaneAuthentication(HttpRequest request) {
+        return evaluateControlPlaneAuthentication(request, null);
+    }
+
+    /**
+     * The gate every extension admin route call passes, on the thread that runs it: as
+     * {@link #controlPlaneRequestAuthenticated(HttpRequest, ResponseWriter)}, except that the route's read or mutate
+     * classification comes from the extension rather than from the method.
+     */
+    private boolean extensionAdminRouteAllowed(HttpRequest request, ResponseWriter responseWriter, java.util.function.BooleanSupplier readOnly) {
+        return controlPlaneRequestAuthenticated(request, responseWriter, evaluateControlPlaneAuthentication(request, readOnly));
+    }
+
+    /**
+     * @param readOverride whether the operation only reads state, asked only once the caller is authenticated, or
+     *                     {@code null} to classify it from its method and path
+     */
+    private ControlPlaneAuthDecision evaluateControlPlaneAuthentication(HttpRequest request, java.util.function.BooleanSupplier readOverride) {
         try {
             // Resolve through the getter, NOT the raw field: the handler may be derived from the live
             // configuration, so reading the field directly would miss a control-plane authentication
@@ -6970,11 +7002,11 @@ public class HttpState {
                     ? org.mockserver.authentication.AuthenticationResult.authenticated(null, "none", java.util.Map.of(), java.util.Set.of())
                     : resolvedControlPlaneAuthenticationHandler.authenticate(request);
             if (authenticationResult.isAuthenticated()) {
-                if (Boolean.TRUE.equals(settings.controlPlaneAuthorizationEnabled()) && !controlPlaneAuthorized(request, authenticationResult, settings.controlPlaneScopeMapping())) {
-                    recordAudit(request, authenticationResult, "FORBIDDEN");
+                if (Boolean.TRUE.equals(settings.controlPlaneAuthorizationEnabled()) && !controlPlaneAuthorized(request, authenticationResult, settings.controlPlaneScopeMapping(), readOverride)) {
+                    recordAudit(request, authenticationResult, "FORBIDDEN", readOverride);
                     return ControlPlaneAuthDecision.FORBIDDEN;
                 }
-                recordAudit(request, authenticationResult, "AUTHORIZED");
+                recordAudit(request, authenticationResult, "AUTHORIZED", readOverride);
                 if (resolvedControlPlaneAuthenticationHandler == null) {
                     return ControlPlaneAuthDecision.ALLOWED;
                 }
@@ -7064,11 +7096,11 @@ public class HttpState {
      * verified principal whose scopes are mapped — i.e. control-plane OIDC authentication
      * should be enabled. The denial detail is logged at INFO server-side only.
      */
-    private boolean controlPlaneAuthorized(HttpRequest request, org.mockserver.authentication.AuthenticationResult authenticationResult, java.util.Map<String, org.mockserver.authentication.authorization.ControlPlaneRole> scopeMapping) {
+    private boolean controlPlaneAuthorized(HttpRequest request, org.mockserver.authentication.AuthenticationResult authenticationResult, java.util.Map<String, org.mockserver.authentication.authorization.ControlPlaneRole> scopeMapping, java.util.function.BooleanSupplier readOverride) {
         org.mockserver.authentication.authorization.ControlPlaneAuthorizer authorizer = controlPlaneAuthorizer(scopeMapping);
         String method = request.getMethod() != null ? request.getMethod().getValue() : "";
         String operation = auditOperation(request.getPath() != null ? request.getPath().getValue() : "");
-        boolean isRead = isControlPlaneRead(request, method, operation);
+        boolean isRead = readOverride != null ? readOverride.getAsBoolean() : isControlPlaneRead(request, method, operation);
         java.util.Set<String> scopes = authenticationResult != null ? authenticationResult.getScopes() : java.util.Set.of();
         boolean authorized = authorizer.isAuthorized(scopes, isRead);
         if (!authorized && mockServerLogger != null && mockServerLogger.isEnabledForInstance(Level.INFO)) {
@@ -7123,7 +7155,7 @@ public class HttpState {
      * The {@code outcome} is "AUTHORIZED" for a permitted operation or "FORBIDDEN" when
      * control-plane authorization denied an authenticated principal.
      */
-    private void recordAudit(HttpRequest request, org.mockserver.authentication.AuthenticationResult authenticationResult, String outcome) {
+    private void recordAudit(HttpRequest request, org.mockserver.authentication.AuthenticationResult authenticationResult, String outcome, java.util.function.BooleanSupplier readOverride) {
         try {
             if (request == null || !configuration.controlPlaneAuditEnabled()) {
                 return;
@@ -7134,7 +7166,7 @@ public class HttpState {
             // Reads are skipped by default (controlPlaneAuditReads), but a FORBIDDEN
             // outcome is a security-relevant denial and is always recorded when auditing
             // is enabled, even for a read.
-            if (!"FORBIDDEN".equals(outcome) && !configuration.controlPlaneAuditReads() && isControlPlaneRead(request, method, operation)) {
+            if (!"FORBIDDEN".equals(outcome) && !configuration.controlPlaneAuditReads() && (readOverride != null ? readOverride.getAsBoolean() : isControlPlaneRead(request, method, operation))) {
                 return;
             }
             String sourceAddress = request.getRemoteAddress();
@@ -7548,6 +7580,16 @@ public class HttpState {
             warnInitOnlyProperty("extensionStartTimeoutMillis", String.valueOf(suppliedExtensionStartTimeoutMillis), String.valueOf(configuration.extensionStartTimeoutMillis()),
                 "extensions are started when the server starts");
         }
+        Integer suppliedExtensionAdminMaxInFlight = suppliedConfiguration.getExtensionAdminMaxInFlight();
+        if (suppliedExtensionAdminMaxInFlight != null && !suppliedExtensionAdminMaxInFlight.equals(configuration.extensionAdminMaxInFlight())) {
+            warnInitOnlyProperty("extensionAdminMaxInFlight", String.valueOf(suppliedExtensionAdminMaxInFlight), String.valueOf(configuration.extensionAdminMaxInFlight()),
+                "the extension admin route executor is built when the server starts");
+        }
+        Long suppliedExtensionAdminTimeoutMillis = suppliedConfiguration.getExtensionAdminTimeoutMillis();
+        if (suppliedExtensionAdminTimeoutMillis != null && !suppliedExtensionAdminTimeoutMillis.equals(configuration.extensionAdminTimeoutMillis())) {
+            warnInitOnlyProperty("extensionAdminTimeoutMillis", String.valueOf(suppliedExtensionAdminTimeoutMillis), String.valueOf(configuration.extensionAdminTimeoutMillis()),
+                "the extension admin route executor is built when the server starts");
+        }
         Integer suppliedMaxWebSocketExpectations = suppliedConfiguration.getMaxWebSocketExpectations();
         if (suppliedMaxWebSocketExpectations != null && configuration.maxWebSocketExpectations() != maxWebSocketExpectationsInForce) {
             warnInitOnlyProperty("maxWebSocketExpectations", configuration.maxWebSocketExpectations(), maxWebSocketExpectationsInForce,
@@ -7755,6 +7797,9 @@ public class HttpState {
      *                      failed never started; every other step skips what was never created
      */
     private void stop(boolean resetAsyncApi) {
+        if (extensionAdminRoutes != null) {
+            extensionAdminRoutes.stop();
+        }
         if (expectationFileSystemPersistence != null) {
             expectationFileSystemPersistence.stop();
         }

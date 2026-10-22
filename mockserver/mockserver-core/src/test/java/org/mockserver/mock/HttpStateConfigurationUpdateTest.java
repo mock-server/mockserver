@@ -397,6 +397,23 @@ public class HttpStateConfigurationUpdateTest {
     }
 
     @Test
+    public void shouldNotLetAPutReconfigureExtensionAdminRoutes() {
+        // given
+        configuration.extensionAdminMaxInFlight(4).extensionAdminTimeoutMillis(1000L);
+
+        // when
+        put(new ConfigurationDTO().setExtensionAdminMaxInFlight(1000).setExtensionAdminTimeoutMillis(5L));
+
+        // then
+        assertThat(configuration.extensionAdminMaxInFlight(), is(4));
+        assertThat(configuration.extensionAdminTimeoutMillis(), is(1000L));
+        List<String> warnings = logger.warnings();
+        assertThat(warnings, hasSize(2));
+        assertThat(warnings.get(0), containsString("extensionAdminMaxInFlight is fixed at startup"));
+        assertThat(warnings.get(1), containsString("extensionAdminTimeoutMillis is fixed at startup"));
+    }
+
+    @Test
     public void shouldNotWarnWhenExtensionPropertiesAreEchoedBackUnchanged() {
         // given - GET then PUT of the whole configuration of a server with extensions
         configuration.extensions("com.example.Loaded").extensionScanning(true);

@@ -341,7 +341,7 @@ public class Metrics {
                         .register();
                     overloadRejectionsTotal = Counter.builder()
                         .name("mock_server_overload_rejections")
-                        .help("Tasks refused because a bound was full, by reason (delayed_responses and template_actions answered 503, delay_skipped sent without chaos latency, side_actions dropped, websocket_replies closed with 1013, static_files and file_bodies answered 503)")
+                        .help("Tasks refused because a bound was full, by reason (delayed_responses and template_actions answered 503, delay_skipped sent without chaos latency, side_actions dropped, websocket_replies closed with 1013, static_files, file_bodies and extension_admin answered 503)")
                         .labelNames("reason")
                         .register();
                     webSocketReadPausesTotal = Counter.builder()

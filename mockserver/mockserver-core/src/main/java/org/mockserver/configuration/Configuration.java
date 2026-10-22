@@ -281,6 +281,8 @@ public class Configuration {
     private volatile String extensions;
     private volatile Boolean extensionScanning;
     private volatile Long extensionStartTimeoutMillis;
+    private volatile Integer extensionAdminMaxInFlight;
+    private volatile Long extensionAdminTimeoutMillis;
     private volatile List<Class<? extends org.mockserver.extension.Extension>> extensionClasses = Collections.emptyList();
     private volatile List<Supplier<? extends org.mockserver.extension.Extension>> extensionSuppliers = Collections.emptyList();
 
@@ -4142,6 +4144,43 @@ public class Configuration {
      */
     public Configuration extensionStartTimeoutMillis(Long extensionStartTimeoutMillis) {
         this.extensionStartTimeoutMillis = extensionStartTimeoutMillis;
+        return this;
+    }
+
+    public Integer extensionAdminMaxInFlight() {
+        if (extensionAdminMaxInFlight == null) {
+            return ConfigurationProperties.extensionAdminMaxInFlight();
+        }
+        return Math.max(1, extensionAdminMaxInFlight);
+    }
+
+    /**
+     * The most extension admin route calls the server runs at once; a call beyond it is answered {@code 503}. Each call
+     * holds its place until the extension's handler returns, even after it timed out. Values below 1 are read as 1.
+     * Read once at startup.
+     *
+     * @param extensionAdminMaxInFlight the most extension admin route calls in flight
+     */
+    public Configuration extensionAdminMaxInFlight(Integer extensionAdminMaxInFlight) {
+        this.extensionAdminMaxInFlight = extensionAdminMaxInFlight;
+        return this;
+    }
+
+    public Long extensionAdminTimeoutMillis() {
+        if (extensionAdminTimeoutMillis == null) {
+            return ConfigurationProperties.extensionAdminTimeoutMillis();
+        }
+        return Math.max(1L, extensionAdminTimeoutMillis);
+    }
+
+    /**
+     * How long the Netty server waits for an extension admin route to answer before it answers {@code 500} itself and
+     * interrupts the handler; not applied in a WAR. Values below 1 are read as 1. Read once at startup.
+     *
+     * @param extensionAdminTimeoutMillis the time to wait for each call, in milliseconds
+     */
+    public Configuration extensionAdminTimeoutMillis(Long extensionAdminTimeoutMillis) {
+        this.extensionAdminTimeoutMillis = extensionAdminTimeoutMillis;
         return this;
     }
 

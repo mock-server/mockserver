@@ -3009,6 +3009,33 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void shouldSetAndGetExtensionAdminRouteProperties() {
+        int originalMaxInFlight = ConfigurationProperties.extensionAdminMaxInFlight();
+        long originalTimeout = ConfigurationProperties.extensionAdminTimeoutMillis();
+        try {
+            // when - system property setters
+            ConfigurationProperties.extensionAdminMaxInFlight(0);
+            ConfigurationProperties.extensionAdminTimeoutMillis(0L);
+
+            // then - clamped to at least 1
+            assertThat(System.getProperty("mockserver.extensionAdminMaxInFlight"), equalTo("0"));
+            assertThat(configuration.extensionAdminMaxInFlight(), equalTo(1));
+            assertThat(configuration.extensionAdminTimeoutMillis(), equalTo(1L));
+
+            // when - setters
+            configuration.extensionAdminMaxInFlight(5).extensionAdminTimeoutMillis(2500L);
+
+            // then - getters
+            assertThat(configuration.extensionAdminMaxInFlight(), equalTo(5));
+            assertThat(configuration.extensionAdminTimeoutMillis(), equalTo(2500L));
+            assertThat(configuration.extensionAdminMaxInFlight(-3).extensionAdminMaxInFlight(), equalTo(1));
+        } finally {
+            ConfigurationProperties.extensionAdminMaxInFlight(originalMaxInFlight);
+            ConfigurationProperties.extensionAdminTimeoutMillis(originalTimeout);
+        }
+    }
+
+    @Test
     public void shouldSetAndGetStaticFilesDirectory() {
         String original = ConfigurationProperties.staticFilesDirectory();
         try {

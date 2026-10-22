@@ -24,7 +24,8 @@ import static org.mockserver.configuration.Configuration.configuration;
 
 /**
  * With no extension configured a server must load no {@code org.mockserver.extension} class, and so cannot have
- * asked {@code ServiceLoader} for extensions (which needs the {@code Extension} class). Runs a server in a fresh JVM
+ * asked {@code ServiceLoader} for extensions (which needs the {@code Extension} class), not even while it serves a
+ * control-plane request, a path under {@code /mockserver/extensions/} and a data-plane request. Runs a server in a fresh JVM
  * that logs every class it loads, since this JVM has loaded the extension classes for other tests; a second run
  * with an extension configured shows the log does see them.
  */
@@ -125,9 +126,29 @@ public class ExtensionClassLoadingTest {
                 configuration.extensions(arguments[0]);
             }
             MockServer mockServer = new MockServer(configuration);
+            try {
+                // a control-plane route, a path under /mockserver/extensions/ and a data-plane request
+                send(mockServer.getLocalPort(), "PUT", "/mockserver/clear");
+                send(mockServer.getLocalPort(), "GET", "/mockserver/extensions/class-loading-probe/x");
+                send(mockServer.getLocalPort(), "GET", "/data");
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
             mockServer.stop();
             System.out.println(STOPPED);
             System.exit(0);
+        }
+
+        private static void send(int port, String method, String path) throws Exception {
+            java.net.HttpURLConnection connection = (java.net.HttpURLConnection) new java.net.URL("http://127.0.0.1:" + port + path).openConnection();
+            connection.setRequestMethod(method);
+            connection.setConnectTimeout(10_000);
+            connection.setReadTimeout(30_000);
+            if (connection.getResponseCode() <= 0) {
+                throw new IllegalStateException("no response to " + method + " " + path);
+            }
+            connection.disconnect();
         }
     }
 }
