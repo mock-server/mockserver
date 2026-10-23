@@ -158,11 +158,22 @@ public abstract class PasswordHash {
         static byte[] derive(String digest, String password, byte[] salt, int iterations, int length) {
             PBEKeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, iterations, length * 8);
             try {
-                return SecretKeyFactory.getInstance("PBKDF2WithHmac" + digest.toUpperCase()).generateSecret(keySpec).getEncoded();
+                return SecretKeyFactory.getInstance(keyFactoryAlgorithm(digest)).generateSecret(keySpec).getEncoded();
             } catch (GeneralSecurityException exception) {
                 throw new IllegalStateException("PBKDF2 with HMAC-" + digest.toUpperCase() + " is not available", exception);
             } finally {
                 keySpec.clearPassword();
+            }
+        }
+
+        private static String keyFactoryAlgorithm(String digest) {
+            switch (digest) {
+                case "sha256":
+                    return "PBKDF2WithHmacSHA256";
+                case "sha512":
+                    return "PBKDF2WithHmacSHA512";
+                default:
+                    throw new IllegalArgumentException("PBKDF2 password hashes must use sha256 or sha512, not " + digest);
             }
         }
     }
