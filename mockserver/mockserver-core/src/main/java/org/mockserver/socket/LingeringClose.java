@@ -31,9 +31,11 @@ public final class LingeringClose {
 
     /**
      * Starts a lingering close; call it once the last response has been written, as nothing written after is sent.
-     * A channel that is not a socket (an HTTP/2 stream, say) or is no longer active is closed at once.
+     * A channel that is not a socket (an HTTP/2 stream, say) or is no longer active is closed at once. The connection is
+     * {@link ConnectionClosing#mark marked} closing first, as the close happens beneath its pipelining gate.
      */
     public static void close(Channel channel) {
+        ConnectionClosing.mark(channel);
         if (channel.eventLoop().inEventLoop()) {
             start(channel);
         } else {

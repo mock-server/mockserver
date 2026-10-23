@@ -85,6 +85,7 @@ public class Metrics {
     // Inbound connections refused by maxInboundConnections, and closed by inboundConnectionIdleTimeoutMillis.
     private static volatile Counter inboundConnectionsRejectedTotal;
     private static volatile Counter inboundConnectionsIdleClosedTotal;
+    private static volatile Counter http1PipeliningWedgedConnectionsTotal;
     // Responses cut by responseWriteStallTimeoutMillis, labelled by protocol and by what was cut.
     private static volatile Counter responseWriteStallsTotal;
     // Live queue depths of the shared scheduler pool and the template-action pool, set by HttpState.
@@ -329,6 +330,10 @@ public class Metrics {
                     inboundConnectionsIdleClosedTotal = Counter.builder()
                         .name("mock_server_inbound_connections_idle_closed")
                         .help("Inbound connections closed after inboundConnectionIdleTimeoutMillis with nothing in progress")
+                        .register();
+                    http1PipeliningWedgedConnectionsTotal = Counter.builder()
+                        .name("mock_server_http1_pipelining_wedged_connections")
+                        .help("HTTP/1.1 connections whose pipelined requests were held behind a response that made no progress for inboundConnectionIdleTimeoutMillis (closed), or for 300 seconds when that timeout is 0 (left open)")
                         .register();
                     responseWriteStallsTotal = Counter.builder()
                         .name("mock_server_response_write_stalls")
@@ -741,6 +746,7 @@ public class Metrics {
             webSocketReadPausesTotal = null;
             inboundConnectionsRejectedTotal = null;
             inboundConnectionsIdleClosedTotal = null;
+            http1PipeliningWedgedConnectionsTotal = null;
             responseWriteStallsTotal = null;
             forwardHostLabels.clear();
             forwardHostLabelCount.set(0);
@@ -999,6 +1005,25 @@ public class Metrics {
         if (counter != null) {
             counter.inc();
         }
+    }
+
+    /**
+     * Count an HTTP/1.1 connection whose pipelined requests were held behind a response that made no progress for the
+     * pipelining gate's backstop time. No-op unless metrics are enabled.
+     */
+    public static void incrementHttp1PipeliningWedgedConnections() {
+        Counter counter = http1PipeliningWedgedConnectionsTotal;
+        if (counter != null) {
+            counter.inc();
+        }
+    }
+
+    /**
+     * Return the wedged pipelining connection count, or 0 if metrics are disabled.
+     */
+    public static long getHttp1PipeliningWedgedConnectionsCount() {
+        Counter counter = http1PipeliningWedgedConnectionsTotal;
+        return counter != null ? (long) counter.get() : 0L;
     }
 
     /**

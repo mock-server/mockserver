@@ -39,9 +39,12 @@ public final class ConnectionReset {
      * A connection with {@link #ON_RESET} (a tunnel's loopback) is not reset but has its output ended at the socket:
      * the relay at its other end then reads all that was written before the end, which an RST could make it drop (its
      * next write would fail and close it unread), and resets the tunnel's client connection after relaying it.
+     * Either way the connection is {@link ConnectionClosing#mark marked} closing first, as the reset or end of output
+     * happens beneath its pipelining gate.
      */
     public static ChannelFuture reset(Channel channel) {
         Channel connection = channel instanceof Http2StreamChannel && channel.parent() != null ? channel.parent() : channel;
+        ConnectionClosing.mark(connection);
         Runnable onReset = connection.attr(ON_RESET).get();
         if (onReset != null) {
             onReset.run();

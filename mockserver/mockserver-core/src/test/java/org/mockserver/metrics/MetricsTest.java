@@ -1027,6 +1027,24 @@ public class MetricsTest {
     }
 
     @Test
+    public void countsWedgedPipeliningConnections() {
+        new Metrics(configuration().metricsEnabled(true));
+
+        Metrics.incrementHttp1PipeliningWedgedConnections();
+
+        assertThat(scrapeUnlabeledCounterValue("mock_server_http1_pipelining_wedged_connections"), is(1.0));
+        assertThat(Metrics.getHttp1PipeliningWedgedConnectionsCount(), is(1L));
+    }
+
+    @Test
+    public void wedgedPipeliningConnectionCounterIsANoOpWhenMetricsDisabled() {
+        Metrics.incrementHttp1PipeliningWedgedConnections();
+
+        assertThat(scrapeContains("mock_server_http1_pipelining_wedged_connections"), is(false));
+        assertThat(Metrics.getHttp1PipeliningWedgedConnectionsCount(), is(0L));
+    }
+
+    @Test
     public void inboundConnectionCountersAreNoOpsWhenMetricsDisabled() {
         Metrics.incrementInboundConnectionsRejected();
         Metrics.incrementInboundConnectionsIdleClosed();
