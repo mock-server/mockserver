@@ -229,6 +229,17 @@ public class ConfigurationDTOTest {
     }
 
     @Test
+    public void shouldNotApplyNoProxyHostsToARunningServer() {
+        Configuration target = configuration().noProxyHosts("internal.example");
+
+        new ConfigurationDTO().setNoProxyHosts("*.com,*.net").applyTo(target);
+
+        assertThat(target.noProxyHosts(), is("internal.example"));
+        // a startup configuration (buildObject) still sets it
+        assertThat(new ConfigurationDTO().setNoProxyHosts("*.com").buildObject().noProxyHosts(), is("*.com"));
+    }
+
+    @Test
     public void shouldNotCarryTheHeldLlmApiKeyToANewLlmDestination() {
         Configuration target = configuration().llmProvider("OPENAI").llmBaseUrl("https://held.example").llmApiKey("sk-held");
 
@@ -774,7 +785,9 @@ public class ConfigurationDTOTest {
         // the peer authentication token is sent to every fan-in peer, so a control-plane request must not
         // choose the peers (and the peer client reads the token once, at startup)
         "clusterVerifyFanInPeers",
-        "clusterFanInPeerAuthToken"
+        "clusterFanInPeerAuthToken",
+        // decides which forwarded requests bypass the upstream proxy
+        "noProxyHosts"
     ));
 
     @Test

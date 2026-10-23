@@ -1809,9 +1809,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
                 target.dataPlaneApiKeyAuthenticationValue(restored);
             }
         }
-        if (noProxyHosts != null) {
-            target.noProxyHosts(noProxyHosts);
-        }
+        // noProxyHosts is deliberately not applied: it decides which forwarded requests bypass the upstream proxy,
+        // so it is fixed at startup like the proxy itself (see HttpState.applyConfigurationUpdate)
         if (proxyRemoteHost != null) {
             target.proxyRemoteHost(proxyRemoteHost);
         }
