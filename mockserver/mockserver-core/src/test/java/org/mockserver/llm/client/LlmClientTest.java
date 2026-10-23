@@ -14,7 +14,9 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
 import static org.mockserver.model.HttpResponse.response;
@@ -166,12 +168,21 @@ public class LlmClientTest {
     @Test
     public void azureOpenAiUsesDeploymentPathAndApiKeyHeader() {
         HttpRequest request = new AzureOpenAiLlmClient().buildCompletionRequest(
-            LlmBackend.of(Provider.AZURE_OPENAI, "az-key"), conversation());
+            new LlmBackend(null, Provider.AZURE_OPENAI, "https://my-resource.openai.azure.com", "az-key", null, null, null), conversation());
+        assertThat(request.getFirstHeader("Host"), is("my-resource.openai.azure.com"));
         assertThat(request.getPath().getValue(), is("/openai/deployments/gpt-4o-mini/chat/completions"));
         assertThat(request.getFirstHeader("api-key"), is("az-key"));
         // Azure uses the api-key header, NOT Authorization: Bearer
         assertThat(request.getFirstHeader("Authorization"), is(""));
         assertThat(request.getFirstQueryStringParameter("api-version"), is(notNullValue()));
+    }
+
+    @Test
+    public void azureOpenAiRefusesToBuildARequestWithoutABaseUrlSoTheKeyGoesToNoDefaultHost() {
+        IllegalStateException refused = assertThrows(IllegalStateException.class, () -> new AzureOpenAiLlmClient()
+            .buildCompletionRequest(LlmBackend.of(Provider.AZURE_OPENAI, "az-key"), conversation()));
+        assertThat(refused.getMessage(), containsString("baseUrl"));
+        assertThat(refused.getMessage(), not(containsString("az-key")));
     }
 
     @Test

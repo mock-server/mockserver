@@ -5055,7 +5055,8 @@ public class Configuration {
      * {@code http://node-b:1080,http://node-c:1080}) queried when
      * {@link #clusterVerifyFanIn()} is enabled. Should list the OTHER nodes in
      * the fleet (excluding this node). Default is empty (no peers — fan-in is
-     * a no-op even when enabled).
+     * a no-op even when enabled). Fixed at startup: {@code PUT /mockserver/configuration}
+     * ignores it, because {@link #clusterFanInPeerAuthToken()} is sent to every peer.
      */
     public String clusterVerifyFanInPeers() {
         if (clusterVerifyFanInPeers == null) {
@@ -5081,7 +5082,8 @@ public class Configuration {
      * {@code Authorization} header (e.g. {@code Bearer <jwt>}), so an authenticated
      * cluster (control-plane bearer/JWT/OIDC) accepts the fan-in query rather than
      * rejecting it with 401/403. Default is empty (no credential — unchanged
-     * behaviour). All nodes must share the same token / trust.
+     * behaviour). All nodes must share the same token / trust. Fixed at startup:
+     * {@code PUT /mockserver/configuration} ignores it.
      */
     public String clusterFanInPeerAuthToken() {
         if (clusterFanInPeerAuthToken == null) {

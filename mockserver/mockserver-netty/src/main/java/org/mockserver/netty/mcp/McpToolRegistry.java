@@ -4923,6 +4923,7 @@ public class McpToolRegistry {
             "Replays a recorded LLM cassette against the live provider and reports STRUCTURAL drift in the responses "
                 + "(new/removed fields, type changes) — not semantic differences. Requires a configured runtime LLM backend "
                 + "(env vars, mockserver.llmProvider/llmApiKey, or a named backend); if none is configured the tool is disabled. "
+                + "The cassette's provider must be the backend's provider; otherwise the call is refused and nothing is sent. "
                 + "Fails closed per exchange: a network error or non-2xx live response is reported as could-not-check, never as drift. "
                 + "Intended for an opt-in/scheduled CI lane, not the per-commit build.",
             schema,
@@ -4965,6 +4966,13 @@ public class McpToolRegistry {
                 return disabled;
             }
             LlmBackend backend = backendOpt.get();
+            // the held API key only ever goes to the backend's own provider and base URL; any other
+            // provider's client would send it to that provider's default host
+            if (backend.provider() != provider) {
+                return errorResult("cassette provider " + provider + " is not the configured LLM backend's provider "
+                    + backend.provider() + "; drift detection only replays a cassette against its own provider, so nothing was sent. "
+                    + "Use a cassette recorded against " + backend.provider() + ", or pass the backendName of a backend configured for " + provider);
+            }
 
             // Extract recorded exchanges (non-streaming JSON responses)
             String json = new String(Files.readAllBytes(inputPath), StandardCharsets.UTF_8);
@@ -5009,12 +5017,6 @@ public class McpToolRegistry {
 
             ObjectNode resultNode = objectMapper.createObjectNode();
             resultNode.put("status", "checked");
-            // surface a likely misconfiguration: the cassette's provider and the
-            // resolved backend's provider differ, so every live call will mis-target
-            if (backend.provider() != provider) {
-                resultNode.put("warning", "resolved backend provider " + backend.provider()
-                    + " does not match cassette provider " + provider + "; live calls may all fail");
-            }
             resultNode.put("exchanges", exchanges.size());
             resultNode.put("drifted", report.driftedCount());
             resultNode.put("checked", report.checkedCount());

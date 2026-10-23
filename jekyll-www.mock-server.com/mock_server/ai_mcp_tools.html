@@ -1878,13 +1878,15 @@ keywords: "mcp tools, mockserver mcp tools, create_expectation, verify_request, 
 
 <p><strong>Requires a configured runtime LLM backend</strong> (provider environment variables, the <code>mockserver.llmProvider</code>/<code>llmApiKey</code> properties, or a named backend &mdash; see <a href="/mock_server/configuration_properties.html#button_configuration_llm_backend">Runtime LLM Backend</a>). If none is configured the tool returns <code>{"disabled": true}</code> and does nothing. It <strong>fails closed</strong>: a network error or non-2xx live response is reported as could-not-check for that exchange, never as drift. Because it calls a real API (keys, tokens, latency, non-determinism), run it in an opt-in or scheduled CI lane &mdash; never the per-commit build.</p>
 
+<p><strong>The cassette's provider must match the backend's provider.</strong> The tool only ever sends the configured API key to the configured backend. If <code>provider</code> is not the provider of the backend it resolves (the default backend, or the one named by <code>backendName</code>), the call is refused with an error and nothing is sent. To check a cassette recorded against another provider, configure a named backend for that provider and pass its <code>backendName</code>.</p>
+
 <table>
     <thead>
         <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
     </thead>
     <tbody>
         <tr><td><code>cassettePath</code></td><td>string</td><td>Yes</td><td>Path to the recorded fixture JSON whose exchanges are replayed</td></tr>
-        <tr><td><code>provider</code></td><td>string</td><td>Yes</td><td>LLM provider the cassette was recorded against</td></tr>
+        <tr><td><code>provider</code></td><td>string</td><td>Yes</td><td>LLM provider the cassette was recorded against; must be the resolved backend's provider</td></tr>
         <tr><td><code>backendName</code></td><td>string</td><td>No</td><td>Named backend from <code>mockserver.llmBackendsConfig</code>; otherwise the default backend is resolved from env/properties</td></tr>
     </tbody>
 </table>

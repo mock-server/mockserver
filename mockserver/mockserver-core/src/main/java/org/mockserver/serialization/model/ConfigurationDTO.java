@@ -2288,15 +2288,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (clusterVerifyFanIn != null) {
             target.clusterVerifyFanIn(clusterVerifyFanIn);
         }
-        if (clusterVerifyFanInPeers != null) {
-            target.clusterVerifyFanInPeers(clusterVerifyFanInPeers);
-        }
-        if (clusterFanInPeerAuthToken != null) {
-            String restored = ConfigurationProperties.restoreRedactedValue("clusterFanInPeerAuthToken", clusterFanInPeerAuthToken, target.clusterFanInPeerAuthToken());
-            if (restored != null) {
-                target.clusterFanInPeerAuthToken(restored);
-            }
-        }
+        // clusterVerifyFanInPeers and clusterFanInPeerAuthToken are deliberately not applied: the token is sent to
+        // every peer, so a runtime update must not choose where it goes (see HttpState.applyConfigurationUpdate)
         // the controlPlaneOidc* properties, controlPlaneAuthorizationEnabled and controlPlaneScopeMapping are
         // deliberately not applied: they decide who may use the control plane and what each user may do, so they
         // are fixed at startup (see HttpState.applyConfigurationUpdate)
@@ -5114,10 +5107,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
      * WRITE-ONLY: the credential each node presents to its peers on cross-node fan-in queries, sent
      * verbatim as the control-plane {@code Authorization} header — so disclosing it hands any reader of
      * {@code GET /mockserver/configuration} a token granting MUTATE access to every node in the
-     * cluster. @JsonIgnore keeps it off the response entirely (the @JsonProperty setter keeps it
-     * settable over the control plane), which also makes a GET-then-PUT round trip safe: the property
-     * is absent from the body a client echoes back, and applyTo() leaves an absent value alone. Same
-     * pattern as dataPlaneBearerAuthenticationToken and the other credentials in this DTO.
+     * cluster. @JsonIgnore keeps it off the response entirely; the @JsonProperty setter still
+     * deserializes it, but applyTo() never applies it, because it is fixed at startup together with
+     * clusterVerifyFanInPeers (a control-plane request must not choose where the token is sent).
      */
     @JsonIgnore
     public String getClusterFanInPeerAuthToken() {

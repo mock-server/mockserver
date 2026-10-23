@@ -7749,6 +7749,16 @@ public class HttpState {
             warnInitOnlyProperty("logRawNetworkTraffic", String.valueOf(suppliedLogRawNetworkTraffic), String.valueOf(configuration.logRawNetworkTraffic()),
                 "it writes the traffic of every connection, credentials and bodies included, to the server's log, so a request to the control plane cannot change it");
         }
+        String suppliedClusterVerifyFanInPeers = suppliedConfiguration.getClusterVerifyFanInPeers();
+        if (suppliedClusterVerifyFanInPeers != null && !suppliedClusterVerifyFanInPeers.equals(configuration.clusterVerifyFanInPeers())) {
+            warnInitOnlyProperty("clusterVerifyFanInPeers", "\"" + suppliedClusterVerifyFanInPeers + "\"", "\"" + configuration.clusterVerifyFanInPeers() + "\"",
+                "the cluster peer authentication token is sent to every peer, so a request to the control plane cannot choose where it goes");
+        }
+        String suppliedClusterFanInPeerAuthToken = suppliedConfiguration.getClusterFanInPeerAuthToken();
+        if (suppliedClusterFanInPeerAuthToken != null && !suppliedClusterFanInPeerAuthToken.equals(configuration.clusterFanInPeerAuthToken())) {
+            warnInitOnlyProperty("clusterFanInPeerAuthToken", "(not shown)", "(not shown)",
+                "the cluster peer client reads the token once, when the server starts");
+        }
         Integer suppliedMaxWebSocketExpectations = suppliedConfiguration.getMaxWebSocketExpectations();
         if (suppliedMaxWebSocketExpectations != null && configuration.maxWebSocketExpectations() != maxWebSocketExpectationsInForce) {
             warnInitOnlyProperty("maxWebSocketExpectations", configuration.maxWebSocketExpectations(), maxWebSocketExpectationsInForce,

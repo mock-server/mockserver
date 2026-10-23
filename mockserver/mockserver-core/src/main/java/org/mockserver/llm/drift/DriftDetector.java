@@ -59,9 +59,20 @@ public class DriftDetector {
     /**
      * Replay each recorded exchange against {@code backend} and diff the live
      * response shape against the recorded one. Never throws.
+     * <p>
+     * When {@code provider} is not the backend's own provider nothing is sent: another provider's
+     * client would carry the backend's API key to that provider's default host.
      */
     public DriftReport detect(List<RecordedExchange> exchanges, Provider provider, LlmBackend backend) {
         List<DriftReport.ExchangeDrift> results = new ArrayList<>();
+        if (backend == null || backend.provider() != provider) {
+            String note = "cassette provider " + provider + " is not the configured backend provider "
+                + (backend == null ? null : backend.provider()) + ", so it was not sent";
+            for (int i = 0; i < exchanges.size(); i++) {
+                results.add(couldNotCheck(i, note));
+            }
+            return new DriftReport(results);
+        }
         Optional<LlmClient> clientOpt = clientRegistry.lookup(provider);
         Optional<ProviderCodec> codecOpt = codecRegistry.lookup(provider);
 
