@@ -167,6 +167,7 @@ def _deserialize_body(data: Any) -> Body | JsonRpcBody | str | dict | None:
                 json_path=data.get("jsonPath", ""),
                 not_body=data.get("not", False),
                 optional=data.get("optional", False),
+                date_time=DateTimeMatcher.from_dict(data.get("dateTime")),
             )
         if data.get("type") == "ALL_OF":
             return AllOfBody.from_dict(data)
@@ -791,6 +792,8 @@ class JsonPathBody:
     json_path: str = ""
     not_body: bool = False
     optional: bool = False
+    # When set, the body matches only when a value the JSONPath selects is a date-time satisfying it.
+    date_time: DateTimeMatcher | None = None
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -800,6 +803,8 @@ class JsonPathBody:
             result["optional"] = True
         result["type"] = "JSON_PATH"
         result["jsonPath"] = self.json_path
+        if self.date_time is not None:
+            result["dateTime"] = self.date_time.to_dict()
         return result
 
 
@@ -941,6 +946,8 @@ class XPathBody:
     namespace_prefixes: dict | None = None
     not_body: bool = False
     optional: bool = False
+    # When set, the body matches only when the text of a node the XPath selects is a date-time satisfying it.
+    date_time: DateTimeMatcher | None = None
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -952,6 +959,8 @@ class XPathBody:
         result["xpath"] = self.xpath
         if self.namespace_prefixes is not None:
             result["namespacePrefixes"] = dict(self.namespace_prefixes)
+        if self.date_time is not None:
+            result["dateTime"] = self.date_time.to_dict()
         return result
 
     @classmethod
@@ -964,6 +973,7 @@ class XPathBody:
             namespace_prefixes=dict(namespace_prefixes) if namespace_prefixes is not None else None,
             not_body=bool(data.get("not", False)),
             optional=bool(data.get("optional", False)),
+            date_time=DateTimeMatcher.from_dict(data.get("dateTime")),
         )
 
 
@@ -1171,8 +1181,12 @@ def _body_xml_matcher(value: str, content_type: str | None = None) -> XmlBody:
     return XmlBody(xml=value, content_type=content_type)
 
 
-def _body_xpath(xpath: str, namespace_prefixes: dict | None = None) -> XPathBody:
-    return XPathBody(xpath=xpath, namespace_prefixes=namespace_prefixes)
+def _body_xpath(xpath: str, namespace_prefixes: dict | None = None, date_time: DateTimeMatcher | None = None) -> XPathBody:
+    return XPathBody(xpath=xpath, namespace_prefixes=namespace_prefixes, date_time=date_time)
+
+
+def _body_json_path(json_path: str, date_time: DateTimeMatcher | None = None) -> JsonPathBody:
+    return JsonPathBody(json_path=json_path, date_time=date_time)
 
 
 def _body_xml_schema(xml_schema: str) -> XmlSchemaBody:
@@ -1232,6 +1246,7 @@ Body.graphql = staticmethod(_body_graphql)
 Body.file = staticmethod(_body_file)
 Body.xml_matcher = staticmethod(_body_xml_matcher)
 Body.xpath = staticmethod(_body_xpath)
+Body.json_path = staticmethod(_body_json_path)
 Body.xml_schema = staticmethod(_body_xml_schema)
 Body.json_schema = staticmethod(_body_json_schema)
 Body.parameters = staticmethod(_body_parameters)

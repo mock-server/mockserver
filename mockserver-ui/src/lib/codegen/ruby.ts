@@ -278,10 +278,15 @@ function body(w: Json, indent: number, at: string): string {
     ], indent);
   }
 
-  known(at, b, ['type', ...Object.keys(BODY_FIELDS)]);
+  const dateTimeBody = type === 'JSON_PATH' || type === 'XPATH';
+  known(at, b, ['type', ...Object.keys(BODY_FIELDS), ...(dateTimeBody ? ['dateTime'] : [])]);
   const args: Arg[] = [{ name: 'type', value: rb(String(type)) }];
   for (const [wk, val] of Object.entries(b)) {
     if (wk === 'type') continue;
+    if (wk === 'dateTime' && dateTimeBody) {
+      args.push({ name: 'date_time', value: matcherValue(val) });
+      continue;
+    }
     const spec = BODY_FIELDS[wk];
     if (!spec) continue;
     args.push({ name: spec.arg, value: spec.opaque ? rbValue(val, indent + 2) : scalar(val) });

@@ -6,6 +6,7 @@ import com.jayway.jsonpath.JsonPath;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
+import org.mockserver.model.NottableDateTimeString;
 
 import java.util.Collection;
 
@@ -25,10 +26,21 @@ public class JsonPathMatcher extends BodyMatcher<String> {
     // Jayway's append() writes to the document it reads, so a path that may call it must never read a
     // document shared with other matchers; any mention of the name opts the path out of sharing.
     private final boolean readsOnly;
+    // null for a plain JSONPath body, which then runs exactly the code it did before date-time comparisons
+    private final NottableDateTimeString dateTime;
 
     JsonPathMatcher(MockServerLogger mockServerLogger, String matcher) {
+        this(mockServerLogger, matcher, null);
+    }
+
+    /**
+     * @param dateTime when not null, the body matches only when a value the JSONPath selects is a
+     *                 date-time that satisfies it
+     */
+    JsonPathMatcher(MockServerLogger mockServerLogger, String matcher, NottableDateTimeString dateTime) {
         this.mockServerLogger = mockServerLogger;
         this.matcher = matcher;
+        this.dateTime = dateTime;
         this.readsOnly = matcher == null || !matcher.contains("append");
         if (isNotBlank(matcher)) {
             try {
@@ -63,12 +75,18 @@ public class JsonPathMatcher extends BodyMatcher<String> {
                 context.addDifference(mockServerLogger, "json path match failed expected:{}found:{}failed because:{}", "null", matched, "json path matcher was null");
                 alreadyLoggedMatchFailure = true;
             }
-        } else if (matcher.equals(matched)) {
+        } else if (matcher.equals(matched) && dateTime == null) {
             result = true;
         } else if (matched != null) {
             try {
                 Object jsonPathResult = read(matched, parsedBodyCache);
-                if (jsonPathResult instanceof Collection) {
+                if (dateTime != null) {
+                    result = anySelectedValueIsMatchingDateTime(jsonPathResult);
+                    if (!result && context != null) {
+                        context.addDifference(mockServerLogger, "json path match failed expected:{}found:{}failed because:{}", matcher, matched, "no value the json path selected is a date-time " + dateTime.getValue());
+                        alreadyLoggedMatchFailure = true;
+                    }
+                } else if (jsonPathResult instanceof Collection) {
                     result = !((Collection<?>) jsonPathResult).isEmpty();
                 } else {
                     result = jsonPathResult != null;
@@ -86,6 +104,36 @@ public class JsonPathMatcher extends BodyMatcher<String> {
         }
 
         return not != result;
+    }
+
+    /**
+     * A definite path such as {@code $.created} selects one value and an indefinite one such as
+     * {@code $..created} a list: the body matches when any selected value is a matching date-time. A
+     * string is read as written and a whole number as epoch seconds or millis; any other value is not a
+     * date-time.
+     */
+    private boolean anySelectedValueIsMatchingDateTime(Object jsonPathResult) {
+        if (jsonPathResult instanceof Collection) {
+            for (Object value : (Collection<?>) jsonPathResult) {
+                if (isMatchingDateTime(value)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return isMatchingDateTime(jsonPathResult);
+    }
+
+    private boolean isMatchingDateTime(Object value) {
+        String text;
+        if (value instanceof String) {
+            text = (String) value;
+        } else if (value instanceof Integer || value instanceof Long || value instanceof java.math.BigInteger) {
+            text = value.toString();
+        } else {
+            return false;
+        }
+        return dateTime.matches(mockServerLogger, null, text);
     }
 
     private Object read(String matched, ParsedBodyCache parsedBodyCache) {

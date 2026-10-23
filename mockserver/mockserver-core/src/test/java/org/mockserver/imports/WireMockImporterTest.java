@@ -27,6 +27,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.model.HttpTemplate;
 import org.mockserver.model.NottableDateTimeString;
+import org.mockserver.model.JsonPathBody;
 import org.mockserver.model.XPathBody;
 import org.mockserver.model.XmlBody;
 import org.mockserver.openapi.OpenApiRuntimeExpressionResolver;
@@ -39,6 +40,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -845,5 +847,36 @@ public class WireMockImporterTest {
 
         assertThat(request.getFirstHeader("X-Since"), is(""));
         assertThat(result.getWarnings().stream().anyMatch(w -> w.getDetail().contains("'after' predicate could not be mapped")), is(true));
+    }
+
+    @Test
+    public void mapsJsonPathAndXPathDateTimeResultMatchersOntoBodyDateTimeComparisons() {
+        String stubs = """
+            [ { "request": { "method": "POST", "urlPath": "/orders",
+                             "bodyPatterns": [ { "matchesJsonPath": { "expression": "$.order.created", "after": "now", "expectedOffset": -1, "expectedOffsetUnit": "hours" } } ] },
+                "response": { "status": 201 } },
+              { "request": { "method": "POST", "urlPath": "/soap",
+                             "bodyPatterns": [ { "matchesXPath": { "expression": "//lib:due", "before": "2026-12-31T00:00:00Z", "actualFormat": "rfc1123" },
+                                                 "xPathNamespaces": { "lib": "urn:library" } } ] },
+                "response": { "status": 200 } } ]
+            """;
+        ImportResult result = importer.importExpectations(stubs);
+
+        assertThat(((HttpRequest) result.getExpectations().get(0).getHttpRequest()).getBody(), is(JsonPathBody.jsonPath("$.order.created", after("now -1 hours"))));
+        assertThat(((HttpRequest) result.getExpectations().get(1).getHttpRequest()).getBody(), is(XPathBody.xpath("//lib:due", Map.of("lib", "urn:library"), before("2026-12-31T00:00:00Z").withActualFormat("rfc1123"))));
+        assertThat(result.getWarnings(), is(empty()));
+    }
+
+    @Test
+    public void omitsABodyDateTimeResultMatcherThatCannotBeMapped() {
+        String stub = """
+            { "request": { "method": "POST", "urlPath": "/orders",
+                           "bodyPatterns": [ { "matchesJsonPath": { "expression": "$.created", "before": "next week" } } ] },
+              "response": { "status": 201 } }
+            """;
+        ImportResult result = importer.importExpectations(stub);
+
+        assertThat(((HttpRequest) result.getExpectations().get(0).getHttpRequest()).getBody(), is(nullValue()));
+        assertThat(result.getWarnings().stream().anyMatch(w -> w.getDetail().contains("'before' predicate could not be mapped")), is(true));
     }
 }

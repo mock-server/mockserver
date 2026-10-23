@@ -42,7 +42,7 @@
  * This file is compiled (not executed) — it is listed in tsconfig.json `include`.
  */
 
-import { DateTimeMatcher, Expectation } from '../mockServer';
+import { DateTimeMatcher, Expectation, JsonPathBodyMatcher, XPathBodyMatcher } from '../mockServer';
 
 /* ================================================================== *
  * SECTION 1 — POSITIVE COVERAGE (must compile clean)
@@ -465,6 +465,35 @@ export const seenNotEqual: DateTimeMatcher = {
     truncateActual: 'startOfDay',
     applyTruncationLast: true
 };
+
+/* Body date-time comparisons (matcher_body_json_path_date_time.json, matcher_body_xpath_date_time.json).
+ * Body is permissive, so the typed body constants carry the excess-property check. */
+export const jsonPathDateTimeBody: JsonPathBodyMatcher = {
+    type: 'JSON_PATH',
+    jsonPath: '$.order.created',
+    dateTime: { after: 'now -1 days', actualFormat: 'iso', truncateExpected: 'startOfDay', zone: 'Europe/London' }
+};
+export const xpathDateTimeBody: XPathBodyMatcher = {
+    type: 'XPATH',
+    xpath: '/order/@expires',
+    dateTime: {
+        not: true,
+        before: '2026-01-01T00:00:00Z',
+        actualFormat: 'rfc1123',
+        truncateActual: 'first day of month',
+        applyTruncationLast: true
+    }
+};
+export const matcherBodyJsonPathDateTimeLiteral: Expectation = {
+    httpRequest: { method: 'POST', path: '/jsonpath-date-time', body: jsonPathDateTimeBody },
+    httpResponse: { body: 'recent order' }
+};
+export const matcherBodyXpathDateTimeLiteral: Expectation = {
+    httpRequest: { method: 'POST', path: '/xpath-date-time', body: xpathDateTimeBody },
+    httpResponse: { body: 'unexpired order' }
+};
+// @ts-expect-error a body date-time comparison takes exactly one operator
+export const jsonPathTwoOperators: JsonPathBodyMatcher = { jsonPath: '$.a', dateTime: { after: 'now', before: 'now' } };
 
 export const matcherRequestDateTimeLiteral: Expectation = {
     httpRequest: {

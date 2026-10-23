@@ -51,7 +51,7 @@ public class BodyMatcherBuilder {
                     break;
                 case XPATH:
                     XPathBody xPathBody = (XPathBody) body;
-                    bodyMatcher = new XPathMatcher(mockServerLogger, xPathBody.getValue(), xPathBody.getNamespacePrefixes());
+                    bodyMatcher = new XPathMatcher(mockServerLogger, xPathBody.getValue(), xPathBody.getNamespacePrefixes(), xPathBody.getDateTime());
                     break;
                 case XML:
                     XmlBody xmlBody = (XmlBody) body;
@@ -67,7 +67,7 @@ public class BodyMatcherBuilder {
                     break;
                 case JSON_PATH:
                     JsonPathBody jsonPathBody = (JsonPathBody) body;
-                    bodyMatcher = new JsonPathMatcher(mockServerLogger, jsonPathBody.getValue());
+                    bodyMatcher = new JsonPathMatcher(mockServerLogger, jsonPathBody.getValue(), jsonPathBody.getDateTime());
                     break;
                 case XML_SCHEMA:
                     XmlSchemaBody xmlSchemaBody = (XmlSchemaBody) body;

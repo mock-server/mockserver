@@ -704,14 +704,17 @@ module MockServer
     attr_accessor :type, :string, :xml, :json, :regex, :json_path, :xpath, :base64_bytes,
                   :not_body, :content_type, :charset, :file_path, :template_type, :templated_file_path, :body_all_of,
                   :sub_string, :match_type, :match_numbers_as_strings, :json_schema,
-                  :parameter_styles, :xml_schema, :parameters, :module_name, :optional
+                  :parameter_styles, :xml_schema, :parameters, :module_name, :optional, :date_time
 
+    # +date_time+ (a DateTimeMatcher) applies to a JSON_PATH or XPATH body: it then
+    # matches only when a value the JSONPath selects, or the text of a node the
+    # XPath selects, is a date-time satisfying it.
     def initialize(type: nil, string: nil, xml: nil, json: nil, regex: nil, json_path: nil, xpath: nil,
                    base64_bytes: nil, not_body: nil, content_type: nil, charset: nil,
                    file_path: nil, template_type: nil, templated_file_path: nil, body_all_of: nil,
                    sub_string: nil, match_type: nil, match_numbers_as_strings: nil,
                    json_schema: nil, parameter_styles: nil, xml_schema: nil,
-                   parameters: nil, module_name: nil, optional: nil)
+                   parameters: nil, module_name: nil, optional: nil, date_time: nil)
       @type = type
       @string = string
       @xml = xml
@@ -736,6 +739,7 @@ module MockServer
       @parameters = parameters
       @module_name = module_name
       @optional = optional
+      @date_time = date_time
     end
 
     def to_h
@@ -747,6 +751,7 @@ module MockServer
       result['regex']        = @regex         unless @regex.nil?
       result['jsonPath']     = @json_path     unless @json_path.nil?
       result['xpath']        = @xpath         unless @xpath.nil?
+      result['dateTime']     = MockServer.serialize_matcher_value(@date_time) unless @date_time.nil?
       result['base64Bytes']  = @base64_bytes  unless @base64_bytes.nil?
       result['not']          = @not_body      unless @not_body.nil?
       result['contentType']  = @content_type  unless @content_type.nil?
@@ -798,6 +803,7 @@ module MockServer
         parameters:               data['parameters'],
         module_name:              data['moduleName'],
         optional:                 data['optional'],
+        date_time:                MockServer.deserialize_matcher_value(data['dateTime']),
         body_all_of:   all_of&.map { |b| MockServer.deserialize_body(b) }
       )
     end
@@ -830,12 +836,12 @@ module MockServer
       new(type: 'ALL_OF', body_all_of: bodies.flatten)
     end
 
-    def self.json_path(value)
-      new(type: 'JSON_PATH', json_path: value)
+    def self.json_path(value, date_time: nil)
+      new(type: 'JSON_PATH', json_path: value, date_time: date_time)
     end
 
-    def self.xpath(value)
-      new(type: 'XPATH', xpath: value)
+    def self.xpath(value, date_time: nil)
+      new(type: 'XPATH', xpath: value, date_time: date_time)
     end
 
     # A JSON_SCHEMA body matcher. +parameter_styles+ is an optional

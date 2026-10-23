@@ -78,7 +78,8 @@ import static org.mockserver.model.HttpResponse.response;
  *       ({@code equalTo} exact, {@code matches} regex, {@code contains} regex, {@code absent},
  *       {@code before} / {@code after} / {@code equalToDateTime} date-time matchers)</td></tr>
  *   <tr><td>{@code bodyPatterns}</td><td>body matcher ({@code equalToJson}, {@code matchesJsonPath},
- *       {@code contains}, {@code matches}/{@code equalTo})</td></tr>
+ *       {@code matchesXPath}, either with a {@code before} / {@code after} / {@code equalToDateTime}
+ *       result matcher, {@code contains}, {@code matches}/{@code equalTo})</td></tr>
  * </table>
  *
  * <p>The {@code response} maps to an {@link HttpResponse} (status/headers/body/{@code base64Body}/
@@ -430,6 +431,15 @@ public class WireMockImporter {
         }
     }
 
+    private static String dateTimeOperator(JsonNode predicate) {
+        for (String operator : DATE_TIME_PREDICATES) {
+            if (predicate.has(operator)) {
+                return operator;
+            }
+        }
+        return null;
+    }
+
     private void applyBodyPattern(HttpRequest httpRequest, JsonNode bodyPatterns, String locator, ImportRedaction.Options redactionOptions, List<ImportWarning> warnings) {
         // MockServer matches a single Body per request: apply the first mappable pattern, warn on the rest
         boolean bodySet = false;
@@ -473,6 +483,11 @@ public class WireMockImporter {
                 warnings.add(new ImportWarning(patternLocator, "bodyPatterns.matchesJsonPath",
                     "matchesJsonPath object form has no 'expression' field — body matcher omitted"));
                 return null;
+            }
+            String dateTimeOperator = jsonPath.isObject() ? dateTimeOperator(jsonPath) : null;
+            if (dateTimeOperator != null) {
+                NottableString dateTime = dateTimePredicate(dateTimeOperator, jsonPath, patternLocator, "bodyPatterns.matchesJsonPath", warnings);
+                return dateTime == null ? null : JsonPathBody.jsonPath(expression, (NottableDateTimeString) dateTime);
             }
             if (jsonPath.isObject() && jsonPath.size() > 1) {
                 warnings.add(new ImportWarning(patternLocator, "bodyPatterns.matchesJsonPath",
@@ -521,7 +536,15 @@ public class WireMockImporter {
     private Body<?> xpathMatcher(JsonNode pattern, String patternLocator, ImportRedaction.Options redactionOptions, List<ImportWarning> warnings) {
         JsonNode xpath = pattern.path("matchesXPath");
         String expression;
-        if (xpath.isTextual()) {
+        NottableDateTimeString dateTime = null;
+        String dateTimeOperator = xpath.isObject() && textOrNull(xpath, "expression") != null ? dateTimeOperator(xpath) : null;
+        if (dateTimeOperator != null) {
+            expression = xpath.path("expression").asText();
+            dateTime = (NottableDateTimeString) dateTimePredicate(dateTimeOperator, xpath, patternLocator, "bodyPatterns.matchesXPath", warnings);
+            if (dateTime == null) {
+                return null;
+            }
+        } else if (xpath.isTextual()) {
             expression = xpath.asText();
         } else if (textOrNull(xpath, "expression") != null) {
             String selector = "(" + xpath.path("expression").asText() + ")";
@@ -547,6 +570,9 @@ public class WireMockImporter {
         JsonNode namespaceNode = pattern.path("xPathNamespaces");
         if (namespaceNode.isObject()) {
             namespaceNode.fields().forEachRemaining(field -> namespaces.put(field.getKey(), field.getValue().asText()));
+        }
+        if (dateTime != null) {
+            return XPathBody.xpath(expression, namespaces.isEmpty() ? null : namespaces, dateTime);
         }
         return namespaces.isEmpty() ? XPathBody.xpath(expression) : XPathBody.xpath(expression, namespaces);
     }

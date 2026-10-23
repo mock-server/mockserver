@@ -38,6 +38,9 @@ public class XPathBodySerializer extends StdSerializer<XPathBody> {
           jgen.writeEndObject();
         }
 
+        if (xPathBody.getDateTime() != null) {
+            provider.defaultSerializeField("dateTime", xPathBody.getDateTime(), jgen);
+        }
         jgen.writeEndObject();
     }
 }

@@ -165,6 +165,16 @@ class PyBuilder {
     return dateTimeBuilderExpr(dt, { head: 'DateTimeMatcher.', naming: 'snake', str: pyStr, bool: pyBool });
   }
 
+  /** The `date_time` keyword of a JSONPath / XPath body, when it has a date-time comparison the
+   *  `DateTimeMatcher` builder can express; any other `dateTime` is reported as omitted. */
+  private dateTimeKw(o: Json): Kw[] {
+    return dateTimeMatcherOf(o['dateTime']) ? [['date_time', this.matcherValue(o['dateTime'])]] : [];
+  }
+
+  private dateTimeKey(o: Json): string[] {
+    return dateTimeMatcherOf(o['dateTime']) ? ['dateTime'] : [];
+  }
+
   private delay(v: unknown, at: string): string {
     this.use('Delay');
     const o = v as Json;
@@ -254,9 +264,9 @@ class PyBuilder {
         this.use('JsonSchemaBody');
         return renderCall('JsonSchemaBody', [['json_schema', pyStr(o['jsonSchema'])]], indent);
       case 'JSON_PATH':
-        known('jsonPath');
+        known('jsonPath', ...this.dateTimeKey(o));
         this.use('JsonPathBody');
-        return renderInline('JsonPathBody', [['json_path', pyStr(o['jsonPath'])]]);
+        return renderInline('JsonPathBody', [['json_path', pyStr(o['jsonPath'])], ...this.dateTimeKw(o)]);
       case 'XML':
         known('xml');
         this.use('XmlBody');
@@ -266,9 +276,9 @@ class PyBuilder {
         this.use('XmlSchemaBody');
         return renderCall('XmlSchemaBody', [['xml_schema', pyStr(o['xmlSchema'])]], indent);
       case 'XPATH':
-        known('xpath');
+        known('xpath', ...this.dateTimeKey(o));
         this.use('XPathBody');
-        return renderInline('XPathBody', [['xpath', pyStr(o['xpath'])]]);
+        return renderInline('XPathBody', [['xpath', pyStr(o['xpath'])], ...this.dateTimeKw(o)]);
       case 'REGEX':
         known('regex');
         this.use('RegexBody');

@@ -49,7 +49,7 @@ import LintWarningsBadge from './LintWarningsBadge';
 import StandardReview from './StandardReview';
 import MatcherPlaygroundDialog from './MatcherPlaygroundDialog';
 import DateTimeMatcherDialog from './DateTimeMatcherDialog';
-import { appendLine, matcherValueToText } from '../lib/matcherValue';
+import { appendLine, bodyDateTimeError, matcherValueToText } from '../lib/matcherValue';
 import TemplateTestDialog from './TemplateTestDialog';
 import LiveResponseWidget from './LiveResponseWidget';
 import {
@@ -375,6 +375,8 @@ interface MatcherState {
   bodySubString: boolean;
   /** Sub-matchers composed by an `allOf` body (only when bodyMatcherType is 'allOf'). */
   bodyAllOf?: StandardBodyAllOfEntry[];
+  /** Date-time comparison on the selected value as compact JSON (only when bodyMatcherType is 'json-path' or 'xpath'). */
+  bodyDateTime?: string;
   /** JWT request-matcher criteria (Advanced form's optional JWT section). */
   jwt?: StandardJwtMatcher;
   /**
@@ -408,6 +410,7 @@ function emptyMatcher(): MatcherState {
     jsonMatchType: 'ONLY_MATCHING_FIELDS',
     bodySubString: false,
     bodyAllOf: [],
+    bodyDateTime: '',
     jwt: undefined,
     secure: undefined,
     clientIp: '',
@@ -693,6 +696,8 @@ function MatcherPanel({ matcher, setMatcher }: { matcher: MatcherState; setMatch
   const cookiesWarning = ignoredLinesWarning(matcher.cookies, '=', 'name=value');
   const pathParamsWarning = ignoredLinesWarning(matcher.pathParams, '=', 'name=value');
   const [dateTimeOpen, setDateTimeOpen] = useState(false);
+  const [bodyDateTimeOpen, setBodyDateTimeOpen] = useState(false);
+  const bodyDateTimeProblem = bodyDateTimeError(matcher.bodyDateTime);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       <Box sx={{ display: 'flex', gap: 1 }}>
@@ -906,6 +911,27 @@ function MatcherPanel({ matcher, setMatcher }: { matcher: MatcherState; setMatch
             />
           );
         })()}
+        {(matcher.bodyMatcherType === 'json-path' || matcher.bodyMatcherType === 'xpath') && (
+          <Box sx={{ mt: 1, display: 'flex', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <TextField
+              label="Date-Time Comparison (optional)"
+              size="small"
+              sx={{ flex: 1, minWidth: 260 }}
+              value={matcher.bodyDateTime ?? ''}
+              onChange={(e) => setMatcher({ ...matcher, bodyDateTime: e.target.value })}
+              placeholder='{"after":"now -1 days"}'
+              error={!!bodyDateTimeProblem}
+              helperText={bodyDateTimeProblem ?? `Matches when a value the ${matcher.bodyMatcherType === 'xpath' ? 'XPath' : 'JSON Path'} selects is a date-time that satisfies this comparison.`}
+              slotProps={{ input: { sx: { fontFamily: monospaceFontFamily, fontSize: '0.78rem' } } }}
+            />
+            <Button size="small" sx={{ mt: 0.5 }} onClick={() => setBodyDateTimeOpen(true)}>Build Date-Time Comparison</Button>
+            <DateTimeMatcherDialog
+              open={bodyDateTimeOpen}
+              onClose={() => setBodyDateTimeOpen(false)}
+              onAddBody={(json) => setMatcher({ ...matcher, bodyDateTime: json })}
+            />
+          </Box>
+        )}
         {matcher.bodyMatcherType === 'graphql' && (
           <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
             <TextField
@@ -1143,6 +1169,11 @@ function DnsMatcherPanel({
  * BodyDTO variants, pathParameters, cookies) — those revert to text. The user
  * can hand-edit the resulting text if needed before re-registering.
  */
+/** A JSONPath / XPath body's `dateTime` as the compact JSON the Composer edits; '' when absent. */
+function bodyDateTimeText(dateTime: unknown): string {
+  return dateTime && typeof dateTime === 'object' && !Array.isArray(dateTime) ? JSON.stringify(dateTime) : '';
+}
+
 /**
  * Convert a Headers / Parameters / Cookies record back to "key separator
  * value" lines. A plain string value is written as-is; an object value (the
@@ -1180,6 +1211,7 @@ export function matcherFromExpectation(item: JsonListItem): MatcherState {
   let jsonMatchType: JsonMatchType = 'ONLY_MATCHING_FIELDS';
   let bodySubString = false;
   let bodyAllOf: StandardBodyAllOfEntry[] = [];
+  let bodyDateTime = '';
   const graphqlOptions: GraphQLMatcherOptions = { selectionSetMatchType: 'NORMALISED_STRING', fields: '' };
   if (typeof rawBody === 'string') {
     bodyText = rawBody;
@@ -1215,6 +1247,7 @@ export function matcherFromExpectation(item: JsonListItem): MatcherState {
     } else if (b['type'] === 'JSON_PATH' && typeof b['jsonPath'] === 'string') {
       bodyText = b['jsonPath'] as string;
       bodyMatcherType = 'json-path';
+      bodyDateTime = bodyDateTimeText(b['dateTime']);
     } else if (b['type'] === 'XML' && typeof b['xml'] === 'string') {
       bodyText = b['xml'] as string;
       bodyMatcherType = 'xml';
@@ -1224,6 +1257,7 @@ export function matcherFromExpectation(item: JsonListItem): MatcherState {
     } else if (b['type'] === 'XPATH' && typeof b['xpath'] === 'string') {
       bodyText = b['xpath'] as string;
       bodyMatcherType = 'xpath';
+      bodyDateTime = bodyDateTimeText(b['dateTime']);
     } else if (b['type'] === 'REGEX' && typeof b['regex'] === 'string') {
       bodyText = b['regex'] as string;
       bodyMatcherType = 'regex';
@@ -1283,6 +1317,7 @@ export function matcherFromExpectation(item: JsonListItem): MatcherState {
     jsonMatchType,
     bodySubString,
     bodyAllOf,
+    bodyDateTime,
     jwt: jwtFromRequest(req),
     // typeof check, not `=== true`: an explicit `false` is an HTTP-only matcher and must load
     // as false, not collapse into the same state as an absent (match-either) field.

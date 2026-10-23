@@ -285,6 +285,11 @@ type TypedBody struct {
 	// XPATH
 	XPath string `json:"xpath,omitempty"`
 
+	// JSON_PATH and XPATH: when set, the body matches only when a value the
+	// JSONPath selects, or the text of a node the XPath selects, is a date-time
+	// satisfying it. Build it with Before, After or EqualToDateTime.
+	DateTime *MatcherValue `json:"dateTime,omitempty"`
+
 	// REGEX
 	Regex string `json:"regex,omitempty"`
 
@@ -371,6 +376,17 @@ func XMLSchemaBody(xmlSchema string) *TypedBody {
 // expression selects a node in the request body.
 func XPathBody(xpath string) *TypedBody {
 	return &TypedBody{Type: "XPATH", XPath: xpath}
+}
+
+// WithDateTime makes a JSON_PATH or XPATH body match only when a value the
+// expression selects is a date-time satisfying dateTime, for example
+//
+//	mockserver.JSONPathBody("$.order.created").WithDateTime(mockserver.After("now -1 days"))
+//
+// dateTime must be built with Before, After or EqualToDateTime.
+func (b *TypedBody) WithDateTime(dateTime MatcherValue) *TypedBody {
+	b.DateTime = &dateTime
+	return b
 }
 
 // RegexBody builds a REGEX body matcher that matches when the request body

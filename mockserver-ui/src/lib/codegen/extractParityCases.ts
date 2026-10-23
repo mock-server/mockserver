@@ -177,6 +177,24 @@ export const combos: Combo[] = [
     baseUrl: BASE_URL,
   },
   {
+    name: 'json-path-date-time-body',
+    matcher: baseMatcher({
+      method: 'POST', path: '/orders', bodyMatcherType: 'json-path', body: '$.order.created',
+      bodyDateTime: '{"after":"now -1 days","actualFormat":"iso","truncateExpected":"startOfDay","zone":"Europe/London"}',
+    }),
+    action: { type: 'static', static: { statusCode: 200, body: 'recent order', contentType: 'text/plain', bodyFromFile: false, filePath: '', fileTemplateType: '' } },
+    baseUrl: BASE_URL,
+  },
+  {
+    name: 'xpath-date-time-body',
+    matcher: baseMatcher({
+      method: 'POST', path: '/orders', bodyMatcherType: 'xpath', body: '/order/@expires',
+      bodyDateTime: '{"not":true,"before":"2026-01-01T00:00:00Z","actualFormat":"rfc1123","truncateActual":"first day of month","applyTruncationLast":true}',
+    }),
+    action: { type: 'static', static: { statusCode: 200, body: 'unexpired order', contentType: 'text/plain', bodyFromFile: false, filePath: '', fileTemplateType: '' } },
+    baseUrl: BASE_URL,
+  },
+  {
     name: 'special-chars-escaping',
     matcher: baseMatcher({ path: '/a`b/c"#d', body: 'line1\nline2 "quoted" `tick`', bodyMatcherType: 'string' }),
     action: { type: 'static', static: { statusCode: 200, body: 'resp "with" `back`tick and #hash', contentType: 'text/plain', bodyFromFile: false, filePath: '', fileTemplateType: '' } },

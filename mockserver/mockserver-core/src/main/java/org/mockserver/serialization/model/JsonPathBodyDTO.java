@@ -2,6 +2,7 @@ package org.mockserver.serialization.model;
 
 import org.mockserver.model.Body;
 import org.mockserver.model.JsonPathBody;
+import org.mockserver.model.NottableDateTimeString;
 
 /**
  * @author jamesdbloom
@@ -9,6 +10,7 @@ import org.mockserver.model.JsonPathBody;
 public class JsonPathBodyDTO extends BodyDTO {
 
     private final String jsonPath;
+    private final NottableDateTimeString dateTime;
 
     public JsonPathBodyDTO(JsonPathBody jsonPathBody) {
         this(jsonPathBody, null);
@@ -17,6 +19,7 @@ public class JsonPathBodyDTO extends BodyDTO {
     public JsonPathBodyDTO(JsonPathBody jsonPathBody, Boolean not) {
         super(Body.Type.JSON_PATH, not);
         this.jsonPath = jsonPathBody.getValue();
+        this.dateTime = jsonPathBody.getDateTime();
         withOptional(jsonPathBody.getOptional());
     }
 
@@ -24,7 +27,11 @@ public class JsonPathBodyDTO extends BodyDTO {
         return jsonPath;
     }
 
+    public NottableDateTimeString getDateTime() {
+        return dateTime;
+    }
+
     public JsonPathBody buildObject() {
-        return (JsonPathBody) new JsonPathBody(getJsonPath()).withOptional(getOptional());
+        return (JsonPathBody) new JsonPathBody(getJsonPath(), getDateTime()).withOptional(getOptional());
     }
 }

@@ -6292,6 +6292,8 @@ components:
             - JSON_PATH
           jsonPath:
             type: string
+          dateTime:
+            $ref: '#/components/schemas/BodyDateTimeMatcher'
       - type: object
         description: parameter body matcher
         additionalProperties: false
@@ -6366,6 +6368,8 @@ components:
             - XPATH
           xpath:
             type: string
+          dateTime:
+            $ref: '#/components/schemas/BodyDateTimeMatcher'
       - type: object
         description: all-of body matcher — matches only when every one of its component body matchers matches
           the same request body
@@ -6446,6 +6450,8 @@ components:
             - JSON_PATH
           jsonPath:
             type: string
+          dateTime:
+            $ref: '#/components/schemas/BodyDateTimeMatcher'
       - type: object
         description: parameter body matcher
         additionalProperties: false
@@ -6547,6 +6553,8 @@ components:
             - XPATH
           xpath:
             type: string
+          dateTime:
+            $ref: '#/components/schemas/BodyDateTimeMatcher'
       - type: object
         description: JSON-RPC body matcher
         additionalProperties: false
@@ -6582,6 +6590,42 @@ components:
         required:
         - type
         - query
+    BodyDateTimeMatcher:
+      description: "date-time comparison for a JSON path or xpath body matcher: the body matches when a value the JSON path selects, or the text of a node the xpath selects, is a date-time that satisfies it"
+      type: object
+      additionalProperties: false
+      oneOf:
+        - required: [before]
+        - required: [after]
+        - required: [equalToDateTime]
+      properties:
+        not:
+          type: boolean
+          description: "negate the comparison; a value that is not a date-time still does not match"
+        before:
+          type: string
+          description: "matches a value earlier than this; now, now with an offset such as now -1 days, or a date-time such as 2026-10-21T15:00:00Z"
+        after:
+          type: string
+          description: "matches a value later than this; now, now with an offset such as now -1 days, or a date-time such as 2026-10-21T15:00:00Z"
+        equalToDateTime:
+          type: string
+          description: "matches a value at the same instant as this; now, now with an offset such as now -1 days, or a date-time such as 2026-10-21T15:00:00Z"
+        actualFormat:
+          type: string
+          description: "how the actual value is written, a Java DateTimeFormatter pattern or iso, rfc1123, epochSeconds or epochMillis; by default any of those forms"
+        truncateExpected:
+          type: string
+          description: "truncate the expected value, such as startOfDay or first day of month"
+        truncateActual:
+          type: string
+          description: "truncate the actual value, such as startOfDay or first day of month"
+        applyTruncationLast:
+          type: boolean
+          description: "truncate now after adding its offset instead of before"
+        zone:
+          type: string
+          description: "zone for values without one, for truncation and for day, month and year offsets; default UTC"
     BodyWithContentType:
       description: response body
       anyOf:

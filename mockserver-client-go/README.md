@@ -188,6 +188,14 @@ client.When(
 
 A plain string such as `"before:2026-01-01"` is still an ordinary literal value.
 
+A JSONPath or XPath body matcher can compare the value it selects as a date-time
+too; the body matches when any selected value (or node text) satisfies it:
+
+```go
+request := mockserver.Request().Path("/orders").Build()
+request.Body = mockserver.JSONPathBody("$.order.created").WithDateTime(mockserver.After("now -1 days"))
+```
+
 #### JWT matcher
 
 Match a decoded bearer-token JWT by its claims, issuer, audience, and algorithm.

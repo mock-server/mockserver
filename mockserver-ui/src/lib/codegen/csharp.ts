@@ -172,6 +172,17 @@ function renderDelay(delay: Record<string, unknown>): string {
 }
 
 /**
+ * `.WithDateTime(MatcherValue.After(..))` for a JSONPath / XPath body's date-time comparison, empty
+ * without one, or null when it holds a shape the builder cannot express (the caller falls back).
+ */
+function csBodyDateTime(body: Record<string, unknown>): string | null {
+  if (body['dateTime'] == null) return '';
+  const dt = dateTimeMatcherOf(body['dateTime']);
+  if (!dt) return null;
+  return `.WithDateTime(${dateTimeBuilderExpr(dt, { head: 'MatcherValue.', naming: 'pascal', str: csStr, bool: (b) => (b ? 'true' : 'false') })})`;
+}
+
+/**
  * Render a request/response body value into a typed C# expression, or null when
  * the shape is not one this emitter models typed (the caller then falls back to
  * a whole-object typed Deserialize).
@@ -197,14 +208,18 @@ function renderBody(body: unknown, indent: number): string | null {
     }
     case 'JSON_SCHEMA':
       return `Body.OfJsonSchema(${csStr(String(body['jsonSchema'] ?? ''))})`;
-    case 'JSON_PATH':
-      return `Body.OfJsonPath(${csStr(String(body['jsonPath'] ?? ''))})`;
+    case 'JSON_PATH': {
+      const dateTime = csBodyDateTime(body);
+      return dateTime === null ? null : `Body.OfJsonPath(${csStr(String(body['jsonPath'] ?? ''))})${dateTime}`;
+    }
     case 'XML':
       return `Body.OfXml(${csStr(String(body['xml'] ?? ''))})`;
     case 'XML_SCHEMA':
       return `Body.OfXmlSchema(${csStr(String(body['xmlSchema'] ?? ''))})`;
-    case 'XPATH':
-      return `Body.OfXPath(${csStr(String(body['xpath'] ?? ''))})`;
+    case 'XPATH': {
+      const dateTime = csBodyDateTime(body);
+      return dateTime === null ? null : `Body.OfXPath(${csStr(String(body['xpath'] ?? ''))})${dateTime}`;
+    }
     case 'REGEX':
       return `Body.OfRegex(${csStr(String(body['regex'] ?? ''))})`;
     case 'BINARY':
@@ -261,14 +276,18 @@ function renderAllOfSub(sub: unknown): string | null {
       return `Body.OfJson(${csStr(jsonArg(sub['json']))})`;
     case 'JSON_SCHEMA':
       return `Body.OfJsonSchema(${csStr(String(sub['jsonSchema'] ?? ''))})`;
-    case 'JSON_PATH':
-      return `Body.OfJsonPath(${csStr(String(sub['jsonPath'] ?? ''))})`;
+    case 'JSON_PATH': {
+      const dateTime = csBodyDateTime(sub);
+      return dateTime === null ? null : `Body.OfJsonPath(${csStr(String(sub['jsonPath'] ?? ''))})${dateTime}`;
+    }
     case 'XML':
       return `Body.OfXml(${csStr(String(sub['xml'] ?? ''))})`;
     case 'XML_SCHEMA':
       return `Body.OfXmlSchema(${csStr(String(sub['xmlSchema'] ?? ''))})`;
-    case 'XPATH':
-      return `Body.OfXPath(${csStr(String(sub['xpath'] ?? ''))})`;
+    case 'XPATH': {
+      const dateTime = csBodyDateTime(sub);
+      return dateTime === null ? null : `Body.OfXPath(${csStr(String(sub['xpath'] ?? ''))})${dateTime}`;
+    }
     case 'REGEX':
       return `Body.OfRegex(${csStr(String(sub['regex'] ?? ''))})`;
     default:

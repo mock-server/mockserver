@@ -1,0 +1,108 @@
+package org.mockserver.matchers;
+
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
+import org.junit.Test;
+import org.mockserver.logging.MockServerLogger;
+import org.mockserver.xml.XPathEvaluator;
+
+import javax.xml.xpath.XPathConstants;
+import java.util.function.BooleanSupplier;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThan;
+import static org.mockserver.testing.AllocationMeasurement.allocatedBytes;
+
+/**
+ * A JSONPath or XPath body matcher without a date-time comparison must cost exactly what it did before
+ * the comparison existed: the same evaluation, and not one byte more, as calling the JSONPath or XPath
+ * library directly.
+ */
+public class BodyDateTimeMatcherCostTest {
+
+    private static final String JSON_PATH = "$.order.items[?(@.price > 5)].sku";
+    private static final String JSON = "{\"order\": {\"id\": 7, \"created\": \"2026-10-21T15:00:00Z\", \"items\": [{\"sku\": \"a\", \"price\": 3}, {\"sku\": \"b\", \"price\": 8}]}}";
+    private static final String XPATH = "/order/item[@price > 5]";
+    private static final String XML = "<order id=\"7\"><created>2026-10-21T15:00:00Z</created><item price=\"3\">a</item><item price=\"8\">b</item></order>";
+    private static final int OPERATIONS = 20_000;
+    // the least of several measurements: background work on a loaded JVM can only add bytes, never remove the
+    // code's own, so the minimum is the code's cost and an injected allocation still fails every attempt
+    private static final int ATTEMPTS = 3;
+    private static final long TOLERANCE_BYTES = 8;
+    private static volatile Object sink;
+
+    private final MockServerLogger mockServerLogger = new MockServerLogger(BodyDateTimeMatcherCostTest.class);
+
+    @Test
+    public void shouldMatchJsonPathWithoutADateTimeAtTheCostOfTheJsonPathReadAlone() {
+        JsonPathMatcher matcher = new JsonPathMatcher(mockServerLogger, JSON_PATH);
+        JsonPath jsonPath = JsonPath.compile(JSON_PATH);
+
+        assertSameCost(
+            () -> matcher.matches(null, JSON),
+            () -> {
+                sink = jsonPath.read(JSON);
+                return true;
+            }
+        );
+    }
+
+    @Test
+    public void shouldMatchJsonPathWithoutADateTimeAgainstAParsedBodyAtTheCostOfTheJsonPathReadAlone() {
+        JsonPathMatcher matcher = new JsonPathMatcher(mockServerLogger, JSON_PATH);
+        JsonPath jsonPath = JsonPath.compile(JSON_PATH);
+        ParsedBodyCache parsedBodyCache = ParsedBodyCache.forCurrentThread();
+
+        assertSameCost(
+            () -> matcher.matches(null, JSON, parsedBodyCache),
+            () -> {
+                Configuration configuration = Configuration.defaultConfiguration();
+                sink = jsonPath.read(parsedBodyCache.jsonPathDocument(JSON, configuration.jsonProvider()), configuration);
+                return true;
+            }
+        );
+    }
+
+    @Test
+    public void shouldMatchXPathWithoutADateTimeAtTheCostOfTheXPathEvaluationAlone() {
+        XPathMatcher matcher = new XPathMatcher(mockServerLogger, XPATH, null);
+        XPathEvaluator evaluator = new XPathEvaluator(XPATH, null, mockServerLogger.getConfiguration());
+
+        assertSameCost(
+            () -> matcher.matches(null, XML),
+            () -> {
+                Object context = null;
+                String matched = XML;
+                // a capturing error logger, as the matcher's is
+                return (Boolean) evaluator.evaluateXPathExpression(matched, (matchedInException, throwable, level) -> sink = context == null ? matched : context, XPathConstants.BOOLEAN);
+            }
+        );
+    }
+
+    private static void assertSameCost(BooleanSupplier matcher, BooleanSupplier library) {
+        for (int warmUp = 0; warmUp < 3; warmUp++) {
+            perOperation(matcher);
+            perOperation(library);
+        }
+        long withMatcher = perOperation(matcher);
+        long withLibrary = perOperation(library);
+        // one-sided: under C2 the matcher's inlining can let escape analysis remove a few bytes the bare call keeps
+        assertThat("bytes per match through the matcher (" + withMatcher + ") beyond the library call alone (" + withLibrary + ")", withMatcher - withLibrary, lessThan(TOLERANCE_BYTES));
+    }
+
+    private static long perOperation(BooleanSupplier operation) {
+        long least = Long.MAX_VALUE;
+        for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
+            long before = allocatedBytes();
+            for (int i = 0; i < OPERATIONS; i++) {
+                if (!operation.getAsBoolean()) {
+                    throw new AssertionError("expected a match");
+                }
+            }
+            least = Math.min(least, (allocatedBytes() - before) / OPERATIONS);
+        }
+        assertThat(least > 0, is(true));
+        return least;
+    }
+}

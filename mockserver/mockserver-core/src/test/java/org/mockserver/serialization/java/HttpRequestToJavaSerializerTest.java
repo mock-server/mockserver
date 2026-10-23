@@ -152,6 +152,33 @@ public class HttpRequestToJavaSerializerTest {
     }
 
     @Test
+    public void shouldSerializeJsonPathAndXPathBodiesWithDateTimeAsJava() {
+        assertThat(
+            new HttpRequestToJavaSerializer().serialize(1,
+                new HttpRequest().withBody(JsonPathBody.jsonPath("$.created", NottableDateTimeString.after("now -1 days").withZone("Europe/London")))
+            ), is(NEW_LINE +
+                "        request()" + NEW_LINE +
+                "                .withBody(new JsonPathBody(\"$.created\", NottableDateTimeString.after(\"now -1 days\").withZone(\"Europe/London\")))"));
+        assertThat(
+            new HttpRequestToJavaSerializer().serialize(1,
+                new HttpRequest().withBody(XPathBody.xpath("/order/@due", NottableDateTimeString.before("2026-01-01").withNot(true)))
+            ), is(NEW_LINE +
+                "        request()" + NEW_LINE +
+                "                .withBody(new XPathBody(\"/order/@due\", null, NottableDateTimeString.before(\"2026-01-01\").withNot(true)))"));
+        assertThat(
+            new HttpRequestToJavaSerializer().serialize(1,
+                new HttpRequest().withBody(XPathBody.xpath("/lib:due", java.util.Map.of("lib", "urn:library"), NottableDateTimeString.after("now")))
+            ), is(NEW_LINE +
+                "        request()" + NEW_LINE +
+                "                .withBody(new XPathBody(\"/lib:due\", java.util.Map.ofEntries(java.util.Map.entry(\"lib\", \"urn:library\")), NottableDateTimeString.after(\"now\")))"));
+        assertThat(
+            new HttpRequestToJavaSerializer().serialize(1, new HttpRequest().withBody(JsonPathBody.jsonPath("$.created"))),
+            is(NEW_LINE +
+                "        request()" + NEW_LINE +
+                "                .withBody(new JsonPathBody(\"$.created\"))"));
+    }
+
+    @Test
     public void shouldEscapeJsonBodies() {
         assertThat(
             new HttpRequestToJavaSerializer().serialize(1,

@@ -29,6 +29,9 @@ public class JsonPathBodyDTOSerializer extends StdSerializer<JsonPathBodyDTO> {
         }
         jgen.writeStringField("type", jsonPathBodyDTO.getType().name());
         jgen.writeStringField("jsonPath", jsonPathBodyDTO.getJsonPath());
+        if (jsonPathBodyDTO.getDateTime() != null) {
+            provider.defaultSerializeField("dateTime", jsonPathBodyDTO.getDateTime(), jgen);
+        }
         jgen.writeEndObject();
     }
 }

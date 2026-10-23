@@ -86,6 +86,8 @@ public class StrictBodyDTODeserializer extends StdDeserializer<BodyDTO> {
         Parameters multipartFilenames = null;
         Parameters multipartPartContentTypes = null;
         Map<String, String> namespacePrefixes = null;
+        Object dateTimeValue = null;
+        boolean explicitType = false;
         String jsonRpcMethod = null;
         String jsonRpcParamsSchema = null;
         String methodFieldValue = null;
@@ -111,6 +113,7 @@ public class StrictBodyDTODeserializer extends StdDeserializer<BodyDTO> {
                     if (key.equalsIgnoreCase("type")) {
                         try {
                             type = Body.Type.valueOf(String.valueOf(entry.getValue()));
+                            explicitType = true;
                         } catch (IllegalArgumentException iae) {
                             if (MockServerLogger.isEnabled(TRACE)) {
                                 MOCK_SERVER_LOGGER.logEvent(
@@ -387,6 +390,9 @@ public class StrictBodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         type = Body.Type.MULTIPART;
                         multipartPartContentTypes = objectMapper.readValue(objectWriter.writeValueAsString(entry.getValue()), Parameters.class);
                     }
+                    if (key.equalsIgnoreCase(BodyDateTimeField.FIELD_NAME)) {
+                        dateTimeValue = entry.getValue();
+                    }
                     if (key.equalsIgnoreCase("namespacePrefixes")) {
                         if (objectMapper == null) {
                             objectMapper = ObjectMapperFactory.createObjectMapper();
@@ -419,6 +425,7 @@ public class StrictBodyDTODeserializer extends StdDeserializer<BodyDTO> {
 
                 }
             }
+            NottableDateTimeString dateTime = BodyDateTimeField.forBody(objectMapper, dateTimeValue, type, explicitType);
             if (type != null) {
                 switch (type) {
                     case BINARY:
@@ -444,7 +451,7 @@ public class StrictBodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         result = new JsonSchemaBodyDTO(new JsonSchemaBody(valueJsonValue), not);
                         break;
                     case JSON_PATH:
-                        result = new JsonPathBodyDTO(new JsonPathBody(valueJsonValue), not);
+                        result = new JsonPathBodyDTO(new JsonPathBody(valueJsonValue, dateTime), not);
                         break;
                     case PARAMETERS:
                         result = new ParameterBodyDTO(new ParameterBody(parameters), not);
@@ -484,7 +491,7 @@ public class StrictBodyDTODeserializer extends StdDeserializer<BodyDTO> {
                         result = new XmlSchemaBodyDTO(new XmlSchemaBody(valueJsonValue), not);
                         break;
                     case XPATH:
-                        result = new XPathBodyDTO(new XPathBody(valueJsonValue, namespacePrefixes), not);
+                        result = new XPathBodyDTO(new XPathBody(valueJsonValue, namespacePrefixes, dateTime), not);
                         break;
                     case JSON_RPC:
                         result = new JsonRpcBodyDTO(new JsonRpcBody(

@@ -9,6 +9,7 @@
  */
 
 import {
+  bodyDateTimeFromText,
   dateTimeBuilderExpr,
   dateTimeMatcherOf,
   nottableObjectOf,
@@ -56,6 +57,11 @@ export interface StandardMatcher {
   bodySubString?: boolean;
   /** Sub-matchers composed by an `allOf` body — used only when bodyMatcherType is 'allOf'. */
   bodyAllOf?: StandardBodyAllOfEntry[];
+  /**
+   * When bodyMatcherType is 'json-path' or 'xpath', an optional date-time comparison on the
+   * selected value, as compact JSON text such as `{"after":"now -1 days"}` (wire `dateTime`).
+   */
+  bodyDateTime?: string;
   /** JWT request-matcher criteria (httpRequest.jwt); omitted entirely when nothing is set. */
   jwt?: StandardJwtMatcher;
   /**
@@ -795,6 +801,12 @@ export function buildJwtJson(jwt: StandardJwtMatcher | undefined): Record<string
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
+/** `body` with the matcher's JSONPath / XPath date-time comparison, when it has one. */
+function withBodyDateTime(body: Record<string, unknown>, matcher: StandardMatcher): Record<string, unknown> {
+  const dateTime = bodyDateTimeFromText(matcher.bodyDateTime);
+  return dateTime ? { ...body, dateTime } : body;
+}
+
 /** Build the wire body object for one `allOf` sub-matcher entry. */
 export function allOfEntryToWire(entry: StandardBodyAllOfEntry): Record<string, unknown> {
   const v = entry.value.trim();
@@ -1369,13 +1381,13 @@ export function buildExpectationJson(
       } else if (matcher.bodyMatcherType === 'json-schema') {
         httpRequest['body'] = { type: 'JSON_SCHEMA', jsonSchema: matcher.body.trim() };
       } else if (matcher.bodyMatcherType === 'json-path') {
-        httpRequest['body'] = { type: 'JSON_PATH', jsonPath: matcher.body.trim() };
+        httpRequest['body'] = withBodyDateTime({ type: 'JSON_PATH', jsonPath: matcher.body.trim() }, matcher);
       } else if (matcher.bodyMatcherType === 'xml') {
         httpRequest['body'] = { type: 'XML', xml: matcher.body.trim() };
       } else if (matcher.bodyMatcherType === 'xml-schema') {
         httpRequest['body'] = { type: 'XML_SCHEMA', xmlSchema: matcher.body.trim() };
       } else if (matcher.bodyMatcherType === 'xpath') {
-        httpRequest['body'] = { type: 'XPATH', xpath: matcher.body.trim() };
+        httpRequest['body'] = withBodyDateTime({ type: 'XPATH', xpath: matcher.body.trim() }, matcher);
       } else if (matcher.bodyMatcherType === 'regex') {
         httpRequest['body'] = { type: 'REGEX', regex: matcher.body.trim() };
       } else if (matcher.bodyMatcherType === 'parameters') {
@@ -2787,6 +2799,22 @@ function wireBranchToJava(branch: Record<string, unknown>, extras: JavaMatcherEx
   return 'not(' + request + ')';
 }
 
+/**
+ * `, NottableDateTimeString.after(..)` for a JSONPath / XPath body's date-time comparison, else empty;
+ * a comparison the builder cannot express is named in `omitted` rather than dropped silently.
+ */
+function javaBodyDateTimeArg(matcher: StandardMatcher, extras: JavaMatcherExtras): string {
+  const dt = dateTimeMatcherOf(bodyDateTimeFromText(matcher.bodyDateTime));
+  if (!dt) {
+    if (matcher.bodyDateTime?.trim()) extras.omitted.push('httpRequest.body.dateTime');
+    return '';
+  }
+  extras.imports.add('import org.mockserver.model.NottableDateTimeString;');
+  return ', ' + dateTimeBuilderExpr(dt, {
+    head: 'NottableDateTimeString.', naming: 'camel', str: (x) => `"${escapeJava(x)}"`, bool: String,
+  });
+}
+
 function matcherToJava(matcher: StandardMatcher, extras: JavaMatcherExtras = { imports: new Set(), omitted: [] }): string {
   // DNS expectations use a DnsRequestDefinition matcher, not an HttpRequest.
   if (matcher.dns && matcher.dns.dnsName.trim()) {
@@ -2838,13 +2866,13 @@ function matcherToJava(matcher: StandardMatcher, extras: JavaMatcherExtras = { i
     } else if (matcher.bodyMatcherType === 'json-schema') {
       lines.push(`    .withBody(jsonSchema("${escapeJava(matcher.body.trim())}"))`);
     } else if (matcher.bodyMatcherType === 'json-path') {
-      lines.push(`    .withBody(jsonPath("${escapeJava(matcher.body.trim())}"))`);
+      lines.push(`    .withBody(jsonPath("${escapeJava(matcher.body.trim())}"${javaBodyDateTimeArg(matcher, extras)}))`);
     } else if (matcher.bodyMatcherType === 'xml') {
       lines.push(`    .withBody(xml("${escapeJava(matcher.body.trim())}"))`);
     } else if (matcher.bodyMatcherType === 'xml-schema') {
       lines.push(`    .withBody(xmlSchema("${escapeJava(matcher.body.trim())}"))`);
     } else if (matcher.bodyMatcherType === 'xpath') {
-      lines.push(`    .withBody(xpath("${escapeJava(matcher.body.trim())}"))`);
+      lines.push(`    .withBody(xpath("${escapeJava(matcher.body.trim())}"${javaBodyDateTimeArg(matcher, extras)}))`);
     } else if (matcher.bodyMatcherType === 'regex') {
       lines.push(`    .withBody(regex("${escapeJava(matcher.body.trim())}"))`);
     } else if (matcher.bodyMatcherType === 'parameters') {
