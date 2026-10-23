@@ -186,6 +186,65 @@ public class ConfigurationDTOTest {
     }
 
     @Test
+    public void shouldNotApplyControlPlaneTrustToARunningServer() {
+        Configuration target = configuration()
+            .controlPlaneTLSMutualAuthenticationRequired(true)
+            .controlPlaneJWTAuthenticationRequired(false)
+            .controlPlaneJWTAuthenticationJWKSource("jwks.json")
+            .controlPlaneOidcAuthenticationRequired(false)
+            .controlPlaneOidcIssuer("https://issuer.example")
+            .controlPlaneOidcJwksUri("https://issuer.example/jwks")
+            .controlPlaneAuthorizationEnabled(true)
+            .controlPlaneAuditEnabled(true)
+            .dashboardAnalyticsEndpoint("https://analytics.example");
+
+        new ConfigurationDTO()
+            .setControlPlaneTLSMutualAuthenticationRequired(false)
+            .setControlPlaneJWTAuthenticationRequired(true)
+            .setControlPlaneJWTAuthenticationJWKSource("https://attacker.example/jwks")
+            .setControlPlaneOidcAuthenticationRequired(true)
+            .setControlPlaneOidcIssuer("https://attacker.example")
+            .setControlPlaneOidcJwksUri("https://attacker.example/jwks")
+            .setControlPlaneAuthorizationEnabled(false)
+            .setControlPlaneAuditEnabled(false)
+            .setDashboardAnalyticsEndpoint("https://attacker.example/beacon")
+            .applyTo(target);
+
+        assertThat(target.controlPlaneTLSMutualAuthenticationRequired(), is(true));
+        assertThat(target.controlPlaneJWTAuthenticationRequired(), is(false));
+        assertThat(target.controlPlaneJWTAuthenticationJWKSource(), is("jwks.json"));
+        assertThat(target.controlPlaneOidcAuthenticationRequired(), is(false));
+        assertThat(target.controlPlaneOidcIssuer(), is("https://issuer.example"));
+        assertThat(target.controlPlaneOidcJwksUri(), is("https://issuer.example/jwks"));
+        assertThat(target.controlPlaneAuthorizationEnabled(), is(true));
+        assertThat(target.controlPlaneAuditEnabled(), is(true));
+        assertThat(target.dashboardAnalyticsEndpoint(), is("https://analytics.example"));
+        // a startup configuration (buildObject) still sets them
+        Configuration built = new ConfigurationDTO().setControlPlaneJWTAuthenticationRequired(true).setControlPlaneOidcIssuer("https://built.example")
+            .setControlPlaneAuditEnabled(true).setDashboardAnalyticsEndpoint("https://built.example/analytics").buildObject();
+        assertThat(built.controlPlaneJWTAuthenticationRequired(), is(true));
+        assertThat(built.controlPlaneOidcIssuer(), is("https://built.example"));
+        assertThat(built.controlPlaneAuditEnabled(), is(true));
+        assertThat(built.dashboardAnalyticsEndpoint(), is("https://built.example/analytics"));
+    }
+
+    @Test
+    public void shouldNotCarryTheHeldLlmApiKeyToANewLlmDestination() {
+        Configuration target = configuration().llmProvider("OPENAI").llmBaseUrl("https://held.example").llmApiKey("sk-held");
+
+        ConfigurationDTO repoint = new ConfigurationDTO().setLlmBaseUrl("https://other.example");
+        repoint.applyTo(target);
+
+        assertThat(target.llmBaseUrl(), is("https://other.example"));
+        assertThat(target.llmApiKey(), is(""));
+        assertThat(repoint.llmApiKeyClearedForNewDestination(), is(true));
+        // a buildObject() at startup has no held key, so nothing is cleared
+        assertThat(new ConfigurationDTO().setLlmBaseUrl("https://other.example").setLlmApiKey("sk-built").buildObject().llmApiKey(), is("sk-built"));
+        // never serialized
+        assertThat(org.mockserver.serialization.ObjectMapperFactory.createObjectMapper().valueToTree(repoint).has("llmApiKeyClearedForNewDestination"), is(false));
+    }
+
+    @Test
     public void shouldNotApplyExtensionPropertiesToARunningServer() {
         Configuration target = configuration()
             .extensions("com.example.Loaded")
@@ -691,7 +750,27 @@ public class ConfigurationDTOTest {
         "controlPlaneBasicAuthenticationRequired",
         "controlPlaneBasicAuthenticationCredentials",
         "controlPlaneBasicAuthenticationUsersFile",
-        "controlPlaneBasicAuthenticationAllowInsecure"
+        "controlPlaneBasicAuthenticationAllowInsecure",
+        "controlPlaneTLSMutualAuthenticationRequired",
+        "controlPlaneTLSMutualAuthenticationCAChain",
+        "controlPlaneJWTAuthenticationRequired",
+        "controlPlaneJWTAuthenticationJWKSource",
+        "controlPlaneJWTAuthenticationExpectedAudience",
+        "controlPlaneJWTAuthenticationMatchingClaims",
+        "controlPlaneJWTAuthenticationRequiredClaims",
+        "controlPlaneOidcAuthenticationRequired",
+        "controlPlaneOidcIssuer",
+        "controlPlaneOidcJwksUri",
+        "controlPlaneOidcAudience",
+        "controlPlaneOidcRequiredScopes",
+        "controlPlaneOidcScopeClaim",
+        // decide what each control-plane user may do, so a control-plane request must not change them
+        "controlPlaneAuthorizationEnabled",
+        "controlPlaneScopeMapping",
+        // switching it off would hide the control-plane changes that follow
+        "controlPlaneAuditEnabled",
+        // decides where every dashboard viewer's browser sends usage events
+        "dashboardAnalyticsEndpoint"
     ));
 
     @Test

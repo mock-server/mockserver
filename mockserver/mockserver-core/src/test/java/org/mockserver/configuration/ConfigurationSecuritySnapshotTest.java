@@ -115,9 +115,10 @@ public class ConfigurationSecuritySnapshotTest {
         configuration.controlPlaneTLSMutualAuthenticationRequired(true).controlPlaneJWTAuthenticationRequired(false);
         configuration.pauseOnNextJwtWrite();
 
-        Thread put = configuration.applyInBackground(new ConfigurationDTO()
-            .setControlPlaneTLSMutualAuthenticationRequired(false)
-            .setControlPlaneJWTAuthenticationRequired(true));
+        // a PUT cannot change these (they are fixed at startup), so the update is made in process
+        Thread put = configuration.applyInBackground(() -> configuration
+            .controlPlaneTLSMutualAuthenticationRequired(false)
+            .controlPlaneJWTAuthenticationRequired(true));
         configuration.awaitPaused();
         try {
             // mid-update: the mTLS field is already false, the JWT field not yet true
@@ -337,7 +338,11 @@ public class ConfigurationSecuritySnapshotTest {
         }
 
         Thread applyInBackground(ConfigurationDTO update) {
-            Thread thread = new Thread(() -> update.applyTo(this), "paused-configuration-update");
+            return applyInBackground(() -> update.applyTo(this));
+        }
+
+        Thread applyInBackground(Runnable update) {
+            Thread thread = new Thread(() -> AtomicConfigurationUpdate.apply(this, update), "paused-configuration-update");
             thread.start();
             return thread;
         }

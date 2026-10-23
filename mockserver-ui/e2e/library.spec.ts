@@ -772,58 +772,47 @@ test('E2E-LIB-10 recording a cassette with no forwarded traffic is not reported 
 // Inspect → Audit
 // ---------------------------------------------------------------------------
 
-test('audit: enable from the UI, see a control-plane mutation, search it, disable again', async ({ page, request }) => {
+// The main e2e server starts with controlPlaneAuditEnabled=true: it is fixed at startup, so no
+// test can switch it on or off over the control plane.
+test('audit: see a control-plane mutation and search it, with no way to switch the trail off', async ({ page, request }) => {
   const stamp = Date.now();
-  try {
-    await openView(page, 'audit');
-    await expect(page.getByText('Audit Trail: Off')).toBeVisible();
-    await expect(page.getByText('No audit entries recorded.')).toBeVisible();
-    await page.getByRole('button', { name: 'Enable Audit Trail' }).click();
-    await expect(page.getByText('Audit Trail: On')).toBeVisible();
+  await openView(page, 'audit');
+  await expect(page.getByText('Audit Trail: On')).toBeVisible();
+  await expect(page.getByRole('switch', { name: 'Audit trail enabled' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Enable Audit Trail' })).toHaveCount(0);
 
-    await put(request, '/mockserver/expectation', { id: `lib-audit-${stamp}`, httpRequest: { path: `/lib-audit/${stamp}` }, httpResponse: { statusCode: 204 } });
-    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
-    const rows = page.getByRole('row').filter({ hasText: '/mockserver/expectation' });
-    await expect(rows.first()).toBeVisible();
+  await put(request, '/mockserver/expectation', { id: `lib-audit-${stamp}`, httpRequest: { path: `/lib-audit/${stamp}` }, httpResponse: { statusCode: 204 } });
+  await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+  const rows = page.getByRole('row').filter({ hasText: '/mockserver/expectation' });
+  await expect(rows.first()).toBeVisible();
 
-    await page.getByRole('textbox', { name: 'Search audit entries' }).fill('no-such-audit-entry-xyz');
-    await expect(page.getByText('No entries match your search.')).toBeVisible();
-    await page.getByRole('textbox', { name: 'Search audit entries' }).fill('/mockserver/expectation');
-    await expect(rows.first()).toBeVisible();
+  await page.getByRole('textbox', { name: 'Search audit entries' }).fill('no-such-audit-entry-xyz');
+  await expect(page.getByText('No entries match your search.')).toBeVisible();
+  await page.getByRole('textbox', { name: 'Search audit entries' }).fill('/mockserver/expectation');
+  await expect(rows.first()).toBeVisible();
 
-    await page.getByRole('switch', { name: 'Audit trail enabled' }).click();
-    await expect(page.getByText('Audit Trail: Off')).toBeVisible();
-  } finally {
-    await request.put(`${ORIGIN}/mockserver/configuration`, { data: { controlPlaneAuditEnabled: false, controlPlaneAuditReads: false } });
-  }
+  // a PUT that tries to switch it off is ignored
+  await put(request, '/mockserver/configuration', { controlPlaneAuditEnabled: false });
+  await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+  await expect(page.getByText('Audit Trail: On')).toBeVisible();
 });
 
 test('E2E-LIB-8 audit rows carry a summary of the change', async ({ page, request }) => {
-  try {
-    await put(request, '/mockserver/configuration', { controlPlaneAuditEnabled: true });
-    await put(request, '/mockserver/expectation', { httpRequest: { path: '/lib-audit-summary' }, httpResponse: { statusCode: 204 } });
-    await openView(page, 'audit');
-    const row = page.getByRole('row').filter({ hasText: '/mockserver/expectation' });
-    await expect(row.getByRole('cell').last()).not.toHaveText('');
-  } finally {
-    await request.put(`${ORIGIN}/mockserver/configuration`, { data: { controlPlaneAuditEnabled: false } });
-  }
+  await put(request, '/mockserver/expectation', { httpRequest: { path: '/lib-audit-summary' }, httpResponse: { statusCode: 204 } });
+  await openView(page, 'audit');
+  const row = page.getByRole('row').filter({ hasText: '/mockserver/expectation' });
+  await expect(row.getByRole('cell').last()).not.toHaveText('');
 });
 
 // A reset empties the audit trail (as documented) but keeps the record of the reset itself.
 test('E2E-LIB-9 a reset empties the audit trail but records who reset it', async ({ page, request }) => {
-  try {
-    await put(request, '/mockserver/configuration', { controlPlaneAuditEnabled: true });
-    await put(request, '/mockserver/expectation', { httpRequest: { path: '/lib-audit-reset' }, httpResponse: { statusCode: 204 } });
-    await put(request, '/mockserver/reset', '');
-    await openView(page, 'audit');
-    const resetRow = page.getByRole('row').filter({ hasText: '/mockserver/reset' });
-    await expect(resetRow).toBeVisible();
-    await expect(resetRow).toContainText('Reset all expectations, recorded requests and state');
-    await expect(page.getByRole('row').filter({ hasText: '/mockserver/expectation' })).toHaveCount(0);
-  } finally {
-    await request.put(`${ORIGIN}/mockserver/configuration`, { data: { controlPlaneAuditEnabled: false } });
-  }
+  await put(request, '/mockserver/expectation', { httpRequest: { path: '/lib-audit-reset' }, httpResponse: { statusCode: 204 } });
+  await put(request, '/mockserver/reset', '');
+  await openView(page, 'audit');
+  const resetRow = page.getByRole('row').filter({ hasText: '/mockserver/reset' });
+  await expect(resetRow).toBeVisible();
+  await expect(resetRow).toContainText('Reset all expectations, recorded requests and state');
+  await expect(page.getByRole('row').filter({ hasText: '/mockserver/expectation' })).toHaveCount(0);
 });
 
 // ---------------------------------------------------------------------------

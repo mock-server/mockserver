@@ -5,6 +5,7 @@
     </p>
     <p>It is possible to enable both <a href="#button_configuration_control_plane_jwt_authentication_required">controlPlaneJWTAuthenticationRequired</a> and <a href="#button_configuration_control_plane_mtls_authentication_required">controlPlaneTLSMutualAuthenticationRequired</a>
         but the mTLS will be checked first.</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneTLSMutualAuthenticationRequired(boolean controlPlaneTLSMutualAuthenticationRequired)</code></pre>
@@ -24,6 +25,7 @@
     <p>MockServer accepts only client certificates signed by a CA in this chain; earlier versions also accepted those signed by MockServer's own CA certificate. If it is not set, MockServer accepts client certificates signed by its own CA certificate, unless that is the bundled default CA: then MockServer refuses to start (and refuses a configuration update that would lead there) until you set this chain or give MockServer its own CA with certificateAuthorityCertificate and certificateAuthorityPrivateKey.</p>
     <p>In the JVM running MockServerClient the same property holds the only CAs the client trusts for MockServer's own certificate, so the client's value must include the CA that signed MockServer's certificate (MockServer's CA certificate unless MockServer is given its own certificate). Earlier versions also trusted MockServer's CA certificate automatically.</p>
     <p>MockServer refuses to start if this chain contains the CA bundled with MockServer, whose private key is published, because anyone could then create an accepted client certificate. If MockServerClient and MockServer share this property in one JVM, give MockServer its own CA with <code>mockserver.certificateAuthorityCertificate</code> and <code>mockserver.certificateAuthorityPrivateKey</code> and put that CA in the chain.</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain(String controlPlaneTLSMutualAuthenticationCAChain)</code></pre>

@@ -431,7 +431,7 @@ public class Http3McpIntegrationTest {
             @Override
             public org.mockserver.authentication.AuthenticationResult authenticate(org.mockserver.model.HttpRequest request) {
                 if (putDuringNextAuthentication.getAndSet(false)) {
-                    new org.mockserver.serialization.model.ConfigurationDTO().setControlPlaneAuthorizationEnabled(false).applyTo(serverConfiguration);
+                    serverConfiguration.controlPlaneAuthorizationEnabled(false);
                 }
                 return org.mockserver.authentication.AuthenticationResult.authenticated(
                     "principal", "verified-oidc", java.util.Map.of(), java.util.Set.of("readers"));

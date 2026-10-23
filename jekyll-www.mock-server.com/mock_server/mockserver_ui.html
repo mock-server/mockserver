@@ -524,12 +524,11 @@ sitemap:
 <p>Recording is <strong>off by default</strong>. A status chip at the top of the view reads <strong>Audit Trail: On</strong> or <strong>Audit Trail: Off</strong>:</p>
 
 <ul>
-    <li>When off, click <strong>Enable Audit Trail</strong> to turn it on. Only changes made after enabling are recorded — nothing retroactive.</li>
-    <li>When on, a switch turns recording back off (this only stops recording; it is not destructive).</li>
-    <li>An <strong>Also record reads</strong> checkbox additionally records reads of control-plane endpoints — by default only mutations are recorded, though a forbidden read is always recorded regardless of this setting.</li>
+    <li>Recording is switched on when MockServer starts, with <code>controlPlaneAuditEnabled=true</code> (for example <code>-Dmockserver.controlPlaneAuditEnabled=true</code> or <code>MOCKSERVER_CONTROL_PLANE_AUDIT_ENABLED=true</code>). The view cannot switch it on or off, so nobody who can reach the control plane can switch it off to hide the changes they make next.</li>
+    <li>An <strong>Also record reads</strong> checkbox additionally records reads of control-plane endpoints — by default only mutations are recorded, though a forbidden read is always recorded regardless of this setting. It can be changed while MockServer runs (property <code>controlPlaneAuditReads</code>).</li>
 </ul>
 
-<p>The view does not poll; click <strong>Refresh</strong> to pull the latest entries. The same controls are available as configuration properties — <code>controlPlaneAuditEnabled</code> and <code>controlPlaneAuditReads</code> — for enabling the trail at startup instead of from the dashboard.</p>
+<p>The view does not poll; click <strong>Refresh</strong> to pull the latest entries.</p>
 
 <a id="ui_composer_section" class="anchor" href="#ui_composer_section">&nbsp;</a>
 

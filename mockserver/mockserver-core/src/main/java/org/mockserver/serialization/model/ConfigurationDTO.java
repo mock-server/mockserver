@@ -394,6 +394,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
     private String llmApiKey;
     private String prometheusRemoteWriteBearerToken;
     private String prometheusRemoteWriteBasicAuthPassword;
+    // set by applyTo, never serialized: see llmApiKeyClearedForNewDestination()
+    private transient boolean llmApiKeyClearedForNewDestination;
 
     public ConfigurationDTO() {
     }
@@ -1387,6 +1389,36 @@ public class ConfigurationDTO implements DTO<Configuration> {
     }
 
     /**
+     * Whether applying this update would change where the default LLM backend sends requests: a different
+     * {@code llmBaseUrl}, or a different {@code llmProvider} while no base URL is set (so the provider's own
+     * default host applies).
+     */
+    private boolean changesLlmDestination(Configuration target) {
+        String baseUrlInForce = trimmedOrEmpty(target.llmBaseUrl());
+        String providerInForce = trimmedOrEmpty(target.llmProvider()).toUpperCase(Locale.ROOT);
+        String baseUrlAfter = llmBaseUrl != null ? trimmedOrEmpty(llmBaseUrl) : baseUrlInForce;
+        String providerAfter = llmProvider != null ? trimmedOrEmpty(llmProvider).toUpperCase(Locale.ROOT) : providerInForce;
+        return !baseUrlAfter.equals(baseUrlInForce) || (baseUrlAfter.isEmpty() && !providerAfter.equals(providerInForce));
+    }
+
+    private static String trimmedOrEmpty(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private static boolean isNotBlankValue(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    /**
+     * @return {@code true} once {@link #applyTo(Configuration)} has cleared the held {@code llmApiKey} because this
+     * update changed the default LLM backend's destination without supplying a new key
+     */
+    @JsonIgnore
+    public boolean llmApiKeyClearedForNewDestination() {
+        return llmApiKeyClearedForNewDestination;
+    }
+
+    /**
      * The value emitted over JSON for a write-only credential: the shared redaction mask whenever a
      * value is present, otherwise {@code null} (so an unset credential stays absent from the JSON under
      * {@code NON_NULL} inclusion rather than advertising a secret that does not exist).
@@ -1430,9 +1462,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (dashboardAnalyticsEnabled != null) {
             target.dashboardAnalyticsEnabled(dashboardAnalyticsEnabled);
         }
-        if (dashboardAnalyticsEndpoint != null) {
-            target.dashboardAnalyticsEndpoint(dashboardAnalyticsEndpoint);
-        }
+        // dashboardAnalyticsEndpoint is deliberately not applied: it decides where every dashboard viewer's browser
+        // sends usage events, so it is fixed at startup (see HttpState.applyConfigurationUpdate)
         if (dashboardAnalyticsKey != null) {
             String restored = ConfigurationProperties.restoreRedactedValue("dashboardAnalyticsKey", dashboardAnalyticsKey, target.dashboardAnalyticsKey());
             if (restored != null) {
@@ -1796,12 +1827,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (matchNamespaceHeader != null) {
             target.matchNamespaceHeader(matchNamespaceHeader);
         }
-        if (controlPlaneTLSMutualAuthenticationRequired != null) {
-            target.controlPlaneTLSMutualAuthenticationRequired(controlPlaneTLSMutualAuthenticationRequired);
-        }
-        if (controlPlaneTLSMutualAuthenticationCAChain != null) {
-            target.controlPlaneTLSMutualAuthenticationCAChain(controlPlaneTLSMutualAuthenticationCAChain);
-        }
+        // controlPlaneTLSMutualAuthenticationRequired and controlPlaneTLSMutualAuthenticationCAChain are deliberately
+        // not applied: they decide who may use the control plane, so they are fixed at startup (see
+        // HttpState.applyConfigurationUpdate)
         if (controlPlanePrivateKeyPath != null) {
             String restored = ConfigurationProperties.restoreRedactedValue("controlPlanePrivateKeyPath", controlPlanePrivateKeyPath, target.controlPlanePrivateKeyPath());
             if (restored != null) {
@@ -1811,21 +1839,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (controlPlaneX509CertificatePath != null) {
             target.controlPlaneX509CertificatePath(controlPlaneX509CertificatePath);
         }
-        if (controlPlaneJWTAuthenticationRequired != null) {
-            target.controlPlaneJWTAuthenticationRequired(controlPlaneJWTAuthenticationRequired);
-        }
-        if (controlPlaneJWTAuthenticationJWKSource != null) {
-            target.controlPlaneJWTAuthenticationJWKSource(controlPlaneJWTAuthenticationJWKSource);
-        }
-        if (controlPlaneJWTAuthenticationExpectedAudience != null) {
-            target.controlPlaneJWTAuthenticationExpectedAudience(controlPlaneJWTAuthenticationExpectedAudience);
-        }
-        if (controlPlaneJWTAuthenticationMatchingClaims != null) {
-            target.controlPlaneJWTAuthenticationMatchingClaims(controlPlaneJWTAuthenticationMatchingClaims);
-        }
-        if (controlPlaneJWTAuthenticationRequiredClaims != null) {
-            target.controlPlaneJWTAuthenticationRequiredClaims(controlPlaneJWTAuthenticationRequiredClaims);
-        }
+        // the controlPlaneJWTAuthentication* properties are deliberately not applied: they decide who may use the
+        // control plane, so they are fixed at startup (see HttpState.applyConfigurationUpdate)
         if (proactivelyInitialiseTLS != null) {
             target.proactivelyInitialiseTLS(proactivelyInitialiseTLS);
         }
@@ -2166,9 +2181,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (driftAlertCooldownMillis != null) {
             target.driftAlertCooldownMillis(driftAlertCooldownMillis);
         }
-        if (controlPlaneAuditEnabled != null) {
-            target.controlPlaneAuditEnabled(controlPlaneAuditEnabled);
-        }
+        // controlPlaneAuditEnabled is deliberately not applied: switching it off would hide the control plane
+        // changes that follow, so it is fixed at startup (see HttpState.applyConfigurationUpdate)
         if (controlPlaneAuditMaxEntries != null) {
             target.controlPlaneAuditMaxEntries(controlPlaneAuditMaxEntries);
         }
@@ -2283,30 +2297,9 @@ public class ConfigurationDTO implements DTO<Configuration> {
                 target.clusterFanInPeerAuthToken(restored);
             }
         }
-        if (controlPlaneOidcAuthenticationRequired != null) {
-            target.controlPlaneOidcAuthenticationRequired(controlPlaneOidcAuthenticationRequired);
-        }
-        if (controlPlaneOidcIssuer != null) {
-            target.controlPlaneOidcIssuer(controlPlaneOidcIssuer);
-        }
-        if (controlPlaneOidcJwksUri != null) {
-            target.controlPlaneOidcJwksUri(controlPlaneOidcJwksUri);
-        }
-        if (controlPlaneOidcAudience != null) {
-            target.controlPlaneOidcAudience(controlPlaneOidcAudience);
-        }
-        if (controlPlaneOidcRequiredScopes != null) {
-            target.controlPlaneOidcRequiredScopes(controlPlaneOidcRequiredScopes);
-        }
-        if (controlPlaneOidcScopeClaim != null) {
-            target.controlPlaneOidcScopeClaim(controlPlaneOidcScopeClaim);
-        }
-        if (controlPlaneAuthorizationEnabled != null) {
-            target.controlPlaneAuthorizationEnabled(controlPlaneAuthorizationEnabled);
-        }
-        if (controlPlaneScopeMapping != null) {
-            target.controlPlaneScopeMapping(controlPlaneScopeMapping);
-        }
+        // the controlPlaneOidc* properties, controlPlaneAuthorizationEnabled and controlPlaneScopeMapping are
+        // deliberately not applied: they decide who may use the control plane and what each user may do, so they
+        // are fixed at startup (see HttpState.applyConfigurationUpdate)
         // the controlPlaneBasicAuthentication* properties are deliberately not applied: they decide who may use the
         // control plane, so they are fixed at startup (see HttpState.applyConfigurationUpdate)
         if (transparentProxyEnabled != null) {
@@ -2332,6 +2325,12 @@ public class ConfigurationDTO implements DTO<Configuration> {
         }
         if (asyncRecordedMessageMaxEntries != null) {
             target.asyncRecordedMessageMaxEntries(asyncRecordedMessageMaxEntries);
+        }
+        // the held llmApiKey must never be sent to a new destination: it is cleared before the destination changes,
+        // and a key supplied in this same update is applied further down
+        if (changesLlmDestination(target) && isNotBlankValue(target.llmApiKey())) {
+            llmApiKeyClearedForNewDestination = llmApiKey == null || isMaskedCredential(llmApiKey);
+            target.llmApiKey("");
         }
         if (llmProvider != null) {
             target.llmProvider(llmProvider);

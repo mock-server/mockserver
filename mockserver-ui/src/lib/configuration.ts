@@ -367,13 +367,9 @@ export const EDITABLE_PROPERTIES: readonly EditablePropertyDescriptor[] = [
     help: 'Send anonymous, cookieless dashboard usage stats (no request or mock data) to improve the UI.',
     group: 'Analytics',
   },
-  {
-    key: 'dashboardAnalyticsEndpoint',
-    label: 'Analytics endpoint',
-    type: 'string',
-    help: 'PostHog instance URL events are sent to. Blank disables analytics.',
-    group: 'Analytics',
-  },
+  // NOTE: dashboardAnalyticsEndpoint is intentionally NOT runtime-editable — it decides where
+  // every dashboard viewer's browser sends events, so the server fixes it at startup and ignores
+  // a PUT of it. It stays in the read-only table.
   {
     key: 'dashboardAnalyticsKey',
     label: 'Analytics key',

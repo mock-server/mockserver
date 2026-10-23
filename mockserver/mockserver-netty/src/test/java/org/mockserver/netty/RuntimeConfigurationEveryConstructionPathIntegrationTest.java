@@ -72,7 +72,8 @@ import static org.mockserver.proxyconfiguration.ProxyConfiguration.proxyConfigur
  * enabling control-plane authentication at runtime left the control plane open. Each check reads its
  * subject through the component that applies it ({@code HttpState}, the action handler, or the request
  * handler an h2c connection gets), and one walks every {@code Configuration} the server holds, so the
- * test goes red if any construction path, or any single component, splits again.
+ * test goes red if any construction path, or any single component, splits again. Control-plane
+ * authentication is now fixed at startup, so the tests also prove a PUT cannot enable it on any path.
  */
 @RunWith(Parameterized.class)
 public class RuntimeConfigurationEveryConstructionPathIntegrationTest {
@@ -80,7 +81,7 @@ public class RuntimeConfigurationEveryConstructionPathIntegrationTest {
     private static final String SENSITIVE_CREDENTIAL = "Bearer runtime-config-split-secret";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final int RUNTIME_DELAY_MILLIS = 750;
-    // with a chain: control-plane mTLS without one, while MockServer's CA is the bundled CA, is refused with 400
+    // a PUT cannot apply this (control-plane mTLS is fixed at startup); the tests prove it is ignored on every path
     private static final String ENABLE_CONTROL_PLANE_MUTUAL_TLS = "{\"controlPlaneTLSMutualAuthenticationRequired\": true, "
         + "\"controlPlaneTLSMutualAuthenticationCAChain\": \"org/mockserver/netty/integration/tls/ca.pem\"}";
 
@@ -161,18 +162,15 @@ public class RuntimeConfigurationEveryConstructionPathIntegrationTest {
     }
 
     @Test
-    public void enablingControlPlaneMutualTlsAtRuntimeMustRejectAnUnauthenticatedControlPlaneCall() throws Exception {
-        assertThat("baseline: the control plane is open by default",
-            send("PUT", "/mockserver/clear", "").statusCode, is(200));
-
+    public void aRuntimePutCannotEnableControlPlaneMutualTls() throws Exception {
         Response put = send("PUT", "/mockserver/configuration", ENABLE_CONTROL_PLANE_MUTUAL_TLS);
         assertThat(put.body, put.statusCode, is(200));
 
-        assertThat("PUT /mockserver/configuration reported control-plane mTLS as enabled, so a control-plane "
-                + "call without a client certificate must now be rejected",
-            send("PUT", "/mockserver/clear", "").statusCode, is(401));
-        assertThat("an expectation must not be creatable without a client certificate either",
-            send("PUT", "/mockserver/expectation", expectation("/after-lock")).statusCode, is(401));
+        // control-plane mTLS is fixed at startup: the PUT is ignored, and the value in force is enforced and reported
+        assertThat(OBJECT_MAPPER.readTree(put.body).path("controlPlaneTLSMutualAuthenticationRequired").asBoolean(), is(false));
+        assertThat(OBJECT_MAPPER.readTree(send("GET", "/mockserver/configuration", "").body).path("controlPlaneTLSMutualAuthenticationRequired").asBoolean(), is(false));
+        assertThat("the control plane keeps the authentication it started with",
+            send("PUT", "/mockserver/clear", "").statusCode, is(200));
     }
 
     @Test
@@ -236,26 +234,25 @@ public class RuntimeConfigurationEveryConstructionPathIntegrationTest {
     }
 
     @Test
-    public void enablingControlPlaneMutualTlsAtRuntimeOverH2cMustRejectTheNextCallOnTheSameConnection() throws Exception {
+    public void aRuntimePutOverH2cMustReachTheConfigurationTheServerRuns() throws Exception {
         // Every call is a stream on ONE cleartext HTTP/2 connection opened before the change. The PUT is
         // served by the request handler the HTTP/2 multiplex child initializer built for this connection,
-        // so it must write the instance the control-plane gate reads; and the gate is re-derived per
-        // request, so the change applies to a connection that was already open.
+        // so it must write the instance the rest of the server reads.
         try (H2cConnection h2c = new H2cConnection(server.port)) {
-            assertThat("baseline: the control plane is open by default over h2c",
-                h2c.send("PUT", "/mockserver/clear", "").status, is("200"));
-
-            H2cResponse put = h2c.send("PUT", "/mockserver/configuration", ENABLE_CONTROL_PLANE_MUTUAL_TLS);
+            H2cResponse put = h2c.send("PUT", "/mockserver/configuration", "{\"maxExpectations\": 4321}");
             assertThat(put.body, put.status, is("200"));
 
-            assertThat("the next control-plane call on the same h2c connection, without a client certificate, must be rejected",
-                h2c.send("PUT", "/mockserver/clear", "").status, is("401"));
-            assertThat("an expectation must not be creatable on it either",
-                h2c.send("PUT", "/mockserver/expectation", expectation("/after-h2c-lock")).status, is("401"));
-            assertThat("the rejection is per request: the connection stays open", h2c.isOpen(), is(true));
+            H2cResponse ignored = h2c.send("PUT", "/mockserver/configuration", ENABLE_CONTROL_PLANE_MUTUAL_TLS);
+            assertThat(ignored.body, ignored.status, is("200"));
+            assertThat("control-plane mTLS is fixed at startup, so the next call on the same connection is still served",
+                h2c.send("PUT", "/mockserver/clear", "").status, is("200"));
+            assertThat(h2c.isOpen(), is(true));
         }
-        assertThat("and over a new HTTP/1.1 connection too",
-            send("PUT", "/mockserver/clear", "").statusCode, is(401));
+        JsonNode served = OBJECT_MAPPER.readTree(send("GET", "/mockserver/configuration", "").body);
+        assertThat("a new HTTP/1.1 connection must see the value the h2c PUT applied", served.path("maxExpectations").asInt(), is(4321));
+        if (server.liveConfiguration != null) {
+            assertThat(server.liveConfiguration.maxExpectations(), is(4321));
+        }
     }
 
     @Test

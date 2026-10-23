@@ -122,17 +122,17 @@ public class ServerSslContextConcurrentUpdateGlobalStateTest {
     public void shouldRebuildWhenTheCachedContextWasRevalidatedDuringAnUpdate() throws Exception {
         CountDownLatch paused = new CountDownLatch(1);
         CountDownLatch resume = new CountDownLatch(1);
-        // applyTo writes tlsMutualAuthenticationRequired, then later controlPlaneOidcAuthenticationRequired
+        // applyTo writes tlsMutualAuthenticationRequired, then later transparentProxyEnabled
         Configuration configuration = new Configuration() {
             @Override
-            public Configuration controlPlaneOidcAuthenticationRequired(Boolean controlPlaneOidcAuthenticationRequired) {
+            public Configuration transparentProxyEnabled(Boolean transparentProxyEnabled) {
                 paused.countDown();
                 try {
                     resume.await(10, TimeUnit.SECONDS);
                 } catch (InterruptedException interrupted) {
                     Thread.currentThread().interrupt();
                 }
-                return super.controlPlaneOidcAuthenticationRequired(controlPlaneOidcAuthenticationRequired);
+                return super.transparentProxyEnabled(transparentProxyEnabled);
             }
         }.tlsMutualAuthenticationAllowBundledCa(true).tlsMutualAuthenticationRequired(false);
         NettySslContextFactory factory = new NettySslContextFactory(configuration, new MockServerLogger(), true);
@@ -140,7 +140,7 @@ public class ServerSslContextConcurrentUpdateGlobalStateTest {
 
         Thread put = new Thread(() -> new ConfigurationDTO()
             .setTlsMutualAuthenticationRequired(true)
-            .setControlPlaneOidcAuthenticationRequired(false)
+            .setTransparentProxyEnabled(false)
             .applyTo(configuration), "configuration-put");
         put.start();
         try {

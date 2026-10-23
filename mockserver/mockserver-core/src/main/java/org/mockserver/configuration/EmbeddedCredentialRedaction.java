@@ -424,9 +424,12 @@ final class EmbeddedCredentialRedaction {
             // carries a mask but cannot be merged — writing it would make "***REDACTED***" the key
             return dropUnmergeableValue(propertyName, "it is not a parseable JSON document");
         }
-        if (!restoreSecretFields(incomingRoot, parseOrNull(existing))) {
-            return dropUnmergeableValue(propertyName,
-                "no value is held for one of its masked fields — the backend it belongs to may have "
+        boolean[] destinationChanged = new boolean[1];
+        if (!restoreSecretFields(incomingRoot, parseOrNull(existing), true, destinationChanged)) {
+            return dropUnmergeableValue(propertyName, destinationChanged[0]
+                ? "a backend's baseUrl or provider changed while its credential stayed masked, and a held "
+                    + "credential is never sent to a new destination — supply that backend's credential again"
+                : "no value is held for one of its masked fields — the backend it belongs to may have "
                     + "been renamed, reordered or newly added");
         }
         String merged;
@@ -542,18 +545,25 @@ final class EmbeddedCredentialRedaction {
      * @return {@code false} when a masked credential field had no held counterpart to restore, so the
      * document as a whole cannot be resolved. Removing just that field (what this did before) writes a
      * document with the credential DELETED — which is the same silent-destruction failure this class
-     * exists to prevent, reached by renaming a backend or reordering an unnamed one.
+     * exists to prevent, reached by renaming a backend or reordering an unnamed one. A masked field is
+     * not restored into an object whose destination ({@code baseUrl} or {@code provider}), or an enclosing
+     * object's, changed either, so a held credential is never sent somewhere new; {@code destinationChanged}
+     * records that case.
      */
-    private static boolean restoreSecretFields(JsonNode incoming, JsonNode held) {
+    private static boolean restoreSecretFields(JsonNode incoming, JsonNode held, boolean sameDestinationSoFar, boolean[] destinationChanged) {
         boolean resolved = true;
         if (incoming.isObject()) {
             ObjectNode object = (ObjectNode) incoming;
+            boolean sameDestination = sameDestinationSoFar && sameField(object, held, "baseUrl") && sameField(object, held, "provider");
             for (String name : fieldNames(object)) {
                 JsonNode child = object.get(name);
                 JsonNode heldChild = held != null && held.isObject() ? held.get(name) : null;
                 if (isSensitiveName(name)) {
                     if (child.isTextual() && MASK.equals(child.asText())) {
-                        if (isRedactableValue(heldChild)) {
+                        if (!sameDestination) {
+                            destinationChanged[0] = true;
+                            resolved = false;
+                        } else if (isRedactableValue(heldChild)) {
                             // whatever its type — the mask stands in for the whole subtree
                             object.set(name, heldChild.deepCopy());
                         } else {
@@ -562,16 +572,26 @@ final class EmbeddedCredentialRedaction {
                     }
                     // else: a real value supplied by the client — written as given, not recursed into
                 } else {
-                    resolved &= restoreSecretFields(child, heldChild);
+                    resolved &= restoreSecretFields(child, heldChild, sameDestination, destinationChanged);
                 }
             }
         } else if (incoming.isArray()) {
             ArrayNode array = (ArrayNode) incoming;
             for (int index = 0; index < array.size(); index++) {
-                resolved &= restoreSecretFields(array.get(index), heldElement(array.get(index), held, index));
+                resolved &= restoreSecretFields(array.get(index), heldElement(array.get(index), held, index), sameDestinationSoFar, destinationChanged);
             }
         }
         return resolved;
+    }
+
+    // an object with no held counterpart has nothing to restore from, which the caller reports separately
+    private static boolean sameField(JsonNode incoming, JsonNode held, String name) {
+        if (held == null || !held.isObject()) {
+            return true;
+        }
+        JsonNode incomingValue = incoming.get(name);
+        JsonNode heldValue = held.get(name);
+        return incomingValue == null || heldValue == null ? incomingValue == heldValue : incomingValue.equals(heldValue);
     }
 
     private static JsonNode heldElement(JsonNode element, JsonNode heldArray, int index) {

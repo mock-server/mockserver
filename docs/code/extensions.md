@@ -127,11 +127,10 @@ output may not be anywhere beneath it, because a directory entry loads any file 
 not be directly in the JAR's directory, because a classpath wildcard over that directory (`/extensions/*`) is not
 recursive, so a subdirectory is allowed. Disabled outputs are not checked, so the default relative paths never
 refuse a `java -cp mockserver.jar:acme.jar` run from the JAR's own directory. The check runs only at start-up.
-`PUT /mockserver/configuration` accepts all five paths, but the persistence and memory-CSV writers bind their path
-when `HttpState` is built, so a later PUT does not move where they write. `auditLogFile` is the exception: the
-audit sink takes its path on its first write, so a PUT that turns on `controlPlaneAuditEnabled` and sets
-`auditLogFile` before any audit record is written does take effect. The read-only mount, not this check, is what
-stops that write.
+A start-up-only check is enough because all five paths, and `controlPlaneAuditEnabled`, are fixed at startup:
+`PUT /mockserver/configuration` ignores a different value and logs a warning (see
+[configuration-reference.md](configuration-reference.md#capacity-properties-fixed-at-startup)), so a later PUT
+cannot point a writer inside an extension classpath directory.
 
 ### Start, ready and stop
 

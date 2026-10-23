@@ -10,7 +10,6 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import Switch from '@mui/material/Switch';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Table from '@mui/material/Table';
@@ -131,8 +130,8 @@ export default function AuditPanel({ connectionParams }: AuditPanelProps) {
     setRefreshTick((t) => t + 1);
   }, []);
 
-  // Apply a single runtime-config change and, on success, refetch config +
-  // entries so the status chip flips and the list starts showing new changes.
+  // Apply a single runtime-config change (only controlPlaneAuditReads: the audit
+  // trail itself is fixed at startup) and, on success, refetch config + entries.
   // A failed PUT (e.g. control-plane auth rejecting the write) surfaces via the
   // HumanErrorAlert rather than silently — mirrors ConfigurationDialog's apply().
   const applyConfig = useCallback(
@@ -229,29 +228,11 @@ export default function AuditPanel({ connectionParams }: AuditPanelProps) {
             flexWrap: 'wrap',
           }}
         >
-          {auditEnabled ? (
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  checked
-                  disabled={busy}
-                  onChange={() => void applyConfig({ controlPlaneAuditEnabled: false })}
-                  slotProps={{ input: { 'aria-label': 'Audit trail enabled' } }}
-                />
-              }
-              label={<Typography variant="body2">Recording control-plane changes</Typography>}
-            />
-          ) : (
-            <Button
-              size="small"
-              variant="contained"
-              disabled={busy}
-              onClick={() => void applyConfig({ controlPlaneAuditEnabled: true })}
-              sx={{ textTransform: 'none' }}
-            >
-              Enable Audit Trail
-            </Button>
+          {!auditEnabled && (
+            <Typography variant="body2" color="text.secondary">
+              The audit trail is off. It can only be switched on when MockServer starts, so a
+              control-plane request cannot switch it off to hide the changes that follow.
+            </Typography>
           )}
           <Tooltip
             title="Also record read operations (e.g. GET /mockserver/expectation), not just mutations."
@@ -277,8 +258,8 @@ export default function AuditPanel({ connectionParams }: AuditPanelProps) {
 
       {auditEnabled && (
         <Alert severity="info" sx={{ mb: 1.5 }}>
-          Recording is on. Only control-plane changes made from now on appear here — changes made
-          before enabling are not recorded.
+          Recording is on. The most recent control-plane changes since the server started appear
+          here; a reset clears them.
         </Alert>
       )}
 
@@ -306,9 +287,9 @@ export default function AuditPanel({ connectionParams }: AuditPanelProps) {
           entries != null && entries.length === 0 ? (
             // Genuinely-empty case. The server records entries only when the
             // audit trail is switched on (controlPlaneAuditEnabled, off by
-            // default) — recording is independent of authentication. When it is
-            // off the honest empty state points at the in-UI toggle above; when
-            // it is on it explains that only changes made since enabling appear.
+            // default) — recording is independent of authentication. It is fixed
+            // at startup, so when it is off the empty state says how to start the
+            // server with it; when it is on it explains what will appear.
             <Box sx={{ p: 2 }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 No audit entries recorded.
@@ -320,11 +301,9 @@ export default function AuditPanel({ connectionParams }: AuditPanelProps) {
                 </Typography>
               ) : (
                 <Typography variant="body2" color="text.secondary">
-                  The control-plane audit trail is off by default. Use{' '}
-                  <strong>Enable Audit Trail</strong> above to start recording control-plane
-                  mutations — changes to expectations, configuration, and server state — here. Only
-                  mutations are recorded unless <strong>Also record reads</strong> is ticked. Or set
-                  it at startup with{' '}
+                  The control-plane audit trail is off by default. To record control-plane
+                  mutations — changes to expectations, configuration, and server state — here, start
+                  MockServer with{' '}
                   <Box component="code" sx={{ fontFamily: monospaceFontFamily }}>
                     controlPlaneAuditEnabled=true
                   </Box>{' '}

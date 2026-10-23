@@ -115,64 +115,30 @@ describe('AuditPanel', () => {
     expect(auditUrls[0]).toContain('/mockserver/audit');
   });
 
-  it('shows the On status chip when the audit trail is enabled', async () => {
+  it('shows the On status chip and no way to switch the audit trail off', async () => {
     stubServer({ enabled: true, entries: fixture() });
     renderPanel();
 
     await waitFor(() => {
       expect(screen.getByText('Audit Trail: On')).toBeInTheDocument();
     });
-    // The enabled control is a switch, not the Enable button.
+    // controlPlaneAuditEnabled is fixed at startup, so the panel offers no toggle for it
+    expect(screen.queryByRole('switch', { name: 'Audit trail enabled' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Enable Audit Trail' })).not.toBeInTheDocument();
-    expect(screen.getByRole('switch', { name: 'Audit trail enabled' })).toBeInTheDocument();
+    expect(screen.getByText(/The most recent control-plane changes since the server started appear here/i)).toBeInTheDocument();
   });
 
-  it('shows the Off status chip and Enable button when the audit trail is disabled', async () => {
-    stubServer({ enabled: false, entries: [] });
-    renderPanel();
-
-    await waitFor(() => {
-      expect(screen.getByText('Audit Trail: Off')).toBeInTheDocument();
-    });
-    expect(screen.getByRole('button', { name: 'Enable Audit Trail' })).toBeInTheDocument();
-  });
-
-  it('enabling PUTs controlPlaneAuditEnabled:true and flips the chip to On', async () => {
+  it('shows the Off status chip and says the audit trail is set at startup when disabled', async () => {
     const { puts } = stubServer({ enabled: false, entries: [] });
-    const user = userEvent.setup();
     renderPanel();
 
     await waitFor(() => {
       expect(screen.getByText('Audit Trail: Off')).toBeInTheDocument();
     });
-
-    await user.click(screen.getByRole('button', { name: 'Enable Audit Trail' }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Audit Trail: On')).toBeInTheDocument();
-    });
-    expect(puts).toContainEqual({ controlPlaneAuditEnabled: true });
-    // The "recording started from now on" hint is surfaced once enabled.
-    expect(
-      screen.getByText(/Only control-plane changes made from now on appear here/i),
-    ).toBeInTheDocument();
-  });
-
-  it('turning off PUTs controlPlaneAuditEnabled:false and flips the chip to Off', async () => {
-    const { puts } = stubServer({ enabled: true, entries: [] });
-    const user = userEvent.setup();
-    renderPanel();
-
-    await waitFor(() => {
-      expect(screen.getByText('Audit Trail: On')).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole('switch', { name: 'Audit trail enabled' }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Audit Trail: Off')).toBeInTheDocument();
-    });
-    expect(puts).toContainEqual({ controlPlaneAuditEnabled: false });
+    expect(screen.queryByRole('button', { name: 'Enable Audit Trail' })).not.toBeInTheDocument();
+    expect(screen.getByText(/It can only be switched on when MockServer starts/i)).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Also record reads' })).toBeDisabled();
+    expect(puts).toHaveLength(0);
   });
 
   it('the reads checkbox PUTs controlPlaneAuditReads', async () => {
@@ -193,7 +159,8 @@ describe('AuditPanel', () => {
 
   it('surfaces a failed configuration update via the error alert', async () => {
     stubServer({
-      enabled: false,
+      enabled: true,
+      reads: false,
       entries: [],
       putFailure: { status: 401, body: 'control-plane write forbidden' },
     });
@@ -201,16 +168,16 @@ describe('AuditPanel', () => {
     renderPanel();
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Enable Audit Trail' })).toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Also record reads' })).toBeEnabled();
     });
 
-    await user.click(screen.getByRole('button', { name: 'Enable Audit Trail' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Also record reads' }));
 
     await waitFor(() => {
       expect(screen.getByText('control-plane write forbidden')).toBeInTheDocument();
     });
-    // The failed write must not have flipped the status to On.
-    expect(screen.getByText('Audit Trail: Off')).toBeInTheDocument();
+    // The failed write must not have ticked the reads box.
+    expect(screen.getByRole('checkbox', { name: 'Also record reads' })).not.toBeChecked();
   });
 
   it('refetches when Refresh is clicked', async () => {
@@ -247,8 +214,8 @@ describe('AuditPanel', () => {
     stubServer({ enabled: false, entries: [] });
     renderPanel();
 
-    // The empty state must explain that the audit trail is off by default, point
-    // at the in-UI Enable control, and still list the startup properties.
+    // The empty state must explain that the audit trail is off by default and
+    // list the startup properties that switch it on.
     await waitFor(() => {
       expect(screen.getByText('No audit entries recorded.')).toBeInTheDocument();
     });

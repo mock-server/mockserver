@@ -131,13 +131,14 @@ public class ControlPlaneMutualTlsClientCertificateTrustTest {
     }
 
     @Test
-    public void shouldRefuseAnUpdateThatPutsBundledCaInTheChain() throws IOException {
+    public void shouldJudgeAnUpdateByTheControlPlaneMutualTlsSettingsInForce() throws IOException {
         String chain = chainWithBundledCa();
 
-        assertThrows(ControlPlaneMutualTlsConfigurationException.class, () -> ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(
-            new ConfigurationDTO().setControlPlaneTLSMutualAuthenticationCAChain(chain), withOwnCa().controlPlaneTLSMutualAuthenticationCAChain(CONTROL_PLANE_CA_CHAIN)));
-        assertThrows(ControlPlaneMutualTlsConfigurationException.class, () -> ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(
-            new ConfigurationDTO().setControlPlaneTLSMutualAuthenticationRequired(true), withOwnCa().controlPlaneTLSMutualAuthenticationRequired(false).controlPlaneTLSMutualAuthenticationCAChain(chain)));
+        // the control-plane mTLS settings are fixed at startup, so an update that supplies them is not judged by them
+        ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(
+            new ConfigurationDTO().setControlPlaneTLSMutualAuthenticationCAChain(chain), withOwnCa().controlPlaneTLSMutualAuthenticationCAChain(CONTROL_PLANE_CA_CHAIN));
+        ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(
+            new ConfigurationDTO().setControlPlaneTLSMutualAuthenticationRequired(true), withOwnCa().controlPlaneTLSMutualAuthenticationRequired(false).controlPlaneTLSMutualAuthenticationCAChain(chain));
     }
 
     @Test
@@ -258,16 +259,13 @@ public class ControlPlaneMutualTlsClientCertificateTrustTest {
 
     @Test
     public void shouldRefuseAnUpdateThatLeavesMutualTlsWithoutChainAndTheBundledCa() {
-        Configuration withoutMutualTls = withBundledCa().controlPlaneTLSMutualAuthenticationRequired(false).controlPlaneTLSMutualAuthenticationCAChain("");
-        Configuration withChain = withBundledCa().controlPlaneTLSMutualAuthenticationCAChain(CONTROL_PLANE_CA_CHAIN);
+        Configuration withOwnCaAndNoChain = withOwnCa().controlPlaneTLSMutualAuthenticationCAChain("");
+        Configuration withDynamicCaAndNoChain = withBundledCa().dynamicallyCreateCertificateAuthorityCertificate(true).controlPlaneTLSMutualAuthenticationCAChain("");
 
         assertThrows(ControlPlaneMutualTlsConfigurationException.class, () -> ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(
-            new ConfigurationDTO().setControlPlaneTLSMutualAuthenticationRequired(true), withoutMutualTls));
+            new ConfigurationDTO().setCertificateAuthorityCertificate(DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE), withOwnCaAndNoChain));
         assertThrows(ControlPlaneMutualTlsConfigurationException.class, () -> ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(
-            new ConfigurationDTO().setControlPlaneTLSMutualAuthenticationCAChain(""), withChain));
-        assertThrows(ControlPlaneMutualTlsConfigurationException.class, () -> ControlPlaneAuthenticationHandlerFactory.requireUsableControlPlaneMutualTls(
-            new ConfigurationDTO().setControlPlaneTLSMutualAuthenticationCAChain("").setCertificateAuthorityCertificate(DEFAULT_CERTIFICATE_AUTHORITY_X509_CERTIFICATE),
-            mutualTlsServer().certificateAuthorityCertificate(CONTROL_PLANE_CA_CHAIN).certificateAuthorityPrivateKey(CONTROL_PLANE_CA_PRIVATE_KEY).controlPlaneTLSMutualAuthenticationCAChain(CONTROL_PLANE_CA_CHAIN)));
+            new ConfigurationDTO().setDynamicallyCreateCertificateAuthorityCertificate(false), withDynamicCaAndNoChain));
     }
 
     @Test
