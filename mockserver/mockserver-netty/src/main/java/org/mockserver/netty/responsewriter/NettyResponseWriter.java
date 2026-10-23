@@ -29,6 +29,7 @@ import org.mockserver.responsewriter.HttpExchangeEndedEvent;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.socket.ConnectionReset;
+import org.mockserver.socket.ReadAfterFailedWrite;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -152,6 +153,11 @@ public class NettyResponseWriter extends ResponseWriter {
      * When no write was attempted (the channel is already gone, so {@code future} is {@code null}) the
      * token is completed directly — there are no bytes left to flush and the close-future net has
      * nothing to protect. Null-safe when no {@link org.mockserver.netty.InFlightRequest} is present.
+     * <p>
+     * A terminal write that fails closes the connection: the client may have received part of the response, or
+     * none of it, so it can neither reuse the connection nor tell that no response is coming. A connection whose
+     * output the failure ended is left to {@link ReadAfterFailedWrite}, which reads what the client sent first. This
+     * shares the token's listener, so it adds no allocation; every writer {@code HttpRequestHandler} creates has a token.
      */
     private void completeInFlightOnFlush(ChannelFuture future) {
         if (inFlightRequest == null) {
@@ -160,7 +166,12 @@ public class NettyResponseWriter extends ResponseWriter {
         if (future == null) {
             inFlightRequest.complete();
         } else {
-            future.addListener(ignored -> inFlightRequest.complete());
+            future.addListener((ChannelFutureListener) written -> {
+                if (!written.isSuccess() && !ReadAfterFailedWrite.isReadingOn(written.channel())) {
+                    written.channel().close();
+                }
+                inFlightRequest.complete();
+            });
         }
     }
 

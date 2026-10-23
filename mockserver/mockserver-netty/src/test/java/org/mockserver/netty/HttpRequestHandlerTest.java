@@ -382,6 +382,22 @@ public class HttpRequestHandlerTest {
     }
 
     @Test
+    public void shouldAnswerBadRequestWhenBindHasNoPortBinding() {
+        // given
+        HttpRequest bindRequest = request("/mockserver/bind")
+            .withMethod("PUT");
+
+        // when
+        embeddedChannel.writeInbound(bindRequest);
+
+        // then
+        HttpResponse httpResponse = embeddedChannel.readOutbound();
+        assertThat(httpResponse.getStatusCode(), is(400));
+        assertThat(httpResponse.getBodyAsString(), is("invalid or missing port binding"));
+        verify(server, never()).bindServerPorts(anyList());
+    }
+
+    @Test
     public void shouldStop() throws InterruptedException {
         // given
         HttpRequest statusRequest = request("/mockserver/stop")

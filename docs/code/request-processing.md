@@ -1186,6 +1186,10 @@ queue of binary messages waiting to be forwarded and a binary relay's two connec
 cannot take more). They all go through `ChannelReadPause`, a per-channel hold
 count: auto-read turns off with the first hold and back on only when the last is released, so one holder
 finishing cannot resume reads another still needs paused.
+Releasing the last hold always issues a read. `LingeringClose`, `ConnectionReset` and
+`HttpChunkLineLimiter`'s rejection turn auto-read back on directly, to read and discard what the client still
+sends; done under a hold, the read that triggers is dropped by the gate below, and auto-read is already on when
+the hold ends, so without that read the socket was never read again (`ChannelReadPauseTest`).
 The first hold also installs a gate at the head of the pipeline that drops read requests while any hold
 remains. Without it, turning auto-read off did not stop reading: a decoder that saw no complete message, or
 the `HttpContentDecompressor` left in a WebSocket pipeline after the upgrade, calls `ctx.read()` after every

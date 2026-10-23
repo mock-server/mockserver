@@ -295,9 +295,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                             responseWriter.writeResponse(request, BAD_REQUEST, e.getMessage() + detail, MediaType.create("text", "plain").toString());
                         }
                     } else {
-                        // null-body path writes no response via responseWriter, so complete the
-                        // in-flight token explicitly to avoid stalling a keep-alive drain.
-                        completeInFlight(inFlightRequest);
+                        responseWriter.writeResponse(request, BAD_REQUEST, "invalid or missing port binding", MediaType.create("text", "plain").toString());
                     }
 
                 } else if (controlPlaneCandidate && request.matches("PUT", PATH_PREFIX + "/stop", "/stop")) {

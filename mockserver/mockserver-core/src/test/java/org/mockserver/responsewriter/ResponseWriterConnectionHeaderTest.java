@@ -63,6 +63,30 @@ public class ResponseWriterConnectionHeaderTest {
     }
 
     @Test
+    public void closeSocketOnKeepAliveRequestGetsCloseConnectionHeader() {
+        HttpResponse out = addConnectionHeader(
+            request().withKeepAlive(true),
+            response("body").withConnectionOptions(connectionOptions().withCloseSocket(true)));
+        assertThat(out.getFirstHeader("connection"), is("close"));
+    }
+
+    @Test
+    public void closeSocketFalseOnKeepAliveRequestGetsKeepAliveConnectionHeader() {
+        HttpResponse out = addConnectionHeader(
+            request().withKeepAlive(true),
+            response("body").withConnectionOptions(connectionOptions().withCloseSocket(false)));
+        assertThat(out.getFirstHeader("connection"), is("keep-alive"));
+    }
+
+    @Test
+    public void closeSocketWithKeepAliveOverrideTrueKeepsKeepAliveConnectionHeader() {
+        HttpResponse out = addConnectionHeader(
+            request().withKeepAlive(true),
+            response("body").withConnectionOptions(connectionOptions().withCloseSocket(true).withKeepAliveOverride(true)));
+        assertThat(out.getFirstHeader("connection"), is("keep-alive"));
+    }
+
+    @Test
     public void suppressConnectionHeaderAddsNoConnectionHeader() {
         HttpResponse out = addConnectionHeader(
             request().withKeepAlive(true),

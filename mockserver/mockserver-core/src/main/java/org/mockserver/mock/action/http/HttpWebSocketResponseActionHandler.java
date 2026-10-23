@@ -1,6 +1,7 @@
 package org.mockserver.mock.action.http;
 
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
@@ -55,6 +56,14 @@ public class HttpWebSocketResponseActionHandler {
      */
     public void handle(HttpWebSocketResponse httpWebSocketResponse, ChannelHandlerContext ctx, org.mockserver.model.HttpRequest request, Runnable responseEnded) {
         FullHttpRequest nettyRequest = buildNettyRequest(request);
+        try {
+            handshake(httpWebSocketResponse, ctx, request, responseEnded, nettyRequest);
+        } finally {
+            nettyRequest.release();
+        }
+    }
+
+    private void handshake(HttpWebSocketResponse httpWebSocketResponse, ChannelHandlerContext ctx, org.mockserver.model.HttpRequest request, Runnable responseEnded, FullHttpRequest nettyRequest) {
         String host = request.getFirstHeader("Host");
         String uri = request.getPath().getValue();
         String scheme = ctx.pipeline().get(SslHandler.class) != null ? "wss" : "ws";
@@ -68,7 +77,6 @@ public class HttpWebSocketResponseActionHandler {
 
         if (handshaker == null) {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel()).addListener(future -> responseEnded.run());
-            nettyRequest.release();
             return;
         }
 
@@ -105,8 +113,16 @@ public class HttpWebSocketResponseActionHandler {
             inboundStreamId = null;
         }
 
+        // the listener's reference; a handshake that throws (a malformed upgrade) never runs the listener
         nettyRequest.retain();
-        handshaker.handshake(ctx.channel(), nettyRequest).addListener(future -> {
+        ChannelFuture handshakeFuture;
+        try {
+            handshakeFuture = handshaker.handshake(ctx.channel(), nettyRequest);
+        } catch (Throwable throwable) {
+            nettyRequest.release();
+            throw throwable;
+        }
+        handshakeFuture.addListener(future -> {
             try {
                 responseEnded.run();
                 if (future.isSuccess()) {
@@ -165,7 +181,6 @@ public class HttpWebSocketResponseActionHandler {
                 nettyRequest.release();
             }
         });
-        nettyRequest.release();
     }
 
     /**
@@ -655,7 +670,7 @@ public class HttpWebSocketResponseActionHandler {
         }
     }
 
-    private FullHttpRequest buildNettyRequest(org.mockserver.model.HttpRequest request) {
+    FullHttpRequest buildNettyRequest(org.mockserver.model.HttpRequest request) {
         String uri = request.getPath().getValue();
         if (request.getQueryStringParameters() != null && !request.getQueryStringParameters().isEmpty()) {
             StringBuilder qs = new StringBuilder("?");

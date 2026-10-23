@@ -14,9 +14,9 @@ import io.netty.util.AttributeKey;
  * reads paused at once (a parked inbound breakpoint frame, pending WebSocket replies, a TCP chaos latency
  * queue, relay backpressure, a connection delay); toggling {@code autoRead} directly would let the first one
  * to finish turn reading back on while another still needs it off. Auto-read is turned off by the first
- * {@link #pause} and back on only by the {@link #resume} that balances the last one; turning it on makes
- * Netty issue the next read. Every holder on a channel must use this class rather than
- * {@code config().setAutoRead}.
+ * {@link #pause} and back on only by the {@link #resume} that balances the last one, which always issues the
+ * next read, even when something else has already turned auto-read back on. Every holder on a channel must use
+ * this class rather than {@code config().setAutoRead}.
  * <p>
  * Turning auto-read off does not stop a handler from requesting a read itself: a decoder that saw no complete
  * message, or an {@code HttpContentDecoder} left in a WebSocket pipeline, calls {@code ctx.read()} after every
@@ -58,12 +58,24 @@ public final class ChannelReadPause {
      * matching hold is ignored.
      */
     public static void resume(Channel channel) {
-        onEventLoop(channel, () -> {
-            int[] holds = channel.attr(HOLDS).get();
-            if (holds != null && holds[0] > 0 && --holds[0] == 0) {
+        if (channel.eventLoop().inEventLoop()) {
+            releaseHold(channel);
+        } else {
+            channel.eventLoop().execute(() -> releaseHold(channel));
+        }
+    }
+
+    private static void releaseHold(Channel channel) {
+        int[] holds = channel.attr(HOLDS).get();
+        if (holds != null && holds[0] > 0 && --holds[0] == 0) {
+            if (channel.config().isAutoRead()) {
+                // something (a lingering close, a connection reset) turned auto-read on under a hold, and
+                // the gate dropped the read that triggered, so nothing would read the socket again
+                channel.read();
+            } else {
                 channel.config().setAutoRead(true);
             }
-        });
+        }
     }
 
     /**

@@ -33,6 +33,22 @@ public class ChannelReadPauseTest {
     }
 
     @Test
+    public void shouldReadWhenTheLastHoldIsReleasedAfterAutoReadWasTurnedOnUnderIt() {
+        // a lingering close or connection reset turns auto-read on while a hold remains; the read
+        // that triggers is dropped by the gate, so the last resume must issue one itself
+        ReadCountingChannel channel = new ReadCountingChannel();
+        ChannelReadPause.pause(channel);
+        channel.config().setAutoRead(true);
+
+        int readsBefore = channel.reads;
+        ChannelReadPause.resume(channel);
+
+        assertThat(channel.config().isAutoRead(), is(true));
+        assertThat("resuming issues a read", channel.reads, is(readsBefore + 1));
+        channel.finishAndReleaseAll();
+    }
+
+    @Test
     public void shouldIgnoreAnUnbalancedResume() {
         ReadCountingChannel channel = new ReadCountingChannel();
 
