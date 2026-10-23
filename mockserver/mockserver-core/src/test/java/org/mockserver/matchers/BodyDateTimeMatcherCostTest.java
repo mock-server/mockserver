@@ -13,6 +13,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.mockserver.testing.AllocationMeasurement.allocatedBytes;
+import static org.mockserver.testing.AllocationMeasurement.assumeC1Only;
 
 /**
  * A JSONPath or XPath body matcher without a date-time comparison must cost exactly what it did before
@@ -83,6 +84,8 @@ public class BodyDateTimeMatcherCostTest {
     }
 
     private static void assertSameCost(BooleanSupplier matcher, BooleanSupplier library) {
+        // C2 inlines the two arms differently, so escape analysis can remove an object in one and keep it in the other
+        assumeC1Only("the matcher's cost against the library call alone");
         for (int warmUp = 0; warmUp < 3; warmUp++) {
             perOperation(matcher);
             perOperation(library);
@@ -93,7 +96,6 @@ public class BodyDateTimeMatcherCostTest {
             withMatcher = Math.min(withMatcher, perOperation(matcher));
             withLibrary = Math.min(withLibrary, perOperation(library));
         }
-        // one-sided: under C2 the matcher's inlining can let escape analysis remove a few bytes the bare call keeps
         assertThat("bytes per match through the matcher (" + withMatcher + ") beyond the library call alone (" + withLibrary + ")", withMatcher - withLibrary, lessThan(TOLERANCE_BYTES));
     }
 

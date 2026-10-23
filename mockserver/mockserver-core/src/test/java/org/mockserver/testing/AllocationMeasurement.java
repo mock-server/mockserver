@@ -63,8 +63,20 @@ public final class AllocationMeasurement {
         assumeNotInstrumented("the immutable collections are instrumented in this JVM (" + perCall + " bytes per probe), so allocations through them cannot be measured here", perCall);
     }
 
+    /**
+     * Skips the calling test unless it runs in the {@code allocation-tests-without-c2} execution, for a bound that C2
+     * escape analysis can break either way: it may remove an object on one side of a comparison but not the other.
+     */
+    public static void assumeC1Only(String measurement) {
+        Assume.assumeTrue(measurement + " is checked only without C2, in the allocation-tests-without-c2 execution", isC1Only());
+    }
+
+    private static boolean isC1Only() {
+        return ManagementFactory.getRuntimeMXBean().getInputArguments().contains("-XX:TieredStopAtLevel=1");
+    }
+
     private static void assumeNotInstrumented(String reason, long perCall) {
-        if (ManagementFactory.getRuntimeMXBean().getInputArguments().contains("-XX:TieredStopAtLevel=1")) {
+        if (isC1Only()) {
             // the dedicated clean-JVM execution: never skip there, or the bound would go unchecked everywhere
             if (perCall != 0) {
                 throw new AssertionError(reason);
