@@ -30,7 +30,7 @@ public final class CredentialRedaction {
      * The request a log entry may hold: without credentials when it is a control-plane request, whether the
      * control-plane gate marked it or its method and path name a control-plane route, so no log site can store
      * one unmasked; otherwise {@code requestDefinition} itself, so data-plane requests are logged as sent. A
-     * data-plane request costs a path-prefix check and allocates nothing.
+     * data-plane request costs one table lookup on its path's opening characters and allocates nothing.
      */
     public static RequestDefinition forLog(RequestDefinition requestDefinition) {
         try {
@@ -84,12 +84,10 @@ public final class CredentialRedaction {
         if (request.isControlPlaneRequest()) {
             return true;
         }
-        String path = request.getPath() != null ? request.getPath().getValue() : null;
-        if (path == null || !(path.startsWith(HttpState.PATH_PREFIX) || path.startsWith("/_mockserver_") || HttpState.isControlPlanePathCandidate(path))) {
-            // the method is read only for a path that may be the control plane
+        if (request.getPath() == null) {
             return false;
         }
-        return HttpState.isControlPlaneRoute(request.getMethod() != null ? request.getMethod().getValue() : null, path);
+        return HttpState.isControlPlaneRoute(request.getMethod() != null ? request.getMethod().getValue() : null, request.getPath().getValue());
     }
 
 

@@ -41,7 +41,29 @@ public final class AllocationMeasurement {
             sink = probe.getRemoteAddressBytes();
         }
         long perCall = (allocatedBytes() - before) / PROBE_CALLS;
-        String reason = "HttpRequest is instrumented in this JVM (" + perCall + " bytes per getter call), so its allocations cannot be measured here";
+        assumeNotInstrumented("HttpRequest is instrumented in this JVM (" + perCall + " bytes per getter call), so its allocations cannot be measured here", perCall);
+    }
+
+    /**
+     * As {@link #assumeHttpRequestIsNotInstrumented()}, for the JDK's immutable {@code Set.of} / {@code Map.of}
+     * collections, which a Mockito mock elsewhere in the JVM can leave instrumented in the same way.
+     */
+    public static void assumeImmutableCollectionsAreNotInstrumented() {
+        java.util.Set<String> one = java.util.Set.of("PUT");
+        java.util.Set<String> three = java.util.Set.of("DELETE", "GET", "PUT");
+        java.util.Map<String, java.util.Set<String>> map = java.util.Map.of("/a", one, "/b", three, "/c", one);
+        for (int i = 0; i < PROBE_CALLS; i++) {
+            sink = one.contains("GET") | three.contains("POST") | map.get("/b") == null;
+        }
+        long before = allocatedBytes();
+        for (int i = 0; i < PROBE_CALLS; i++) {
+            sink = one.contains("GET") | three.contains("POST") | map.get("/b") == null;
+        }
+        long perCall = (allocatedBytes() - before) / PROBE_CALLS;
+        assumeNotInstrumented("the immutable collections are instrumented in this JVM (" + perCall + " bytes per probe), so allocations through them cannot be measured here", perCall);
+    }
+
+    private static void assumeNotInstrumented(String reason, long perCall) {
         if (ManagementFactory.getRuntimeMXBean().getInputArguments().contains("-XX:TieredStopAtLevel=1")) {
             // the dedicated clean-JVM execution: never skip there, or the bound would go unchecked everywhere
             if (perCall != 0) {
