@@ -3580,7 +3580,7 @@ PUT /mockserver/grpcChaos
             <td><strong>reset_peer</strong></td>
             <td><code class="inline code">resetPeer</code></td>
             <td>boolean</td>
-            <td>Sends a TCP RST and closes the connection immediately on first data</td>
+            <td>Sends a TCP RST and closes the connection immediately on first data. The client sees "connection reset", also over TLS and through a CONNECT or SOCKS tunnel</td>
         </tr>
         <tr>
             <td><strong>slicer</strong></td>
@@ -3646,7 +3646,7 @@ PATCH /mockserver/tcpChaos
         <tr>
             <td><strong>Mid-response RST</strong></td>
             <td><code class="inline code">resetMidResponse</code> (boolean)</td>
-            <td>After the response head is flushed, forces a TCP RST (SO_LINGER 0 + immediate close) instead of a clean FIN. The client sees "connection reset" mid-stream — simulates a server that crashed while replying.</td>
+            <td>Sends the response, then resets the connection with a TCP RST (SO_LINGER 0 + immediate close) instead of a clean FIN or keeping it open. The client receives the response and then sees "connection reset" when it reads on past it or sends another request on the same connection — simulates a server that crashed while replying. A client that stops reading at the end of a response with a <code class="inline code">Content-Length</code> may not notice. This holds over TLS too (no TLS close is sent first) and through a CONNECT or SOCKS tunnel, where the client receives the response and then its own connection is reset.</td>
         </tr>
         <tr>
             <td><strong>Slow close</strong></td>

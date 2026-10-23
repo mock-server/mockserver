@@ -1282,18 +1282,22 @@ common (no-lifecycle-chaos) case.
 
 ### L1 — Mid-response RST (`resetMidResponse`)
 
-`NettyResponseWriter.writeHeadThenReset()` writes the response head via `ctx.writeAndFlush(response)`,
-then on the write-complete future calls `forceReset()`, which sets `SO_LINGER 0` and calls `close()` —
-the same proven RST mechanism as `TcpChaosHandler` (zero linger makes the close emit a TCP RST rather
-than a FIN). The client sees "connection reset" while reading the body — the "server crashed mid-reply"
-fault.
+`NettyResponseWriter.writeThenReset()` writes the whole response (head and body) via `ctx.writeAndFlush(response)`,
+then on the write-complete future calls `ConnectionReset.reset()` (see [Connection Reset](#connection-reset-httperror-resetconnection)),
+which sets `SO_LINGER 0` and closes from the head of the pipeline, so over TLS no `close_notify` precedes
+the RST and through a CONNECT/SOCKS tunnel the client's own connection is reset. `TcpChaosHandler`'s
+`resetPeer` uses the same call (zero linger makes the close emit a TCP RST rather than a FIN). The client
+receives the response, then sees "connection reset" when it reads on past it or sends its next request on
+the connection — the "server crashed mid-reply" fault. A client that stops reading at the end of a
+`Content-Length` response may report success. Through a tunnel the client is reset only after the relay
+has written the response to it (see the tunnel row under [Connection Reset](#connection-reset-httperror-resetconnection)).
 
 **HTTP/2 multiplex parent walk.** On the multiplex pipeline (`Http2FrameCodec` + `Http2MultiplexHandler`)
-the response head is written on a per-stream `Http2StreamChannel` child channel, where setting
+the response is written on a per-stream `Http2StreamChannel` child channel, where setting
 `SO_LINGER` does nothing at all (`DefaultChannelConfig.setOption` returns `false` for an unknown option
 rather than throwing, so there is not even an exception to notice) and `close()` only emits
 `RST_STREAM` for that one stream. Because
-`resetMidResponse` exists to simulate a genuine socket abort, `forceReset()` walks up from an
+`resetMidResponse` exists to simulate a genuine socket abort, `ConnectionReset.reset()` walks up from an
 `Http2StreamChannel` to its **parent connection channel** (the same parent-walk pattern
 `Http2GoAwayEmitter` uses) and forces the RST there, aborting the whole TCP connection and every
 concurrent stream on it. The guard is on the `Http2StreamChannel` **type**, not on
@@ -1424,22 +1428,25 @@ flowchart TD
     HEH --> P["Http2StreamChannel? use parent connection"]
     P --> L["SO_LINGER 0"]
     L --> C["close from pipeline.firstContext()\n(below SslHandler)"]
-    HEH -->|"connection is a tunnel's loopback\n(ConnectionReset.ON_RESET)"| R["LoopbackResetRelay\nresets the proxy client's connection"]
+    HEH -->|"connection is a tunnel's loopback\n(ConnectionReset.ON_RESET)"| E["loopback output ended\n(no RST on the loopback)"]
+    E --> R["LoopbackResetRelay\nresets the proxy client's connection\nafter what was relayed"]
 ```
 
 | Transport | What the client sees |
 |-----------|----------------------|
 | HTTP/1.1 | A TCP RST. |
 | TLS (HTTP/1.1 or HTTP/2) | A TCP RST with no TLS `close_notify` before it: the close starts at `pipeline().firstContext()`, so it reaches the head of the pipeline without passing through `SslHandler` (whose `close` would send `close_notify` first, which a client reads as a clean end of stream). |
-| HTTP/2 | The whole TCP connection is reset, failing every stream on it. On the multiplex pipeline the request is on an `Http2StreamChannel` child, where `SO_LINGER` is not a known option and `close()` would only send `RST_STREAM`, so the parent connection channel is reset instead (the same parent walk `NettyResponseWriter.forceReset` uses for `resetMidResponse`). The per-stream equivalent is `streamError` (`RST_STREAM`). |
+| HTTP/2 | The whole TCP connection is reset, failing every stream on it. On the multiplex pipeline the request is on an `Http2StreamChannel` child, where `SO_LINGER` is not a known option and `close()` would only send `RST_STREAM`, so the parent connection channel is reset instead. The per-stream equivalent is `streamError` (`RST_STREAM`). |
 | HTTP/3 | QUIC runs on UDP and has no reset, so the QUIC connection is closed at once with `CONNECTION_CLOSE` carrying `H3_INTERNAL_ERROR` (`QuicChannel.close(true, 0x102, EMPTY_BUFFER)`), failing every stream on it. |
-| CONNECT / SOCKS tunnel | A TCP RST on the client's own connection, HTTP/1.1, TLS or h2. The request is served on MockServer's loopback leg, so the reset lands there, and the relay would otherwise end the client leg with its usual clean close (`closeOnFlush`, or a GOAWAY and per-stream `INTERNAL_ERROR` on h2), indistinguishable from `dropConnection`. So the reset is signalled explicitly: `PortUnificationHandler.switchToProxyConnected` sets `ConnectionReset.ON_RESET` on MockServer's end of each relay loopback (`LoopbackResetRelay.relayResetsOf`, which finds the tunnel's client channel through `RelayLoopbackAddresses`). `ConnectionReset.reset` runs it before resetting the loopback: it marks the client channel and resets it (`SO_LINGER 0` at once, the close on its event loop). `LoopbackResetRelay`, first on the relay's end of the loopback (ahead of its `SslHandler` and HTTP/2 handler), resets the client channel again in-loop as the loopback's reset is read, so no relay handler gets to close the client leg cleanly first. A loopback reset that was not asked for (MockServer behind the loopback failing) keeps the relay's usual GOAWAY / stream-reset handling. |
+| CONNECT / SOCKS tunnel | A TCP RST on the client's own connection, HTTP/1.1, TLS or h2. The request is served on MockServer's loopback leg, so the reset lands there, and the relay would otherwise end the client leg with its usual clean close (`closeOnFlush`, or a GOAWAY and per-stream `INTERNAL_ERROR` on h2), indistinguishable from `dropConnection`. So the reset is signalled explicitly: `PortUnificationHandler.switchToProxyConnected` sets `ConnectionReset.ON_RESET` on MockServer's end of each relay loopback (`LoopbackResetRelay.relayResetsOf`, which finds the tunnel's client channel through `RelayLoopbackAddresses`). `ConnectionReset.reset` runs it, and it only marks the client channel: the relay has yet to pass on what MockServer wrote to the loopback (a chaos `resetMidResponse` writes the whole response first). The loopback itself is then not reset but has its output ended at the socket (`shutdownOutput`, no `close_notify`), reading and dropping what the relay still sends until the relay closes it or `LingeringClose.LINGER_MILLIS` passes. An RST there could make the relay drop the response unread: an h2 relay writes to the loopback (a SETTINGS ack, a WINDOW_UPDATE) as it reads, and a write failing on the RST closes it with the response still in its receive buffer. `LoopbackResetRelay`, first on the relay's end of the loopback (ahead of its `SslHandler` and HTTP/2 handler), resets the marked client channel as the loopback closes on reading that end (or as a reset of it is read), so no relay handler gets to close the client leg cleanly first. The reset follows an empty write from the client pipeline's `firstContext()`, so it comes after everything the relay has already written to the client (HTTP/2 DATA that the client's flow-control window still holds back is not yet written, and is lost). A loopback reset that was not asked for (MockServer behind the loopback failing) keeps the relay's usual GOAWAY / stream-reset handling. |
 | Servlet (WAR) | Not available: the WAR rejects every `HttpError` action as unsupported (`HttpState`), and a servlet container gives no access to the socket. |
 
 `responseBytes` set alongside `resetConnection` are written first and the reset is chained on that write, but a
 reset discards whatever the peer has not yet received, so the bytes may not arrive. When `SO_LINGER` cannot be set
 (a channel type without it) the connection is still closed, without the RST, and a WARN is logged. The WireMock
-and Mountebank importers map their `CONNECTION_RESET_BY_PEER` fault to `resetConnection`.
+and Mountebank importers map their `CONNECTION_RESET_BY_PEER` fault to `resetConnection`. The TCP chaos faults `resetPeer`
+(`TcpChaosHandler`) and `resetMidResponse` (`NettyResponseWriter`) reset through the same `ConnectionReset.reset`,
+so they too reach a TLS or tunnelled client as a reset (see [chaos.md](chaos.md#connection-lifecycle-faults)).
 
 ## Relay Connect Pattern
 

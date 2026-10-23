@@ -4,6 +4,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.socket.DuplexChannel;
 import io.netty.handler.codec.http2.Http2StreamChannel;
 import io.netty.util.AttributeKey;
 import org.mockserver.log.model.LogEntry;
@@ -21,8 +22,8 @@ public final class ConnectionReset {
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(ConnectionReset.class);
 
     /**
-     * Run as a connection is {@link #reset}, before the reset: MockServer's own end of a CONNECT/SOCKS tunnel's
-     * loopback uses it to reset the tunnel's client connection too.
+     * Run as a connection is {@link #reset}: MockServer's end of a CONNECT/SOCKS tunnel's loopback uses it to mark
+     * the tunnel's client connection, which the relay resets once it has relayed what was written before.
      */
     public static final AttributeKey<Runnable> ON_RESET = AttributeKey.valueOf("MOCKSERVER_CONNECTION_ON_RESET");
 
@@ -34,12 +35,19 @@ public final class ConnectionReset {
      * multiplex connection closes as a RST_STREAM only, so its parent connection is reset instead. The close starts
      * at the head of the pipeline, below any {@code SslHandler}, so no TLS {@code close_notify} is sent first, as
      * none is when a peer resets.
+     * <p>
+     * A connection with {@link #ON_RESET} (a tunnel's loopback) is not reset but has its output ended at the socket:
+     * the relay at its other end then reads all that was written before the end, which an RST could make it drop (its
+     * next write would fail and close it unread), and resets the tunnel's client connection after relaying it.
      */
     public static ChannelFuture reset(Channel channel) {
         Channel connection = channel instanceof Http2StreamChannel && channel.parent() != null ? channel.parent() : channel;
         Runnable onReset = connection.attr(ON_RESET).get();
         if (onReset != null) {
             onReset.run();
+            if (connection instanceof DuplexChannel && connection.isActive()) {
+                return endOutput((DuplexChannel) connection);
+            }
         }
         boolean abortive;
         try {
@@ -55,6 +63,25 @@ public final class ConnectionReset {
         }
         ChannelHandlerContext first = connection.pipeline().firstContext();
         return first != null ? first.close() : connection.close();
+    }
+
+    /**
+     * Ends the output with no TLS {@code close_notify} and reads (and drops) what the other end still sends, so its
+     * writes do not fail, until it closes or {@link LingeringClose#LINGER_MILLIS} has passed.
+     */
+    private static ChannelFuture endOutput(DuplexChannel connection) {
+        if (connection.pipeline().get(LingeringClose.DiscardInbound.class) == null) {
+            connection.pipeline().addFirst(LingeringClose.DiscardInbound.INSTANCE);
+        }
+        connection.config().setAutoRead(true);
+        LingeringClose.closeSocketUnlessClosedWithinLinger(connection);
+        ChannelFuture ended = ReadAfterFailedWrite.endOutput(connection);
+        ended.addListener(shutdown -> {
+            if (!shutdown.isSuccess()) {
+                LingeringClose.closeSocket(connection);
+            }
+        });
+        return ended;
     }
 
     /**

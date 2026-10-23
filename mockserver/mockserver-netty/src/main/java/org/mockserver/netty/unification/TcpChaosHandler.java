@@ -4,13 +4,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPromise;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.ScheduledFuture;
 import org.mockserver.mock.action.http.TcpChaosRegistry;
 import org.mockserver.model.TcpChaosProfile;
 import org.mockserver.socket.ChannelReadPause;
+import org.mockserver.socket.ConnectionReset;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
@@ -84,11 +84,10 @@ public class TcpChaosHandler extends ChannelDuplexHandler {
             return;
         }
 
-        // reset peer: send RST and close immediately
+        // reset peer: send RST and close immediately (no TLS close_notify; a tunnel's client is reset too)
         if (Boolean.TRUE.equals(profile.getResetPeer())) {
             ReferenceCountUtil.release(msg);
-            ctx.channel().config().setOption(ChannelOption.SO_LINGER, 0);
-            ctx.close();
+            ConnectionReset.reset(ctx.channel());
             return;
         }
 

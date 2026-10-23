@@ -145,9 +145,10 @@ public class TcpChaosProfile extends ObjectWithJsonToString {
     }
 
     /**
-     * When true, after the response head is written the socket is forced to RST (SO_LINGER 0 +
-     * forced close) instead of a clean FIN, so the client sees the connection reset mid-stream —
-     * the "server crashed while replying" fault. Applied in the response writer, not at connect time.
+     * When true, once the response has been written the socket is forced to RST (SO_LINGER 0 +
+     * forced close) instead of a clean FIN, so a client reading on past the response sees the
+     * connection reset — the "server crashed while replying" fault. Applied in the response writer,
+     * not at connect time.
      */
     public TcpChaosProfile withResetMidResponse(Boolean resetMidResponse) {
         this.resetMidResponse = resetMidResponse;
