@@ -10,6 +10,7 @@ import org.mockserver.model.ObjectWithReflectiveEqualsHashCodeToString;
 public class HttpErrorDTO extends ObjectWithReflectiveEqualsHashCodeToString implements DTO<HttpError> {
     private DelayDTO delay;
     private Boolean dropConnection;
+    private Boolean resetConnection;
     private byte[] responseBytes;
     private Long streamError;
     @JsonInclude(JsonInclude.Include.NON_DEFAULT)
@@ -21,6 +22,7 @@ public class HttpErrorDTO extends ObjectWithReflectiveEqualsHashCodeToString imp
                 delay = new DelayDTO(httpError.getDelay());
             }
             dropConnection = httpError.getDropConnection();
+            resetConnection = httpError.getResetConnection();
             responseBytes = httpError.getResponseBytes();
             streamError = httpError.getStreamError();
             primary = httpError.isPrimary();
@@ -34,6 +36,7 @@ public class HttpErrorDTO extends ObjectWithReflectiveEqualsHashCodeToString imp
         HttpError httpError = new HttpError()
             .withDelay((delay != null ? delay.buildObject() : null))
             .withDropConnection(dropConnection)
+            .withResetConnection(resetConnection)
             .withResponseBytes(responseBytes)
             .withPrimary(primary);
         if (streamError != null) {
@@ -57,6 +60,15 @@ public class HttpErrorDTO extends ObjectWithReflectiveEqualsHashCodeToString imp
 
     public HttpErrorDTO setDropConnection(Boolean port) {
         this.dropConnection = port;
+        return this;
+    }
+
+    public Boolean getResetConnection() {
+        return resetConnection;
+    }
+
+    public HttpErrorDTO setResetConnection(Boolean resetConnection) {
+        this.resetConnection = resetConnection;
         return this;
     }
 

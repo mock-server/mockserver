@@ -462,12 +462,15 @@ public class MountebankImporter {
     }
 
     private HttpError mapFault(String fault, String locator, List<ImportWarning> warnings) {
-        if (!"CONNECTION_RESET_BY_PEER".equalsIgnoreCase(fault) && !"RANDOM_DATA_THEN_CLOSE".equalsIgnoreCase(fault)) {
-            warnings.add(new ImportWarning(locator, "response.fault." + fault,
-                "unknown fault type — approximated as a dropped connection"));
-        } else if ("RANDOM_DATA_THEN_CLOSE".equalsIgnoreCase(fault)) {
+        if ("CONNECTION_RESET_BY_PEER".equalsIgnoreCase(fault)) {
+            return HttpError.error().withResetConnection(true);
+        }
+        if ("RANDOM_DATA_THEN_CLOSE".equalsIgnoreCase(fault)) {
             warnings.add(new ImportWarning(locator, "response.fault.RANDOM_DATA_THEN_CLOSE",
                 "approximated as an immediate connection drop; the random bytes are not reproduced"));
+        } else {
+            warnings.add(new ImportWarning(locator, "response.fault." + fault,
+                "unknown fault type — approximated as a dropped connection"));
         }
         return HttpError.error().withDropConnection(true);
     }

@@ -48,6 +48,7 @@ _FIELD_MAP = {
     "drop_connection": "dropConnection",
     "response_bytes": "responseBytes",
     "stream_error": "streamError",
+    "reset_connection": "resetConnection",
     "http_request": "httpRequest",
     "http_response": "httpResponse",
     "http_response_template": "httpResponseTemplate",
@@ -2086,10 +2087,14 @@ class HttpError:
     stream_error: int | None = None
     delay: Delay | None = None
     primary: bool | None = None
+    # reset the connection with a TCP RST so the client sees "connection reset by peer"; takes
+    # precedence over stream_error and drop_connection
+    reset_connection: bool | None = None
 
     def to_dict(self) -> dict:
         return _strip_none({
             "dropConnection": self.drop_connection,
+            "resetConnection": self.reset_connection,
             "responseBytes": self.response_bytes,
             "streamError": self.stream_error,
             "delay": self.delay.to_dict() if self.delay else None,
@@ -2106,6 +2111,7 @@ class HttpError:
             stream_error=data.get("streamError"),
             delay=Delay.from_dict(data.get("delay")),
             primary=data.get("primary"),
+            reset_connection=data.get("resetConnection"),
         )
 
     @staticmethod

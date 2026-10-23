@@ -400,6 +400,7 @@ public abstract class RelayConnectHandler<T> extends SimpleChannelInboundHandler
         // the relay's handlers, added last below, take each leg's exceptions from here on
         removeHandler(pipelineToMockServer, UnconfiguredTunnelLegExceptionHandler.class);
         removeHandler(pipelineToProxyClient, UnconfiguredTunnelLegExceptionHandler.class);
+        pipelineToMockServer.addFirst(new LoopbackResetRelay(proxyClientCtx.channel()));
         if (isSslEnabledDownstream(proxyClientCtx.channel())) {
             // the loopback connection mirrors the protocol negotiated with the proxy client: it advertises
             // h2 via ALPN only when the proxy client negotiated HTTP/2, so its TLS layer and its codec

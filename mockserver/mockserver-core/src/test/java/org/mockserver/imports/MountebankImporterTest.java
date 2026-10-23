@@ -144,11 +144,12 @@ public class MountebankImporterTest {
     }
 
     @Test
-    public void mapsFaultToConnectionDrop() {
+    public void mapsConnectionResetByPeerFaultToConnectionReset() {
         Expectation boom = importer.importExpectations(MOUNTEBANK).getExpectations().get(3);
         HttpError error = boom.getHttpError();
         assertThat(error, is(not(nullValue())));
-        assertThat(error.getDropConnection(), is(true));
+        assertThat(error.getResetConnection(), is(true));
+        assertThat(error.getDropConnection(), is(nullValue()));
     }
 
     @Test

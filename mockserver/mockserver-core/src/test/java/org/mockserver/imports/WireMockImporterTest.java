@@ -216,11 +216,12 @@ public class WireMockImporterTest {
     }
 
     @Test
-    public void mapsFaultToConnectionDrop() {
+    public void mapsConnectionResetByPeerFaultToConnectionReset() {
         Expectation flaky = importer.importExpectations(WIREMOCK_MAPPINGS).getExpectations().get(3);
         HttpError error = flaky.getHttpError();
         assertThat(error, is(not(nullValue())));
-        assertThat(error.getDropConnection(), is(true));
+        assertThat(error.getResetConnection(), is(true));
+        assertThat(error.getDropConnection(), is(nullValue()));
     }
 
     @Test
@@ -418,10 +419,10 @@ public class WireMockImporterTest {
         assertThat(new String(random.getResponseBytes(), UTF_8), is(garbage));
         assertThat(random.getDropConnection(), is(true));
 
-        assertThat(result.getExpectations().get(3).getHttpError().getDropConnection(), is(true));
-        // only the reset, which MockServer cannot reproduce per expectation, is reported
-        assertThat(result.getWarnings(), hasSize(1));
-        assertThat(result.getWarnings().get(0).getConstruct(), is("response.fault.CONNECTION_RESET_BY_PEER"));
+        HttpError reset = result.getExpectations().get(3).getHttpError();
+        assertThat(reset.getResetConnection(), is(true));
+        assertThat(reset.getDropConnection(), is(nullValue()));
+        assertThat(result.getWarnings(), is(empty()));
     }
 
     // ---- XML / XPath body matching -----------------------------------------------------------------

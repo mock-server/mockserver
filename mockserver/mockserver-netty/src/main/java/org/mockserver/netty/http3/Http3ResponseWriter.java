@@ -93,6 +93,20 @@ public class Http3ResponseWriter extends ResponseWriter implements StreamErrorWr
         }
     }
 
+    /**
+     * Close the whole QUIC connection at once with {@code H3_INTERNAL_ERROR} (a CONNECTION_CLOSE frame),
+     * failing every stream on it: QUIC runs on UDP, so there is no TCP reset to send.
+     */
+    @Override
+    public void writeConnectionReset() {
+        responseStarted = true;
+        if (ctx.channel() instanceof QuicStreamChannel && ((QuicStreamChannel) ctx.channel()).parent() != null) {
+            ((QuicStreamChannel) ctx.channel()).parent().close(true, Http3ErrorCode.H3_INTERNAL_ERROR.code(), Unpooled.EMPTY_BUFFER);
+        } else if (ctx.channel().isActive()) {
+            ctx.close();
+        }
+    }
+
     @Override
     public void sendResponse(HttpRequest request, HttpResponse response) {
         responseStarted = true;

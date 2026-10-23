@@ -22,4 +22,11 @@ public interface StreamErrorWriter {
      * @param errorCode the application/stream error code to send on the reset
      */
     void writeStreamError(long errorCode);
+
+    /**
+     * Abort the whole connection, the transport's nearest equivalent of a TCP reset (an
+     * {@link org.mockserver.model.HttpError} carrying {@code resetConnection}). HTTP/3 runs on UDP, which
+     * has no reset, so the QUIC connection is closed at once with an error code.
+     */
+    void writeConnectionReset();
 }

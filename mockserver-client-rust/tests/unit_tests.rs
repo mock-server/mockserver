@@ -494,6 +494,16 @@ fn test_error_drop_connection() {
     assert_eq!(json["dropConnection"], true);
 }
 
+#[test]
+fn test_error_reset_connection() {
+    let err = HttpError::new().reset_connection(true);
+    let json = serde_json::to_value(&err).unwrap();
+    assert_eq!(json, serde_json::json!({ "resetConnection": true }));
+    let parsed: HttpError = serde_json::from_value(json).unwrap();
+    assert_eq!(parsed.reset_connection_value(), Some(true));
+    assert_eq!(HttpError::new().reset_connection_value(), None);
+}
+
 // ---------------------------------------------------------------------------
 // Times and TimeToLive tests
 // ---------------------------------------------------------------------------

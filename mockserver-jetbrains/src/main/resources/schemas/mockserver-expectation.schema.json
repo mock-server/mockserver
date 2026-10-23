@@ -1287,7 +1287,11 @@
         },
         "dropConnection": {
           "type": "boolean",
-          "description": "drop the connection; ignored when streamError is set (streamError takes precedence)"
+          "description": "drop the connection with a clean close; ignored when resetConnection or streamError is set"
+        },
+        "resetConnection": {
+          "type": "boolean",
+          "description": "reset the connection with a TCP RST (SO_LINGER 0) instead of returning a response, so the client sees connection reset by peer; over HTTP/2 the whole connection is reset, over HTTP/3 the QUIC connection is closed with H3_INTERNAL_ERROR; takes precedence over streamError and dropConnection"
         },
         "responseBytes": {
           "type": "string"

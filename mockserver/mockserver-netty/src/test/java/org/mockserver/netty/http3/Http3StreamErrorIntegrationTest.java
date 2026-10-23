@@ -4,6 +4,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.codec.http3.DefaultHttp3HeadersFrame;
@@ -15,6 +16,7 @@ import io.netty.handler.codec.http3.Http3RequestStreamInboundHandler;
 import io.netty.handler.codec.http3.Http3ServerConnectionHandler;
 import io.netty.handler.codec.quic.InsecureQuicTokenHandler;
 import io.netty.handler.codec.quic.QuicChannel;
+import io.netty.handler.codec.quic.QuicConnectionCloseEvent;
 import io.netty.handler.codec.quic.QuicSslContext;
 import io.netty.handler.codec.quic.QuicSslContextBuilder;
 import io.netty.handler.codec.quic.QuicStreamChannel;
@@ -33,11 +35,14 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.mockserver.configuration.Configuration.configuration;
 
 /**
@@ -82,7 +87,7 @@ public class Http3StreamErrorIntegrationTest {
     public void shouldResetHttp3StreamInsteadOfResponding() throws Exception {
         // given - a QUIC/HTTP3 server whose handler resets the stream with H3_REQUEST_CANCELLED
         long errorCode = HttpError.StreamErrorCode.H3_REQUEST_CANCELLED.code();
-        int port = startStreamErrorServer(errorCode);
+        int port = startServer(writer -> writer.writeStreamError(errorCode));
 
         // when - send an HTTP/3 request and observe the stream outcome
         StreamOutcome outcome = sendHttp3Request(port, "/reset");
@@ -96,9 +101,26 @@ public class Http3StreamErrorIntegrationTest {
             outcome.resetOrClosedWithoutResponse(), is(true));
     }
 
+    @Test
+    public void shouldCloseQuicConnectionWithH3InternalErrorOnConnectionReset() throws Exception {
+        // given - a server whose handler applies the HttpError resetConnection seam
+        int port = startServer(Http3ResponseWriter::writeConnectionReset);
+
+        // when
+        CompletableFuture<QuicConnectionCloseEvent> closeEvent = new CompletableFuture<>();
+        StreamOutcome outcome = sendHttp3Request(port, "/reset", closeEvent);
+
+        // then - QUIC has no TCP reset, so the whole connection is closed by the peer with H3_INTERNAL_ERROR
+        QuicConnectionCloseEvent event = closeEvent.getNow(null);
+        assertThat("the client should see the peer close the QUIC connection", event, notNullValue());
+        assertThat(event.isApplicationClose(), is(true));
+        assertThat((long) event.error(), is(HttpError.StreamErrorCode.H3_INTERNAL_ERROR.code()));
+        assertThat(outcome.receivedHeaders, is(false));
+    }
+
     // ---- server ----
 
-    private int startStreamErrorServer(long errorCode) throws Exception {
+    private int startServer(Consumer<Http3ResponseWriter> action) throws Exception {
         serverGroup = new NioEventLoopGroup(1);
 
         KeyPair keyPair = generateKeyPair();
@@ -124,7 +146,7 @@ public class Http3StreamErrorIntegrationTest {
                     new ChannelInitializer<QuicStreamChannel>() {
                         @Override
                         protected void initChannel(QuicStreamChannel ch) {
-                            ch.pipeline().addLast(new StreamErrorTestHandler(errorCode));
+                            ch.pipeline().addLast(new StreamErrorTestHandler(action));
                         }
                     }
                 ))
@@ -137,19 +159,19 @@ public class Http3StreamErrorIntegrationTest {
     }
 
     /**
-     * Server handler that, on receiving the request headers, applies the HTTP/3 stream-error reset via
-     * the production {@link Http3ResponseWriter#writeStreamError(long)} seam.
+     * Server handler that, on receiving the request headers, applies a production {@link Http3ResponseWriter}
+     * seam ({@code writeStreamError} or {@code writeConnectionReset}).
      */
     private static class StreamErrorTestHandler extends Http3RequestStreamInboundHandler {
-        private final long errorCode;
+        private final Consumer<Http3ResponseWriter> action;
 
-        StreamErrorTestHandler(long errorCode) {
-            this.errorCode = errorCode;
+        StreamErrorTestHandler(Consumer<Http3ResponseWriter> action) {
+            this.action = action;
         }
 
         @Override
         protected void channelRead(ChannelHandlerContext ctx, Http3HeadersFrame headersFrame) {
-            new Http3ResponseWriter(CONFIGURATION, LOGGER, ctx).writeStreamError(errorCode);
+            action.accept(new Http3ResponseWriter(CONFIGURATION, LOGGER, ctx));
         }
 
         @Override
@@ -176,6 +198,10 @@ public class Http3StreamErrorIntegrationTest {
     }
 
     private StreamOutcome sendHttp3Request(int port, String path) throws Exception {
+        return sendHttp3Request(port, path, null);
+    }
+
+    private StreamOutcome sendHttp3Request(int port, String path, CompletableFuture<QuicConnectionCloseEvent> closeEvent) throws Exception {
         clientGroup = new NioEventLoopGroup(1);
 
         QuicSslContext clientSslContext = QuicSslContextBuilder.forClient()
@@ -198,7 +224,21 @@ public class Http3StreamErrorIntegrationTest {
             .channel();
 
         QuicChannel quicChannel = QuicChannel.newBootstrap(clientChannel)
-            .handler(new Http3ClientConnectionHandler())
+            .handler(new ChannelInitializer<QuicChannel>() {
+                @Override
+                protected void initChannel(QuicChannel ch) {
+                    ch.pipeline().addLast(new Http3ClientConnectionHandler());
+                    ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                        @Override
+                        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
+                            if (closeEvent != null && evt instanceof QuicConnectionCloseEvent) {
+                                closeEvent.complete((QuicConnectionCloseEvent) evt);
+                            }
+                            ctx.fireUserEventTriggered(evt);
+                        }
+                    });
+                }
+            })
             .remoteAddress(new InetSocketAddress("127.0.0.1", port))
             .connect()
             .get(15, TimeUnit.SECONDS);
@@ -251,6 +291,10 @@ public class Http3StreamErrorIntegrationTest {
 
         done.await(5, TimeUnit.SECONDS);
 
+        if (closeEvent != null) {
+            // wait for the peer's close before closing locally, which would end the wait for it
+            closeEvent.completeOnTimeout(null, 5, TimeUnit.SECONDS).join();
+        }
         quicChannel.close().sync();
         clientChannel.close().sync();
 

@@ -794,6 +794,10 @@ declarations are needed -- they resolve automatically.
   `QuicStreamChannel.shutdownOutput(code)`, sending a QUIC `RESET_STREAM` for just that stream; other
   streams on the connection are unaffected and no ByteBuf is allocated. (On HTTP/2 the same action
   sends `RST_STREAM`; on HTTP/1.1 it falls back to dropping the connection.)
+- **Connection reset (HttpError resetConnection)**: QUIC runs on UDP, so there is no TCP reset to
+  send. `Http3ResponseWriter.writeConnectionReset()`, reached through the same `StreamErrorWriter`
+  seam, closes the whole QUIC connection at once with `CONNECTION_CLOSE` carrying `H3_INTERNAL_ERROR`,
+  failing every stream on it. See netty-pipeline.md → *Connection Reset (HttpError resetConnection)*.
 - **Alt-Svc auto-discovery (RFC 7838)**: when `http3Port > 0`, responses served over
   the TCP (HTTP/1.1 and HTTP/2) paths include an `Alt-Svc: h3=":<port>"; ma=<maxAge>`
   header so HTTP/3-capable clients automatically upgrade to QUIC. The max-age is

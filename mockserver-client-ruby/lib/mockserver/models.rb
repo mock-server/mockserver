@@ -33,6 +33,7 @@ module MockServer
     'drop_connection'                => 'dropConnection',
     'response_bytes'                 => 'responseBytes',
     'stream_error'                   => 'streamError',
+    'reset_connection'               => 'resetConnection',
     'http_request'                   => 'httpRequest',
     'http_response'                  => 'httpResponse',
     'http_response_template'         => 'httpResponseTemplate',
@@ -1649,10 +1650,14 @@ module MockServer
     # stream_error: reset the matched request stream with this error code (HTTP/2 RST_STREAM /
     # HTTP/3 RESET_STREAM) instead of returning a response; HTTP/1.1 has no stream concept so this
     # falls back to dropping the connection. Takes precedence over drop_connection when both are set.
-    attr_accessor :drop_connection, :response_bytes, :stream_error, :delay, :primary
+    # reset_connection: reset the connection with a TCP RST so the client sees "connection reset by
+    # peer". Takes precedence over stream_error and drop_connection.
+    attr_accessor :drop_connection, :reset_connection, :response_bytes, :stream_error, :delay, :primary
 
-    def initialize(drop_connection: nil, response_bytes: nil, stream_error: nil, delay: nil, primary: nil)
+    def initialize(drop_connection: nil, response_bytes: nil, stream_error: nil, delay: nil, primary: nil,
+                   reset_connection: nil)
       @drop_connection = drop_connection
+      @reset_connection = reset_connection
       @response_bytes = response_bytes
       @stream_error = stream_error
       @delay = delay
@@ -1662,6 +1667,7 @@ module MockServer
     def to_h
       MockServer.strip_none({
         'dropConnection' => @drop_connection,
+        'resetConnection' => @reset_connection,
         'responseBytes'  => @response_bytes,
         'streamError'    => @stream_error,
         'delay'          => @delay&.to_h,
@@ -1674,6 +1680,7 @@ module MockServer
 
       new(
         drop_connection: data['dropConnection'],
+        reset_connection: data['resetConnection'],
         response_bytes:  data['responseBytes'],
         stream_error:    data['streamError'],
         delay:           Delay.from_hash(data['delay']),

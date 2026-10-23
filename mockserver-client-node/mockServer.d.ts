@@ -398,8 +398,10 @@ export interface HttpError {
   /** response delay */
   delay?: Delay;
   primary?: boolean;
-  /** drop the connection; ignored when streamError is set (streamError takes precedence) */
+  /** drop the connection with a clean close; ignored when resetConnection or streamError is set */
   dropConnection?: boolean;
+  /** reset the connection with a TCP RST (SO_LINGER 0) instead of returning a response, so the client sees connection reset by peer; over HTTP/2 the whole connection is reset, over HTTP/3 the QUIC connection is closed with H3_INTERNAL_ERROR; takes precedence over streamError and dropConnection */
+  resetConnection?: boolean;
   responseBytes?: string;
   /** reset the matched request stream with this error code (HTTP/2 RST_STREAM / HTTP/3 RESET_STREAM) instead of returning a response; HTTP/1.1 has no stream concept so this falls back to dropping the connection */
   streamError?: number;

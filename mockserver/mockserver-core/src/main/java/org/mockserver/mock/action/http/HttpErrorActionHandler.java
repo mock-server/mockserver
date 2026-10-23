@@ -13,19 +13,20 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.responsewriter.HttpExchangeEndedEvent;
 import org.mockserver.responsewriter.RawResponseBytesEvent;
 import org.mockserver.responsewriter.ResponseWrittenBeneathCodecEvent;
+import org.mockserver.socket.ConnectionReset;
 
 import java.util.concurrent.RejectedExecutionException;
 
 /**
  * Applies an {@link HttpError} action to the underlying Netty channel: writes raw response bytes,
  * resets the request stream (HTTP/2 RST_STREAM, written here; HTTP/3 RESET_STREAM, handled by the
- * HTTP/3 response writer seam in mockserver-netty), and/or drops the connection.
+ * HTTP/3 response writer seam in mockserver-netty), and/or drops or resets (TCP RST) the connection.
  * <p>
  * On HTTP/1.1 it fires {@link RawResponseBytesEvent} immediately before it writes raw bytes,
  * {@link ResponseWrittenBeneathCodecEvent} immediately after, then
  * {@link HttpExchangeEndedEvent#RAW_RESPONSE_WRITTEN} as their write completes and before any stream error or drop
  * is applied, and {@link HttpExchangeEndedEvent#INSTANCE} when nothing at all is written and the connection stays
- * open. A stream error or drop with no raw bytes fires nothing: the connection's state closes with it.
+ * open. A stream error, reset or drop with no raw bytes fires nothing: the connection's state closes with it.
  *
  * @author jamesdbloom
  */
@@ -86,10 +87,14 @@ public class HttpErrorActionHandler {
     }
 
     /**
-     * Apply the stream error or connection drop, returning true if either was applied, and run {@code applied} once
-     * the reset or close it issued has completed.
+     * Apply the connection reset, stream error or connection drop, returning true if one was applied, and run
+     * {@code applied} once the reset or close it issued has completed.
      */
     private boolean resetStreamOrDropConnection(HttpError httpError, HttpRequest request, ChannelHandlerContext ctx, Runnable applied) {
+        if (Boolean.TRUE.equals(httpError.getResetConnection())) {
+            runWhenDone(ConnectionReset.reset(ctx.channel()), applied);
+            return true;
+        }
         if (httpError.getStreamError() != null) {
             // reset only this stream, leaving other multiplexed streams on the connection alive.
             // HTTP/3 (QuicStreamChannel) is handled earlier by the StreamErrorWriter seam in the

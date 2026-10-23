@@ -419,6 +419,131 @@ $client-&gt;when(
         <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
     </div>
 </div>
+<button id="button_reset_connection_error" class="accordion">reset connection error</button>
+<div class="panel">
+    <p>Use <strong>resetConnection</strong> to answer a matched request with a TCP reset instead of a response. The client sees "connection reset by peer" (<code class="inline code">ECONNRESET</code>), where <strong>dropConnection</strong> closes the connection cleanly and the client sees the end of the stream. Use it to test how a client handles a server, proxy or load balancer that aborts a connection.</p>
+    <ul>
+        <li><strong>HTTP/1.1 and TLS</strong>: the connection is reset. Over TLS no TLS close message is sent first, just as with a real reset.</li>
+        <li><strong>HTTP/2</strong>: the whole TCP connection is reset, so every other request in progress on it fails too. To reset only the matched request use <strong>streamError</strong>, which sends an HTTP/2 <code class="inline code">RST_STREAM</code>.</li>
+        <li><strong>HTTP/3</strong>: QUIC runs over UDP, which has no reset, so the QUIC connection is closed at once with the <code class="inline code">H3_INTERNAL_ERROR</code> error code.</li>
+        <li><strong>Through MockServer's proxy</strong> (an HTTPS <code class="inline code">CONNECT</code> tunnel or SOCKS, over HTTP/1.1, TLS or HTTP/2): the client's own connection to MockServer is reset.</li>
+    </ul>
+    <p><strong>resetConnection</strong> takes precedence over <strong>streamError</strong> and <strong>dropConnection</strong>. If <strong>responseBytes</strong> are also set they are written first, but the reset discards anything the client has not yet received, so they may not arrive. Like every error action, it is not supported when MockServer is deployed as a WAR. A WireMock <code class="inline code">CONNECTION_RESET_BY_PEER</code> fault is imported as <strong>resetConnection</strong>.</p>
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withPath("/some/path")
+    )
+    .error(
+        error()
+            .withResetConnection(true)
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest" : {
+        "path" : "/some/path"
+    },
+    "httpError" : {
+        "resetConnection" : true
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver.client import MockServerClient
+from mockserver.models import HttpError, HttpRequest
+
+client = MockServerClient("localhost", 1080)
+client.when(
+    HttpRequest.request("/some/path")
+).error(
+    HttpError(reset_connection=True)
+)</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+client.when(
+    MockServer::HttpRequest.new(path: '/some/path')
+).error(
+    MockServer::HttpError.new(reset_connection: true)
+)</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
+
+client := mockserver.New("localhost", 1080)
+client.When(
+    mockserver.Request().Path("/some/path"),
+).RespondWithError(
+    mockserver.Error().ResetConnection(true),
+)</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using MockServer.Client;
+using MockServer.Client.Models;
+
+using var client = new MockServerClient("localhost", 1080);
+client.When(
+    HttpRequest.Request().WithPath("/some/path")
+).Error(
+    HttpError.Error().WithResetConnection(true)
+);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use mockserver_client::{ClientBuilder, HttpRequest, HttpError};
+
+let client = ClientBuilder::new("localhost", 1080).build().unwrap();
+client.when(HttpRequest::new().path("/some/path"))
+    .error(HttpError::new().reset_connection(true))
+    .unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">use MockServer\MockServerClient;
+use MockServer\HttpRequest;
+use MockServer\HttpError;
+
+$client = new MockServerClient('localhost', 1080);
+$client-&gt;when(
+    HttpRequest::request()
+        -&gt;path('/some/path')
+)-&gt;error(
+    HttpError::error()
+        -&gt;resetConnection(true)
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest" : {
+        "path" : "/some/path"
+    },
+    "httpError" : {
+        "resetConnection" : true
+    }
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 <button id="button_respond_before_body" class="accordion">respond before request body is received</button>
 <div class="panel">
     <p>Use <code class="inline code">respondBeforeBody</code> on the request matcher to dispatch the configured response before MockServer reads the request body. The matcher must not include a body matcher and only RESPONSE and ERROR actions are supported. The connection is always closed after the response (the inbound body has not been consumed, so reuse is unsafe), so any <code class="inline code">closeSocket</code> value is ignored, and the response carries a <code class="inline code">Connection: close</code> header unless you set <code class="inline code">keepAliveOverride</code> or <code class="inline code">suppressConnectionHeader</code>. MockServer keeps reading and discarding the rest of the body for up to 5 seconds after responding, so a client that sends its whole body before reading the response still receives it, provided it finishes sending within that time. HTTP/1.1 only — HTTP/2 connections fall through to the standard pipeline. This is useful for reproducing client behaviour when a server responds and closes mid-upload.</p>

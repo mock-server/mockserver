@@ -1624,6 +1624,7 @@ function actionFromExpectation(item: JsonListItem): ActionPrefill | null {
       type: 'error',
       errorState: {
         dropConnection: e['dropConnection'] === true,
+        resetConnection: e['resetConnection'] === true,
         responseBytesB64: typeof responseBytes === 'string' ? responseBytes : '',
         delayValue: typeof delay?.['value'] === 'number' ? (delay['value'] as number) : 0,
         delayUnit:
@@ -2411,6 +2412,7 @@ type DelayUnit = 'MILLISECONDS' | 'SECONDS' | 'MINUTES';
 
 interface ErrorState {
   dropConnection: boolean;
+  resetConnection: boolean;
   responseBytesB64: string;
   delayValue: number;
   delayUnit: DelayUnit;
@@ -2426,7 +2428,7 @@ function ErrorPanel({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       <Typography variant="body2" color="text.secondary">
-        Inject a fault for matched requests — close the TCP connection abruptly,
+        Inject a fault for matched requests — close or reset the TCP connection,
         and / or return arbitrary bytes that are NOT a valid HTTP response. Useful
         for testing client error handling.
       </Typography>
@@ -2440,7 +2442,21 @@ function ErrorPanel({
         }
         label={
           <Typography variant="body2">
-            Drop connection (RST the TCP socket)
+            Drop connection (clean close)
+          </Typography>
+        }
+      />
+      <FormControlLabel
+        control={
+          <Switch
+            size="small"
+            checked={state.resetConnection}
+            onChange={(e) => setState({ ...state, resetConnection: e.target.checked })}
+          />
+        }
+        label={
+          <Typography variant="body2">
+            Reset connection (TCP RST, client sees "connection reset by peer")
           </Typography>
         }
       />
@@ -4559,6 +4575,7 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
   });
   const [errorState, setErrorState] = useState<ErrorState>({
     dropConnection: true,
+    resetConnection: false,
     responseBytesB64: '',
     delayValue: 0,
     delayUnit: 'MILLISECONDS',
@@ -5862,7 +5879,7 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
                   case 'template': return (templateState.template.trim().length > 0 || (templateState.templateFile ?? '').trim().length > 0) ? templateParametersError(templateState.parameters) : 'Enter a response template or a template file path';
                   case 'error':
                     if (errorState.responseBytesB64.trim().length > 0 && !isValidBase64(errorState.responseBytesB64)) return 'Response bytes are not valid base64';
-                    return (errorState.dropConnection || errorState.responseBytesB64.trim().length > 0) ? null : 'Enable drop-connection or enter response bytes';
+                    return (errorState.dropConnection || errorState.resetConnection || errorState.responseBytesB64.trim().length > 0) ? null : 'Enable drop-connection or reset-connection, or enter response bytes';
                   case 'websocket': return null;
                   case 'sse':
                     if (!sseState.events.some((ev) => ev.data.trim().length > 0 || ev.event.trim().length > 0)) return 'Add at least one SSE event';

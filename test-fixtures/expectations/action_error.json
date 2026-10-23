@@ -9,6 +9,7 @@
       "value": 20
     },
     "dropConnection": false,
+    "resetConnection": false,
     "primary": true
   }
 }

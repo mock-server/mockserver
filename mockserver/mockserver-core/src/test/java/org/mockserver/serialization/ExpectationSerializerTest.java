@@ -41,6 +41,19 @@ import static org.junit.Assert.fail;
 public class ExpectationSerializerTest {
 
     @Test
+    public void shouldRoundTripResetConnectionThroughSchemaValidatedJson() {
+        // given
+        ExpectationSerializer serializer = new ExpectationSerializer(new MockServerLogger());
+
+        // when
+        Expectation expectation = serializer.deserialize("{ \"httpRequest\" : { \"path\" : \"/reset\" }, \"httpError\" : { \"resetConnection\" : true } }");
+
+        // then
+        assertThat(expectation.getHttpError().getResetConnection(), is(true));
+        assertThat(serializer.serialize(expectation), containsString("\"resetConnection\" : true"));
+    }
+
+    @Test
     public void shouldAllowSingleObjectForArray() {
         // given
         String requestBytes = ("{" + NEW_LINE +

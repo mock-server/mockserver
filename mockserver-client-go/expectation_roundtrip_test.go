@@ -377,6 +377,12 @@ func TestHttpErrorStreamErrorRoundTrip(t *testing.T) {
     }`)
 }
 
+func TestHttpErrorResetConnectionRoundTrip(t *testing.T) {
+	assertRoundTrip(t, `{
+      "httpError": {"resetConnection": true}
+    }`)
+}
+
 // TestKitchenSinkExpectationRoundTrip is one expectation exercising the request
 // matcher plus a broad set of auxiliary features (chaos, rateLimit, before/after
 // actions, steps, capture, cross-protocol scenarios, namespace, percentage,

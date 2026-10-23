@@ -74,6 +74,22 @@ public class HttpErrorDTOTest {
     }
 
     @Test
+    public void shouldRoundTripResetConnection() {
+        // given
+        HttpError httpError = new HttpError().withResetConnection(true);
+
+        // when
+        HttpErrorDTO httpErrorDTO = new HttpErrorDTO(httpError);
+        HttpError builtHttpError = httpErrorDTO.buildObject();
+
+        // then
+        assertThat(httpErrorDTO.getResetConnection(), is(true));
+        assertThat(builtHttpError.getResetConnection(), is(true));
+        assertThat(builtHttpError, is(httpError));
+        assertThat(new HttpErrorDTO(new HttpError()).buildObject().getResetConnection(), is(nullValue()));
+    }
+
+    @Test
     public void shouldLeaveStreamErrorNullByDefault() {
         assertThat(new HttpErrorDTO(new HttpError()).getStreamError(), is(nullValue()));
         assertThat(new HttpErrorDTO(new HttpError()).buildObject().getStreamError(), is(nullValue()));

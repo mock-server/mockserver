@@ -49,6 +49,9 @@ type HttpError struct {
 	Delay       *Delay `json:"delay,omitempty"`
 	// Primary marks this as the primary action when multiple are present.
 	Primary *bool `json:"primary,omitempty"`
+	// ResetConnection resets the connection with a TCP RST, so the client sees
+	// "connection reset by peer"; it takes precedence over StreamError and DropConnection.
+	ResetConnection *bool `json:"resetConnection,omitempty"`
 }
 
 // ForwardBuilder provides a fluent API for building HttpForward actions.
@@ -103,6 +106,12 @@ func Error() *ErrorBuilder {
 // DropConnection sets whether to drop the connection.
 func (b *ErrorBuilder) DropConnection(drop bool) *ErrorBuilder {
 	b.httpError.DropConnection = &drop
+	return b
+}
+
+// ResetConnection sets whether to reset the connection with a TCP RST.
+func (b *ErrorBuilder) ResetConnection(reset bool) *ErrorBuilder {
+	b.httpError.ResetConnection = &reset
 	return b
 }
 

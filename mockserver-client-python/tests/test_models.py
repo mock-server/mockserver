@@ -1340,6 +1340,12 @@ class TestHttpError:
         restored = HttpError.from_dict(original.to_dict())
         assert restored.stream_error == 7
 
+    def test_reset_connection_round_trip(self):
+        e = HttpError(reset_connection=True)
+        assert e.to_dict() == {"resetConnection": True}
+        assert HttpError.from_dict({"resetConnection": True}).reset_connection is True
+        assert "resetConnection" not in HttpError(drop_connection=True).to_dict()
+
 
 class TestHttpOverrideForwardedRequest:
     def test_factory(self):

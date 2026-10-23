@@ -124,6 +124,7 @@ These runnable shell scripts were extracted from the original reference markdown
 |------|-------------|
 | `random_bytes_error.sh` | Drop connection and return random bytes |
 | `drop_connection.sh` | Drop the connection without response |
+| `reset_connection.sh` | Reset the connection with a TCP reset (connection reset by peer) |
 
 ### forward_action/
 

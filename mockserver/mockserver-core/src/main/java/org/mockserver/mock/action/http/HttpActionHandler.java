@@ -4458,11 +4458,14 @@ public class HttpActionHandler {
     /**
      * Apply an {@link HttpError} action and emit its expectation-response log entry. When the error
      * carries a stream error and the active {@link ResponseWriter} can reset its own transport stream
-     * (HTTP/3 via {@link StreamErrorWriter}), the reset is delegated to it; otherwise the netty
-     * {@link HttpErrorActionHandler} resets the HTTP/2 stream (or drops the connection on HTTP/1.1).
+     * (HTTP/3 via {@link StreamErrorWriter}), the reset is delegated to it, as is a connection reset; otherwise
+     * the netty {@link HttpErrorActionHandler} resets the connection or HTTP/2 stream (or drops the connection
+     * on HTTP/1.1).
      */
     private void dispatchErrorAction(final HttpError httpError, final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx) {
-        if (httpError.getStreamError() != null && responseWriter instanceof StreamErrorWriter) {
+        if (Boolean.TRUE.equals(httpError.getResetConnection()) && responseWriter instanceof StreamErrorWriter) {
+            ((StreamErrorWriter) responseWriter).writeConnectionReset();
+        } else if (httpError.getStreamError() != null && responseWriter instanceof StreamErrorWriter) {
             ((StreamErrorWriter) responseWriter).writeStreamError(httpError.getStreamError());
         } else {
             getHttpErrorActionHandler().handle(httpError, request, ctx, responseWriter.respondingDirectly());

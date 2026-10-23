@@ -416,9 +416,10 @@ function httpClassCallback(w: Obj, indent: number, at: string): string {
 }
 
 function httpError(w: Obj, indent: number, at: string): string {
-  known(at, w, ['dropConnection', 'responseBytes', 'streamError', 'delay', 'primary']);
+  known(at, w, ['dropConnection', 'resetConnection', 'responseBytes', 'streamError', 'delay', 'primary']);
   const args: Arg[] = [];
   if ('dropConnection' in w) args.push({ name: 'drop_connection', value: scalar(w['dropConnection']) });
+  if ('resetConnection' in w) args.push({ name: 'reset_connection', value: scalar(w['resetConnection']) });
   if ('responseBytes' in w) args.push({ name: 'response_bytes', value: rb(String(w['responseBytes'])) });
   if ('streamError' in w) args.push({ name: 'stream_error', value: scalar(w['streamError']) });
   return ctor('HttpError', inherited(w, args, indent, at), indent);

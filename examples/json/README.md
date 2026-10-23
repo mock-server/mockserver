@@ -121,6 +121,7 @@ as the request body for MockServer's REST API (e.g. `PUT /mockserver/expectation
 |------|-------------|
 | `random_bytes_error.json` | Drop connection and return random bytes |
 | `drop_connection.json` | Drop the connection without response |
+| `reset_connection.json` | Reset the connection with a TCP reset (connection reset by peer) |
 
 ### forward_action/
 

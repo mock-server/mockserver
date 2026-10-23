@@ -573,11 +573,12 @@ function templateExpr(t: Record<string, unknown>, ctx: Ctx, indent: number, para
 function errorExpr(e: Record<string, unknown>, indent: number): string {
   const calls: string[] = [];
   if (typeof e['dropConnection'] === 'boolean') calls.push(`.drop_connection(${e['dropConnection']})`);
+  if (typeof e['resetConnection'] === 'boolean') calls.push(`.reset_connection(${e['resetConnection']})`);
   if (typeof e['responseBytes'] === 'string') calls.push(`.response_bytes(${rustStr(e['responseBytes'])})`);
   if (typeof e['streamError'] === 'number') calls.push(`.stream_error(${numLit(e['streamError'])})`);
   calls.push(...inheritedCalls(e));
   const base = (ind: number) => chain('HttpError::new()', calls, ind);
-  return withExtra('HttpError', base, e, ['dropConnection', 'responseBytes', 'streamError', 'delay', 'primary'], indent);
+  return withExtra('HttpError', base, e, ['dropConnection', 'resetConnection', 'responseBytes', 'streamError', 'delay', 'primary'], indent);
 }
 
 // ---------------------------------------------------------------------------

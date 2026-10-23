@@ -1350,6 +1350,13 @@ RSpec.describe 'MockServer models' do
       roundtrip = MockServer::HttpError.from_hash(original.to_h)
       expect(roundtrip.stream_error).to eq(7)
     end
+
+    it 'round-trips reset_connection to the resetConnection key' do
+      err = MockServer::HttpError.new(reset_connection: true)
+      expect(err.to_h).to eq({ 'resetConnection' => true })
+      expect(MockServer::HttpError.from_hash(err.to_h).reset_connection).to be(true)
+      expect(MockServer::HttpError.new(drop_connection: true).to_h).not_to have_key('resetConnection')
+    end
   end
 
   # -------------------------------------------------------------------

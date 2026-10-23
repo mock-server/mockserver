@@ -175,6 +175,7 @@ const STRUCTS: Record<string, FieldSpec[]> = {
   ],
   HttpError: [
     ['dropConnection', 'DropConnection', 'boolPtr'],
+    ['resetConnection', 'ResetConnection', 'boolPtr'],
     ['responseBytes', 'ResponseBytes', 'string'],
     ['streamError', 'StreamError', 'int64Ptr'],
     ['delay', 'Delay', 'struct:Delay'],

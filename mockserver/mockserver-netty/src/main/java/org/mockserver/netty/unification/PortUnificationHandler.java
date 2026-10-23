@@ -45,6 +45,7 @@ import org.mockserver.netty.connection.HttpTransportTimer;
 import org.mockserver.netty.connection.InboundConnectionActivity;
 import org.mockserver.netty.connection.WriteStallTimeoutHandler;
 import org.mockserver.netty.proxy.relay.LoopbackRelaySignalHandler;
+import org.mockserver.netty.proxy.relay.LoopbackResetRelay;
 import org.mockserver.netty.proxy.relay.RelayLoopbackAddresses;
 import org.mockserver.netty.mcp.McpStreamableHttpHandler;
 import org.mockserver.netty.grpc.GrpcToHttpRequestHandler;
@@ -839,6 +840,7 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
         InboundConnectionActivity.markLongLived(ctx.channel());
         if (RelayLoopbackAddresses.isRelayLoopback(ctx.channel())) {
             WriteStallTimeoutHandler.exempt(ctx.channel());
+            LoopbackResetRelay.relayResetsOf(ctx.channel());
         }
         String message = readMessage(msg);
         if (message.startsWith(PROXIED_SECURE)) {

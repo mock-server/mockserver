@@ -1409,6 +1409,38 @@ early-match and main paths). It first checks whether the active `ResponseWriter`
 no buffer, so there is nothing to leak. Resetting one stream leaves the rest of the multiplexed
 connection intact.
 
+## Connection Reset (HttpError resetConnection)
+
+**Outcome:** an `HttpError` with `resetConnection: true` answers a matched request with a TCP RST, so the
+client's read fails with `ECONNRESET` ("connection reset by peer") instead of seeing the clean end of stream a
+`dropConnection` gives. It takes precedence over `streamError` and `dropConnection`. Only `HttpError` dispatch
+reads the flag, so every other response runs exactly the code it ran before.
+
+```mermaid
+flowchart TD
+    A["HttpError with resetConnection"] --> D{"HttpActionHandler.dispatchErrorAction"}
+    D -->|"responseWriter is StreamErrorWriter\n(HTTP/3)"| H3["Http3ResponseWriter.writeConnectionReset()\nQuicChannel.close(H3_INTERNAL_ERROR)"]
+    D -->|"otherwise"| HEH["HttpErrorActionHandler\nConnectionReset.reset()"]
+    HEH --> P["Http2StreamChannel? use parent connection"]
+    P --> L["SO_LINGER 0"]
+    L --> C["close from pipeline.firstContext()\n(below SslHandler)"]
+    HEH -->|"connection is a tunnel's loopback\n(ConnectionReset.ON_RESET)"| R["LoopbackResetRelay\nresets the proxy client's connection"]
+```
+
+| Transport | What the client sees |
+|-----------|----------------------|
+| HTTP/1.1 | A TCP RST. |
+| TLS (HTTP/1.1 or HTTP/2) | A TCP RST with no TLS `close_notify` before it: the close starts at `pipeline().firstContext()`, so it reaches the head of the pipeline without passing through `SslHandler` (whose `close` would send `close_notify` first, which a client reads as a clean end of stream). |
+| HTTP/2 | The whole TCP connection is reset, failing every stream on it. On the multiplex pipeline the request is on an `Http2StreamChannel` child, where `SO_LINGER` is not a known option and `close()` would only send `RST_STREAM`, so the parent connection channel is reset instead (the same parent walk `NettyResponseWriter.forceReset` uses for `resetMidResponse`). The per-stream equivalent is `streamError` (`RST_STREAM`). |
+| HTTP/3 | QUIC runs on UDP and has no reset, so the QUIC connection is closed at once with `CONNECTION_CLOSE` carrying `H3_INTERNAL_ERROR` (`QuicChannel.close(true, 0x102, EMPTY_BUFFER)`), failing every stream on it. |
+| CONNECT / SOCKS tunnel | A TCP RST on the client's own connection, HTTP/1.1, TLS or h2. The request is served on MockServer's loopback leg, so the reset lands there, and the relay would otherwise end the client leg with its usual clean close (`closeOnFlush`, or a GOAWAY and per-stream `INTERNAL_ERROR` on h2), indistinguishable from `dropConnection`. So the reset is signalled explicitly: `PortUnificationHandler.switchToProxyConnected` sets `ConnectionReset.ON_RESET` on MockServer's end of each relay loopback (`LoopbackResetRelay.relayResetsOf`, which finds the tunnel's client channel through `RelayLoopbackAddresses`). `ConnectionReset.reset` runs it before resetting the loopback: it marks the client channel and resets it (`SO_LINGER 0` at once, the close on its event loop). `LoopbackResetRelay`, first on the relay's end of the loopback (ahead of its `SslHandler` and HTTP/2 handler), resets the client channel again in-loop as the loopback's reset is read, so no relay handler gets to close the client leg cleanly first. A loopback reset that was not asked for (MockServer behind the loopback failing) keeps the relay's usual GOAWAY / stream-reset handling. |
+| Servlet (WAR) | Not available: the WAR rejects every `HttpError` action as unsupported (`HttpState`), and a servlet container gives no access to the socket. |
+
+`responseBytes` set alongside `resetConnection` are written first and the reset is chained on that write, but a
+reset discards whatever the peer has not yet received, so the bytes may not arrive. When `SO_LINGER` cannot be set
+(a channel type without it) the connection is still closed, without the RST, and a WARN is logged. The WireMock
+and Mountebank importers map their `CONNECTION_RESET_BY_PEER` fault to `resetConnection`.
+
 ## Relay Connect Pattern
 
 When HTTP CONNECT or SOCKS tunneling is established, MockServer uses a **self-loopback relay** rather than connecting directly to the target. It does so on every connection, also one whose original destination is known (`REMOTE_SOCKET` set by `proxyRemoteHost`, the transparent-proxy resolver chain or a PROXY protocol header): `RelayConnectHandler` connects to MockServer's own port, never to `REMOTE_SOCKET`, because only MockServer answers the `PROXIED_` preamble. The loopback's `REMOTE_SOCKET` is then the CONNECT/SOCKS target, so requests in the tunnel that match no expectation are forwarded there, not to the client connection's original destination. Requests that are not in a tunnel still go to the original destination.
@@ -2943,7 +2975,7 @@ flowchart LR
 | `Http2MultiplexChildInitializer` | `mockserver-netty/.../netty/unification/Http2MultiplexChildInitializer.java` | Per-stream child initializer for the HTTP/2 multiplex pipeline; installs `ConnectionScopeHandler`, `Http2StreamTransportTimer` when metrics are enabled, optionally `GrpcBidiRouterHandler`, and the re-aggregating chain for every HTTP/2 stream |
 | `HttpRequestHandler` | `mockserver-netty/.../netty/HttpRequestHandler.java` | Main request dispatcher |
 | `NettyResponseWriter` | `mockserver-netty/.../netty/responsewriter/NettyResponseWriter.java` | Writes responses to Netty channels |
-| `HttpErrorActionHandler` | `mockserver-core/.../mock/action/http/HttpErrorActionHandler.java` | Applies an `HttpError` action: raw response bytes, HTTP/2 stream reset (RST_STREAM), and/or connection drop (also the HTTP/1.1 stream-error fallback) |
+| `HttpErrorActionHandler` | `mockserver-core/.../mock/action/http/HttpErrorActionHandler.java` | Applies an `HttpError` action: raw response bytes, connection reset (TCP RST), HTTP/2 stream reset (RST_STREAM), and/or connection drop (also the HTTP/1.1 stream-error fallback) |
 | `StreamErrorWriter` | `mockserver-core/.../responsewriter/StreamErrorWriter.java` | Transport-neutral seam for resetting the request stream; implemented by `Http3ResponseWriter` for the QUIC RESET_STREAM |
 | `HttpConnectHandler` | `mockserver-netty/.../netty/proxy/connect/HttpConnectHandler.java` | HTTP CONNECT tunnel handler |
 | `RelayConnectHandler` | `mockserver-netty/.../netty/proxy/relay/RelayConnectHandler.java` | Abstract relay establishment |

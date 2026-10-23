@@ -177,6 +177,13 @@ class MockServerKotlinDslTest {
     }
 
     @Test
+    fun `error resets the connection`() {
+        mockServer.expect { request { path = "/reset" } error { resetConnection = true } }
+
+        assertThrows<java.io.IOException> { send("GET", "/reset") }
+    }
+
+    @Test
     fun `verify checks counts and passes and fails as the requests dictate`() {
         mockServer.expect { request { path = "/v" } respond { status = 204 } }
         send("GET", "/v")

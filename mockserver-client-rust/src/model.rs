@@ -2882,6 +2882,21 @@ impl HttpError {
         self
     }
 
+    /// Reset the connection with a TCP RST instead of responding, so the client sees
+    /// "connection reset by peer" (sent as `resetConnection`). Takes precedence over
+    /// `stream_error` and `drop_connection`. Held in [`extra`](Self::extra) so adding it
+    /// changed no public field.
+    pub fn reset_connection(mut self, reset: bool) -> Self {
+        self.extra
+            .insert("resetConnection".into(), serde_json::Value::Bool(reset));
+        self
+    }
+
+    /// The `resetConnection` flag of this error, or `None` when it is not set.
+    pub fn reset_connection_value(&self) -> Option<bool> {
+        self.extra.get("resetConnection").and_then(|v| v.as_bool())
+    }
+
     /// Send arbitrary bytes then close.
     pub fn response_bytes(mut self, bytes: impl Into<String>) -> Self {
         self.response_bytes = Some(bytes.into());

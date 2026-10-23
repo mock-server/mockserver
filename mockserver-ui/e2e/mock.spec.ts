@@ -454,7 +454,7 @@ test('Advanced HTTP error / fault injection: drop connection really drops the so
   await openAdvanced(page);
   await page.getByLabel('Path', { exact: true }).fill(path);
   await chooseAction(page, 'Error / fault injection');
-  const drop = actionPanel(page).getByLabel('Drop connection (RST the TCP socket)');
+  const drop = actionPanel(page).getByLabel('Drop connection (clean close)');
   await expect(drop).toBeChecked(); // the default
   await drop.uncheck();
   await expect(registerButton(page)).toBeDisabled(); // needs drop or bytes

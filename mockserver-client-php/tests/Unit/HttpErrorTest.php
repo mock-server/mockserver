@@ -102,12 +102,25 @@ class HttpErrorTest extends TestCase
         );
     }
 
+    public function testMatchesTheSharedConnectionResetFixture(): void
+    {
+        $built = HttpError::error()->resetConnection(true)->toArray();
+
+        $this->assertSame(
+            SharedFixtures::sortedDeep(
+                SharedFixtures::action('action_error_connection_reset.json', 'httpError'),
+            ),
+            SharedFixtures::sortedDeep($built),
+        );
+    }
+
     public function testFieldsOmittedWhenNotSet(): void
     {
         $arr = HttpError::error()->dropConnection(true)->toArray();
 
         $this->assertArrayNotHasKey('primary', $arr);
         $this->assertArrayNotHasKey('streamError', $arr);
+        $this->assertArrayNotHasKey('resetConnection', $arr);
     }
 
     public function testDelayIsSerialised(): void

@@ -81,6 +81,20 @@ public class HttpErrorTest {
     }
 
     @Test
+    public void returnsResetConnection() {
+        assertThat(error().getResetConnection(), is(org.hamcrest.CoreMatchers.nullValue()));
+        assertThat(new HttpError().withResetConnection(true).getResetConnection(), is(true));
+    }
+
+    @Test
+    public void resetConnectionAffectsEqualsAndHashCode() {
+        assertThat(error().withResetConnection(true), is(error().withResetConnection(true)));
+        assertThat(error().withResetConnection(true), not(error().withDropConnection(true)));
+        assertThat(error().withResetConnection(true), not(error()));
+        assertThat(error().withResetConnection(true).hashCode(), is(error().withResetConnection(true).hashCode()));
+    }
+
+    @Test
     public void includesStreamErrorInToString() {
         assertThat(error().withStreamError(HttpError.StreamErrorCode.REFUSED_STREAM).toString().contains("\"streamError\" : 7"), is(true));
     }

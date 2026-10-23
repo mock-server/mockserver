@@ -33,6 +33,15 @@ public sealed class HttpError
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public long? StreamError { get; set; }
 
+    /// <summary>
+    /// Resets the connection with a TCP RST, so the client sees "connection reset by peer".
+    /// Takes precedence over <see cref="StreamError"/> and <see cref="DropConnection"/>. Mirrors the
+    /// server's <c>httpError.json</c> <c>resetConnection</c> property.
+    /// </summary>
+    [JsonPropertyName("resetConnection")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? ResetConnection { get; set; }
+
     /// <summary>Marks this as the primary action when the expectation configures more than one.</summary>
     [JsonPropertyName("primary")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

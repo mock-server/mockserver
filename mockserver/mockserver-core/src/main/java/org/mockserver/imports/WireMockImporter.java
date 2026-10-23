@@ -915,8 +915,8 @@ public class WireMockImporter {
 
     /**
      * EMPTY_RESPONSE, MALFORMED_RESPONSE_CHUNK and RANDOM_DATA_THEN_CLOSE are reproduced byte for byte on
-     * HTTP/1.1 (HTTP/2 has no raw-bytes path, so only the drop applies). CONNECTION_RESET_BY_PEER needs a TCP
-     * RST, which MockServer only produces through host-scoped TCP chaos, so it is approximated.
+     * HTTP/1.1 (HTTP/2 has no raw-bytes path, so only the drop applies). CONNECTION_RESET_BY_PEER resets the
+     * connection with a TCP RST, as WireMock does.
      */
     private HttpError mapFault(String fault, String locator, List<ImportWarning> warnings) {
         switch (fault.toUpperCase(Locale.ROOT)) {
@@ -932,9 +932,7 @@ public class WireMockImporter {
             case "RANDOM_DATA_THEN_CLOSE":
                 return HttpError.error().withResponseBytes(WIREMOCK_GARBAGE.clone()).withDropConnection(true);
             case "CONNECTION_RESET_BY_PEER":
-                warnings.add(new ImportWarning(locator, "response.fault." + fault,
-                    "approximated as a dropped connection (a FIN rather than a TCP RST); for a true reset register a TCP chaos profile with resetPeer for the host"));
-                return HttpError.error().withDropConnection(true);
+                return HttpError.error().withResetConnection(true);
             default:
                 warnings.add(new ImportWarning(locator, "response.fault." + fault,
                     "unknown fault type — approximated as a dropped connection"));

@@ -244,7 +244,9 @@ classDiagram
     }
     class HttpError {
         +dropConnection: Boolean
+        +resetConnection: Boolean
         +responseBytes: byte[]
+        +streamError: Long
     }
 
     Action <|-- HttpResponse

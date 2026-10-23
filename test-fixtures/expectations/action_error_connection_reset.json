@@ -1,0 +1,8 @@
+{
+  "httpRequest": {
+    "path": "/err/connection-reset"
+  },
+  "httpError": {
+    "resetConnection": true
+  }
+}

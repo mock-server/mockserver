@@ -149,6 +149,11 @@ export const errorLiteral: Expectation = {
     httpError: { responseBytes: 'SGVsbG8gV29ybGQh', delay: { timeUnit: 'MILLISECONDS', value: 20 } }
 };
 
+export const errorConnectionResetLiteral: Expectation = {
+    httpRequest: { path: '/err/connection-reset' },
+    httpError: { resetConnection: true }
+};
+
 export const sseLiteral: Expectation = {
     httpRequest: { path: '/events' },
     httpSseResponse: {

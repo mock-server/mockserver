@@ -491,9 +491,10 @@ class PyBuilder {
   private error(v: unknown, indent: number, at: string): string {
     this.use('HttpError');
     const o = v as Json;
-    this.known(at, o, ['dropConnection', 'responseBytes', 'streamError', 'delay', 'primary']);
+    this.known(at, o, ['dropConnection', 'resetConnection', 'responseBytes', 'streamError', 'delay', 'primary']);
     const kw: Kw[] = [];
     if (o['dropConnection'] != null) kw.push(['drop_connection', pyBool(o['dropConnection'])]);
+    if (o['resetConnection'] != null) kw.push(['reset_connection', pyBool(o['resetConnection'])]);
     if (o['responseBytes'] != null) kw.push(['response_bytes', pyStr(o['responseBytes'])]);
     if (o['streamError'] != null) kw.push(['stream_error', pyNum(o['streamError'])]);
     return renderCall('HttpError', this.inherited(o, kw, at), indent);

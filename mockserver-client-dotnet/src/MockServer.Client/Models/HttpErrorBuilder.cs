@@ -13,6 +13,16 @@ public sealed class HttpErrorBuilder
         return this;
     }
 
+    /// <summary>
+    /// Resets the connection with a TCP RST instead of returning a response. Takes precedence over
+    /// <c>WithStreamError</c> and <c>WithDropConnection</c>.
+    /// </summary>
+    public HttpErrorBuilder WithResetConnection(bool reset = true)
+    {
+        _error.ResetConnection = reset;
+        return this;
+    }
+
     public HttpErrorBuilder WithResponseBytes(string base64Bytes)
     {
         _error.ResponseBytes = base64Bytes;

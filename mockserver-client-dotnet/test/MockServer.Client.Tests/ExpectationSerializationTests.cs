@@ -103,6 +103,23 @@ public class ExpectationSerializationTests
     }
 
     [Fact]
+    public void Expectation_WithResetConnectionError_RoundTrips()
+    {
+        var expectation = new Expectation
+        {
+            HttpRequest = HttpRequest.Request().WithPath("/reset").Build(),
+            HttpError = HttpError.Error().WithResetConnection().Build()
+        };
+
+        var json = JsonSerializer.Serialize(expectation, JsonOptions);
+        var err = JsonDocument.Parse(json).RootElement.GetProperty("httpError");
+
+        err.GetProperty("resetConnection").GetBoolean().Should().BeTrue();
+        err.TryGetProperty("dropConnection", out _).Should().BeFalse();
+        JsonSerializer.Deserialize<Expectation>(json, JsonOptions)!.HttpError!.ResetConnection.Should().BeTrue();
+    }
+
+    [Fact]
     public void Expectation_Array_SerializesCorrectly()
     {
         var expectations = new[]

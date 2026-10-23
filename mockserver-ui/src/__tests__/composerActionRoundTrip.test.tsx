@@ -66,6 +66,10 @@ const CASES: [string, Record<string, unknown>][] = [
     httpRequest: http('/error'),
     httpError: { dropConnection: true, delay: { timeUnit: 'DAYS', value: 1 }, primary: true },
   }],
+  ['httpError-resetConnection', {
+    httpRequest: http('/reset'),
+    httpError: { resetConnection: true },
+  }],
   ['httpWebSocketResponse', {
     httpRequest: http('/ws'),
     httpWebSocketResponse: { messages: [{ text: 'hi', delay }], delay, primary: true },

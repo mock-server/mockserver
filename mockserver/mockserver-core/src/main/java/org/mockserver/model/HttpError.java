@@ -12,6 +12,7 @@ import java.util.Objects;
 public class HttpError extends Action<HttpError> {
     private int hashCode;
     private Boolean dropConnection;
+    private Boolean resetConnection;
     private byte[] responseBytes;
     private Long streamError;
 
@@ -92,7 +93,8 @@ public class HttpError extends Action<HttpError> {
     /**
      * Forces the connection to be dropped without any response being returned.
      * <p>
-     * Precedence: when {@link #withStreamError(long) streamError} is also set it takes precedence and
+     * Precedence: when {@link #withResetConnection(Boolean) resetConnection} is set it takes precedence. When
+     * {@link #withStreamError(long) streamError} is also set it takes precedence and
      * {@code dropConnection} is ignored (the matched request stream is reset instead of the whole
      * connection being dropped). Note that on HTTP/1.1 a streamError has no stream to reset and itself
      * falls back to dropping the connection, so the observable behaviour is the same there.
@@ -107,6 +109,30 @@ public class HttpError extends Action<HttpError> {
 
     public Boolean getDropConnection() {
         return dropConnection;
+    }
+
+    /**
+     * Resets the connection with a TCP RST (the socket is closed with {@code SO_LINGER} 0) instead of
+     * returning a response, so the client sees "connection reset by peer" ({@code ECONNRESET}) rather than
+     * the clean close of {@link #withDropConnection(Boolean) dropConnection}. Over TLS the reset is sent
+     * without a TLS {@code close_notify}. Over HTTP/2 the whole TCP connection is reset, failing every
+     * stream on it (use {@link #withStreamError(long) streamError} to reset one stream). Over HTTP/3, which
+     * runs on UDP and has no TCP reset, the QUIC connection is closed at once with {@code H3_INTERNAL_ERROR}.
+     * <p>
+     * Precedence: takes precedence over {@code streamError} and {@code dropConnection}. Any
+     * {@link #withResponseBytes(byte[]) responseBytes} are written first, but a reset discards whatever the
+     * client has not yet received, so they may never arrive.
+     *
+     * @param resetConnection if true the connection is reset without any response being returned
+     */
+    public HttpError withResetConnection(Boolean resetConnection) {
+        this.resetConnection = resetConnection;
+        this.hashCode = 0;
+        return this;
+    }
+
+    public Boolean getResetConnection() {
+        return resetConnection;
     }
 
     /**
@@ -196,6 +222,7 @@ public class HttpError extends Action<HttpError> {
         }
         HttpError httpError = (HttpError) o;
         return Objects.equals(dropConnection, httpError.dropConnection) &&
+            Objects.equals(resetConnection, httpError.resetConnection) &&
             Objects.equals(streamError, httpError.streamError) &&
             Arrays.equals(responseBytes, httpError.responseBytes);
     }
@@ -203,7 +230,7 @@ public class HttpError extends Action<HttpError> {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            int result = Objects.hash(super.hashCode(), dropConnection, streamError);
+            int result = Objects.hash(super.hashCode(), dropConnection, resetConnection, streamError);
             hashCode = 31 * result + Arrays.hashCode(responseBytes);
         }
         return hashCode;

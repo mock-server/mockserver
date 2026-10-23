@@ -12,11 +12,12 @@ namespace MockServer;
  *       ->dropConnection(true)
  *       ->responseBytes(base64_encode("garbage"));
  *
- * Wire keys: dropConnection, responseBytes, streamError, primary.
+ * Wire keys: dropConnection, resetConnection, responseBytes, streamError, primary.
  */
 class HttpError implements \JsonSerializable
 {
     private ?bool $dropConnection = null;
+    private ?bool $resetConnection = null;
     private ?string $responseBytes = null;
     private ?int $streamError = null;
     private ?bool $primary = null;
@@ -33,6 +34,17 @@ class HttpError implements \JsonSerializable
     public function dropConnection(bool $dropConnection): self
     {
         $this->dropConnection = $dropConnection;
+        return $this;
+    }
+
+    /**
+     * Reset the connection with a TCP RST instead of returning a response, so the
+     * client sees "connection reset by peer". Takes precedence over streamError
+     * and dropConnection.
+     */
+    public function resetConnection(bool $resetConnection): self
+    {
+        $this->resetConnection = $resetConnection;
         return $this;
     }
 
@@ -98,6 +110,9 @@ class HttpError implements \JsonSerializable
 
         if ($this->dropConnection !== null) {
             $data['dropConnection'] = $this->dropConnection;
+        }
+        if ($this->resetConnection !== null) {
+            $data['resetConnection'] = $this->resetConnection;
         }
         if ($this->responseBytes !== null) {
             $data['responseBytes'] = $this->responseBytes;

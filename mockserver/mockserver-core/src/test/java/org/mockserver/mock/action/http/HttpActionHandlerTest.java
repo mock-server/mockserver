@@ -1061,6 +1061,38 @@ public class HttpActionHandlerTest {
         verify(mockHttpErrorActionHandler).handle(eq(error), eq(request), eq(mockChannelHandlerContext), any());
     }
 
+    @Test
+    public void shouldDelegateConnectionResetToStreamErrorWriterAheadOfStreamError() {
+        // given - resetConnection and a stream error on the HTTP/3-style writer: the connection reset wins
+        HttpError error = error().withResetConnection(true).withStreamError(HttpError.StreamErrorCode.REFUSED_STREAM);
+        expectation = new Expectation(request).thenError(error);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        StreamErrorAwareResponseWriter streamErrorWriter = mock(StreamErrorAwareResponseWriter.class);
+
+        // when
+        actionHandler.processAction(request, streamErrorWriter, mock(ChannelHandlerContext.class), new HashSet<>(), false, true);
+
+        // then
+        verify(streamErrorWriter).writeConnectionReset();
+        verify(streamErrorWriter, never()).writeStreamError(anyLong());
+        verify(mockHttpErrorActionHandler, never()).handle(any(HttpError.class), any(HttpRequest.class), any(ChannelHandlerContext.class), any());
+    }
+
+    @Test
+    public void shouldHandleConnectionResetViaHttpErrorActionHandlerWhenResponseWriterCannotResetStream() {
+        // given
+        HttpError error = error().withResetConnection(true);
+        expectation = new Expectation(request).thenError(error);
+        when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(expectation);
+        ChannelHandlerContext mockChannelHandlerContext = mock(ChannelHandlerContext.class);
+
+        // when
+        actionHandler.processAction(request, mock(ResponseWriter.class), mockChannelHandlerContext, new HashSet<>(), false, true);
+
+        // then
+        verify(mockHttpErrorActionHandler).handle(eq(error), eq(request), eq(mockChannelHandlerContext), any());
+    }
+
     /**
      * Test double that is both a {@link ResponseWriter} and a {@link StreamErrorWriter}, so Mockito can
      * mock the HTTP/3-style writer used to verify {@code dispatchErrorAction} delegation.

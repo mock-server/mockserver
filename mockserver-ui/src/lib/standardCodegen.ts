@@ -216,6 +216,7 @@ export function templateParametersText(parameters: unknown): string {
 
 export interface StandardErrorState {
   dropConnection: boolean;
+  resetConnection?: boolean;
   responseBytesB64: string;
   delayValue: number;
   delayUnit: 'MILLISECONDS' | 'SECONDS' | 'MINUTES';
@@ -1523,6 +1524,7 @@ export function buildExpectationJson(
       if (action.error) {
         const payload: Record<string, unknown> = {};
         if (action.error.dropConnection) payload['dropConnection'] = true;
+        if (action.error.resetConnection) payload['resetConnection'] = true;
         if (action.error.responseBytesB64.trim()) payload['responseBytes'] = action.error.responseBytesB64.trim();
         if (action.error.delayValue > 0) {
           payload['delay'] = { timeUnit: action.error.delayUnit, value: action.error.delayValue };
@@ -3106,6 +3108,7 @@ function actionToJava(action: StandardActionPayload, w: JavaWireAction): string 
       if (!e) return '.error(error())';
       const lines = ['.error(', '    error()'];
       if (e.dropConnection) lines.push('        .withDropConnection(true)');
+      if (e.resetConnection) lines.push('        .withResetConnection(true)');
       if (e.responseBytesB64.trim()) lines.push(`        .withResponseBytes(Base64.getDecoder().decode("${escapeJava(e.responseBytesB64.trim())}"))`);
       const errorDelay = javaDelayArgs(w.wire['delay']);
       if (errorDelay) {

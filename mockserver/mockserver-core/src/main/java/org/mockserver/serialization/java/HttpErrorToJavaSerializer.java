@@ -25,6 +25,9 @@ public class HttpErrorToJavaSerializer implements ToJavaSerializer<HttpError> {
             if (httpError.getDropConnection() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withDropConnection(").append(httpError.getDropConnection()).append(")");
             }
+            if (httpError.getResetConnection() != null) {
+                appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withResetConnection(").append(httpError.getResetConnection()).append(")");
+            }
             if (httpError.getResponseBytes() != null) {
                 appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output).append(".withResponseBytes(new Base64Converter().base64StringToBytes(\"").append(base64Converter.bytesToBase64String(httpError.getResponseBytes())).append("\"))");
             }

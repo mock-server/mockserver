@@ -35,6 +35,15 @@ public class HttpErrorToJavaSerializerTest {
     }
 
     @Test
+    public void shouldSerializeResetConnectionAsJava() {
+        assertThat(
+            new HttpErrorToJavaSerializer().serialize(1, new HttpError().withResetConnection(true))
+        , is(NEW_LINE +
+                "        error()" + NEW_LINE +
+                "                .withResetConnection(true)"));
+    }
+
+    @Test
     public void shouldSerializeStreamErrorAsJava() {
         assertThat(
             new HttpErrorToJavaSerializer().serialize(1,

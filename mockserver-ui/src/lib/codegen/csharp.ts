@@ -448,10 +448,11 @@ function renderForward(fwd: Record<string, unknown>, indent: number, ctx: Ctx): 
 }
 
 function renderError(err: Record<string, unknown>, indent: number, ctx: Ctx): string {
-  const known = new Set(['dropConnection', 'responseBytes', 'delay']);
+  const known = new Set(['dropConnection', 'resetConnection', 'responseBytes', 'delay']);
   if (Object.keys(err).some((k) => !known.has(k))) return rawTyped('HttpError', err, ctx);
   const calls: string[] = [];
   if (err['dropConnection'] === true) calls.push('.WithDropConnection(true)');
+  if (typeof err['resetConnection'] === 'boolean') calls.push(`.WithResetConnection(${err['resetConnection']})`);
   if (typeof err['responseBytes'] === 'string') calls.push(`.WithResponseBytes(${csStr(err['responseBytes'] as string)})`);
   if (isObject(err['delay'])) calls.push(delayCall(err['delay'] as Record<string, unknown>));
   calls.push('.Build()');

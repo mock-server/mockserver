@@ -63,7 +63,7 @@ export const FULL_ACTIONS: Record<string, Wire> = {
     responseModifier: { headers: { remove: ['x-template-gone'] } },
     parameters: { greeting: 'hello', names: ['ann', 'bob'], limits: { max: 5, none: null } },
   },
-  httpError: { dropConnection: false, responseBytes: 'AQID', streamError: 8, delay: DELAY, primary: true },
+  httpError: { dropConnection: false, resetConnection: true, responseBytes: 'AQID', streamError: 8, delay: DELAY, primary: true },
   httpForwardWithFallback: {
     httpForward: { host: 'fallback.example.com', port: 4401, scheme: 'HTTP', primary: false },
     fallbackResponse: { statusCode: 503, body: 'fallback body', trailers: { 'x-fallback': ['fallback-trailer'] } },

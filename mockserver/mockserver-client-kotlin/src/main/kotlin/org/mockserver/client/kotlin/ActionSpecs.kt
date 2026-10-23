@@ -107,6 +107,9 @@ public class ErrorSpec internal constructor() {
     /** Close the connection. */
     public var dropConnection: Boolean? = null
 
+    /** Reset the connection with a TCP RST, so the client sees "connection reset by peer". */
+    public var resetConnection: Boolean? = null
+
     /** Raw bytes to write to the connection before any close, such as a malformed response. */
     public var responseBytes: ByteArray? = null
 
@@ -116,6 +119,7 @@ public class ErrorSpec internal constructor() {
     internal fun build(): HttpError {
         val error = HttpError.error()
         dropConnection?.let { error.withDropConnection(it) }
+        resetConnection?.let { error.withResetConnection(it) }
         responseBytes?.let { error.withResponseBytes(it) }
         delay?.let { error.withDelay(it.toDelay()) }
         return error
