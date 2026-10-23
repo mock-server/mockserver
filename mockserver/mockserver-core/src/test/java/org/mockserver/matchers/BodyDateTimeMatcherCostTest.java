@@ -1,8 +1,8 @@
 package org.mockserver.matchers;
 
-import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.Test;
+import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.xml.XPathEvaluator;
 
@@ -26,13 +26,15 @@ public class BodyDateTimeMatcherCostTest {
     private static final String XPATH = "/order/item[@price > 5]";
     private static final String XML = "<order id=\"7\"><created>2026-10-21T15:00:00Z</created><item price=\"3\">a</item><item price=\"8\">b</item></order>";
     private static final int OPERATIONS = 20_000;
-    // the least of several measurements: background work on a loaded JVM can only add bytes, never remove the
-    // code's own, so the minimum is the code's cost and an injected allocation still fails every attempt
-    private static final int ATTEMPTS = 3;
+    // the least of several interleaved measurements per arm: background work on a loaded JVM can only add bytes,
+    // never remove the code's own, so the minimum is the code's cost and an injected allocation still fails
+    private static final int ATTEMPTS = 5;
     private static final long TOLERANCE_BYTES = 8;
     private static volatile Object sink;
 
-    private final MockServerLogger mockServerLogger = new MockServerLogger(BodyDateTimeMatcherCostTest.class);
+    // no XPath timeout, so the evaluation runs on this thread: the pool hand-off it otherwise makes allocates a
+    // varying few bytes per call (a queue node, a wait node) depending on thread scheduling, in both arms alike
+    private final MockServerLogger mockServerLogger = new MockServerLogger(Configuration.configuration().xpathMatchingTimeoutMillis(0L), BodyDateTimeMatcherCostTest.class);
 
     @Test
     public void shouldMatchJsonPathWithoutADateTimeAtTheCostOfTheJsonPathReadAlone() {
@@ -57,7 +59,7 @@ public class BodyDateTimeMatcherCostTest {
         assertSameCost(
             () -> matcher.matches(null, JSON, parsedBodyCache),
             () -> {
-                Configuration configuration = Configuration.defaultConfiguration();
+                com.jayway.jsonpath.Configuration configuration = com.jayway.jsonpath.Configuration.defaultConfiguration();
                 sink = jsonPath.read(parsedBodyCache.jsonPathDocument(JSON, configuration.jsonProvider()), configuration);
                 return true;
             }
@@ -85,24 +87,25 @@ public class BodyDateTimeMatcherCostTest {
             perOperation(matcher);
             perOperation(library);
         }
-        long withMatcher = perOperation(matcher);
-        long withLibrary = perOperation(library);
+        long withMatcher = Long.MAX_VALUE;
+        long withLibrary = Long.MAX_VALUE;
+        for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
+            withMatcher = Math.min(withMatcher, perOperation(matcher));
+            withLibrary = Math.min(withLibrary, perOperation(library));
+        }
         // one-sided: under C2 the matcher's inlining can let escape analysis remove a few bytes the bare call keeps
         assertThat("bytes per match through the matcher (" + withMatcher + ") beyond the library call alone (" + withLibrary + ")", withMatcher - withLibrary, lessThan(TOLERANCE_BYTES));
     }
 
     private static long perOperation(BooleanSupplier operation) {
-        long least = Long.MAX_VALUE;
-        for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
-            long before = allocatedBytes();
-            for (int i = 0; i < OPERATIONS; i++) {
-                if (!operation.getAsBoolean()) {
-                    throw new AssertionError("expected a match");
-                }
+        long before = allocatedBytes();
+        for (int i = 0; i < OPERATIONS; i++) {
+            if (!operation.getAsBoolean()) {
+                throw new AssertionError("expected a match");
             }
-            least = Math.min(least, (allocatedBytes() - before) / OPERATIONS);
         }
-        assertThat(least > 0, is(true));
-        return least;
+        long perOperation = (allocatedBytes() - before) / OPERATIONS;
+        assertThat(perOperation > 0, is(true));
+        return perOperation;
     }
 }
