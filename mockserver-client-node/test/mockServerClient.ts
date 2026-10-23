@@ -1,4 +1,4 @@
-import {mockServerClient, ClockStatus, ExpectationFilter, GrpcService, Har, MockServerClient, ScenarioHandle, ScenarioList, ScenarioState, llm as llmFactory, mcpMock, a2aMock} from '../index';
+import {mockServerClient, ClockStatus, ExpectationFilter, RecordedExpectationsOptions, GrpcService, Har, MockServerClient, ScenarioHandle, ScenarioList, ScenarioState, llm as llmFactory, mcpMock, a2aMock} from '../index';
 import {RequestResponse} from '../mockServerClient';
 import {ChaosExperiment, CrossProtocolScenario, Expectation, ExpectationStep, GenerateLoadScenarioFromOpenAPIRequest, GenerateLoadScenarioFromRecordingRequest, HttpChaosProfile, HttpOverrideForwardedRequest, HttpRequest, HttpResponse, LoadScenario, LoadScenarioEntry, LoadScenarioGenerationResult, LoadScenarioList, LoadScenarioRegistration, LoadScenarioReport, LoadScenarioStartResult, LoadScenarioStopResult, RequestDefinition, SloCriteria, SloVerdict, RequestExplanation, ExplainedExpectation, DebugMismatchResult, ExplainUnmatchedResult, ArrivalForwardFailure} from '../mockServer';
 
@@ -312,6 +312,9 @@ async function test() {
     filtered = await client.retrieveActiveExpectationsByMetadataKey('owner');
     filtered = await client.retrieveUnmatchedExpectations();
     filtered = await client.retrieveRecordedExpectations(null, 0, 25);
+    const recordedOptions: RecordedExpectationsOptions = {repeatsAsScenarios: true, captureHeaders: ['X-Tenant'], extractBodiesLargerThan: 1024};
+    filtered = await client.retrieveRecordedExpectations('/jobs/.*', recordedOptions);
+    filtered = await client.retrieveRecordedExpectations(null, {consolidate: true, parameterize: true, captureHeaders: []});
     requestResponse = await client.clear(null, {metadataKey: 'owner', metadataValue: 'team-a'});
     requestResponse = await client.clearWithFilter('some/path', {metadataJsonPath: '$.owner'});
     requestResponse = await client.clearByMetadata('tags', ['smoke', 'checkout']);

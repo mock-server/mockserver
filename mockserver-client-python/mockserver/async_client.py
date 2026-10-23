@@ -33,6 +33,7 @@ from mockserver.models import (
     LoadScenario,
     OpenAPIExpectation,
     Ports,
+    RecordedExpectationsOptions,
     RequestExplanation,
     TimeToLive,
     Times,
@@ -1383,10 +1384,19 @@ class AsyncMockServerClient:
         request: HttpRequest | None = None,
         offset: int | None = None,
         limit: int | None = None,
+        options: RecordedExpectationsOptions | None = None,
     ) -> list[Expectation]:
         """Retrieve the recorded expectations matching ``request`` (all when omitted),
-        optionally one page of them, in the order the requests were received."""
+        optionally one page of them, in the order the requests were received.
+
+        ``options`` shapes the returned expectations, for example replaying a request
+        recorded with different responses in order (see :class:`RecordedExpectationsOptions`).
+        """
+        if options is not None and not isinstance(options, RecordedExpectationsOptions):
+            raise ValueError(f"options must be a RecordedExpectationsOptions, got {options!r}")
         query_params = {"type": "RECORDED_EXPECTATIONS", "format": "JSON"}
+        if options is not None:
+            query_params.update(options.to_query_params())
         query_params.update(
             ExpectationFilter().with_offset(offset).with_limit(limit).to_query_params()
         )

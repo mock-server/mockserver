@@ -307,6 +307,7 @@ $logs = $client->retrieveLogMessages();
 
 ```php
 use MockServer\ExpectationFilter;
+use MockServer\RecordedExpectationsOptions;
 
 // Attach metadata (any JSON values) to an expectation
 $client->when(HttpRequest::request()->path('/checkout'))
@@ -324,6 +325,11 @@ $page = $client->retrieveActiveExpectationsWithFilter(null, ExpectationFilter::e
     ->withLimit(10)
     ->withOffset(0));
 $recorded = $client->retrieveRecordedExpectationsPage(null, 0, 50);
+// Replay changing responses in order, keep only some request headers, move large bodies into files
+$shaped = $client->retrieveRecordedExpectationsWithOptions(null, RecordedExpectationsOptions::recordedExpectationsOptions()
+    ->withRepeatsAsScenarios()
+    ->withCaptureHeaders('X-Tenant')
+    ->withExtractBodiesLargerThan(1024));
 
 // Clear only the matching expectations (the event log is kept)
 $client->clearByMetadata('owner', 'team-a');

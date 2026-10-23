@@ -99,6 +99,9 @@ var mine = client.RetrieveActiveExpectationsByMetadata("owner", "team-a");
 var unused = client.RetrieveUnmatchedExpectations();
 var page = client.RetrieveActiveExpectations(null, ExpectationFilter.Filter().WithOffset(0).WithLimit(50));
 var recorded = client.RetrieveRecordedExpectations(null, offset: 0, limit: 50);
+// replay changing responses in order, keep only some request headers, move large bodies into files
+var shaped = client.RetrieveRecordedExpectations(null, RecordedExpectationsOptions.Options()
+    .WithRepeatsAsScenarios().WithCaptureHeaders("X-Tenant").WithExtractBodiesLargerThan(1024));
 
 client.ClearByMetadata("owner", "team-a");      // a string is compared as text, any other value as JSON
 client.ClearByMetadataKey("ticket");            // any value

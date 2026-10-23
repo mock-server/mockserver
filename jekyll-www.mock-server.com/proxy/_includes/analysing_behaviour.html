@@ -49,11 +49,13 @@ curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTAT
     <li><strong>extractBodiesLargerThan=1024</strong> &mdash; writes each recorded response body larger than this many bytes to a file and returns a <a href="/mock_server/creating_expectations.html#button_response_file_body">file body</a> that points at it, so a recording with large payloads stays small and readable. Files are written only to the directory set by the <a href="/mock_server/configuration_properties.html#button_configuration_recorded_body_files_directory"><code class="inline code">recordedBodyFilesDirectory</code></a> configuration property; the retrieve call cannot choose the directory, and it is rejected with a 400 when the property is not set. Each file is named after a hash of its contents (for example <code class="inline code">3f2a&hellip;9c.json</code>), so the same body is stored once, and an existing file with that name is reused or replaced. Files are readable only by the user MockServer runs as, and MockServer never deletes them, not even on reset, so clear the directory yourself when you no longer need them. One retrieve writes at most 1,000 files and 256 MB, and stops starting new files after <code class="inline code">maxFutureTimeout</code> (90 seconds by default); bodies beyond that stay in the expectations. Because it writes files, a retrieve with this option needs a role that may change expectations when <a href="/mock_server/configuration_properties.html#button_configuration_control_plane_authorization">control-plane authorization</a> is on.</li>
 </ul>
 
-<pre class="prettyprint lang-bash code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&amp;repeatsAsScenarios=true&amp;captureHeaders=X-Tenant&amp;extractBodiesLargerThan=1024"</code></pre>
+<p>Every client library takes the same options when retrieving recorded expectations:</p>
 
-<p>From Java, pass the same options to <code class="inline code">retrieveRecordedExpectations</code>:</p>
-
-<pre class="prettyprint lang-java code"><code class="code">Expectation[] recorded = new MockServerClient("localhost", 1080)
+<button id="button_retrieve_recorded_expectations_with_options" class="accordion">retrieve recorded expectations as response sequences, with chosen headers and large bodies in files</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">Expectation[] recorded = new MockServerClient("localhost", 1080)
     .retrieveRecordedExpectations(
         request().withPath("/jobs/.*"),
         recordedExpectationsOptions()
@@ -61,6 +63,111 @@ curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTAT
             .withCaptureHeaders("X-Tenant")
             .withExtractBodiesLargerThan(1024L)
     );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+
+mockServerClient("localhost", 1080)
+    .retrieveRecordedExpectations("/jobs/.*", {
+        repeatsAsScenarios: true,
+        captureHeaders: ["X-Tenant"],
+        extractBodiesLargerThan: 1024
+    })
+    .then(function (recorded) {
+        console.log(JSON.stringify(recorded, null, "  "));
+    });</code></pre>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">from mockserver import MockServerClient, HttpRequest, RecordedExpectationsOptions
+
+client = MockServerClient("localhost", 1080)
+recorded = client.retrieve_recorded_expectations(
+    HttpRequest.request("/jobs/.*"),
+    options=RecordedExpectationsOptions()
+    .with_repeats_as_scenarios()
+    .with_capture_headers("X-Tenant")
+    .with_extract_bodies_larger_than(1024),
+)</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'mockserver-client'
+
+client = MockServer::Client.new('localhost', 1080)
+recorded = client.retrieve_recorded_expectations(
+  request: MockServer::HttpRequest.new(path: '/jobs/.*'),
+  options: MockServer::RecordedExpectationsOptions.new
+                                                  .with_repeats_as_scenarios
+                                                  .with_capture_headers('X-Tenant')
+                                                  .with_extract_bodies_larger_than(1024)
+)</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">import mockserver "github.com/mock-server/mockserver-monorepo/mockserver-client-go/v9"
+
+client := mockserver.New("localhost", 1080)
+recorded, err := client.RetrieveRecordedExpectationsWithOptions(
+    mockserver.Request().Path("/jobs/.*"),
+    mockserver.NewRecordedExpectationsOptions().
+        WithRepeatsAsScenarios(true).
+        WithCaptureHeaders("X-Tenant").
+        WithExtractBodiesLargerThan(1024),
+)</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using MockServer.Client;
+using MockServer.Client.Models;
+
+using var client = new MockServerClient("localhost", 1080);
+var recorded = client.RetrieveRecordedExpectations(
+    HttpRequest.Request().WithPath("/jobs/.*").Build(),
+    RecordedExpectationsOptions.Options()
+        .WithRepeatsAsScenarios()
+        .WithCaptureHeaders("X-Tenant")
+        .WithExtractBodiesLargerThan(1024));</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use mockserver_client::{ClientBuilder, HttpRequest, RecordedExpectationsOptions};
+
+let client = ClientBuilder::new("localhost", 1080).build().unwrap();
+let recorded = client
+    .retrieve_recorded_expectations_with_options(
+        Some(&amp;HttpRequest::new().path("/jobs/.*")),
+        &amp;RecordedExpectationsOptions::new()
+            .repeats_as_scenarios(true)
+            .capture_headers(["X-Tenant"])
+            .extract_bodies_larger_than(1024),
+    )
+    .unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">use MockServer\MockServerClient;
+use MockServer\HttpRequest;
+use MockServer\RecordedExpectationsOptions;
+
+$client = new MockServerClient('localhost', 1080);
+$recorded = $client-&gt;retrieveRecordedExpectationsWithOptions(
+    HttpRequest::request()-&gt;path('/jobs/.*'),
+    RecordedExpectationsOptions::recordedExpectationsOptions()
+        -&gt;withRepeatsAsScenarios()
+        -&gt;withCaptureHeaders('X-Tenant')
+        -&gt;withExtractBodiesLargerThan(1024),
+);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/retrieve?type=RECORDED_EXPECTATIONS&amp;repeatsAsScenarios=true&amp;captureHeaders=X-Tenant&amp;extractBodiesLargerThan=1024" -d '{
+    "path": "/jobs/.*"
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/control/put_retrieve" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 
 <p>These options work together with <code class="inline code">consolidate</code>, <code class="inline code">parameterize</code> and the recording configuration properties. A request turned into a response sequence by <code class="inline code">repeatsAsScenarios</code> is kept as that sequence and is not merged again by <code class="inline code">consolidate</code>.</p>
 

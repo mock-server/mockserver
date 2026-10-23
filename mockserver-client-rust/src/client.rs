@@ -969,6 +969,22 @@ impl MockServerClient {
         self.retrieve_expectations_filtered(request, RetrieveType::RecordedExpectations, &pairs)
     }
 
+    /// Retrieve the recorded expectations matching the optional request
+    /// matcher, shaped by `options`: for example replaying a request recorded
+    /// with different responses in order, keeping only some request headers,
+    /// or moving large bodies into files.
+    ///
+    /// An invalid option is rejected with [`Error::InvalidRequest`] before
+    /// anything is sent.
+    pub fn retrieve_recorded_expectations_with_options(
+        &self,
+        request: Option<&HttpRequest>,
+        options: &RecordedExpectationsOptions,
+    ) -> Result<Vec<Expectation>> {
+        let pairs = options.query_pairs().map_err(Error::InvalidRequest)?;
+        self.retrieve_expectations_filtered(request, RetrieveType::RecordedExpectations, &pairs)
+    }
+
     // ------------------------------------------------------------------
     // Status / Bind
     // ------------------------------------------------------------------

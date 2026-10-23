@@ -104,6 +104,23 @@ export interface ExpectationFilter {
     offset?: number;
 }
 
+/**
+ * Options that shape the expectations returned by retrieveRecordedExpectations. Each is off unless set,
+ * and an invalid option is rejected before anything is sent.
+ */
+export interface RecordedExpectationsOptions {
+    /** collapse recorded exchanges that share a request shape into one reusable, unlimited-times expectation */
+    consolidate?: boolean;
+    /** also generalise volatile path, query, header and body values into matchers (implies consolidate) */
+    parameterize?: boolean;
+    /** replay a request recorded several times with different responses in the recorded order, then keep returning the last one */
+    repeatsAsScenarios?: boolean;
+    /** keep only these request headers (case-insensitive) in each recorded matcher; an empty array keeps none */
+    captureHeaders?: string[];
+    /** write each response body larger than this many bytes to the server's recordedBodyFilesDirectory and return a FILE body */
+    extractBodiesLargerThan?: number;
+}
+
 /** An ExpectationFilter for a clear: no paging. */
 export type ClearExpectationFilter = Omit<ExpectationFilter, 'limit' | 'offset'>;
 export type CodeFormat = 'java' | 'javascript' | 'python' | 'go' | 'csharp' | 'ruby' | 'rust' | 'php'
@@ -738,6 +755,13 @@ export interface MockServerClient {
 
     /** Retrieve one page of the recorded expectations: skip offset, return at most limit (integers zero or more). */
     retrieveRecordedExpectations(pathOrRequestDefinition: PathOrRequestDefinition, offset: number | undefined, limit?: number): Promise<Expectation[]>;
+
+    /**
+     * Retrieve the recorded expectations shaped by the options, for example replaying a request recorded with
+     * different responses in order, keeping only some request headers, or moving large bodies into files.
+     * Throws, sending nothing, on an invalid option.
+     */
+    retrieveRecordedExpectations(pathOrRequestDefinition: PathOrRequestDefinition, options: RecordedExpectationsOptions): Promise<Expectation[]>;
 
     retrieveExpectationsAsCode(format: CodeFormat, pathOrRequestDefinition?: PathOrRequestDefinition): Promise<string>;
 

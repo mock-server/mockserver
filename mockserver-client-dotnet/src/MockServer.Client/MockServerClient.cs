@@ -599,6 +599,21 @@ public sealed class MockServerClient : IDisposable
             ExpectationFilter.Filter().WithOffset(offset).WithLimit(limit), "recorded expectations");
 
     /// <summary>
+    /// Retrieve the recorded expectations matching the optional request matcher, shaped by the options, for example
+    /// replaying a request recorded with different responses in order, keeping only some request headers, or moving
+    /// large bodies into files.
+    /// </summary>
+    /// <param name="request">Optional request matcher; null for all recorded expectations.</param>
+    /// <param name="options">The options to apply; null for none.</param>
+    public List<Expectation> RetrieveRecordedExpectations(HttpRequest? request, RecordedExpectationsOptions? options)
+        => RetrieveRecordedExpectationsAsync(request, options).GetAwaiter().GetResult();
+
+    /// <summary>Retrieve the recorded expectations shaped by the options (async).</summary>
+    public Task<List<Expectation>> RetrieveRecordedExpectationsAsync(HttpRequest? request, RecordedExpectationsOptions? options)
+        => RetrieveExpectationsWithQueryAsync("RECORDED_EXPECTATIONS", request, options?.ToQueryString() ?? "",
+            "recorded expectations");
+
+    /// <summary>
     /// Retrieve the active expectations matching both the optional request matcher and the filter, for example by
     /// metadata, because they have never matched a request, or one page of them (offset and limit). Pages are
     /// taken in match order (highest priority first, then oldest first).
@@ -642,11 +657,15 @@ public sealed class MockServerClient : IDisposable
     public Task<List<Expectation>> RetrieveUnmatchedExpectationsAsync()
         => RetrieveActiveExpectationsAsync(null, ExpectationFilter.Filter().WithUnmatched(true));
 
-    private async Task<List<Expectation>> RetrieveExpectationsWithFilterAsync(
+    private Task<List<Expectation>> RetrieveExpectationsWithFilterAsync(
         string type, HttpRequest? request, ExpectationFilter? filter, string description)
+        => RetrieveExpectationsWithQueryAsync(type, request, filter?.ToQueryString() ?? "", description);
+
+    private async Task<List<Expectation>> RetrieveExpectationsWithQueryAsync(
+        string type, HttpRequest? request, string query, string description)
     {
         var json = request != null ? JsonSerializer.Serialize(request, JsonOptions) : "";
-        var path = $"/mockserver/retrieve?type={type}&format=JSON" + (filter?.ToQueryString() ?? "");
+        var path = $"/mockserver/retrieve?type={type}&format=JSON" + query;
         var (statusCode, body) = await PutAsync(path, json).ConfigureAwait(false);
 
         if (statusCode >= 400)

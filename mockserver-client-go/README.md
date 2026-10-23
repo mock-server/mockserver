@@ -146,6 +146,9 @@ unused, _ := client.RetrieveUnmatchedExpectations()
 page, _ := client.RetrieveActiveExpectationsWithFilter(nil,
     mockserver.NewExpectationFilter().WithMetadataJSONPath("$.tags[?(@ == 'smoke')]").WithOffset(0).WithLimit(20))
 recorded, _ := client.RetrieveRecordedExpectationsPage(nil, 0, 50)
+// replay changing responses in order, keep only some request headers, move large bodies into files
+shaped, _ := client.RetrieveRecordedExpectationsWithOptions(nil, mockserver.NewRecordedExpectationsOptions().
+    WithRepeatsAsScenarios(true).WithCaptureHeaders("X-Tenant").WithExtractBodiesLargerThan(1024))
 
 // clear only the matching expectations (the event log is kept)
 _ = client.ClearByMetadata("owner", "team-a")
