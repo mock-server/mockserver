@@ -17,6 +17,8 @@
   **U11d** adds three listeners: served requests (H3), expectation lifecycle (H7) and configuration updates (H8),
   each delivered on the extension's own thread through a queue that never waits. **U11c** adds `$ext` template
   helpers (see [Template helpers](#template-helpers-h6)), each call on a capped helper executor. A global request filter and response transformer are deliberately out of phase 1.
+- **Every deployment loads them:** the Netty server (`LifeCycle`), both servlets and `InProcessMockServer` start,
+  notify and stop the registry the same way (see [Start, ready and stop](#start-ready-and-stop)).
 - **With listeners loaded, no listener code runs on a server thread.** The thread that logs, removes or changes
   something only builds a small event and makes a lock-free, bounded offer; when the queue is full the event is
   dropped and counted, never waited on.
@@ -25,7 +27,7 @@
 
 ```mermaid
 sequenceDiagram
-    participant LC as "LifeCycle / servlet constructor"
+    participant LC as "LifeCycle / servlet / InProcessMockServer constructor"
     participant REG as ExtensionRegistry
     participant HS as HttpState
     participant EXT as Extension
@@ -71,10 +73,11 @@ sequenceDiagram
   the `controlPlaneCorsAllowOrigin` pattern: echoed read-only by `GET /mockserver/configuration`, skipped by
   `applyTo`, warned about by `applyConfigurationUpdate`, and read only through the `Configuration` instance.
 - **Start before anything else.** A refused start then leaks no event loop, selector or scheduler: in
-  `LifeCycle` the registry is built straight after the logger, and in both servlets straight after the logger.
+  `LifeCycle`, both servlets and `InProcessMockServer` the registry is built straight after the logger.
 - **Zero cost when unconfigured.** The gate, `Configuration.extensionsConfigured()`, lives outside the extension
   package. Fields of type `ExtensionRegistry` in `LifeCycle`, `HttpState` and the servlets stay `null`; holding,
-  passing and null-checking a reference does not load its class.
+  passing and null-checking a reference does not load its class. The same holds for the field in
+  `InProcessMockServer`, pinned by `InProcessMockServerExtensionClassLoadingTest` in a fresh JVM.
 - **Bounded calls.** `start`, `onStarted` and `stop` each run on a short-lived daemon thread
   (`MockServer-ext-<phase>-<name>`) awaited for `extensionStartTimeoutMillis`, because the `Scheduler` does not
   exist yet. A timed-out `start` counts as not started, is not stopped, and logs a WARN that its thread may still
@@ -108,6 +111,7 @@ JAR and hooks.
 |---|---|---|---|---|
 | Netty (`LifeCycle`) | First in the constructor | `startedServer(ports)`, after every port binds | Constructor `catch` stops the registry; an `onStarted` failure calls `stop()` (server and extensions) and rethrows | `stopAsync`, after the drain and `httpState.stop()` |
 | WAR / proxy WAR | First in the servlet constructor | End of the constructor, empty port list | Shuts down whatever the constructor built, then stops the registry | `shutdown()` (idempotent) |
+| `InProcessMockServer` | First in the constructor, straight after the logger | End of the constructor, empty port list | `httpState.stop()` (when built), `scheduler.shutdown()`, then `registry.stop()`, and rethrows | `close()` (idempotent): `httpState.stop()`, scheduler, forward group, then `registry.stop()` last |
 
 `notifyStarted` runs at most once and skips the remaining extensions once the registry is stopping (for example a
 `PUT /mockserver/stop` during start-up). `LifeCycle.stop()` waits the drain budget plus `maximumStopMillis()` (one
@@ -116,6 +120,21 @@ JAR and hooks.
 
 `HttpState.isInitializationComplete()` is `initializationComplete && (registry == null ||
 registry.isStartedNotified())`, so `/mockserver/ready` stays 503 until every `onStarted` returns.
+
+### In-process (`InProcessMockServer`)
+
+`InProcessMockServer` wires the registry as the WAR does, so every hook works without a socket:
+
+| Hook | In-process behaviour |
+|---|---|
+| Lifecycle | `start` before the scheduler and `HttpState` exist; `onStarted(List.of())`, as a WAR has no ports of its own; `stop` in reverse on `close()` or a refused start. `isInitializationComplete()` is true once `onStarted` returns |
+| H4 initialiser | Applied while `HttpState` is built, as elsewhere |
+| H5 admin routes | `handle()` / `handleAsync()` reach `/mockserver/extensions/<name>/…` through `HttpState.handle(..., warDeployment = true)`, behind the same control-plane gate as the instance's other REST routes (JWT or Basic as configured; mTLS cannot work, there is no client certificate). The Java methods (`upsert`, `verify`, …) never reach an admin route |
+| H3, H7 listeners | Fire as on Netty: served requests from the event-log consumer, expectation changes from the store, each on the listener's own thread |
+| H8 settings listener | Never fires through `handle()`: `PUT /mockserver/configuration` is a Netty-only route and answers `404` in-process. Only a direct `getHttpState().applyConfigurationUpdate(dto)` call fires it |
+| H6 `$ext` helpers | `handle()` renders a response or forward template on the caller thread and `handleAsync()` on the template pool; each helper call still runs on the helper executor with its usual budget |
+
+`InProcessMockServerExtensionTest` covers each of these and that `close()` leaves no extension thread running.
 
 ### Expectation initializer hook (H4)
 
@@ -159,7 +178,7 @@ sequenceDiagram
 | Timeout | Netty only, on the scheduler's timer. The timer writes one `500` (correlation id; the logged exception carries the stuck thread's stack) and interrupts the thread only while it is inside extension code (`isReadOnly` or `handle`), never MockServer's gate, audit or response writing (an interrupt there could close the audit file sink's channel and disable it). The interrupt flag is cleared as each extension call returns. `OnceResponseWriter` makes the timeout and a late handler mutually exclusive; a late result is discarded and counted (`lateResultCount`) |
 | Loopback | A handler calling its own server at the cap gets a `503` (non-blocking `tryAcquire`), not a deadlock |
 | Errors | A throw is answered `500` with a correlation id through `ControlPlaneFailureResponse.writeUnexpectedFailure`; `null` is answered `404` |
-| WAR | Runs inline on the servlet thread, inside the cap, with no timeout |
+| WAR and in-process | Runs inline on the servlet thread, or on the thread calling `InProcessMockServer.handle` / `handleAsync`, inside the cap, with no timeout: `extensionAdminTimeoutMillis` does not apply, and a handler that never returns holds that caller (`handleAsync` included) |
 | Shutdown | `HttpState.stop` stops the routes first, which `LifeCycle` runs after the drain and before `ExtensionRegistry.stop`: `shutdown()` (not `shutdownNow`), then an interrupt only for the live calls that are inside extension code, so MockServer's own authentication, audit and response writing are never interrupted. A call that has not reached `handle` yet is answered `503` |
 | Shadowing | After the initialisers, `warnOnShadowedExpectations` logs a WARN for each start-up expectation whose literal or regex path falls under a loaded name. Expectations added later are not checked; they simply never match there |
 | Ordering | On pipelined HTTP/1.1 an admin reply can overtake an earlier response, as with `dispatchOffTheEventLoop` |
@@ -364,5 +383,6 @@ Tests: `ExtensionRegistryTest`, `TemplateHelpersTest`, `ExtensionAdminRoutesTest
 `ExpectationRemovalNoListenerCostTest` and the extension case in `HttpStateAuditTest` (core), `ExtensionLifecycleTest`,
 `ExtensionAdminRouteTest`, `ExtensionListenersIntegrationTest`, `ExtensionTemplateHelpersTest`,
 `ExtensionHelperBreakpointIntegrationTest` and `ExtensionClassLoadingTest` (netty),
-`MockServerServletExtensionTest`, `ProxyServletExtensionTest`, `MockServerInstanceExtensionsTest` (Spring), plus
+`MockServerServletExtensionTest`, `ProxyServletExtensionTest`, `MockServerInstanceExtensionsTest` (Spring),
+`InProcessMockServerExtensionTest` and `InProcessMockServerExtensionClassLoadingTest` (core, in-process), plus
 the startup-only cases in `HttpStateConfigurationUpdateTest` and `ConfigurationDTOTest`.

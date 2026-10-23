@@ -5,6 +5,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.mockserver.authentication.ControlPlaneAuthenticationHandlerFactory;
 import org.mockserver.configuration.Configuration;
+import org.mockserver.extension.ExtensionRegistry;
 import org.mockserver.log.MockServerEventLog;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
@@ -25,6 +26,7 @@ import org.mockserver.verify.VerificationSequence;
 import org.mockserver.verify.VerificationTimes;
 
 import java.io.Closeable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -63,6 +65,9 @@ import static org.mockserver.verify.VerificationSequence.verificationSequence;
  * in-JVM calls and are not authenticated. What needs a connection is not available: object callbacks (they need a
  * WebSocket client), SSE, WebSocket and gRPC streaming, and {@code HttpError} connection faults.
  * <p>
+ * Configured extensions start with this instance, with no ports, and stop on {@link #close()}; their admin routes
+ * are served by {@link #handle}, inline on the calling thread.
+ * <p>
  * The expectations, recorded requests and log are this instance's own; the process-wide registries (rate limits,
  * chaos, quotas and the like) are shared with every MockServer in the JVM, as they are between Netty servers.
  */
@@ -76,6 +81,8 @@ public class InProcessMockServer implements Closeable {
     private final HttpState httpState;
     private final HttpActionHandler actionHandler;
     private final PortBindingSerializer portBindingSerializer;
+    // null unless extensions are configured, so with none the extension package is never loaded
+    private final ExtensionRegistry extensionRegistry;
     // created on the first forward only, as the Netty server does, so a pure-mock instance starts no event loop
     private volatile EventLoopGroup forwardClientGroup;
     private final Object forwardClientGroupLock = new Object();
@@ -94,26 +101,50 @@ public class InProcessMockServer implements Closeable {
             MockServerLogger.setGlobalLogEventListener(this.configuration.logEventListener());
         }
         MockServerLogger logger = new MockServerLogger(this.configuration, MockServerEventLog.class);
-        this.scheduler = new Scheduler(this.configuration, logger);
-        this.httpState = new HttpState(this.configuration, logger, this.scheduler);
-        this.mockServerLogger = httpState.getMockServerLogger();
-        this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
+        // extensions start before anything else is built, so a refused start leaks no thread
+        this.extensionRegistry = this.configuration.extensionsConfigured() ? ExtensionRegistry.start(this.configuration, logger) : null;
+        Scheduler createdScheduler = null;
+        HttpState createdHttpState = null;
         try {
+            this.scheduler = createdScheduler = new Scheduler(this.configuration, logger);
+            this.httpState = createdHttpState = new HttpState(this.configuration, logger, this.scheduler, this.extensionRegistry);
+            this.mockServerLogger = httpState.getMockServerLogger();
+            this.portBindingSerializer = new PortBindingSerializer(mockServerLogger);
             this.actionHandler = new HttpActionHandler(this.configuration, this::getForwardClientEventLoopGroup, httpState, proxyConfigurations, new NettySslContextFactory(this.configuration, mockServerLogger, false));
             this.httpState.installRequestSender(actionHandler.getRequestSender());
+            if (this.extensionRegistry != null) {
+                // an in-process server has no ports to report
+                this.extensionRegistry.notifyStarted(Collections.emptyList());
+            }
         } catch (RuntimeException | Error failed) {
             // the caller gets no reference to close, so release what was started
             closed.set(true);
-            httpState.stop();
-            scheduler.shutdown();
+            stopRefusedStart(createdHttpState, createdScheduler, this.extensionRegistry);
             throw failed;
+        }
+    }
+
+    private static void stopRefusedStart(HttpState httpState, Scheduler scheduler, ExtensionRegistry extensionRegistry) {
+        try {
+            if (httpState != null) {
+                httpState.stop();
+            }
+        } finally {
+            if (scheduler != null) {
+                scheduler.shutdown();
+            }
+            if (extensionRegistry != null) {
+                extensionRegistry.stop();
+            }
         }
     }
 
     /**
      * Handles a request and returns its response, as MockServer would answer it over HTTP. A response delay (an
      * action's {@code delay} or {@code globalResponseDelayMillis}) blocks the calling thread for its duration, and a
-     * forward blocks it until the upstream answers, for at most {@code maxSocketTimeoutInMillis}.
+     * forward blocks it until the upstream answers, for at most {@code maxSocketTimeoutInMillis}. An extension admin
+     * route ({@code /mockserver/extensions/<name>/...}) runs on the calling thread with no timeout;
+     * {@code maxSocketTimeoutInMillis} does not bound it.
      *
      * @throws IllegalStateException if no response was produced within {@code maxSocketTimeoutInMillis}, or this
      *                               instance is closed
@@ -137,7 +168,9 @@ public class InProcessMockServer implements Closeable {
      * scheduler when the delay has elapsed, and a forwarded one when the upstream answers. Matching, and any
      * response with no delay, runs on the calling thread. Apply a timeout to the future if an expectation could
      * leave a request unanswered, and use an async continuation with your own executor for blocking work, as a
-     * forwarded response completes the future on MockServer's scheduler.
+     * forwarded response completes the future on MockServer's scheduler. An extension admin route
+     * ({@code /mockserver/extensions/<name>/...}) runs on the calling thread, with no timeout, before the future is
+     * returned.
      */
     public CompletableFuture<HttpResponse> handleAsync(HttpRequest request) {
         return dispatch(request, false);
@@ -224,9 +257,10 @@ public class InProcessMockServer implements Closeable {
     }
 
     /**
-     * Stops the scheduler and its executors, the event log and, if a forward created it, the forward client's event
-     * loop. Their threads end once idle; a delayed response still pending is completed when its delay elapses, and
-     * its thread ends then. Every other method then throws {@link IllegalStateException}.
+     * Stops the scheduler and its executors, the event log, the forward client's event loop if a forward created it
+     * and, last, any extensions, in reverse start order. Their threads end once idle; a delayed response still
+     * pending is completed when its delay elapses, and its thread ends then. Every other method then throws
+     * {@link IllegalStateException}.
      */
     @Override
     public void close() {
@@ -241,8 +275,14 @@ public class InProcessMockServer implements Closeable {
             synchronized (forwardClientGroupLock) {
                 forwardGroupToStop = forwardClientGroup;
             }
-            if (forwardGroupToStop != null) {
-                forwardGroupToStop.shutdownGracefully(0, 5, MILLISECONDS).awaitUninterruptibly(5, SECONDS);
+            try {
+                if (forwardGroupToStop != null) {
+                    forwardGroupToStop.shutdownGracefully(0, 5, MILLISECONDS).awaitUninterruptibly(5, SECONDS);
+                }
+            } finally {
+                if (extensionRegistry != null) {
+                    extensionRegistry.stop();
+                }
             }
         }
     }
