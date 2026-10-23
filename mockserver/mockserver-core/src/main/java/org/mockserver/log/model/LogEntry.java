@@ -1639,13 +1639,32 @@ public class LogEntry implements EventTranslator<LogEntry> {
         return arguments;
     }
 
-    private static Object argumentForLog(Object argument) {
+    private Object argumentForLog(Object argument) {
         if (argument instanceof DeferredLogArgument && ((DeferredLogArgument) argument).getRequest() != null) {
             HttpRequest request = ((DeferredLogArgument) argument).getRequest();
+            if (holdsRequest(request)) {
+                return argument;
+            }
             RequestDefinition redacted = org.mockserver.authentication.CredentialRedaction.forLog(request);
             return redacted != request ? ((DeferredLogArgument) argument).withRequest((HttpRequest) redacted) : argument;
         }
+        if (argument instanceof HttpRequest && holdsRequest(argument)) {
+            return argument;
+        }
         return org.mockserver.authentication.CredentialRedaction.argumentForLog(argument);
+    }
+
+    // A request this entry already holds was checked as it was attached (no site changes it after), so an argument
+    // that is that very instance needs no second check: were it unmasked, the entry would already hold it unmasked.
+    private boolean holdsRequest(Object request) {
+        if (httpRequests != null) {
+            for (RequestDefinition held : httpRequests) {
+                if (held == request) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public LogEntry setArguments(Object... arguments) {

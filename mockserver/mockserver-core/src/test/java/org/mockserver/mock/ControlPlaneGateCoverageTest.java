@@ -141,6 +141,42 @@ public class ControlPlaneGateCoverageTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    public void theOpeningFilterNeverChangesTheRouteVerdict() throws ReflectiveOperationException {
+        Set<String> routes = new LinkedHashSet<>(java.util.Arrays.asList(HttpState.PATH_PREFIX, HttpState.PATH_PREFIX + "/", "/_mockserver_"));
+        for (String table : new String[]{"CONTROL_PLANE_BARE_ROUTE_METHODS", "CONTROL_PLANE_BARE_PREFIX_METHODS"}) {
+            java.lang.reflect.Field field = HttpState.class.getDeclaredField(table);
+            field.setAccessible(true);
+            routes.addAll(((java.util.Map<String, ?>) field.get(null)).keySet());
+        }
+        assertTrue("read only " + routes.size() + " routes, failing closed", routes.size() >= MIN_EXPECTED_TWO_FORM_SITES);
+        String[] methods = {null, "GET", "PUT", "POST", "DELETE", "PATCH"};
+        int accepted = 0;
+        for (String route : routes) {
+            String tail = route.substring(3);
+            // every opening, so a route the filter did not learn fails here, plus two outside ASCII
+            for (char first = 0; first < 130; first++) {
+                for (char second = 0; second < 130; second++) {
+                    for (String suffix : new String[]{"", "name"}) {
+                        String path = "/" + first + second + tail + suffix;
+                        for (String method : methods) {
+                            boolean expected = HttpState.matchesControlPlaneRoute(method, path);
+                            if (expected) {
+                                accepted++;
+                            }
+                            assertEquals(method + " " + path, expected, HttpState.isControlPlaneRoute(method, path));
+                        }
+                    }
+                }
+            }
+        }
+        assertTrue("only " + accepted + " route paths accepted, failing closed", accepted >= routes.size());
+        for (String shortPath : new String[]{"", "/", "/m", "/mo", "x/mockserver/expectation"}) {
+            assertEquals(shortPath, false, HttpState.isControlPlaneRoute("PUT", shortPath));
+        }
+    }
+
+    @Test
     public void everyNameRoutePrefixInTheRoutingSourcesIsAcceptedByTheGate() throws IOException {
         Set<String> prefixes = new LinkedHashSet<>();
         for (Path source : ROUTING_SOURCES) {
