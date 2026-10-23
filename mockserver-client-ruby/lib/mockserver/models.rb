@@ -3262,6 +3262,90 @@ module MockServer
     end
   end
 
+  # Options that shape the expectations returned by
+  # {Client#retrieve_recorded_expectations}. Sent as query parameters on
+  # +PUT /mockserver/retrieve?type=RECORDED_EXPECTATIONS+; each option is off
+  # unless set. Invalid arguments raise ArgumentError immediately, so nothing
+  # is sent.
+  #
+  #   MockServer::RecordedExpectationsOptions.new
+  #     .with_repeats_as_scenarios(true)
+  #     .with_capture_headers('X-Tenant')
+  #     .with_extract_bodies_larger_than(1024)
+  class RecordedExpectationsOptions
+    attr_reader :consolidate, :parameterize, :repeats_as_scenarios, :capture_headers, :extract_bodies_larger_than
+
+    def initialize
+      @consolidate = nil
+      @parameterize = nil
+      @repeats_as_scenarios = nil
+      @capture_headers = nil
+      @extract_bodies_larger_than = nil
+    end
+
+    # Collapse recorded exchanges that share a request shape into one
+    # reusable, unlimited-times expectation.
+    def with_consolidate(consolidate = true)
+      @consolidate = RecordedExpectationsOptions.require_boolean(consolidate, 'consolidate')
+      self
+    end
+
+    # Also generalise volatile path, query, header and body values into
+    # matchers (implies consolidate).
+    def with_parameterize(parameterize = true)
+      @parameterize = RecordedExpectationsOptions.require_boolean(parameterize, 'parameterize')
+      self
+    end
+
+    # Replay a request recorded several times with different responses in the
+    # recorded order, then keep returning the last one.
+    def with_repeats_as_scenarios(repeats_as_scenarios = true)
+      @repeats_as_scenarios = RecordedExpectationsOptions.require_boolean(repeats_as_scenarios, 'repeats_as_scenarios')
+      self
+    end
+
+    # Keep only these request headers (case-insensitive) in each recorded
+    # matcher; no names keeps none.
+    # @raise [ArgumentError] if a name is blank or contains a comma
+    def with_capture_headers(*header_names)
+      header_names.each do |name|
+        unless name.is_a?(String) && !name.strip.empty? && !name.include?(',')
+          raise ArgumentError,
+                "each capture header must be a non-blank header name without a comma, got #{name.inspect}"
+        end
+      end
+      @capture_headers = header_names
+      self
+    end
+
+    # Write each response body larger than this many bytes to the server's
+    # +recordedBodyFilesDirectory+ and return a FILE body that points at it.
+    # @raise [ArgumentError] unless an Integer of zero or more
+    def with_extract_bodies_larger_than(threshold_bytes)
+      @extract_bodies_larger_than = ExpectationFilter.require_non_negative(threshold_bytes, 'extract_bodies_larger_than')
+      self
+    end
+
+    # The query parameters for these options, names and values exactly as sent.
+    # @return [Hash{String => String}]
+    def to_query_params
+      params = {}
+      params['consolidate'] = 'true' if @consolidate
+      params['parameterize'] = 'true' if @parameterize
+      params['repeatsAsScenarios'] = 'true' if @repeats_as_scenarios
+      params['captureHeaders'] = @capture_headers.join(',') unless @capture_headers.nil?
+      params['extractBodiesLargerThan'] = @extract_bodies_larger_than.to_s unless @extract_bodies_larger_than.nil?
+      params
+    end
+
+    # @api private
+    def self.require_boolean(value, description)
+      raise ArgumentError, "#{description} must be true or false, got #{value.inspect}" unless [true, false].include?(value)
+
+      value
+    end
+  end
+
   # An OpenAPI request matcher: as an expectation's or verification's
   # httpRequest it matches the requests an OpenAPI operation accepts.
   class OpenAPIDefinition

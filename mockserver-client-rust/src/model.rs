@@ -5957,6 +5957,112 @@ impl ExpectationFilter {
     }
 }
 
+/// Options that shape the expectations returned by
+/// [`MockServerClient::retrieve_recorded_expectations_with_options`](crate::MockServerClient::retrieve_recorded_expectations_with_options).
+///
+/// Sent as query parameters on `PUT /mockserver/retrieve?type=RECORDED_EXPECTATIONS`.
+/// Each option is off unless set. An invalid option is kept and reported by the
+/// client method it is passed to, so nothing is sent.
+///
+/// ```
+/// use mockserver_client::RecordedExpectationsOptions;
+///
+/// let options = RecordedExpectationsOptions::new()
+///     .repeats_as_scenarios(true)
+///     .capture_headers(["X-Tenant"])
+///     .extract_bodies_larger_than(1024);
+/// ```
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct RecordedExpectationsOptions {
+    consolidate: bool,
+    parameterize: bool,
+    repeats_as_scenarios: bool,
+    capture_headers: Option<Vec<String>>,
+    extract_bodies_larger_than: Option<u64>,
+}
+
+impl RecordedExpectationsOptions {
+    /// Options with every option off.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Collapse recorded exchanges that share a request shape into one
+    /// reusable, unlimited-times expectation.
+    pub fn consolidate(mut self, consolidate: bool) -> Self {
+        self.consolidate = consolidate;
+        self
+    }
+
+    /// Also generalise volatile path, query, header and body values into
+    /// matchers (implies consolidate).
+    pub fn parameterize(mut self, parameterize: bool) -> Self {
+        self.parameterize = parameterize;
+        self
+    }
+
+    /// Replay a request recorded several times with different responses in the
+    /// recorded order, then keep returning the last one.
+    pub fn repeats_as_scenarios(mut self, repeats_as_scenarios: bool) -> Self {
+        self.repeats_as_scenarios = repeats_as_scenarios;
+        self
+    }
+
+    /// Keep only these request headers (case-insensitive) in each recorded
+    /// matcher; an empty list keeps none.
+    pub fn capture_headers<I, S>(mut self, header_names: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.capture_headers = Some(header_names.into_iter().map(Into::into).collect());
+        self
+    }
+
+    /// Write each response body larger than this many bytes to the server's
+    /// `recordedBodyFilesDirectory` and return a `FILE` body that points at it.
+    pub fn extract_bodies_larger_than(mut self, threshold_bytes: u64) -> Self {
+        self.extract_bodies_larger_than = Some(threshold_bytes);
+        self
+    }
+
+    /// Validate the options and return their query parameters. Values are raw;
+    /// the caller encodes them.
+    pub(crate) fn query_pairs(&self) -> Result<Vec<(&'static str, String)>, String> {
+        let mut pairs = Vec::new();
+        for (name, on) in [
+            ("consolidate", self.consolidate),
+            ("parameterize", self.parameterize),
+            ("repeatsAsScenarios", self.repeats_as_scenarios),
+        ] {
+            if on {
+                pairs.push((name, "true".to_string()));
+            }
+        }
+        if let Some(names) = &self.capture_headers {
+            if let Some(bad) = names
+                .iter()
+                .find(|n| n.trim().is_empty() || n.contains(','))
+            {
+                return Err(format!(
+                    "each capture header must be a non-blank header name without a comma, got {bad:?}"
+                ));
+            }
+            pairs.push(("captureHeaders", names.join(",")));
+        }
+        if let Some(threshold) = self.extract_bodies_larger_than {
+            if threshold > i64::MAX as u64 {
+                return Err(format!(
+                    "extractBodiesLargerThan must not be greater than {}",
+                    i64::MAX
+                ));
+            }
+            pairs.push(("extractBodiesLargerThan", threshold.to_string()));
+        }
+        Ok(pairs)
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Pact verification result
 // ---------------------------------------------------------------------------

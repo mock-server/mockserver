@@ -373,6 +373,12 @@ client.retrieve_active_expectations(
   filter: MockServer::ExpectationFilter.new.with_metadata_json_path("$.tags[?(@ == 'smoke')]").with_limit(10)
 )
 client.retrieve_recorded_expectations(offset: 0, limit: 50)
+# replay changing responses in order, keep only some request headers, move large bodies into files
+client.retrieve_recorded_expectations(
+  options: MockServer::RecordedExpectationsOptions.new.with_repeats_as_scenarios
+                                                    .with_capture_headers('X-Tenant')
+                                                    .with_extract_bodies_larger_than(1024)
+)
 
 client.clear_by_metadata('owner', 'team-a')
 client.clear_by_metadata_key('ticket')

@@ -785,6 +785,23 @@ class MockServerClient
     }
 
     /**
+     * Retrieve the recorded expectations matching the request matcher, shaped
+     * by the options: for example replaying a request recorded with different
+     * responses in order, keeping only some request headers, or moving large
+     * bodies into files.
+     *
+     * @param HttpRequest|null $request Matcher (null = all)
+     * @param RecordedExpectationsOptions $options The options to apply
+     * @return array List of expectation arrays
+     */
+    public function retrieveRecordedExpectationsWithOptions(
+        ?HttpRequest $request,
+        RecordedExpectationsOptions $options,
+    ): array {
+        return $this->retrieveFiltered($request, 'RECORDED_EXPECTATIONS', $options);
+    }
+
+    /**
      * Retrieve the active expectations as MockServer SDK setup code (the builder
      * code that recreates the expectations) in the requested language.
      *
@@ -2678,8 +2695,11 @@ class MockServerClient
      * Retrieve expectations with an {@see ExpectationFilter} applied as query
      * string parameters, preserving each expectation's metadata JSON shape.
      */
-    private function retrieveFiltered(?HttpRequest $request, string $type, ExpectationFilter $filter): array
-    {
+    private function retrieveFiltered(
+        ?HttpRequest $request,
+        string $type,
+        ExpectationFilter|RecordedExpectationsOptions $filter,
+    ): array {
         $path = '/mockserver/retrieve?type=' . urlencode($type) . '&format=JSON';
         $query = $filter->toQueryString();
         if ($query !== '') {

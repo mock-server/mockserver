@@ -350,7 +350,7 @@ affects matching; it is returned on retrieve and lets you retrieve or clear
 just your own expectations.
 
 ```python
-from mockserver import ExpectationFilter, JSON_NULL
+from mockserver import ExpectationFilter, JSON_NULL, RecordedExpectationsOptions
 
 client.when(HttpRequest.request("/api/users")).with_metadata("owner", "team-a").with_metadata(
     "ticket", 4211
@@ -363,6 +363,10 @@ page = client.retrieve_active_expectations(
     expectation_filter=ExpectationFilter().with_metadata_json_path("$.tags[?(@ == 'smoke')]").with_offset(0).with_limit(20)
 )
 recorded_page = client.retrieve_recorded_expectations(offset=0, limit=50)
+# replay changing responses in order, keep only some request headers, move large bodies into files
+shaped = client.retrieve_recorded_expectations(
+    options=RecordedExpectationsOptions().with_repeats_as_scenarios().with_capture_headers("X-Tenant").with_extract_bodies_larger_than(1024)
+)
 
 client.clear_by_metadata("owner", "team-a")      # str compared as text, other values as JSON
 client.clear_by_metadata_key("ticket")           # any value

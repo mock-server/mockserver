@@ -1266,15 +1266,23 @@ module MockServer
     # @param request [HttpRequest, nil]
     # @param offset [Integer, nil] number to skip, zero or more
     # @param limit [Integer, nil] maximum number to return, zero or more
+    # @param options [RecordedExpectationsOptions, nil] shapes the returned
+    #   expectations, for example replaying a request recorded with different
+    #   responses in order
     # @return [Array<Expectation>]
-    def retrieve_recorded_expectations(request: nil, offset: nil, limit: nil)
+    def retrieve_recorded_expectations(request: nil, offset: nil, limit: nil, options: nil)
+      unless options.nil? || options.is_a?(RecordedExpectationsOptions)
+        raise ArgumentError, "options must be a RecordedExpectationsOptions, got #{options.inspect}"
+      end
+
       paging = ExpectationFilter.new
       paging.with_offset(offset) unless offset.nil?
       paging.with_limit(limit) unless limit.nil?
       body = request ? JSON.generate(request.to_h) : ''
+      query_params = { 'type' => 'RECORDED_EXPECTATIONS', 'format' => 'JSON' }
+      query_params.merge!(options.to_query_params) unless options.nil?
       status, response_body = do_request(
-        'PUT', '/mockserver/retrieve', body,
-        { 'type' => 'RECORDED_EXPECTATIONS', 'format' => 'JSON' }.merge(paging.to_query_params)
+        'PUT', '/mockserver/retrieve', body, query_params.merge(paging.to_query_params)
       )
       if status >= 400
         raise Error, "Failed to retrieve recorded expectations (status=#{status}): #{response_body}"

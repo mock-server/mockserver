@@ -290,6 +290,14 @@ let page = client.retrieve_active_expectations_with_filter(
     None,
     &ExpectationFilter::new().metadata_key("owner").offset(0).limit(20),
 )?;
+// replay changing responses in order, keep only some request headers, move large bodies into files
+let shaped = client.retrieve_recorded_expectations_with_options(
+    None,
+    &RecordedExpectationsOptions::new()
+        .repeats_as_scenarios(true)
+        .capture_headers(["X-Tenant"])
+        .extract_bodies_larger_than(1024),
+)?;
 
 client.clear_by_metadata("owner", "team-a")?;
 client.clear_unmatched_expectations()?;

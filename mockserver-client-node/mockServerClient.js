@@ -141,6 +141,56 @@ var mockServerClient;
         return params.length > 0 ? '&' + params.join('&') : '';
     };
 
+    var RECORDED_EXPECTATIONS_OPTIONS = ['consolidate', 'parameterize', 'repeatsAsScenarios', 'captureHeaders', 'extractBodiesLargerThan'];
+
+    /**
+     * Build the query string suffix (starting with "&", or empty) for the recorded-expectation options:
+     * { consolidate, parameterize, repeatsAsScenarios, captureHeaders, extractBodiesLargerThan }.
+     * A boolean option is sent only when true; captureHeaders: [] is sent empty, which keeps no headers.
+     */
+    var _recordedExpectationsOptionsQuery = function (options) {
+        if (options === null || typeof options !== 'object' || Array.isArray(options)) {
+            throw new Error("the recorded expectations options must be an object with any of: " + RECORDED_EXPECTATIONS_OPTIONS.join(', '));
+        }
+        Object.keys(options).forEach(function (name) {
+            if (RECORDED_EXPECTATIONS_OPTIONS.indexOf(name) === -1) {
+                throw new Error("\"" + name + "\" is not a supported recorded expectations option, only " + RECORDED_EXPECTATIONS_OPTIONS.join(', ') + " are allowed");
+            }
+        });
+        var params = [];
+        ['consolidate', 'parameterize', 'repeatsAsScenarios'].forEach(function (name) {
+            var value = options[name];
+            if (value !== undefined && value !== null) {
+                if (typeof value !== 'boolean') {
+                    throw new Error(name + " must be a boolean but found: " + JSON.stringify(value));
+                }
+                if (value) {
+                    params.push(name + '=true');
+                }
+            }
+        });
+        var captureHeaders = options.captureHeaders;
+        if (captureHeaders !== undefined && captureHeaders !== null) {
+            if (!Array.isArray(captureHeaders)) {
+                throw new Error("captureHeaders must be an array of header names but found: " + JSON.stringify(captureHeaders));
+            }
+            captureHeaders.forEach(function (name) {
+                if (_isBlankString(name) || name.indexOf(',') !== -1) {
+                    throw new Error("each captureHeaders entry must be a non-blank header name without a comma but found: " + JSON.stringify(name));
+                }
+            });
+            params.push('captureHeaders=' + _encodeQueryValue(captureHeaders.join(',')));
+        }
+        var threshold = options.extractBodiesLargerThan;
+        if (threshold !== undefined && threshold !== null) {
+            if (typeof threshold !== 'number' || !Number.isSafeInteger(threshold) || threshold < 0) {
+                throw new Error("extractBodiesLargerThan must be an integer number of bytes, zero or more, but found: " + JSON.stringify(threshold));
+            }
+            params.push('extractBodiesLargerThan=' + threshold);
+        }
+        return params.length > 0 ? '&' + params.join('&') : '';
+    };
+
     // Validate the metadata object of an expectation (string keys, any JSON value).
     var _requireMetadataObject = function (metadata) {
         if (typeof metadata !== 'object' || Array.isArray(metadata)) {
@@ -2051,14 +2101,25 @@ var mockServerClient;
          * @param pathOrRequestMatcher  if a string is passed in the value will be treated as the path, however
          *                              if an object is passed in the value will be treated as a full request
          *                              matcher object, if null is passed in it will be treated as match all
-         * @param offset                optional number of recorded expectations to skip, an integer zero or more
+         * @param offset                optional number of recorded expectations to skip, an integer zero or more,
+         *                              or an options object ({ consolidate, parameterize, repeatsAsScenarios,
+         *                              captureHeaders, extractBodiesLargerThan }) that shapes the returned
+         *                              expectations; invalid options are rejected before anything is sent
          * @param limit                 optional maximum number to return, an integer zero or more
          */
         var retrieveRecordedExpectations = function (pathOrRequestMatcher, offset, limit) {
-            var pagingQuery = _expectationFilterQuery({offset: offset, limit: limit}, false);
+            var query;
+            if (offset !== null && typeof offset === 'object') {
+                if (limit !== undefined) {
+                    throw new Error("limit cannot be combined with a recorded expectations options object");
+                }
+                query = _recordedExpectationsOptionsQuery(offset);
+            } else {
+                query = _expectationFilterQuery({offset: offset, limit: limit}, false);
+            }
             return {
                 then: function (sucess, error) {
-                    return makeRequest(host, port, "/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" + pagingQuery, addDefaultRequestMatcherHeaders(pathOrRequestMatcher))
+                    return makeRequest(host, port, "/mockserver/retrieve?type=RECORDED_EXPECTATIONS&format=JSON" + query, addDefaultRequestMatcherHeaders(pathOrRequestMatcher))
                         .then(function (result) {
                             sucess(result.body && JSON.parse(result.body));
                         }, function (err) {

@@ -25,6 +25,7 @@ from mockserver.models import (
     HttpTemplate,
     LoadScenario,
     OpenAPIExpectation,
+    RecordedExpectationsOptions,
     RequestExplanation,
     TimeToLive,
     Times,
@@ -618,9 +619,10 @@ class MockServerClient:
         request: HttpRequest | None = None,
         offset: int | None = None,
         limit: int | None = None,
+        options: RecordedExpectationsOptions | None = None,
     ) -> list[Expectation]:
         return self._run(
-            self._async_client.retrieve_recorded_expectations(request, offset, limit)
+            self._async_client.retrieve_recorded_expectations(request, offset, limit, options)
         )
 
     def retrieve_recorded_requests_by_id(

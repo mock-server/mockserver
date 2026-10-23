@@ -3299,6 +3299,94 @@ class ExpectationFilter:
         return f"ExpectationFilter({self.to_query_params()!r})"
 
 
+def _require_optional_bool(value: Any, name: str) -> bool | None:
+    if value is not None and not isinstance(value, bool):
+        raise ValueError(f"{name} must be True or False, got {value!r}")
+    return value
+
+
+def _require_header_names(names: Any) -> list[str] | None:
+    if names is None:
+        return None
+    if isinstance(names, str) or not isinstance(names, (list, tuple)):
+        raise ValueError(f"capture_headers must be a list of header names, got {names!r}")
+    for name in names:
+        if not isinstance(name, str) or not name.strip() or "," in name:
+            raise ValueError(
+                f"each capture_headers entry must be a non-blank header name without a comma, got {name!r}"
+            )
+    return list(names)
+
+
+class RecordedExpectationsOptions:
+    """Options that shape the expectations returned when retrieving recorded expectations.
+
+    Sent as query string parameters on ``PUT /mockserver/retrieve?type=RECORDED_EXPECTATIONS``.
+    Each option is off unless set, so an empty options object changes nothing. Invalid
+    values raise ``ValueError`` before anything is sent.
+    """
+
+    def __init__(self) -> None:
+        self.consolidate: bool | None = None
+        self.parameterize: bool | None = None
+        self.repeats_as_scenarios: bool | None = None
+        self.capture_headers: list[str] | None = None
+        self.extract_bodies_larger_than: int | None = None
+
+    def with_consolidate(self, consolidate: bool = True) -> RecordedExpectationsOptions:
+        """Collapse recorded exchanges that share a request shape into one unlimited-times expectation."""
+        self.consolidate = _require_optional_bool(consolidate, "consolidate")
+        return self
+
+    def with_parameterize(self, parameterize: bool = True) -> RecordedExpectationsOptions:
+        """Also generalise volatile path, query, header and body values into matchers (implies consolidate)."""
+        self.parameterize = _require_optional_bool(parameterize, "parameterize")
+        return self
+
+    def with_repeats_as_scenarios(self, repeats_as_scenarios: bool = True) -> RecordedExpectationsOptions:
+        """Replay a request recorded several times with different responses in the recorded order,
+        then keep returning the last one."""
+        self.repeats_as_scenarios = _require_optional_bool(repeats_as_scenarios, "repeats_as_scenarios")
+        return self
+
+    def with_capture_headers(self, *header_names: str) -> RecordedExpectationsOptions:
+        """Keep only these request headers (case-insensitive) in each recorded matcher; no names keeps none."""
+        self.capture_headers = _require_header_names(list(header_names))
+        return self
+
+    def with_extract_bodies_larger_than(self, threshold_bytes: int | None) -> RecordedExpectationsOptions:
+        """Write each response body larger than this many bytes to the server's
+        ``recordedBodyFilesDirectory`` and return a FILE body that points at it."""
+        self.extract_bodies_larger_than = _require_non_negative_int(
+            threshold_bytes, "extract_bodies_larger_than"
+        )
+        return self
+
+    def to_query_params(self) -> dict[str, str]:
+        """The query string parameters for these options, as literal (not yet URL-encoded) text.
+
+        Re-validates the attributes, which are public and so may have been set directly.
+        """
+        params: dict[str, str] = {}
+        for name, value in (
+            ("consolidate", self.consolidate),
+            ("parameterize", self.parameterize),
+            ("repeatsAsScenarios", self.repeats_as_scenarios),
+        ):
+            if _require_optional_bool(value, name):
+                params[name] = "true"
+        capture_headers = _require_header_names(self.capture_headers)
+        if capture_headers is not None:
+            params["captureHeaders"] = ",".join(capture_headers)
+        threshold = _require_non_negative_int(self.extract_bodies_larger_than, "extract_bodies_larger_than")
+        if threshold is not None:
+            params["extractBodiesLargerThan"] = str(threshold)
+        return params
+
+    def __repr__(self) -> str:
+        return f"RecordedExpectationsOptions({self.to_query_params()!r})"
+
+
 @dataclass
 class Expectation:
     id: str | None = None
