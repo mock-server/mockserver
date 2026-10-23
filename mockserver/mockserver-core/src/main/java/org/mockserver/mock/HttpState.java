@@ -7672,6 +7672,8 @@ public class HttpState {
             warnInitOnlyProperty("forwardProxyDeniedHosts", "\"" + suppliedForwardProxyDeniedHosts + "\"", "\"" + configuration.forwardProxyDeniedHosts() + "\"",
                 "it decides where the server may send requests, so a request to the control plane cannot widen it");
         }
+        warnIfInitOnlyPathSupplied("noProxyHosts", suppliedConfiguration.getNoProxyHosts(), configuration.noProxyHosts(),
+            "it decides which forwarded requests bypass the upstream proxy, so a request to the control plane cannot change it");
         Boolean suppliedTlsMutualAuthenticationAllowBundledCa = suppliedConfiguration.getTlsMutualAuthenticationAllowBundledCa();
         if (suppliedTlsMutualAuthenticationAllowBundledCa != null && !suppliedTlsMutualAuthenticationAllowBundledCa.equals(configuration.tlsMutualAuthenticationAllowBundledCa())) {
             warnInitOnlyProperty("tlsMutualAuthenticationAllowBundledCa", String.valueOf(suppliedTlsMutualAuthenticationAllowBundledCa), String.valueOf(configuration.tlsMutualAuthenticationAllowBundledCa()),

@@ -229,6 +229,17 @@ public class ConfigurationDTOTest {
     }
 
     @Test
+    public void shouldNotApplyNoProxyHostsToARunningServer() {
+        Configuration target = configuration().noProxyHosts("internal.example");
+
+        new ConfigurationDTO().setNoProxyHosts("*.com,*.net").applyTo(target);
+
+        assertThat(target.noProxyHosts(), is("internal.example"));
+        // a startup configuration (buildObject) still sets it
+        assertThat(new ConfigurationDTO().setNoProxyHosts("*.com").buildObject().noProxyHosts(), is("*.com"));
+    }
+
+    @Test
     public void shouldNotCarryTheHeldLlmApiKeyToANewLlmDestination() {
         Configuration target = configuration().llmProvider("OPENAI").llmBaseUrl("https://held.example").llmApiKey("sk-held");
 
@@ -770,7 +781,9 @@ public class ConfigurationDTOTest {
         // switching it off would hide the control-plane changes that follow
         "controlPlaneAuditEnabled",
         // decides where every dashboard viewer's browser sends usage events
-        "dashboardAnalyticsEndpoint"
+        "dashboardAnalyticsEndpoint",
+        // decides which forwarded requests bypass the upstream proxy
+        "noProxyHosts"
     ));
 
     @Test

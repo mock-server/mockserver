@@ -313,6 +313,32 @@ public class HttpStateConfigurationUpdateTest {
     }
 
     @Test
+    public void shouldNotLetAPutChangeWhichHostsBypassTheUpstreamProxy() {
+        // given - forwarded requests go through an upstream proxy except for one host
+        configuration.noProxyHosts("internal.example");
+
+        // when - a PUT tries to route every .com and .net destination around the proxy
+        put(new ConfigurationDTO().setNoProxyHosts("*.com,*.net"));
+
+        // then - the startup value stays in force, GET reports it, and the ignored value is reported
+        assertThat(configuration.noProxyHosts(), is("internal.example"));
+        assertThat(new ConfigurationDTO(configuration).getNoProxyHosts(), is("internal.example"));
+        List<String> warnings = logger.warnings();
+        assertThat(warnings, hasSize(1));
+        assertThat(warnings.get(0), containsString("noProxyHosts is fixed at startup"));
+        assertThat(warnings.get(0), containsString("the supplied value \"*.com,*.net\" has been IGNORED and noProxyHosts remains \"internal.example\""));
+    }
+
+    @Test
+    public void shouldNotWarnWhenAPutEchoesTheNoProxyHostsInForce() {
+        configuration.noProxyHosts("internal.example");
+
+        put(new ConfigurationDTO().setNoProxyHosts("internal.example"));
+
+        assertThat(logger.warnings(), hasSize(0));
+    }
+
+    @Test
     public void shouldNotLetAPutSwitchOffForwardProxyBlockPrivateNetworks() {
         // given - the SSRF guard is on
         configuration.forwardProxyBlockPrivateNetworks(true);

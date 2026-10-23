@@ -15,6 +15,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 import org.mockserver.proxyconfiguration.ProxyConfiguration;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.serialization.ObjectMapperFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -241,6 +242,23 @@ public class NoProxyHostsBypassesUpstreamProxyIntegrationTest {
             destinationClientAndServer.verify(request().withPath("/target"), exactly(0));
             assertThat(httpProxy.destinations(), is(empty()));
             assertThat(httpsProxy.destinations(), is(empty()));
+        }
+    }
+
+    @Test
+    public void shouldKeepTheStartupNoProxyHostsWhenAPutTriesToRouteAroundTheUpstreamProxy() throws Exception {
+        try (RecordingUpstreamProxy httpProxy = new RecordingUpstreamProxy(RecordingUpstreamProxy.Protocol.HTTP, TIMEOUT_SECONDS)) {
+            proxyClientAndServer = startClientAndServer(configuration().forwardHttpProxy(httpProxy.address()).noProxyHosts("other.test"));
+            overrideForwardToDestination();
+
+            proxyClientAndServer.updateConfiguration("{\"noProxyHosts\": \"localhost\"}");
+
+            assertThat(ObjectMapperFactory.createObjectMapper().readTree(proxyClientAndServer.retrieveConfiguration()).path("noProxyHosts").asText(), is("other.test"));
+            HttpResponse response = sendToProxy("/clear");
+            assertThat(response.getStatusCode(), is(200));
+            assertThat(response.getBodyAsString(), is(RecordingUpstreamProxy.HTTP_PROXY_BODY));
+            destinationClientAndServer.verify(request().withPath("/target"), exactly(0));
+            assertThat(httpProxy.destinations(), contains("http://localhost:" + destinationPort() + "/target"));
         }
     }
 
