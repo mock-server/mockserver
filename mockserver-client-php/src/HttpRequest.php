@@ -301,16 +301,53 @@ class HttpRequest implements \JsonSerializable
     }
 
     /**
-     * Build a JSON_PATH body matcher array (for composition, e.g. inside allOfBody()).
+     * Build a JSON_PATH body matcher array (for composition, e.g. inside allOfBody(),
+     * or for matcherBody()). With {@code $dateTime} the body matches only when a value
+     * the JSONPath selects is a date-time satisfying it.
      *
-     * @return array<string, string>
+     * @return array<string, mixed>
      */
-    public static function jsonPathBody(string $jsonPath): array
+    public static function jsonPathBody(string $jsonPath, ?DateTimeMatcher $dateTime = null): array
     {
-        return [
+        $body = [
             'type' => 'JSON_PATH',
             'jsonPath' => $jsonPath,
         ];
+        if ($dateTime !== null) {
+            $body['dateTime'] = $dateTime->toArray();
+        }
+        return $body;
+    }
+
+    /**
+     * Build an XPATH body matcher array (for composition, e.g. inside allOfBody(),
+     * or for matcherBody()). With {@code $dateTime} the body matches only when the
+     * text of a node the XPath selects is a date-time satisfying it.
+     *
+     * @return array<string, mixed>
+     */
+    public static function xpathBody(string $xpath, ?DateTimeMatcher $dateTime = null): array
+    {
+        $body = [
+            'type' => 'XPATH',
+            'xpath' => $xpath,
+        ];
+        if ($dateTime !== null) {
+            $body['dateTime'] = $dateTime->toArray();
+        }
+        return $body;
+    }
+
+    /**
+     * Set the request body to a typed body matcher array, such as one built by
+     * {@see jsonPathBody()} or {@see xpathBody()}.
+     *
+     * @param array<string, mixed> $body
+     */
+    public function matcherBody(array $body): self
+    {
+        $this->body = $body;
+        return $this;
     }
 
     /**

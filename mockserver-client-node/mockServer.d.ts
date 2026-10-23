@@ -510,6 +510,31 @@ export interface SocketAddress {
 }
 
 /**
+ * JSONPath body matcher. With `dateTime` the body matches only when a value the JSONPath selects
+ * is a date-time satisfying it, e.g. `{ type: "JSON_PATH", jsonPath: "$.created", dateTime: { after: "now -1 days" } }`.
+ */
+export interface JsonPathBodyMatcher {
+  not?: boolean;
+  optional?: boolean;
+  type?: "JSON_PATH";
+  jsonPath?: string;
+  dateTime?: DateTimeMatcher;
+}
+
+/**
+ * XPath body matcher. With `dateTime` the body matches only when the text of a node the XPath
+ * selects is a date-time satisfying it, e.g. `{ type: "XPATH", xpath: "/order/@expires", dateTime: { before: "now" } }`.
+ */
+export interface XPathBodyMatcher {
+  not?: boolean;
+  optional?: boolean;
+  type?: "XPATH";
+  xpath?: string;
+  namespacePrefixes?: Record<string, string>;
+  dateTime?: DateTimeMatcher;
+}
+
+/**
  * request body matcher
  */
 export type Body =
@@ -517,14 +542,14 @@ export type Body =
   | { not?: boolean; type?: "JSON"; json?: string; contentType?: string; matchType?: "STRICT" | "ONLY_MATCHING_FIELDS" }
   | Record<string, any>
   | { not?: boolean; type?: "JSON_SCHEMA"; jsonSchema?: any }
-  | { not?: boolean; type?: "JSON_PATH"; jsonPath?: string }
+  | JsonPathBodyMatcher
   | { not?: boolean; type?: "PARAMETERS"; parameters?: KeyToMultiValue }
   | { not?: boolean; type?: "REGEX"; regex?: string }
   | { not?: boolean; type?: "STRING"; string?: string; contentType?: string; subString?: boolean }
   | string
   | { not?: boolean; type?: "XML"; xml?: string; contentType?: string }
   | { not?: boolean; type?: "XML_SCHEMA"; xmlSchema?: string }
-  | { not?: boolean; type?: "XPATH"; xpath?: string }
+  | XPathBodyMatcher
   | { not?: boolean; type?: "FILE"; filePath?: string; contentType?: string; templateType?: "VELOCITY" | "MUSTACHE" }
   | {
       type: 'JSON_RPC';

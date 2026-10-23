@@ -176,6 +176,17 @@ client.When(
 
 A plain string such as `"before:2026-01-01"` is always matched as literal text, never as a date-time.
 
+A `JSON_PATH` or `XPATH` body can compare the value it selects as a date-time; the body matches when
+any selected value (or node text) satisfies it:
+
+```csharp
+var request = new HttpRequest
+{
+    Path = "/orders",
+    Body = Body.OfJsonPath("$.order.created").WithDateTime(MatcherValue.After("now -1 days"))
+};
+```
+
 ### Client IP Matcher
 
 Match requests by the client IP address or CIDR range, IPv4 or IPv6. The client address is the TCP peer of the connection, not `X-Forwarded-For`; prefix with `!` to match every other address.

@@ -203,6 +203,13 @@ function bodyValueExpr(o: Record<string, unknown>, indent: number): string {
   if (type === 'REGEX' && hasExactKeys(o, ['type', 'regex'])) return `Body::regex(${rustStr(String(o['regex']))})`;
   if (type === 'JSON_PATH' && hasExactKeys(o, ['type', 'jsonPath'])) return `Body::json_path(${rustStr(String(o['jsonPath']))})`;
   if (type === 'XPATH' && hasExactKeys(o, ['type', 'xpath'])) return `Body::xpath(${rustStr(String(o['xpath']))})`;
+  const dt = dateTimeMatcherOf(o['dateTime']);
+  if (dt && type === 'JSON_PATH' && hasExactKeys(o, ['type', 'jsonPath', 'dateTime'])) {
+    return `Body::json_path(${rustStr(String(o['jsonPath']))}).with_date_time(${dateTimeBuilderExpr(dt, { head: 'MatcherValue::', naming: 'snake', str: rustStr, bool: String })})`;
+  }
+  if (dt && type === 'XPATH' && hasExactKeys(o, ['type', 'xpath', 'dateTime'])) {
+    return `Body::xpath(${rustStr(String(o['xpath']))}).with_date_time(${dateTimeBuilderExpr(dt, { head: 'MatcherValue::', naming: 'snake', str: rustStr, bool: String })})`;
+  }
   if (type === 'XML' && hasExactKeys(o, ['type', 'xml'])) return `Body::xml(${rustStr(String(o['xml']))})`;
   if (type === 'XML_SCHEMA' && hasExactKeys(o, ['type', 'xmlSchema'])) return `Body::xml_schema(${rustStr(String(o['xmlSchema']))})`;
   if (type === 'JSON_SCHEMA' && hasExactKeys(o, ['type', 'jsonSchema'])) return `Body::json_schema(${rustStr(String(o['jsonSchema']))})`;

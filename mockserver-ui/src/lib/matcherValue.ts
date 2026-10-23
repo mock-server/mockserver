@@ -187,6 +187,31 @@ export function dateTimeBuilderExpr(dt: DateTimeMatcher, style: DateTimeBuilderS
 }
 
 /**
+ * The wire `dateTime` of a JSONPath / XPath body from the Composer's text for it (compact JSON
+ * such as `{"after":"now -1 days"}`): the parsed object, or undefined when the text is blank or
+ * not a JSON object. An object that is not a date-time matcher is still returned, so the server
+ * rejects it loudly instead of the comparison being dropped; {@link bodyDateTimeError} flags it.
+ */
+export function bodyDateTimeFromText(text: string | undefined): Record<string, unknown> | undefined {
+  const t = text?.trim();
+  if (!t) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(t);
+    return isPlainObject(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Why the Composer's body date-time text is not a date-time matcher, or undefined when it is (or is blank). */
+export function bodyDateTimeError(text: string | undefined): string | undefined {
+  if (!text?.trim()) return undefined;
+  return dateTimeMatcherOf(bodyDateTimeFromText(text))
+    ? undefined
+    : 'Must be a date-time matcher with one of before, after or equalToDateTime, e.g. {"after":"now -1 days"}';
+}
+
+/**
  * The plain-string reading of a value, as the server's NottableString.string(..) parses it:
  * a leading `?` (optional), then `!` (not), then `?` again. A blank value carries no markers.
  */

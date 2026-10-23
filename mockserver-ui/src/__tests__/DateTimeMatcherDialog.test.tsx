@@ -15,6 +15,16 @@ function renderDialog() {
   return props;
 }
 
+function renderBodyDialog() {
+  const props = { open: true, onClose: vi.fn(), onAddBody: vi.fn() };
+  render(
+    <ThemeProvider theme={buildTheme('dark')}>
+      <DateTimeMatcherDialog {...props} />
+    </ThemeProvider>,
+  );
+  return props;
+}
+
 describe('DateTimeMatcherDialog', () => {
   it('adds a header line holding only the options that are set', async () => {
     const user = userEvent.setup();
@@ -56,5 +66,20 @@ describe('DateTimeMatcherDialog', () => {
     expect(screen.getByText('Name cannot contain ":"')).toBeInTheDocument();
     expect(add).toBeDisabled();
     expect(props.onAdd).not.toHaveBeenCalled();
+  });
+
+  it('builds a body date-time comparison without a field or name', async () => {
+    const user = userEvent.setup();
+    const props = renderBodyDialog();
+    expect(screen.queryByRole('textbox', { name: 'Name' })).not.toBeInTheDocument();
+    const set = screen.getByRole('button', { name: 'Set' });
+    expect(set).toBeDisabled();
+    await user.click(screen.getByRole('combobox', { name: 'Comparison' }));
+    await user.click(screen.getByRole('option', { name: 'Before' }));
+    await user.type(screen.getByRole('textbox', { name: 'Expected Value' }), 'now +1 days');
+    await user.type(screen.getByRole('textbox', { name: 'Actual Format (optional)' }), 'rfc1123');
+    await user.click(set);
+    expect(props.onAddBody).toHaveBeenCalledWith('{"before":"now +1 days","actualFormat":"rfc1123"}');
+    expect(props.onClose).toHaveBeenCalledOnce();
   });
 });

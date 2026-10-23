@@ -10,15 +10,25 @@ public class XPathBody extends Body<String> {
     private int hashCode;
     private final String xpath;
     private final Map<String, String> namespacePrefixes;
+    private final NottableDateTimeString dateTime;
 
     public XPathBody(String xpath) {
-      this(xpath, null);
+      this(xpath, null, null);
     }
     
     public XPathBody(String xpath, Map<String, String> namespacePrefixes) {
+      this(xpath, namespacePrefixes, null);
+    }
+
+    /**
+     * @param dateTime when not null, the body matches only when the text of a node the XPath selects is a
+     *                 date-time that satisfies this comparison
+     */
+    public XPathBody(String xpath, Map<String, String> namespacePrefixes, NottableDateTimeString dateTime) {
       super(Type.XPATH);
       this.xpath = xpath;
       this.namespacePrefixes = namespacePrefixes;
+      this.dateTime = dateTime;
     }
 
     public String getValue() {
@@ -28,11 +38,27 @@ public class XPathBody extends Body<String> {
         return namespacePrefixes;
     }
 
+    public NottableDateTimeString getDateTime() {
+        return dateTime;
+    }
+
     public static XPathBody xpath(String xpath) {
        return new XPathBody(xpath);
     }
     public static XPathBody xpath(String xpath, Map<String, String> namespacePrefixes) {
         return new XPathBody(xpath, namespacePrefixes);
+    }
+
+    /**
+     * Matches when the text of a node the XPath selects is a date-time that satisfies {@code dateTime}, for
+     * example {@code xpath("/order/created", after("now -1 days"))}.
+     */
+    public static XPathBody xpath(String xpath, NottableDateTimeString dateTime) {
+        return new XPathBody(xpath, null, dateTime);
+    }
+
+    public static XPathBody xpath(String xpath, Map<String, String> namespacePrefixes, NottableDateTimeString dateTime) {
+        return new XPathBody(xpath, namespacePrefixes, dateTime);
     }
 
     @Override
@@ -50,13 +76,13 @@ public class XPathBody extends Body<String> {
             return false;
         }
         XPathBody xPathBody = (XPathBody) o;
-        return Objects.equals(xpath, xPathBody.xpath) && Objects.equals(namespacePrefixes, xPathBody.namespacePrefixes);
+        return Objects.equals(xpath, xPathBody.xpath) && Objects.equals(namespacePrefixes, xPathBody.namespacePrefixes) && Objects.equals(dateTime, xPathBody.dateTime);
     }
 
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-          hashCode = Objects.hash(super.hashCode(), xpath, namespacePrefixes);
+          hashCode = dateTime == null ? Objects.hash(super.hashCode(), xpath, namespacePrefixes) : Objects.hash(super.hashCode(), xpath, namespacePrefixes, dateTime);
         }
         return hashCode;
     }

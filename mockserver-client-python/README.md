@@ -226,6 +226,17 @@ Each `with_*` option (`with_actual_format`, `with_truncate_expected`,
 `with_truncate_actual`, `with_apply_truncation_last`, `with_zone`, `with_not`)
 returns a new matcher.
 
+A JSONPath or XPath body matcher can take a `DateTimeMatcher` too: the body
+matches when a value the JSONPath selects, or the text of a node the XPath
+selects, is a matching date-time.
+
+```python
+from mockserver import Body, DateTimeMatcher, HttpRequest
+
+HttpRequest(path="/orders", body=Body.json_path("$.order.created", DateTimeMatcher.after("now -1 days")))
+HttpRequest(path="/soap", body=Body.xpath("/order/@expires", None, DateTimeMatcher.after("now")))
+```
+
 ### JWT matcher
 
 Match requests by the claims (and metadata) of a JWT carried in a header. Each

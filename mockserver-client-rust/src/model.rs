@@ -1660,6 +1660,67 @@ impl Body {
         }
     }
 
+    /// Compare the value a `JSON_PATH` body selects, or the text of a node an
+    /// `XPATH` body selects, as a date-time: the body then matches only when one
+    /// satisfies `date_time`, built with [`MatcherValue::before`],
+    /// [`MatcherValue::after`] or [`MatcherValue::equal_to_date_time`].
+    ///
+    /// Serialises to `{ "type": "JSON_PATH", "jsonPath": <expr>, "dateTime": {...} }`
+    /// and is held as a [`Body::Object`].
+    ///
+    /// ```
+    /// use mockserver_client::{Body, MatcherValue};
+    ///
+    /// let body = Body::json_path("$.order.created").with_date_time(MatcherValue::after("now -1 days"));
+    /// ```
+    ///
+    /// # Panics
+    /// Panics if `date_time` is not a date-time matcher or this is not a
+    /// `JSON_PATH` or `XPATH` body, so a misplaced comparison is never silently dropped.
+    pub fn with_date_time(self, date_time: MatcherValue) -> Self {
+        assert!(
+            date_time.is_date_time(),
+            "with_date_time needs a date-time matcher; build one with MatcherValue::before, after or equal_to_date_time"
+        );
+        let date_time = serde_json::to_value(&date_time)
+            .expect("BUG: MatcherValue serialization failed for an in-memory value");
+        let mut map = match self {
+            Body::Matcher {
+                body_type,
+                value_key,
+                value,
+            } => {
+                let mut map = serde_json::Map::new();
+                map.insert("type".into(), serde_json::Value::from(body_type));
+                map.insert(value_key, serde_json::Value::from(value));
+                map
+            }
+            Body::Object(map) => map,
+            other => {
+                panic!("with_date_time applies only to a JSON_PATH or XPATH body, not {other:?}")
+            }
+        };
+        match map.get("type").and_then(|t| t.as_str()) {
+            Some("JSON_PATH" | "XPATH") => {}
+            other => {
+                panic!("with_date_time applies only to a JSON_PATH or XPATH body, not {other:?}")
+            }
+        }
+        map.insert("dateTime".into(), date_time);
+        Body::Object(map)
+    }
+
+    /// The date-time comparison of a `JSON_PATH` or `XPATH` body, if it has one.
+    pub fn date_time(&self) -> Option<MatcherValue> {
+        match self {
+            Body::Object(map) => map
+                .get("dateTime")
+                .and_then(|value| serde_json::from_value::<MatcherValue>(value.clone()).ok())
+                .filter(MatcherValue::is_date_time),
+            _ => None,
+        }
+    }
+
     /// Create a `STRING` body matcher. When `sub_string` is true the value need
     /// only be a substring of the request body.
     ///

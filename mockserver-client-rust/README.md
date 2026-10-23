@@ -269,6 +269,16 @@ optional `with_actual_format`, `with_truncate_expected`, `with_truncate_actual`,
 `with_apply_truncation_last`, `with_zone` and `with_not` each return a new
 value. A plain string such as `"before:2026-01-01"` is still matched literally.
 
+A `JSON_PATH` or `XPATH` body can compare the value it selects as a date-time
+with `with_date_time`; the body matches when any selected value (or node text)
+satisfies it:
+
+```rust
+use mockserver_client::{Body, MatcherValue};
+
+let body = Body::json_path("$.order.created").with_date_time(MatcherValue::after("now -1 days"));
+```
+
 ### Expectation metadata, unused mocks and paging
 
 Label expectations with free-form `metadata` (any JSON values, including

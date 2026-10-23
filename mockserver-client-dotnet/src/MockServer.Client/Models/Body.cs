@@ -87,6 +87,14 @@ public sealed class Body
     /// <summary>The XPath expression for an <c>XPATH</c> body.</summary>
     public string? Xpath { get; set; }
 
+    /// <summary>
+    /// For a <c>JSON_PATH</c> or <c>XPATH</c> body: the body matches only when a value the JSONPath
+    /// selects, or the text of a node the XPath selects, is a date-time satisfying this matcher
+    /// (wire property <c>dateTime</c>). Build it with <see cref="MatcherValue.Before"/>,
+    /// <see cref="MatcherValue.After"/> or <see cref="MatcherValue.EqualToDateTime"/>.
+    /// </summary>
+    public MatcherValue? DateTime { get; set; }
+
     // ---- REGEX ----
     /// <summary>The regular expression for a <c>REGEX</c> body.</summary>
     public string? Regex { get; set; }
@@ -227,6 +235,22 @@ public sealed class Body
 
     /// <summary>Negates this matcher (fluent).</summary>
     public Body WithNot(bool not) { Not = not; return this; }
+
+    /// <summary>
+    /// Compares the value a <c>JSON_PATH</c> body selects, or the text of a node an <c>XPATH</c> body
+    /// selects, as a date-time (fluent), for example
+    /// <c>Body.OfJsonPath("$.order.created").WithDateTime(MatcherValue.After("now -1 days"))</c>.
+    /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="dateTime"/> is not a date-time matcher.</exception>
+    public Body WithDateTime(MatcherValue dateTime)
+    {
+        if (!dateTime.IsDateTime)
+        {
+            throw new ArgumentException("WithDateTime needs a date-time matcher; build one with MatcherValue.Before, After or EqualToDateTime", nameof(dateTime));
+        }
+        DateTime = dateTime;
+        return this;
+    }
 
     /// <summary>Sets the content type (fluent).</summary>
     public Body WithContentType(string contentType) { ContentType = contentType; return this; }

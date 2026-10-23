@@ -114,6 +114,17 @@ mockServerClient("localhost", 1080)
 
 A plain string such as `'before:2026-01-01'` is matched literally, not as a date-time.
 
+A `JSON_PATH` or `XPATH` body can compare the value it selects as a date-time with a `dateTime` field of the same form; the body matches when any selected value (or node text) satisfies it. TypeScript users can type these bodies as `JsonPathBodyMatcher` and `XPathBodyMatcher`:
+
+```js
+mockServerClient("localhost", 1080)
+    .when({
+        path: '/orders',
+        body: { type: 'JSON_PATH', jsonPath: '$.order.created', dateTime: { after: 'now -1 days' } }
+    })
+    .respond({ statusCode: 200 });
+```
+
 For the full documentation see [MockServer - Creating Expectations](https://mock-server.com/mock_server/creating_expectations.html).
 
 ### Fluent `when().respond()` API

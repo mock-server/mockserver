@@ -192,6 +192,14 @@ $client->when(
 );
 ```
 
+A JSON_PATH or XPATH body can compare the value it selects as a date-time; the
+body matches when any selected value (or node text) satisfies it:
+
+```php
+HttpRequest::request()->path('/orders')
+    ->matcherBody(HttpRequest::jsonPathBody('$.order.created', DateTimeMatcher::after('now -1 days')));
+```
+
 ### Conditional and OpenAPI Request Matchers
 
 `HttpRequest::conditional($if, $then, $else)` builds an if/then/else matcher,

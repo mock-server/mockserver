@@ -88,6 +88,9 @@ public sealed class BodyJsonConverter : JsonConverter<Body>
                 case "xpath":
                     body.Xpath = prop.Value.GetString();
                     break;
+                case "dateTime":
+                    body.DateTime = prop.Value.Deserialize<MatcherValue>(options);
+                    break;
                 case "regex":
                     body.Regex = prop.Value.GetString();
                     break;
@@ -201,6 +204,11 @@ public sealed class BodyJsonConverter : JsonConverter<Body>
         if (value.Xml is not null) writer.WriteString("xml", value.Xml);
         if (value.XmlSchema is not null) writer.WriteString("xmlSchema", value.XmlSchema);
         if (value.Xpath is not null) writer.WriteString("xpath", value.Xpath);
+        if (value.DateTime is not null)
+        {
+            writer.WritePropertyName("dateTime");
+            JsonSerializer.Serialize(writer, value.DateTime.Value, options);
+        }
         if (value.Regex is not null) writer.WriteString("regex", value.Regex);
         if (value.Base64Bytes is not null) writer.WriteString("base64Bytes", value.Base64Bytes);
 

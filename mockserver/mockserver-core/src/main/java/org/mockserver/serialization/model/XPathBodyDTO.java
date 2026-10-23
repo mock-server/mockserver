@@ -1,6 +1,7 @@
 package org.mockserver.serialization.model;
 
 import org.mockserver.model.Body;
+import org.mockserver.model.NottableDateTimeString;
 import org.mockserver.model.XPathBody;
 
 import java.util.Map;
@@ -12,6 +13,7 @@ public class XPathBodyDTO extends BodyDTO {
 
     private final String xpath;
     private final Map<String, String> namespacePrefixes;
+    private final NottableDateTimeString dateTime;
 
     public XPathBodyDTO(XPathBody xPathBody) {
         this(xPathBody, null);
@@ -21,6 +23,7 @@ public class XPathBodyDTO extends BodyDTO {
         super(Body.Type.XPATH, not);
         this.xpath = xPathBody.getValue();
         this.namespacePrefixes = xPathBody.getNamespacePrefixes();
+        this.dateTime = xPathBody.getDateTime();
         withOptional(xPathBody.getOptional());
     }
 
@@ -32,7 +35,11 @@ public class XPathBodyDTO extends BodyDTO {
         return namespacePrefixes;
     }
 
+    public NottableDateTimeString getDateTime() {
+        return dateTime;
+    }
+
     public XPathBody buildObject() {
-        return (XPathBody) new XPathBody(getXPath(), getNamespacePrefixes()).withOptional(getOptional());
+        return (XPathBody) new XPathBody(getXPath(), getNamespacePrefixes(), getDateTime()).withOptional(getOptional());
     }
 }

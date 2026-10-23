@@ -42,6 +42,8 @@ export {
   CrossProtocolScenario,
   DateTimeMatcher,
   DateTimeMatcherOptions,
+  JsonPathBodyMatcher,
+  XPathBodyMatcher,
   Expectation,
   ExpectationId,
   ExpectationStep,

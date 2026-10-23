@@ -362,9 +362,9 @@ $client-&gt;when(
     </li>
     <li><strong>date-time comparison</strong> (<code>before</code>, <code>after</code> or <code>equalToDateTime</code>)
         <ul>
-            <li><strong>use for:</strong> path parameters values, query parameters values, header values, cookie values and form field values</li>
+            <li><strong>use for:</strong> path parameters values, query parameters values, header values, cookie values, form field values and values selected from a body by JsonPath or XPath</li>
             <li><strong>not supported for:</strong> path parameter keys, query parameter keys, header keys or cookie keys</li>
-            <li><strong>examples:</strong> <a href="#date_time_matching">date-time matching</a></li>
+            <li><strong>examples:</strong> <a href="#date_time_matching">date-time matching</a>, <a href="#body_date_time_matching">date-time matching in a body</a></li>
         </ul>
     </li>
     <li><strong>optional value</strong>
@@ -471,7 +471,7 @@ $client-&gt;when(
         </ul>
     </li>
     <li><strong><a href="#button_match_request_by_body_with_json_schema">JSON Schema</a></strong> - see <a target="_blank" href="https://json-schema.org/" rel="noopener noreferrer">JSON Schema documentation</a></li>
-    <li><strong><a href="#button_match_request_by_body_with_json_path">JsonPath</a></strong> - matches if at least one value is returned by the expression, see <a target="_blank" href="https://github.com/json-path/JsonPath" rel="noopener noreferrer">JsonPath documentation</a></li>
+    <li><strong><a href="#button_match_request_by_body_with_json_path">JsonPath</a></strong> - matches if at least one value is returned by the expression, or, with a <a href="#body_date_time_matching">date-time comparison</a>, if a returned value is a matching date-time, see <a target="_blank" href="https://github.com/json-path/JsonPath" rel="noopener noreferrer">JsonPath documentation</a></li>
     <li><strong><a href="#button_match_request_by_body_with_xml">XML</a></strong> - supports:
         <ul>
             <li><strong><a href="#button_match_request_by_body_with_xml_placeholders">XMLUnit placeholders</a></strong> to allow fields or elements to be ignored or matched by type for example:
@@ -484,7 +484,7 @@ $client-&gt;when(
         </ul>
     </li>
     <li><strong><a href="#button_match_request_by_body_with_xml_schema">XML Schema</a></strong> - see <a target="_blank" href="https://www.w3.org/standards/xml/schema.html" rel="noopener noreferrer">XML Schema documentation</a></li>
-    <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong> - matches if at least one value returned by expression, see <a target="_blank" href="https://www.w3.org/TR/2017/REC-xpath-31-20170321/" rel="noopener noreferrer">XPath specification</a></li>
+    <li><strong><a href="#button_match_request_by_body_with_xpath">XPath</a></strong> - matches if at least one value returned by expression, or, with a <a href="#body_date_time_matching">date-time comparison</a>, if the text of a returned node is a matching date-time, see <a target="_blank" href="https://www.w3.org/TR/2017/REC-xpath-31-20170321/" rel="noopener noreferrer">XPath specification</a></li>
     <li><strong><a href="#button_match_request_by_form_submission_body">form fields</a></strong> (i.e. body parameters)</li>
     <li><strong><a href="#button_match_request_by_multipart_body">multipart/form-data</a></strong> &mdash; match file uploads and mixed field/file requests by field value, filename, or part content-type</li>
     <li><strong><a href="#button_match_request_by_binary_body">binary</a></strong></li>
@@ -3415,7 +3415,541 @@ curl_close($ch);</code></pre>
     </div>
 </div>
 
-<p>A date-time matcher can be used anywhere a value can be a <a href="#button_match_request_by_header_value_json_schema">JSON schema</a> matcher, which includes header, cookie, query-string, path-parameter and form-field values, and the headers checked when verifying responses. It does not yet apply to values inside a JSON or XML body.</p>
+<p>A date-time matcher can be used anywhere a value can be a <a href="#button_match_request_by_header_value_json_schema">JSON schema</a> matcher, which includes header, cookie, query-string, path-parameter and form-field values, and the headers checked when verifying responses. To compare a value inside a JSON or XML body, use a <a href="#body_date_time_matching">JsonPath or XPath body matcher with a date-time comparison</a>.</p>
+
+
+<a id="body_date_time_matching" class="anchor" href="#body_date_time_matching">&nbsp;</a>
+
+<h4>Date-Time Matching in JSON and XML Bodies</h4>
+
+<p>A <a href="#button_match_request_by_body_with_json_path">JsonPath</a> or <a href="#button_match_request_by_body_with_xpath">XPath</a> body matcher can compare the value it selects as a date-time, like WireMock's <code>matchesJsonPath</code> and <code>matchesXPath</code> with <code>before</code>, <code>after</code> or <code>equalToDateTime</code>. Add a <code>"dateTime"</code> field holding a <a href="#date_time_matching">date-time matcher</a>, with the same <code>before</code>, <code>after</code> and <code>equalToDateTime</code> operators and the same optional fields (<code>actualFormat</code>, <code>truncateExpected</code>, <code>truncateActual</code>, <code>applyTruncationLast</code>, <code>zone</code> and <code>not</code>).</p>
+
+<ul>
+    <li><strong>JsonPath:</strong> the body matches when a value the expression selects is a matching date-time. An expression such as <code>$.items[*].expires</code> can select several values; one matching value is enough. A string is read as written and a whole number as epoch seconds or milliseconds; any other value (an object, an array, <code>true</code>) is not a date-time.</li>
+    <li><strong>XPath:</strong> the expression must select nodes, such as an element (<code>/order/created</code>) or an attribute (<code>/order/@expires</code>); the body matches when the text of one of them is a matching date-time. An expression that returns a string or a number, such as <code>string(/order/created)</code>, never matches.</li>
+</ul>
+
+<p>A body that does not contain the selected value, or whose selected value is not a date-time, does not match, even with <code>"not": true</code> inside the date-time matcher. To match bodies that do <em>not</em> satisfy the comparison at all, including those without the value, set <code>"not": true</code> on the body matcher itself. Without a <code>"dateTime"</code> field a JsonPath or XPath body matcher works exactly as before.</p>
+
+<p>This expectation matches orders created in the last day:</p>
+
+<button id="button_match_request_by_body_json_path_date_time" class="accordion">match request by JsonPath date-time comparison</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">// import static org.mockserver.model.JsonPathBody.jsonPath;
+// import static org.mockserver.model.NottableDateTimeString.after;
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("POST")
+            .withPath("/api/orders")
+            .withBody(jsonPath("$.order.created", after("now -1 days")))
+    )
+    .respond(
+        response()
+            .withStatusCode(200)
+            .withBody("recent order")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+// the JSON_PATH body matcher compares the value it selects as a date-time
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "JSON_PATH",
+            "jsonPath": "$.order.created",
+            "dateTime": {
+                "after": "now -1 days"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent order"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">import requests
+
+# the JSON_PATH body matcher compares the value it selects as a date-time
+requests.put(
+    "http://localhost:1080/mockserver/expectation",
+    headers={"Content-Type": "application/json"},
+    data=r'''{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "JSON_PATH",
+            "jsonPath": "$.order.created",
+            "dateTime": {
+                "after": "now -1 days"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent order"
+    }
+}'''
+)</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'net/http'
+
+uri = URI('http://localhost:1080/mockserver/expectation')
+http = Net::HTTP.new(uri.host, uri.port)
+# the JSON_PATH body matcher compares the value it selects as a date-time
+request = Net::HTTP::Put.new(uri, 'Content-Type' =&gt; 'application/json')
+request.body = &lt;&lt;~'JSON'
+{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "JSON_PATH",
+            "jsonPath": "$.order.created",
+            "dateTime": {
+                "after": "now -1 days"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent order"
+    }
+}
+JSON
+http.request(request)</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    // the JSON_PATH body matcher compares the value it selects as a date-time
+    body := []byte(`{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "JSON_PATH",
+            "jsonPath": "$.order.created",
+            "dateTime": {
+                "after": "now -1 days"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent order"
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+// the JSON_PATH body matcher compares the value it selects as a date-time
+var json = @"{
+    ""httpRequest"": {
+        ""method"": ""POST"",
+        ""path"": ""/api/orders"",
+        ""body"": {
+            ""type"": ""JSON_PATH"",
+            ""jsonPath"": ""$.order.created"",
+            ""dateTime"": {
+                ""after"": ""now -1 days""
+            }
+        }
+    },
+    ""httpResponse"": {
+        ""statusCode"": 200,
+        ""body"": ""recent order""
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+
+let client = Client::new();
+// the JSON_PATH body matcher compares the value it selects as a date-time
+let body = r#"{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "JSON_PATH",
+            "jsonPath": "$.order.created",
+            "dateTime": {
+                "after": "now -1 days"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent order"
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "JSON_PATH",
+            "jsonPath": "$.order.created",
+            "dateTime": {
+                "after": "now -1 days"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent order"
+    }
+}
+JSON;
+
+// the JSON_PATH body matcher compares the value it selects as a date-time
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "JSON_PATH",
+            "jsonPath": "$.order.created",
+            "dateTime": {
+                "after": "now -1 days"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "recent order"
+    }
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
+
+<p>This expectation matches orders whose <code>expires</code> attribute, written as an RFC-1123 date-time, is in the future:</p>
+
+<button id="button_match_request_by_body_xpath_date_time" class="accordion">match request by XPath date-time comparison</button>
+<div class="panel">
+    <button class="accordion inner">Java</button>
+    <div class="panel">
+        <pre class="prettyprint lang-java code"><code class="code">// import static org.mockserver.model.XPathBody.xpath;
+// import static org.mockserver.model.NottableDateTimeString.after;
+new MockServerClient("localhost", 1080)
+    .when(
+        request()
+            .withMethod("POST")
+            .withPath("/api/orders")
+            .withBody(xpath("/order/@expires", after("now").withActualFormat("rfc1123")))
+    )
+    .respond(
+        response()
+            .withStatusCode(200)
+            .withBody("unexpired order")
+    );</code></pre>
+    </div>
+    <button class="accordion inner">JavaScript</button>
+    <div class="panel">
+        <pre class="prettyprint lang-javascript code"><code class="code">var mockServerClient = require('mockserver-client').mockServerClient;
+// the XPATH body matcher compares the text of the node it selects as a date-time
+mockServerClient("localhost", 1080).mockAnyResponse({
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "XPATH",
+            "xpath": "/order/@expires",
+            "dateTime": {
+                "after": "now",
+                "actualFormat": "rfc1123"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "unexpired order"
+    }
+}).then(
+    function () {
+        console.log("expectation created");
+    },
+    function (error) {
+        console.log(error);
+    }
+);</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+    <button class="accordion inner">Python</button>
+    <div class="panel">
+        <pre class="prettyprint lang-python code"><code class="code">import requests
+
+# the XPATH body matcher compares the text of the node it selects as a date-time
+requests.put(
+    "http://localhost:1080/mockserver/expectation",
+    headers={"Content-Type": "application/json"},
+    data=r'''{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "XPATH",
+            "xpath": "/order/@expires",
+            "dateTime": {
+                "after": "now",
+                "actualFormat": "rfc1123"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "unexpired order"
+    }
+}'''
+)</code></pre>
+    </div>
+    <button class="accordion inner">Ruby</button>
+    <div class="panel">
+        <pre class="prettyprint lang-ruby code"><code class="code">require 'net/http'
+
+uri = URI('http://localhost:1080/mockserver/expectation')
+http = Net::HTTP.new(uri.host, uri.port)
+# the XPATH body matcher compares the text of the node it selects as a date-time
+request = Net::HTTP::Put.new(uri, 'Content-Type' =&gt; 'application/json')
+request.body = &lt;&lt;~'JSON'
+{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "XPATH",
+            "xpath": "/order/@expires",
+            "dateTime": {
+                "after": "now",
+                "actualFormat": "rfc1123"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "unexpired order"
+    }
+}
+JSON
+http.request(request)</code></pre>
+    </div>
+    <button class="accordion inner">Go</button>
+    <div class="panel">
+        <pre class="prettyprint lang-go code"><code class="code">package main
+
+import (
+    "bytes"
+    "net/http"
+)
+
+func main() {
+    // the XPATH body matcher compares the text of the node it selects as a date-time
+    body := []byte(`{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "XPATH",
+            "xpath": "/order/@expires",
+            "dateTime": {
+                "after": "now",
+                "actualFormat": "rfc1123"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "unexpired order"
+    }
+}`)
+    req, _ := http.NewRequest("PUT",
+        "http://localhost:1080/mockserver/expectation",
+        bytes.NewReader(body))
+    req.Header.Set("Content-Type", "application/json")
+    http.DefaultClient.Do(req)
+}</code></pre>
+    </div>
+    <button class="accordion inner">.NET</button>
+    <div class="panel">
+        <pre class="prettyprint lang-csharp code"><code class="code">using System.Net.Http;
+using System.Text;
+
+using var httpClient = new HttpClient();
+// the XPATH body matcher compares the text of the node it selects as a date-time
+var json = @"{
+    ""httpRequest"": {
+        ""method"": ""POST"",
+        ""path"": ""/api/orders"",
+        ""body"": {
+            ""type"": ""XPATH"",
+            ""xpath"": ""/order/@expires"",
+            ""dateTime"": {
+                ""after"": ""now"",
+                ""actualFormat"": ""rfc1123""
+            }
+        }
+    },
+    ""httpResponse"": {
+        ""statusCode"": 200,
+        ""body"": ""unexpired order""
+    }
+}";
+await httpClient.PutAsync(
+    "http://localhost:1080/mockserver/expectation",
+    new StringContent(json, Encoding.UTF8, "application/json")
+);</code></pre>
+    </div>
+    <button class="accordion inner">Rust</button>
+    <div class="panel">
+        <pre class="prettyprint lang-rust code"><code class="code">use reqwest::blocking::Client;
+
+let client = Client::new();
+// the XPATH body matcher compares the text of the node it selects as a date-time
+let body = r#"{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "XPATH",
+            "xpath": "/order/@expires",
+            "dateTime": {
+                "after": "now",
+                "actualFormat": "rfc1123"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "unexpired order"
+    }
+}"#;
+client.put("http://localhost:1080/mockserver/expectation")
+    .header("Content-Type", "application/json")
+    .body(body.to_string())
+    .send()
+    .unwrap();</code></pre>
+    </div>
+    <button class="accordion inner">PHP</button>
+    <div class="panel">
+        <pre class="prettyprint lang-php code"><code class="code">$json = &lt;&lt;&lt;'JSON'
+{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "XPATH",
+            "xpath": "/order/@expires",
+            "dateTime": {
+                "after": "now",
+                "actualFormat": "rfc1123"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "unexpired order"
+    }
+}
+JSON;
+
+// the XPATH body matcher compares the text of the node it selects as a date-time
+$ch = curl_init('http://localhost:1080/mockserver/expectation');
+curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST  =&gt; 'PUT',
+    CURLOPT_POSTFIELDS     =&gt; $json,
+    CURLOPT_HTTPHEADER     =&gt; ['Content-Type: application/json; charset=utf-8'],
+    CURLOPT_RETURNTRANSFER =&gt; true,
+]);
+curl_exec($ch);
+curl_close($ch);</code></pre>
+    </div>
+    <button class="accordion inner">REST API</button>
+    <div class="panel">
+        <pre class="prettyprint code"><code class="code">curl -v -X PUT "http://localhost:1080/mockserver/expectation" -d '{
+    "httpRequest": {
+        "method": "POST",
+        "path": "/api/orders",
+        "body": {
+            "type": "XPATH",
+            "xpath": "/order/@expires",
+            "dateTime": {
+                "after": "now",
+                "actualFormat": "rfc1123"
+            }
+        }
+    },
+    "httpResponse": {
+        "statusCode": 200,
+        "body": "unexpired order"
+    }
+}'</code></pre>
+        <p>See <a  href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/{{ site.mockserver_api_version }}#/expectation/put_expectation" target="_blank" rel="noopener noreferrer">REST API</a> for full JSON specification</p>
+    </div>
+</div>
 
 <button id="button_request" class="accordion title"><strong>Request Properties Matcher Code Examples</strong></button>
 <div class="panel title">

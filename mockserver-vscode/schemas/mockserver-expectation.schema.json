@@ -2564,6 +2564,66 @@
             },
             "jsonPath": {
               "type": "string"
+            },
+            "dateTime": {
+              "description": "date-time comparison: the body matches when a value the JSONPath selects is a date-time that satisfies it",
+              "type": "object",
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "required": [
+                    "before"
+                  ]
+                },
+                {
+                  "required": [
+                    "after"
+                  ]
+                },
+                {
+                  "required": [
+                    "equalToDateTime"
+                  ]
+                }
+              ],
+              "properties": {
+                "not": {
+                  "type": "boolean",
+                  "description": "negate the comparison; a value that is not a date-time still does not match"
+                },
+                "before": {
+                  "type": "string",
+                  "description": "matches a value earlier than this; now, now with an offset such as now -1 days, or a date-time such as 2026-10-21T15:00:00Z"
+                },
+                "after": {
+                  "type": "string",
+                  "description": "matches a value later than this; now, now with an offset such as now -1 days, or a date-time such as 2026-10-21T15:00:00Z"
+                },
+                "equalToDateTime": {
+                  "type": "string",
+                  "description": "matches a value at the same instant as this; now, now with an offset such as now -1 days, or a date-time such as 2026-10-21T15:00:00Z"
+                },
+                "actualFormat": {
+                  "type": "string",
+                  "description": "how the actual value is written, a Java DateTimeFormatter pattern or iso, rfc1123, epochSeconds or epochMillis; by default any of those forms"
+                },
+                "truncateExpected": {
+                  "type": "string",
+                  "description": "truncate the expected value, such as startOfDay or first day of month"
+                },
+                "truncateActual": {
+                  "type": "string",
+                  "description": "truncate the actual value, such as startOfDay or first day of month"
+                },
+                "applyTruncationLast": {
+                  "type": "boolean",
+                  "description": "truncate now after adding its offset instead of before"
+                },
+                "zone": {
+                  "type": "string",
+                  "description": "zone for values without one, for truncation and for day, month and year offsets; default UTC"
+                }
+              }
             }
           }
         },
@@ -2748,6 +2808,66 @@
             },
             "xpath": {
               "type": "string"
+            },
+            "dateTime": {
+              "description": "date-time comparison: the body matches when the text of a node the XPath selects is a date-time that satisfies it",
+              "type": "object",
+              "additionalProperties": false,
+              "oneOf": [
+                {
+                  "required": [
+                    "before"
+                  ]
+                },
+                {
+                  "required": [
+                    "after"
+                  ]
+                },
+                {
+                  "required": [
+                    "equalToDateTime"
+                  ]
+                }
+              ],
+              "properties": {
+                "not": {
+                  "type": "boolean",
+                  "description": "negate the comparison; a value that is not a date-time still does not match"
+                },
+                "before": {
+                  "type": "string",
+                  "description": "matches a value earlier than this; now, now with an offset such as now -1 days, or a date-time such as 2026-10-21T15:00:00Z"
+                },
+                "after": {
+                  "type": "string",
+                  "description": "matches a value later than this; now, now with an offset such as now -1 days, or a date-time such as 2026-10-21T15:00:00Z"
+                },
+                "equalToDateTime": {
+                  "type": "string",
+                  "description": "matches a value at the same instant as this; now, now with an offset such as now -1 days, or a date-time such as 2026-10-21T15:00:00Z"
+                },
+                "actualFormat": {
+                  "type": "string",
+                  "description": "how the actual value is written, a Java DateTimeFormatter pattern or iso, rfc1123, epochSeconds or epochMillis; by default any of those forms"
+                },
+                "truncateExpected": {
+                  "type": "string",
+                  "description": "truncate the expected value, such as startOfDay or first day of month"
+                },
+                "truncateActual": {
+                  "type": "string",
+                  "description": "truncate the actual value, such as startOfDay or first day of month"
+                },
+                "applyTruncationLast": {
+                  "type": "boolean",
+                  "description": "truncate now after adding its offset instead of before"
+                },
+                "zone": {
+                  "type": "string",
+                  "description": "zone for values without one, for truncation and for day, month and year offsets; default UTC"
+                }
+              }
             }
           }
         },

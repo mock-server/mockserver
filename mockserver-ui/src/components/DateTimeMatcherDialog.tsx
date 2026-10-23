@@ -53,25 +53,30 @@ function emptyDraft(field: MatcherValueField): Draft {
 
 /**
  * Builds one date-time matcher line (e.g. `X-Issued-At: {"after":"now -1 hours"}`) and hands it
- * to `onAdd` for the chosen header / query / cookie / path-parameter field.
+ * to `onAdd` for the chosen header / query / cookie / path-parameter field. Given `onAddBody`
+ * instead, it builds the date-time comparison for a JSON Path / XPath body and hands over its
+ * compact JSON (e.g. `{"after":"now -1 days"}`); there is then no field or name to choose.
  */
 export default function DateTimeMatcherDialog({
   open,
   onClose,
   onAdd,
+  onAddBody,
 }: {
   open: boolean;
   onClose: () => void;
-  onAdd: (field: MatcherValueField, line: string) => void;
+  onAdd?: (field: MatcherValueField, line: string) => void;
+  onAddBody?: (json: string) => void;
 }) {
   const [draft, setDraft] = useState<Draft>(() => emptyDraft('headers'));
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((d) => ({ ...d, [key]: value }));
+  const forBody = !!onAddBody;
 
   const name = draft.name.trim();
   const nameError = name.includes(matcherFieldSeparator(draft.field))
     ? `Name cannot contain "${matcherFieldSeparator(draft.field)}"`
     : undefined;
-  const canAdd = name !== '' && !nameError && draft.expected.trim() !== '';
+  const canAdd = (forBody || (name !== '' && !nameError)) && draft.expected.trim() !== '';
 
   const add = () => {
     const value = dateTimeMatcherToWire({
@@ -84,7 +89,8 @@ export default function DateTimeMatcherDialog({
       applyTruncationLast: draft.applyTruncationLast || undefined,
       not: draft.not,
     });
-    onAdd(draft.field, matcherValueLine(draft.field, name, value));
+    if (onAddBody) onAddBody(JSON.stringify(value));
+    else onAdd?.(draft.field, matcherValueLine(draft.field, name, value));
     setDraft(emptyDraft(draft.field));
     onClose();
   };
@@ -102,14 +108,14 @@ export default function DateTimeMatcherDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth aria-labelledby="date-time-matcher-title">
-      <DialogTitle id="date-time-matcher-title">Add Date-Time Matcher</DialogTitle>
+      <DialogTitle id="date-time-matcher-title">{forBody ? 'Body Date-Time Comparison' : 'Add Date-Time Matcher'}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
           Match a value by comparing it as a date-time instead of as text. The expected value
           is <code>now</code>, <code>now -1 hours</code>, or a date-time such as <code>2026-10-21T15:00:00Z</code>.
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 0.5 }}>
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          {!forBody && <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <TextField
               label="Field"
               size="small"
@@ -130,7 +136,7 @@ export default function DateTimeMatcherDialog({
               helperText={nameError}
               sx={{ flex: 1, minWidth: 180 }}
             />
-          </Box>
+          </Box>}
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <TextField
               label="Comparison"
@@ -173,7 +179,7 @@ export default function DateTimeMatcherDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" disabled={!canAdd} onClick={add}>Add</Button>
+        <Button variant="contained" disabled={!canAdd} onClick={add}>{forBody ? 'Set' : 'Add'}</Button>
       </DialogActions>
     </Dialog>
   );

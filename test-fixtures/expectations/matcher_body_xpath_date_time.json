@@ -1,0 +1,20 @@
+{
+  "httpRequest": {
+    "method": "POST",
+    "path": "/xpath-date-time",
+    "body": {
+      "type": "XPATH",
+      "xpath": "/order/@expires",
+      "dateTime": {
+        "not": true,
+        "before": "2026-01-01T00:00:00Z",
+        "actualFormat": "rfc1123",
+        "truncateActual": "first day of month",
+        "applyTruncationLast": true
+      }
+    }
+  },
+  "httpResponse": {
+    "body": "unexpired order"
+  }
+}

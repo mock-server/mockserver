@@ -3,6 +3,7 @@ package org.mockserver.serialization.java;
 import org.mockserver.model.*;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mockserver.character.Character.NEW_LINE;
@@ -83,7 +84,11 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
                 } else if (request.getBody() instanceof JsonPathBody jsonPathBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(".withBody(");
-                    output.append("new JsonPathBody(\"").appendEscaped(jsonPathBody.getValue()).append("\")");
+                    output.append("new JsonPathBody(\"").appendEscaped(jsonPathBody.getValue()).append("\"");
+                    if (jsonPathBody.getDateTime() != null) {
+                        output.append(", ").append(NottableStringToJavaSerializer.serialize(jsonPathBody.getDateTime(), false));
+                    }
+                    output.append(")");
                     output.append(")");
                 } else if (request.getBody() instanceof JsonSchemaBody jsonSchemaBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
@@ -98,7 +103,23 @@ public class HttpRequestToJavaSerializer implements ToJavaSerializer<HttpRequest
                 } else if (request.getBody() instanceof XPathBody xPathBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);
                     output.append(".withBody(");
-                    output.append("new XPathBody(\"").appendEscaped(xPathBody.getValue()).append("\")");
+                    output.append("new XPathBody(\"").appendEscaped(xPathBody.getValue()).append("\"");
+                    Map<String, String> namespacePrefixes = xPathBody.getNamespacePrefixes();
+                    if (namespacePrefixes != null && !namespacePrefixes.isEmpty()) {
+                        output.append(", java.util.Map.ofEntries(");
+                        boolean first = true;
+                        for (Map.Entry<String, String> prefix : namespacePrefixes.entrySet()) {
+                            output.append(first ? "" : ", ").append("java.util.Map.entry(\"").appendEscaped(prefix.getKey()).append("\", \"").appendEscaped(prefix.getValue()).append("\")");
+                            first = false;
+                        }
+                        output.append(")");
+                    } else if (xPathBody.getDateTime() != null) {
+                        output.append(", null");
+                    }
+                    if (xPathBody.getDateTime() != null) {
+                        output.append(", ").append(NottableStringToJavaSerializer.serialize(xPathBody.getDateTime(), false));
+                    }
+                    output.append(")");
                     output.append(")");
                 } else if (request.getBody() instanceof XmlSchemaBody xmlSchemaBody) {
                     appendNewLineAndIndent((numberOfSpacesToIndent + 1) * INDENT_SIZE, output);

@@ -642,6 +642,12 @@ function renderRaw(v: unknown, d: number): string {
 // Body — typed body constructors (StringBody / JSONMatchBody / XPathBody / …).
 // ---------------------------------------------------------------------------
 
+/** `.WithDateTime(mockserver.After(..))` for a JSONPath / XPath body's date-time comparison, else empty. */
+function goBodyDateTime(b: Record<string, unknown>): string {
+  const dt = dateTimeMatcherOf(b['dateTime']);
+  return dt ? `.WithDateTime(${dateTimeBuilderExpr(dt, { head: 'mockserver.', naming: 'pascal', str: goStr, bool: String })})` : '';
+}
+
 /** A typed request-body matcher wire object → its Go constructor expression. */
 function renderBodyMatcher(b: Record<string, unknown>, ctx: Ctx, d: number): string {
   switch (b['type']) {
@@ -654,13 +660,15 @@ function renderBodyMatcher(b: Record<string, unknown>, ctx: Ctx, d: number): str
     case 'JSON_SCHEMA':
       return `mockserver.JSONSchemaBody(${goStr(jsonArg(b['jsonSchema']))})`;
     case 'JSON_PATH':
-      return `mockserver.JSONPathBody(${goStr(String(b['jsonPath'] ?? ''))})`;
+      if (b['dateTime'] != null && !dateTimeMatcherOf(b['dateTime'])) return renderRaw(b, d);
+      return `mockserver.JSONPathBody(${goStr(String(b['jsonPath'] ?? ''))})${goBodyDateTime(b)}`;
     case 'XML':
       return `mockserver.XMLBody(${goStr(String(b['xml'] ?? ''))})`;
     case 'XML_SCHEMA':
       return `mockserver.XMLSchemaBody(${goStr(String(b['xmlSchema'] ?? ''))})`;
     case 'XPATH':
-      return `mockserver.XPathBody(${goStr(String(b['xpath'] ?? ''))})`;
+      if (b['dateTime'] != null && !dateTimeMatcherOf(b['dateTime'])) return renderRaw(b, d);
+      return `mockserver.XPathBody(${goStr(String(b['xpath'] ?? ''))})${goBodyDateTime(b)}`;
     case 'REGEX':
       return `mockserver.RegexBody(${goStr(String(b['regex'] ?? ''))})`;
     case 'PARAMETERS':

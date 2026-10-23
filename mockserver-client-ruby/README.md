@@ -163,6 +163,17 @@ Each `with_*` option (`with_actual_format`, `with_truncate_expected`,
 returns a new matcher. `from_hash` reads an object holding `before`, `after` or
 `equalToDateTime` as a `DateTimeMatcher`.
 
+A JSONPath or XPath body matcher takes a `date_time:` too: the body matches when
+a value the JSONPath selects, or the text of a node the XPath selects, is a
+matching date-time.
+
+```ruby
+MockServer::HttpRequest.new(path: '/orders',
+                            body: MockServer::Body.json_path('$.order.created',
+                                                             date_time: MockServer::DateTimeMatcher.after('now -1 days')))
+# body => {"type"=>"JSON_PATH", "jsonPath"=>"$.order.created", "dateTime"=>{"after"=>"now -1 days"}}
+```
+
 An `httpRequest` holding `specUrlOrPayload` is read as an `OpenAPIDefinition`
 matcher, and `HttpOverrideForwardedRequest` carries `request_override`,
 `response_override` and `response_template`. These need a client released
