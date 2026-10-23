@@ -2,10 +2,14 @@ package org.mockserver.netty.integration.mock;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPromise;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.ChannelInputShutdownEvent;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.HttpMethod;
@@ -43,6 +47,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
@@ -115,21 +120,17 @@ public class ResetConnectionIntegrationTest {
     public void shouldResetWholeHttp2Connection() throws Exception {
         NioEventLoopGroup group = new NioEventLoopGroup();
         try {
-            CompletableFuture<Throwable> connectionError = new CompletableFuture<>();
+            ConnectionOutcome outcome = new ConnectionOutcome();
             Channel connection = new Bootstrap()
                 .group(group)
                 .channel(NioSocketChannel.class)
+                .option(ChannelOption.ALLOW_HALF_CLOSURE, true)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
+                        ch.pipeline().addLast(outcome);
                         ch.pipeline().addLast(Http2FrameCodecBuilder.forClient().build());
                         ch.pipeline().addLast(new Http2MultiplexHandler(new ChannelInboundHandlerAdapter()));
-                        ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
-                            @Override
-                            public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                                connectionError.complete(cause);
-                            }
-                        });
                     }
                 })
                 .connect("localhost", mockServer.getLocalPort())
@@ -139,8 +140,7 @@ public class ResetConnectionIntegrationTest {
             CompletableFuture<String> resetStatus = new CompletableFuture<>();
             openStream(connection, authority, "/reset", resetStatus);
 
-            assertThat("the TCP connection must be torn down", connection.closeFuture().await(15, TimeUnit.SECONDS), is(true));
-            assertThat("the client must see a reset, not a clean close", describe(connectionError.getNow(null)), containsString("reset"));
+            outcome.assertReset();
             assertThat("no response is sent", resetStatus.isDone(), is(false));
         } finally {
             group.shutdownGracefully(0, 1, TimeUnit.SECONDS);
@@ -200,7 +200,7 @@ public class ResetConnectionIntegrationTest {
     public void shouldResetClientHttp2ConnectionThroughConnectTunnel() throws Exception {
         NioEventLoopGroup group = new NioEventLoopGroup();
         try {
-            CompletableFuture<Throwable> connectionError = new CompletableFuture<>();
+            ConnectionOutcome outcome = new ConnectionOutcome();
             SslContext sslContext = SslContextBuilder.forClient()
                 .trustManager(InsecureTrustManagerFactory.INSTANCE)
                 .applicationProtocolConfig(new ApplicationProtocolConfig(
@@ -213,19 +213,15 @@ public class ResetConnectionIntegrationTest {
             Channel connection = new Bootstrap()
                 .group(group)
                 .channel(NioSocketChannel.class)
+                .option(ChannelOption.ALLOW_HALF_CLOSURE, true)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
+                        ch.pipeline().addLast(outcome);
                         ch.pipeline().addLast(proxyHandler);
                         ch.pipeline().addLast(sslContext.newHandler(ch.alloc(), "localhost", mockServer.getLocalPort()));
                         ch.pipeline().addLast(Http2FrameCodecBuilder.forClient().build());
                         ch.pipeline().addLast(new Http2MultiplexHandler(new ChannelInboundHandlerAdapter()));
-                        ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
-                            @Override
-                            public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                                connectionError.complete(cause);
-                            }
-                        });
                     }
                 })
                 .connect(InetSocketAddress.createUnresolved("localhost", mockServer.getLocalPort()))
@@ -238,8 +234,7 @@ public class ResetConnectionIntegrationTest {
             CompletableFuture<String> resetStatus = new CompletableFuture<>();
             openStream(connection, "localhost:" + mockServer.getLocalPort(), "/reset", resetStatus);
 
-            assertThat("the client's TCP connection must be torn down", connection.closeFuture().await(15, TimeUnit.SECONDS), is(true));
-            assertThat("the client must see a reset, not a clean close or a stream error", describe(connectionError.getNow(null)), containsString("reset"));
+            outcome.assertReset();
             assertThat("no response is sent", resetStatus.isDone(), is(false));
         } finally {
             group.shutdownGracefully(0, 1, TimeUnit.SECONDS);
@@ -293,6 +288,61 @@ public class ResetConnectionIntegrationTest {
             throw new AssertionError("expected a connection reset but read " + (read == -1 ? "a clean end of stream" : "data"));
         } catch (IOException expected) {
             assertThat(describe(expected), containsString("reset"));
+        }
+    }
+
+    /**
+     * First at the socket end of a client's pipeline, so it sees the connection's first failure before any handler
+     * acts on it. A peer reset can reach the client as a failed read (exceptionCaught) or, when the client is writing
+     * as it arrives (a SETTINGS ACK, say), as a failed write, after which Netty closes the channel with no
+     * exceptionCaught at all. Both mean the connection was reset; a clean close shows up instead as the end of the
+     * input (with half-closure on), or as a close with no failure. Settled at channelInactive, not the close future:
+     * Netty completes the close future before it fails the writes still queued, so a test woken by it can look before
+     * the failed write that carries the reset is recorded.
+     */
+    private static final class ConnectionOutcome extends ChannelDuplexHandler {
+        private static final String CLEAN_END_OF_STREAM = "clean end of stream";
+        private final CompletableFuture<Object> first = new CompletableFuture<>();
+        private final CompletableFuture<Void> inactive = new CompletableFuture<>();
+
+        @Override
+        public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
+            ChannelPromise observed = promise.unvoid();
+            observed.addListener(future -> {
+                if (!future.isSuccess()) {
+                    first.complete(future.cause());
+                }
+            });
+            ctx.write(msg, observed);
+        }
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+            first.complete(cause);
+            ctx.fireExceptionCaught(cause);
+        }
+
+        @Override
+        public void channelInactive(ChannelHandlerContext ctx) {
+            inactive.complete(null);
+            ctx.fireChannelInactive();
+        }
+
+        @Override
+        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
+            if (evt instanceof ChannelInputShutdownEvent) {
+                first.complete(CLEAN_END_OF_STREAM);
+                ctx.close();
+            }
+            ctx.fireUserEventTriggered(evt);
+        }
+
+        void assertReset() throws Exception {
+            inactive.get(15, TimeUnit.SECONDS);
+            Object signal = first.getNow(null);
+            String description = signal instanceof Throwable ? describe((Throwable) signal) : String.valueOf(signal);
+            assertThat("the client must see a reset, not a clean close or a stream error", description,
+                anyOf(containsString("connection reset"), containsString("broken pipe")));
         }
     }
 
