@@ -7664,11 +7664,18 @@ public class HttpState {
             warnInitOnlyProperty("tlsMutualAuthenticationAllowBundledCa", String.valueOf(suppliedTlsMutualAuthenticationAllowBundledCa), String.valueOf(configuration.tlsMutualAuthenticationAllowBundledCa()),
                 "it lets mTLS trust client certificates anyone can create, so a request to the control plane cannot enable it");
         }
-        String suppliedRecordedBodyFilesDirectory = suppliedConfiguration.getRecordedBodyFilesDirectory();
-        if (suppliedRecordedBodyFilesDirectory != null && !suppliedRecordedBodyFilesDirectory.equals(configuration.recordedBodyFilesDirectory())) {
-            warnInitOnlyProperty("recordedBodyFilesDirectory", "\"" + suppliedRecordedBodyFilesDirectory + "\"", "\"" + configuration.recordedBodyFilesDirectory() + "\"",
-                "it decides where the server writes files, so a request to the control plane cannot change it");
-        }
+        String writesFiles = "it decides where the server writes files, so a request to the control plane cannot change it";
+        warnIfInitOnlyPathSupplied("recordedBodyFilesDirectory", suppliedConfiguration.getRecordedBodyFilesDirectory(), configuration.recordedBodyFilesDirectory(), writesFiles);
+        warnIfInitOnlyPathSupplied("auditLogFile", suppliedConfiguration.getAuditLogFile(), configuration.auditLogFile(), writesFiles);
+        warnIfInitOnlyPathSupplied("persistedExpectationsPath", suppliedConfiguration.getPersistedExpectationsPath(), configuration.persistedExpectationsPath(), writesFiles);
+        warnIfInitOnlyPathSupplied("persistedRecordedExpectationsPath", suppliedConfiguration.getPersistedRecordedExpectationsPath(), configuration.persistedRecordedExpectationsPath(), writesFiles);
+        warnIfInitOnlyPathSupplied("persistedRecordedRequestsPath", suppliedConfiguration.getPersistedRecordedRequestsPath(), configuration.persistedRecordedRequestsPath(), writesFiles);
+        warnIfInitOnlyPathSupplied("memoryUsageCsvDirectory", suppliedConfiguration.getMemoryUsageCsvDirectory(), configuration.memoryUsageCsvDirectory(), writesFiles);
+        warnIfInitOnlyPathSupplied("directoryToSaveDynamicSSLCertificate", suppliedConfiguration.getDirectoryToSaveDynamicSSLCertificate(),
+            org.mockserver.configuration.ServerTlsSettings.of(configuration).directoryToSaveDynamicSSLCertificate(),
+            "it decides where the server writes certificate and private key files, so a request to the control plane cannot change it");
+        warnIfInitOnlyPathSupplied("grpcProtocPath", suppliedConfiguration.getGrpcProtocPath(), configuration.grpcProtocPath(),
+            "it names an executable the server runs, so a request to the control plane cannot change it");
         String suppliedStaticFilesDirectory = suppliedConfiguration.getStaticFilesDirectory();
         if (suppliedStaticFilesDirectory != null && !suppliedStaticFilesDirectory.equals(configuration.staticFilesDirectory())) {
             warnInitOnlyProperty("staticFilesDirectory", "\"" + suppliedStaticFilesDirectory + "\"", "\"" + configuration.staticFilesDirectory() + "\"",
@@ -7812,6 +7819,12 @@ public class HttpState {
      */
     private void warnInitOnlyProperty(String property, int suppliedValue, int valueInForce, String reason) {
         warnInitOnlyProperty(property, String.valueOf(suppliedValue), String.valueOf(valueInForce), reason);
+    }
+
+    private void warnIfInitOnlyPathSupplied(String property, String suppliedValue, String valueInForce, String reason) {
+        if (suppliedValue != null && !suppliedValue.equals(valueInForce)) {
+            warnInitOnlyProperty(property, "\"" + suppliedValue + "\"", "\"" + valueInForce + "\"", reason);
+        }
     }
 
     private void warnInitOnlyProperty(String property, String suppliedValue, String valueInForce, String reason) {

@@ -36,6 +36,7 @@
     <p>Directory used to save the dynamically generated Certificate Authority X.509 Certificate and Private Key.</p>
     <p>This directory will only be used if MockServer is configured to create a dynamic Certificate Authority X.509 certificate and private key using <a href="#button_configuration_dynamically_create_ca_certificate">dynamicallyCreateCertificateAuthorityCertificate</a>.</p>
     <p>By default the certificate and private key are written to the current working directory (<span class="this_value">.</span>) of the MockServer process.</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot redirect where MockServer writes files.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">.</span> (current working directory)</p>
     <p>Java Code:</p>
     <pre class="code" style="padding: 2px;"><code class="code">ConfigurationProperties.directoryToSaveDynamicSSLCertificate(String directoryToSaveDynamicSSLCertificate)</code></pre>
