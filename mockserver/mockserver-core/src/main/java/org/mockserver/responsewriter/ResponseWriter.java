@@ -182,7 +182,10 @@ public abstract class ResponseWriter {
                 }
             }
         } else {
-            if (Boolean.TRUE.equals(request.isKeepAlive())) {
+            // a socket closed after the response must not be announced as kept alive, or the client may send its
+            // next request into the close
+            boolean closesSocket = connectionOptions != null && Boolean.TRUE.equals(connectionOptions.getCloseSocket());
+            if (Boolean.TRUE.equals(request.isKeepAlive()) && !closesSocket) {
                 responseWithConnectionHeader.replaceHeader(KEEP_ALIVE_CONNECTION_HEADER);
             } else {
                 responseWithConnectionHeader.replaceHeader(CLOSE_CONNECTION_HEADER);
