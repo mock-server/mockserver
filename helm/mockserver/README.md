@@ -180,6 +180,21 @@ For example:
 helm upgrade --install --create-namespace --namespace mockserver --set app.mountedLibsConfigMapName=mockserver-libs mockserver helm/mockserver
 ```
 
+### Extensions
+
+[Extensions](https://www.mock-server.com/mock_server/extensions.html) are your own Java classes that MockServer loads when it starts. Every MockServer image loads JARs from `/extensions`, so put the JARs in any Kubernetes volume and name the classes:
+
+```yaml
+extensions:
+  classes: "com.acme.AcmeExtension"   # sets MOCKSERVER_EXTENSIONS
+  scanning: false                     # true also loads META-INF/services entries
+  volume:                             # any volume source, mounted read-only at /extensions
+    configMap:
+      name: mockserver-extensions
+```
+
+The volume is always mounted read-only. MockServer refuses to start if persisted expectations, persisted recorded expectations or requests, the audit log or the memory-usage CSV is enabled and would be written into `/extensions`.
+
 ### Persistent Storage
 
 By default, expectations are held in memory and lost when a pod restarts. To persist expectations across pod restarts, enable persistent storage:

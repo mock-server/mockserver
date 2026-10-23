@@ -75,6 +75,12 @@ for df in "${DOCKERFILES[@]}"; do
     # command after joining '\' continuations, so reflowing a RUN instruction cannot hide one.
     logical="$(logical_lines "$filepath")"
     entrypoint_lines="$(grep -E '^ENTRYPOINT ' <<<"$logical" || true)"
+    # Extension JARs mounted at /extensions (docs/code/extensions.md) load only if every image puts the
+    # directory on its classpath, last, so an extension cannot shadow a MockServer or /libs class.
+    if ! grep -qE '"-cp", "[^"]*:/libs/\*:/extensions/\*"' <<<"$entrypoint_lines"; then
+      echo "FAIL: $df ENTRYPOINT classpath must end with :/libs/*:/extensions/*"
+      errors=$((errors + 1))
+    fi
     if ! grep -qF '"--enable-native-access=ALL-UNNAMED"' <<<"$entrypoint_lines"; then
       echo "FAIL: $df ENTRYPOINT must pass \"--enable-native-access=ALL-UNNAMED\""
       errors=$((errors + 1))
@@ -144,8 +150,8 @@ for df in "${JARPREP_DOCKERFILES[@]}"; do
   fi
   logical="$(logical_lines "$filepath")"
   entrypoint_lines="$(grep -E '^ENTRYPOINT ' <<<"$logical" || true)"
-  if ! grep -qF '"-cp", "/mockserver.jar:/mockserver-deps.jar:/libs/*"' <<<"$entrypoint_lines"; then
-    echo "FAIL: $df ENTRYPOINT must use the split classpath /mockserver.jar:/mockserver-deps.jar:/libs/*"
+  if ! grep -qF '"-cp", "/mockserver.jar:/mockserver-deps.jar:/libs/*:/extensions/*"' <<<"$entrypoint_lines"; then
+    echo "FAIL: $df ENTRYPOINT must use the split classpath /mockserver.jar:/mockserver-deps.jar:/libs/*:/extensions/*"
     errors=$((errors + 1))
   fi
   # The jars must come from the jarprep stage: an image that also COPYs the untrimmed fat jar into its

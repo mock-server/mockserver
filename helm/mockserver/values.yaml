@@ -476,4 +476,25 @@ clustering:
   # -- JGroups bind port for inter-pod cluster communication (TCP).
   jgroupsPort: 7800
 
+# Extensions: your own Java classes implementing org.mockserver.extension.Extension, loaded once
+# at startup (https://www.mock-server.com/mock_server/extensions.html). Every MockServer image
+# puts /extensions/* last on its classpath, so JARs in the volume below are loaded without
+# changing the image. The volume is always mounted read-only, and MockServer refuses to start
+# if an enabled output file (persisted expectations, recorded expectations or requests, the audit log or the
+# memory-usage CSV) would be written into it. Nothing is mounted or set while these are empty.
+# Example - JARs from a ConfigMap (binaryData), a PVC, or an image volume:
+#   extensions:
+#     classes: "com.acme.AcmeExtension"
+#     volume:
+#       configMap:
+#         name: mockserver-extensions
+extensions:
+  # -- Comma-separated fully qualified Extension class names; sets MOCKSERVER_EXTENSIONS.
+  classes: ""
+  # -- Also load the extensions listed in META-INF/services files; sets MOCKSERVER_EXTENSION_SCANNING.
+  scanning: false
+  # -- Any Kubernetes volume source (configMap, secret, persistentVolumeClaim, image, csi, ...)
+  # holding the extension JARs, mounted read-only at /extensions.
+  volume: {}
+
 imagePullSecrets: []

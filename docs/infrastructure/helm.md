@@ -289,6 +289,9 @@ With `create=true` (default) the Secret is created from the inline PEM values (`
 | `app.dynamicCertificateDir.path` | string | `/dynamic-certificates` | Mount path / `directoryToSaveDynamicSSLCertificate` value |
 | `app.extraEnv` | list | `[]` | Extra container env vars (EnvVar list), appended verbatim — set any `MOCKSERVER_*` property without a dedicated value |
 | `app.mountConfigMap` | bool | `false` | Set `MOCKSERVER_PROPERTY_FILE` even when `app.config.enabled=false` (for external-ConfigMap mounts). Previously referenced an undeclared value — now a real key, default `false` preserves prior behaviour. |
+| `extensions.classes` | string | `""` | Comma-separated [extension](../code/extensions.md) class names; sets `MOCKSERVER_EXTENSIONS` |
+| `extensions.scanning` | bool | `false` | Sets `MOCKSERVER_EXTENSION_SCANNING=true` (load `META-INF/services` entries) |
+| `extensions.volume` | object | `{}` | Any Kubernetes volume source (`configMap`, `secret`, `persistentVolumeClaim`, `image`, `csi`, …) rendered verbatim as the `extensions-volume` and mounted `readOnly: true` at `/extensions`, which every image puts last on its classpath. Independent of the `/libs` ConfigMap, so it also works with `clustering.enabled`. `helm-validate.sh` asserts the read-only mount, the volume source and the env var render, and that the default renders none of them |
 
 **Backward compatibility:** all of the above are disabled/empty by default; the rendered Deployment is byte-for-byte unchanged unless a value is set.
 

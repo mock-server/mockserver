@@ -76,6 +76,7 @@ RUN sh /usr/local/bin/mockserver-jarprep.sh /mockserver-netty-jar-with-dependenc
 FROM eclipse-temurin:25-jdk-noble AS aot-build
 
 # The AOT cache records this exact classpath: training and ENTRYPOINT both use own:deps in this order.
+# The ENTRYPOINT may append entries (/libs/*, /extensions/*); a cache still maps for an extended classpath.
 COPY --from=jarprep /jarprep/own.jar  /mockserver.jar
 COPY --from=jarprep /jarprep/deps.jar /mockserver-deps.jar
 
@@ -151,7 +152,7 @@ USER nonroot
 # different CPU arch) the JVM logs a warning and starts normally.
 # GC: kept on the JDK default (G1), unlike the sibling server images' -XX:+UseZGC — see the training
 # stage above. To trade start-up for ZGC's lower tail latency, pass -XX:+UseZGC via JAVA_TOOL_OPTIONS.
-ENTRYPOINT ["/usr/lib/jvm/temurin25-trimmed/bin/java", "-Dfile.encoding=UTF-8", "--enable-native-access=ALL-UNNAMED", "-XX:MaxRAMPercentage=45.0", "-XX:AOTCache=/mockserver.aot", "-cp", "/mockserver.jar:/mockserver-deps.jar:/libs/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
+ENTRYPOINT ["/usr/lib/jvm/temurin25-trimmed/bin/java", "-Dfile.encoding=UTF-8", "--enable-native-access=ALL-UNNAMED", "-XX:MaxRAMPercentage=45.0", "-XX:AOTCache=/mockserver.aot", "-cp", "/mockserver.jar:/mockserver-deps.jar:/libs/*:/extensions/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
 
 ENV SERVER_PORT=1080
 

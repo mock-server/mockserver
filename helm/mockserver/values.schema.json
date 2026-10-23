@@ -14,6 +14,14 @@
     "tolerations": { "type": "array" },
     "affinity": { "type": "object" },
     "imagePullSecrets": { "type": "array" },
+    "extensions": {
+      "type": "object",
+      "properties": {
+        "classes": { "type": "string" },
+        "scanning": { "type": "boolean" },
+        "volume": { "type": "object" }
+      }
+    },
     "image": {
       "type": "object",
       "properties": {

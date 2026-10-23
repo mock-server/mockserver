@@ -166,7 +166,7 @@ USER root
 # Switch to G1 with -e JAVA_TOOL_OPTIONS=-XX:+UseG1GC; keep -XX:+UseZGC if you set it for -Xmx etc.
 # JDK 25 ZGC is generational — no -XX:+ZGenerational (obsolete post-JDK 23).
 ENV JAVA_TOOL_OPTIONS="-XX:+UseZGC"
-ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "--enable-native-access=ALL-UNNAMED", "-XX:MaxRAMPercentage=45.0", "-cp", "/mockserver-netty-jar-with-dependencies.jar:/libs/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
+ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "--enable-native-access=ALL-UNNAMED", "-XX:MaxRAMPercentage=45.0", "-cp", "/mockserver-netty-jar-with-dependencies.jar:/libs/*:/extensions/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
 
 ENV SERVER_PORT=1080
 

@@ -60,13 +60,16 @@ public final class ExtensionRegistry {
     }
 
     /**
-     * Loads every configured extension and calls each one's {@code start} in order. If loading fails nothing is
-     * started; if a {@code start} throws or times out, the extensions already started are stopped in reverse order.
+     * Loads every configured extension and calls each one's {@code start} in order. If loading fails, or an enabled
+     * output file would be written where an extension's code is loaded from, nothing is started; if a {@code start}
+     * throws or times out, the extensions already started are stopped in reverse order.
      *
      * @throws ExtensionException when start-up must be refused
      */
     public static ExtensionRegistry start(Configuration configuration, MockServerLogger mockServerLogger) {
-        ExtensionRegistry registry = new ExtensionRegistry(ExtensionLoader.load(configuration), configuration, mockServerLogger);
+        List<LoadedExtension> loaded = ExtensionLoader.load(configuration);
+        ExtensionOutputPaths.refuseOutputsInsideExtensionCode(configuration, loaded);
+        ExtensionRegistry registry = new ExtensionRegistry(loaded, configuration, mockServerLogger);
         registry.logLoaded();
         registry.startAll();
         registry.listenerDispatch = ListenerDispatch.create(registry.startedExtensions(), configuration, mockServerLogger);

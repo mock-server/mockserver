@@ -175,7 +175,7 @@ USER nonroot
 # required (valid on JDK 21; obsolete from JDK 23, so absent on the JDK 25/26 images). Switch to G1
 # with -e JAVA_TOOL_OPTIONS=-XX:+UseG1GC; keep both flags if you set JAVA_TOOL_OPTIONS for -Xmx etc.
 ENV JAVA_TOOL_OPTIONS="-XX:+UseZGC -XX:+ZGenerational"
-ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "--enable-native-access=ALL-UNNAMED", "-XX:MaxRAMPercentage=45.0", "-cp", "/mockserver.jar:/mockserver-deps.jar:/libs/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
+ENTRYPOINT ["java", "-Dfile.encoding=UTF-8", "--enable-native-access=ALL-UNNAMED", "-XX:MaxRAMPercentage=45.0", "-cp", "/mockserver.jar:/mockserver-deps.jar:/libs/*:/extensions/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
 
 ENV SERVER_PORT=1080
 

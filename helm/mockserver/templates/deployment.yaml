@@ -220,6 +220,14 @@ spec:
             - name: MOCKSERVER_CERTIFICATE_DIRECTORY_TO_SAVE_DYNAMIC_SSL_CERTIFICATE
               value: {{ .Values.app.dynamicCertificateDir.path | quote }}
 {{- end }}
+{{- if .Values.extensions.classes }}
+            - name: MOCKSERVER_EXTENSIONS
+              value: {{ .Values.extensions.classes | quote }}
+{{- end }}
+{{- if .Values.extensions.scanning }}
+            - name: MOCKSERVER_EXTENSION_SCANNING
+              value: "true"
+{{- end }}
 {{- with .Values.app.extraEnv }}
 {{ toYaml . | indent 12 }}
 {{- end }}
@@ -242,6 +250,11 @@ spec:
 {{- if .Values.app.persistence.enabled }}
             - name: persistence-volume
               mountPath: {{ .Values.app.persistence.mountPath }}
+{{- end }}
+{{- if .Values.extensions.volume }}
+            - name: extensions-volume
+              mountPath: /extensions
+              readOnly: true
 {{- end }}
 {{- if .Values.resources }}
           resources:
@@ -271,6 +284,10 @@ spec:
         - name: persistence-volume
           persistentVolumeClaim:
             claimName: {{ .Values.app.persistence.existingClaimName | default (include "release.name" .) }}
+{{- end }}
+{{- with .Values.extensions.volume }}
+        - name: extensions-volume
+{{ toYaml . | indent 10 }}
 {{- end }}
 {{- with .Values.nodeSelector }}
       nodeSelector:

@@ -7,6 +7,9 @@
   embedded, or from `META-INF/services` entries when `mockserver.extensionScanning=true`.
 - Extensions start **first**, before any event loop, selector or scheduler exists, and stop in **reverse** order.
   Any load, `start()` or `onStarted()` failure refuses start-up and stops the extensions already started.
+- Docker images load JARs mounted at `/extensions` (last on the classpath, AppCDS and AOT archives still map); Helm
+  mounts `extensions.volume` there read-only. Start-up is refused when an enabled output file would be written
+  where extension code is loaded from ([Deployment](#deployment)).
 - The control plane can never change extensions: `ConfigurationDTO.applyTo` skips the three `extension*`
   properties and `HttpState.applyConfigurationUpdate` warns via `warnInitOnlyProperty`.
 - **With nothing configured, nothing changes:** no `ServiceLoader` call, no `org.mockserver.extension` class
@@ -65,7 +68,8 @@ sequenceDiagram
 | `LoadedExtension` | One loaded extension: instance, name, priority, class, source JAR, implemented hooks and **disabled hooks with their reasons** |
 | `ExtensionLoader` | Package-private. Resolves classes through `CallbackClassLoaderResolver`, validates and de-duplicates, sorts by priority then name |
 | `ExtensionRegistry` | Starts, notifies and stops extensions; disables hooks; runs the initializer hook |
-| `ExtensionException` | Every refusal: load error, duplicate or invalid name, start/onStarted throw or timeout |
+| `ExtensionException` | Every refusal: load error, duplicate or invalid name, an output written into extension code, start/onStarted throw or timeout |
+| `ExtensionOutputPaths` | Start-up check that no enabled output file is written where an extension's code is loaded from ([Deployment](#deployment)) |
 
 ## Rationale
 
@@ -104,6 +108,30 @@ sequenceDiagram
 A class is instantiated once however many sources name it. Each server built from one `Configuration` gets its
 own instances. Names must match `[a-z0-9-]+` and be unique. The INFO line per extension names its class, source
 JAR and hooks.
+
+### Deployment
+
+| Deployment | Where the JARs go |
+|---|---|
+| JAR | `java -cp mockserver-netty-jar-with-dependencies.jar:ext/* org.mockserver.cli.Main -extensions com.acme.Ext` (`java -jar` ignores `-cp`) |
+| Docker | Every server image ends its classpath with `/libs/*:/extensions/*`: `-v ./ext:/extensions:ro -e MOCKSERVER_EXTENSIONS=com.acme.Ext`. The AppCDS archive and AOT cache still map, because the runtime classpath only extends the training one ([docker.md](../infrastructure/docker.md)) |
+| Helm | `extensions.volume` (any volume source) is mounted `readOnly: true` at `/extensions`; `extensions.classes` and `extensions.scanning` set the two properties ([helm.md](../infrastructure/helm.md)) |
+| WAR | JARs in `WEB-INF/lib`, properties as system properties |
+
+**Output-path refusal.** Before any extension starts, `ExtensionOutputPaths` refuses start-up with an
+`ExtensionException` when an enabled output would be written where an extension's code is loaded from:
+`persistedExpectationsPath` (with `persistExpectations`), `persistedRecordedExpectationsPath` (with
+`persistRecordedExpectations`), `persistedRecordedRequestsPath` (with `persistRecordedRequestsToDisk`),
+`auditLogFile` (when set) or `memoryUsageCsvDirectory` (with `outputMemoryUsageCsv`). For a class directory the
+output may not be anywhere beneath it, because a directory entry loads any file under it. For a JAR the output may
+not be directly in the JAR's directory, because a classpath wildcard over that directory (`/extensions/*`) is not
+recursive, so a subdirectory is allowed. Disabled outputs are not checked, so the default relative paths never
+refuse a `java -cp mockserver.jar:acme.jar` run from the JAR's own directory. The check runs only at start-up.
+`PUT /mockserver/configuration` accepts all five paths, but the persistence and memory-CSV writers bind their path
+when `HttpState` is built, so a later PUT does not move where they write. `auditLogFile` is the exception: the
+audit sink takes its path on its first write, so a PUT that turns on `controlPlaneAuditEnabled` and sets
+`auditLogFile` before any audit record is written does take effect. The read-only mount, not this check, is what
+stops that write.
 
 ### Start, ready and stop
 
