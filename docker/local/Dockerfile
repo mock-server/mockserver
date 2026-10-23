@@ -54,7 +54,8 @@ FROM eclipse-temurin:26-jdk-noble AS appcds-build
 
 # own.jar and deps.jar from the jarprep stage. The AppCDS archive records this exact classpath, so the
 # training run and the runtime ENTRYPOINT MUST both list /mockserver.jar:/mockserver-deps.jar in that
-# order (the ENTRYPOINT appends /libs/*) or the archive does not map.
+# order or the archive does not map. The ENTRYPOINT appends /libs/* and /extensions/*: CDS accepts a
+# runtime classpath that extends the dump-time one, and a wildcard over a missing directory adds nothing.
 COPY --from=jarprep /jarprep/own.jar  /mockserver.jar
 COPY --from=jarprep /jarprep/deps.jar /mockserver-deps.jar
 
@@ -180,7 +181,7 @@ USER nonroot
 # The AppCDS archive is trained under ZGC to match (collector-independent from JDK 22, so it still
 # maps under an override). JDK 26 ZGC is generational — no -XX:+ZGenerational (obsolete post-JDK 23).
 ENV JAVA_TOOL_OPTIONS="-XX:+UseZGC"
-ENTRYPOINT ["/usr/lib/jvm/temurin25-trimmed/bin/java", "-Dfile.encoding=UTF-8", "--enable-native-access=ALL-UNNAMED", "-XX:MaxRAMPercentage=45.0", "-XX:SharedArchiveFile=/mockserver.jsa", "-cp", "/mockserver.jar:/mockserver-deps.jar:/libs/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
+ENTRYPOINT ["/usr/lib/jvm/temurin25-trimmed/bin/java", "-Dfile.encoding=UTF-8", "--enable-native-access=ALL-UNNAMED", "-XX:MaxRAMPercentage=45.0", "-XX:SharedArchiveFile=/mockserver.jsa", "-cp", "/mockserver.jar:/mockserver-deps.jar:/libs/*:/extensions/*", "-Dmockserver.propertyFile=/config/mockserver.properties", "org.mockserver.cli.Main"]
 
 ENV SERVER_PORT=1080
 

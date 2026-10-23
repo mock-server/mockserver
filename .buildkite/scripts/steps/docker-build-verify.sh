@@ -41,6 +41,8 @@
 #     handshake on its port;
 #   * with metrics enabled, the Prometheus scrape includes jvm_memory_allocated_bytes
 #     — the guard that the jlink runtime kept jdk.management (com.sun.management.ThreadMXBean).
+#   * an extension JAR mounted read-only at /extensions is loaded and serves its expectation,
+#     under -Xshare:on (the JVM exits if the AppCDS archive no longer maps).
 #
 # ARCH TRAP
 #   The image is built WITHOUT --build-arg TARGETARCH, exactly as the release and
@@ -392,6 +394,65 @@ assert_jvm_memory_allocated_metric() {
   echo "    :white_check_mark: jvm_memory_allocated_bytes present in the Prometheus scrape"
 }
 
+# ── Assert an extension JAR mounted read-only at /extensions loads, with AppCDS still mapped ──
+# Every image appends /extensions/* to its classpath. -Xshare:on makes the JVM exit when the AppCDS
+# archive cannot map, so a classpath that no longer extends the archive's training classpath fails here.
+assert_extension_loads_with_cds() {
+  echo "--- :jigsaw: asserting a JAR mounted read-only at /extensions loads, with the AppCDS archive mapped (-Xshare:on)"
+  local ext_dir cid cname port body="" attempt
+  ext_dir="$(mktemp -d)"
+  CLEANUP+=( "dir:$ext_dir" )
+  mkdir -p "$ext_dir/src/verify" "$ext_dir/classes" "$ext_dir/extensions"
+  cid="$(docker create "$IMAGE_TAG")" || fail "docker create '$IMAGE_TAG' failed"
+  CLEANUP+=( "container:$cid" )
+  docker cp "$cid:/mockserver.jar" "$ext_dir/mockserver.jar" >/dev/null || fail "could not copy /mockserver.jar out of the image"
+  docker rm -f "$cid" >/dev/null 2>&1 || true
+  cat > "$ext_dir/src/verify/VerifyExtension.java" <<'JAVA'
+package verify;
+
+import org.mockserver.extension.Extension;
+import org.mockserver.mock.Expectation;
+import org.mockserver.server.initialize.ExpectationInitializer;
+
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
+
+public class VerifyExtension implements Extension, ExpectationInitializer {
+    public String name() {
+        return "verify";
+    }
+
+    public Expectation[] initializeExpectations() {
+        String source = String.valueOf(VerifyExtension.class.getProtectionDomain().getCodeSource().getLocation());
+        return new Expectation[]{new Expectation(request().withPath("/verify-extension")).thenRespond(response().withBody("loaded from " + source))};
+    }
+}
+JAVA
+  docker run --rm --user "$(id -u):$(id -g)" -v "$ext_dir":/ext "$PROBE_JDK_IMAGE" sh -c \
+    'javac --release 17 -cp /ext/mockserver.jar -d /ext/classes /ext/src/verify/VerifyExtension.java && jar cf /ext/extensions/verify-extension.jar -C /ext/classes .' \
+    || fail "extension compile failed"
+  # the image runs as nonroot, and mktemp -d is private to this user
+  chmod a+rx "$ext_dir" "$ext_dir/extensions" && chmod a+r "$ext_dir/extensions/verify-extension.jar"
+  cname="docker-build-verify-extension-$$"
+  docker run -d --name "$cname" -p 0:1080 -v "$ext_dir/extensions":/extensions:ro \
+    -e MOCKSERVER_EXTENSIONS=verify.VerifyExtension -e JAVA_TOOL_OPTIONS="-XX:+UseZGC -Xshare:on" "$IMAGE_TAG" >/dev/null \
+    || fail "docker run (extension) failed"
+  CLEANUP+=( "container:$cname" )
+  port="$(docker port "$cname" 1080/tcp | head -n1 | sed 's/.*://')"
+  [ -n "$port" ] || fail "could not determine mapped port for the extension container — failing closed"
+  for attempt in $(seq 1 60); do
+    : "$attempt"
+    body="$(curl -s "http://localhost:${port}/verify-extension" --max-time 5 || true)"
+    [ -n "$body" ] && break
+    sleep 1
+  done
+  if [ "$body" != "loaded from file:/extensions/verify-extension.jar" ]; then
+    docker logs "$cname" 2>&1 | tail -30 >&2
+    fail "GET /verify-extension returned '${body:-nothing}', expected 'loaded from file:/extensions/verify-extension.jar' — the /extensions classpath entry or the AppCDS archive is broken, failing closed"
+  fi
+  echo "    :white_check_mark: extension loaded from /extensions with -Xshare:on (AppCDS archive mapped)"
+}
+
 # ══ 1. Build the image (unless asserting against an existing one) ═══════════════
 if [ "${DOCKER_VERIFY_SKIP_BUILD:-}" = "true" ]; then
   echo "--- :fast_forward: DOCKER_VERIFY_SKIP_BUILD=true — asserting against existing image '$IMAGE_TAG' (no build, no derive)"
@@ -427,5 +488,6 @@ assert_native_provider
 assert_native_provider_readonly
 assert_starts_and_serves_tls
 assert_jvm_memory_allocated_metric
+assert_extension_loads_with_cds
 
-echo "--- :white_check_mark: docker build verify PASSED (image builds, native tcnative loads incl. under --read-only, TLS serves, jvm_memory_allocated_bytes emitted)"
+echo "--- :white_check_mark: docker build verify PASSED (image builds, native tcnative loads incl. under --read-only, TLS serves, jvm_memory_allocated_bytes emitted, /extensions JAR loads with AppCDS mapped)"

@@ -225,10 +225,20 @@ MOCKSERVER_EXTENSIONS=com.example.AuditExtension
 mockserver.extensions=com.example.AuditExtension
 </pre>
 
-<p><strong>Docker</strong> &mdash; the standard image adds every JAR in <span class="inline_code">/libs</span> to the classpath, so mount the extension JARs there and set the property. The <span class="inline_code">-graaljs</span> and <span class="inline_code">clustered-</span> images ship their own JARs in <span class="inline_code">/libs</span>, so mounting over that directory breaks them.</p>
+<p><strong>Docker</strong> &mdash; every MockServer image adds every JAR in <span class="inline_code">/extensions</span> to the classpath, so mount a folder of extension JARs there, read-only, and set the property. This works the same in every image variant, including <span class="inline_code">-graaljs</span>, <span class="inline_code">-clustered</span> and <span class="inline_code">-aot</span>, and keeps the images' fast start-up. Use <span class="inline_code">/extensions</span> rather than <span class="inline_code">/libs</span>: the <span class="inline_code">-graaljs</span> and <span class="inline_code">-clustered</span> images ship their own JARs in <span class="inline_code">/libs</span>, so mounting over it breaks them.</p>
 
 <pre class="prettyprint lang-bash code">
-docker run -v "$(pwd)/ext:/libs:ro" -e MOCKSERVER_EXTENSIONS=com.example.AuditExtension -p 1080:1080 mockserver/mockserver
+docker run -v "$(pwd)/ext:/extensions:ro" -e MOCKSERVER_EXTENSIONS=com.example.AuditExtension -p 1080:1080 mockserver/mockserver
+</pre>
+
+<p><strong>Helm</strong> &mdash; put the JARs in any Kubernetes volume (a ConfigMap, a Secret, a PersistentVolumeClaim, ...) and the chart mounts it read-only at <span class="inline_code">/extensions</span>:</p>
+
+<pre class="prettyprint lang-yaml code">
+extensions:
+  classes: "com.example.AuditExtension"
+  volume:
+    configMap:
+      name: mockserver-extensions
 </pre>
 
 <p><strong>Embedded Java</strong> &mdash; pass classes or suppliers. Each server you start gets its own instances, even when two servers share one <span class="inline_code">Configuration</span>:</p>
@@ -262,7 +272,8 @@ ClientAndServer mockServer = ClientAndServer.startClientAndServer(
     <li>two extensions have the same name, or a name is not lower-case letters, digits and <span class="inline_code">-</span>;</li>
     <li><span class="inline_code">start</span> or <span class="inline_code">onStarted</span> throws, or does not return within <a href="/mock_server/configuration_properties.html#button_configuration_extension_start_timeout_millis"><span class="inline_code">extensionStartTimeoutMillis</span></a> (default 30 seconds);</li>
     <li>a template helper is not a public interface with an implementation of it, two helpers of one extension share an interface name, or a Mustache helper key is not letters, digits, <span class="inline_code">_</span> or <span class="inline_code">-</span>;</li>
-    <li>an extension that seeds expectations throws from <span class="inline_code">initializeExpectations</span>. This is stricter than <span class="inline_code">initializationClass</span>, which only stops start-up when <span class="inline_code">failOnInitializationError</span> is set.</li>
+    <li>an extension that seeds expectations throws from <span class="inline_code">initializeExpectations</span>. This is stricter than <span class="inline_code">initializationClass</span>, which only stops start-up when <span class="inline_code">failOnInitializationError</span> is set;</li>
+    <li>a file MockServer is set to write would land in the folder an extension was loaded from: persisted expectations (<span class="inline_code">persistExpectations</span>), persisted recorded expectations (<span class="inline_code">persistRecordedExpectations</span>), persisted recorded requests (<span class="inline_code">persistRecordedRequestsToDisk</span>), the audit log (<span class="inline_code">auditLogFile</span>) or the memory-usage CSV files (<span class="inline_code">outputMemoryUsageCsv</span>). Write them somewhere else, such as a separate volume. For an extension JAR this means the JAR's own folder, for example <span class="inline_code">/extensions</span>; for a folder of classes it means anywhere inside it.</li>
 </ul>
 
 <p>The extensions that had already started are stopped, in reverse order, and nothing else is left running, except the thread of an extension call that did not return in time: it is interrupted, and a warning says it may still be running. An exception thrown from <span class="inline_code">stop</span> is logged and the other extensions still stop.</p>

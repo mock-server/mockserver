@@ -70,6 +70,30 @@ EOF
       errors=$((errors + 1))
     fi
 
+    # The extensions volume must mount read-only at /extensions (the images put /extensions/* on the
+    # classpath), carry the user volume source verbatim, and set the class list; absent by default.
+    echo "--- Asserting extensions.volume mounts read-only at /extensions"
+    rendered_ext=$(helm template test-release helm/mockserver \
+      --set extensions.classes=com.acme.AcmeExtension \
+      --set extensions.volume.configMap.name=acme-ext 2>/dev/null) || rendered_ext=""
+    ext_mount=$(printf "%s\n" "$rendered_ext" | grep -A2 -E "^[[:space:]]+- name: extensions-volume$" | tr -s " " | tr "\n" "|")
+    ext_ok=1
+    case "$ext_mount" in *"mountPath: /extensions| readOnly: true|"*) ;; *) ext_ok=0 ;; esac
+    case "$ext_mount" in *"configMap:| name: acme-ext|"*) ;; *) ext_ok=0 ;; esac
+    case "$rendered_ext" in *"value: \"com.acme.AcmeExtension\""*) ;; *) ext_ok=0 ;; esac
+    if [ "$ext_ok" -eq 1 ]; then
+      echo "PASS: extensions volume, read-only mount and MOCKSERVER_EXTENSIONS rendered"
+    else
+      echo "FAILED: extensions.volume did not render a read-only /extensions mount with its volume source and class list: $ext_mount"
+      errors=$((errors + 1))
+    fi
+    rendered_default=$(helm template test-release helm/mockserver 2>/dev/null) || rendered_default="RENDER-FAILED"
+    case "$rendered_default" in
+      *extensions-volume*|*MOCKSERVER_EXTENSION*|RENDER-FAILED)
+        echo "FAILED: the default render failed, or mounts an extensions volume or sets an extension property"
+        errors=$((errors + 1)) ;;
+    esac
+
     # image.variant selects a published tag suffix; assert the exact rendered image so a template
     # edit cannot silently point pods at a tag that does not exist.
     assert_image() {

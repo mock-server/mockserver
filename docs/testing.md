@@ -391,7 +391,7 @@ There are 6 production Docker image variants. Only the main nonroot variant is t
 | Graceful shutdown (signal handling) | No test verifies `docker stop` drains connections or persists state. |
 | Multi-arch (ARM64) | CI builds `linux/amd64,linux/arm64` but integration tests only run on native arch. |
 | JVM options (`JVM_OPTIONS` env var) | Supported by Helm chart but never tested via Docker Compose. |
-| `/libs/*` classpath extension | Entrypoint includes `/libs/*` on classpath for custom JARs but no test mounts into `/libs/`. |
+| `/libs/*` classpath extension | Entrypoint includes `/libs/*` on classpath for custom JARs but no test mounts into `/libs/`. `/extensions/*` is covered by `docker-build-verify.sh` (developer pre-commit gate, not CI), which mounts a compiled extension JAR and checks it serves under `-Xshare:on`. |
 | Custom TLS certificates | Forward-with-override uses HTTPS via `nghttp` but no test exercises custom certs or mTLS. |
 | Resource limits / memory constraints | No test verifies behaviour under memory pressure. |
 

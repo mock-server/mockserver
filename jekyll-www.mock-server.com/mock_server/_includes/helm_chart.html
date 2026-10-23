@@ -235,6 +235,25 @@ For example:
 
 <pre class="prettyprint code"><code class="code">helm upgrade --install --namespace mockserver --set app.mountedLibsConfigMapName=mockserver-libs mockserver helm/mockserver</code></pre>
 
+<a id="helm_extensions" class="anchor" href="#helm_extensions">&nbsp;</a>
+
+<h2>Extensions</h2>
+
+<p><a href="/mock_server/extensions.html">Extensions</a> are your own Java classes that MockServer loads when it starts. Put the extension JARs in any Kubernetes volume, such as a ConfigMap, a Secret or a PersistentVolumeClaim, and name the classes; the chart mounts the volume read-only at <span class="inline_code">/extensions</span>, which every MockServer image loads JARs from:</p>
+<ul>
+    <li><span class="keyword">extensions.classes</span> (default: empty) - comma-separated extension class names</li>
+    <li><span class="keyword">extensions.scanning</span> (default: false) - also load the extensions listed in <span class="inline_code">META-INF/services</span> files</li>
+    <li><span class="keyword">extensions.volume</span> (default: none) - the volume holding the JARs, in the same form as a pod's <span class="inline_code">volumes</span> entry without its name</li>
+</ul>
+
+<pre class="prettyprint code"><code class="code">extensions:
+  classes: "com.example.AuditExtension"
+  volume:
+    configMap:
+      name: mockserver-extensions</code></pre>
+
+<p>MockServer refuses to start if persisted expectations, persisted recorded expectations or requests, the audit log or the memory-usage CSV files are turned on and would be written into <span class="inline_code">/extensions</span>.</p>
+
 <a id="helm_persistent_storage" class="anchor" href="#helm_persistent_storage">&nbsp;</a>
 
 <h2>Persistent Storage</h2>
