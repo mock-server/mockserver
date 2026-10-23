@@ -15,6 +15,8 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.ScheduledFuture;
 import org.apache.commons.lang3.StringUtils;
+import org.mockserver.codec.HeldRequestAccounting;
+import org.mockserver.codec.Http1PipeliningGate;
 import org.mockserver.codec.HttpChunkLineLimiter;
 import org.mockserver.codec.HttpLineEndSplitGuard;
 import org.mockserver.codec.HttpObjectAggregators;
@@ -777,6 +779,9 @@ public class PortUnificationHandler extends ReplayingDecoder<Void> {
             }
             if (transportTimer != null) {
                 addLastIfNotPresent(pipeline, transportTimer);
+            }
+            if (Boolean.TRUE.equals(configuration.http1PipeliningInOrder())) {
+                addLastIfNotPresent(pipeline, new Http1PipeliningGate(configuration, server != null ? server.getHeldRequestAccounting() : HeldRequestAccounting.NONE, mockServerLogger));
             }
             addLastIfNotPresent(pipeline, preserveHeadersNettyRemoves);
             addLastIfNotPresent(pipeline, new MockServerHttpContentDecompressor(configuration.maxRequestBodySize()));

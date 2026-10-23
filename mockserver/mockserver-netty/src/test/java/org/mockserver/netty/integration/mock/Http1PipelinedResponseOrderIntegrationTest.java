@@ -1,7 +1,6 @@
 package org.mockserver.netty.integration.mock;
 
 import org.junit.AfterClass;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -77,7 +76,6 @@ public class Http1PipelinedResponseOrderIntegrationTest {
 
     @BeforeClass
     public static void startServers() throws IOException {
-        assumeInOrderResponsesAreImplemented();
         Path staticFiles = FILES.newFolder("static").toPath();
         largeFile = staticFiles.resolve("large.bin");
         byte[] large = new byte[LARGE_FILE_BYTES];
@@ -90,6 +88,8 @@ public class Http1PipelinedResponseOrderIntegrationTest {
         Configuration configuration = configuration()
             .logLevel("WARN")
             .proxySetup(false)
+            // a request that matches nothing is answered from the static files, not forwarded to its Host header
+            .attemptToProxyIfNoMatchingExpectation(false)
             .staticFilesDirectory(staticFiles.toString())
             .extensions((Supplier<Extension>) SlowAdminExtension::new);
         mockServer = new MockServer(configuration, 0);
@@ -112,23 +112,6 @@ public class Http1PipelinedResponseOrderIntegrationTest {
         upstreamClient.reset();
         mockServerClient.when(request().withPath("/slow")).respond(response("slow").withDelay(TimeUnit.MILLISECONDS, SLOW_MILLIS));
         mockServerClient.when(request().withPath("/fast")).respond(response("fast"));
-    }
-
-    /**
-     * Ordering is enforced by {@code Http1PipeliningGate}, wired in by F2 U3 together with its
-     * {@code http1PipeliningInOrder} property. Until then these tests are skipped, so they are never red on master;
-     * {@code -Dmockserver.f2.runFailFirst=true} runs them anyway, to record that they fail without the gate.
-     */
-    private static void assumeInOrderResponsesAreImplemented() {
-        boolean implemented;
-        try {
-            Configuration.class.getMethod("http1PipeliningInOrder");
-            implemented = true;
-        } catch (NoSuchMethodException notYet) {
-            implemented = false;
-        }
-        Assume.assumeTrue("pipelined HTTP/1.1 responses are ordered from F2 U3 (http1PipeliningInOrder)",
-            implemented || Boolean.getBoolean("mockserver.f2.runFailFirst"));
     }
 
     // test 1
@@ -172,7 +155,7 @@ public class Http1PipelinedResponseOrderIntegrationTest {
             client.pipeline(get("/large.bin"), get("/fast"));
 
             List<Response> responses = client.readResponses(false, false);
-            assertThat(responses.get(0).status, is(200));
+            assertThat("the static file is answered first: " + responses.get(0).head, responses.get(0).status, is(200));
             assertThat("the static file is answered first, in full", responses.get(0).body.length, is(LARGE_FILE_BYTES));
             assertThat(responses.get(1).body(), is("fast"));
         }

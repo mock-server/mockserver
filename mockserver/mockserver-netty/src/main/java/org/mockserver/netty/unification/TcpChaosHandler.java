@@ -10,6 +10,7 @@ import io.netty.util.concurrent.ScheduledFuture;
 import org.mockserver.mock.action.http.TcpChaosRegistry;
 import org.mockserver.model.TcpChaosProfile;
 import org.mockserver.socket.ChannelReadPause;
+import org.mockserver.socket.ConnectionClosing;
 import org.mockserver.socket.ConnectionReset;
 
 import java.net.InetSocketAddress;
@@ -97,6 +98,8 @@ public class TcpChaosHandler extends ChannelDuplexHandler {
                 ByteBuf buf = (ByteBuf) msg;
                 if (bytesConsumed >= profile.getLimitDataBytes()) {
                     buf.release();
+                    // this close starts beneath the pipelining gate, so the gate is told first
+                    ConnectionClosing.mark(ctx.channel());
                     ctx.close();
                     return;
                 }

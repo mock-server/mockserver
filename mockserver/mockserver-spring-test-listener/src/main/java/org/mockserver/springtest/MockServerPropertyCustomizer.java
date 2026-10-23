@@ -302,6 +302,9 @@ public class MockServerPropertyCustomizer implements ContextCustomizer {
             case "alwaysCloseSocketConnections":
                 config.alwaysCloseSocketConnections(parseStrictBoolean(value, key));
                 break;
+            case "http1PipeliningInOrder":
+                config.http1PipeliningInOrder(parseStrictBoolean(value, key));
+                break;
             case "useSemicolonAsQueryParameterSeparator":
                 config.useSemicolonAsQueryParameterSeparator(parseStrictBoolean(value, key));
                 break;

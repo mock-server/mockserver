@@ -57,6 +57,14 @@ public class MockServerPropertyCustomizerConfigurationTest {
     }
 
     @Test
+    public void shouldApplyHttp1PipeliningInOrder() {
+        Configuration config = MockServerPropertyCustomizer.buildConfiguration(
+            Collections.singletonList("mockserver.http1PipeliningInOrder=false")
+        );
+        assertThat(config.http1PipeliningInOrder(), is(false));
+    }
+
+    @Test
     public void shouldApplyExtensionProperties() {
         Configuration config = MockServerPropertyCustomizer.buildConfiguration(
             Arrays.asList(

@@ -13,6 +13,7 @@ import org.mockserver.model.HttpRequest;
 import org.mockserver.responsewriter.HttpExchangeEndedEvent;
 import org.mockserver.responsewriter.RawResponseBytesEvent;
 import org.mockserver.responsewriter.ResponseWrittenBeneathCodecEvent;
+import org.mockserver.socket.ConnectionClosing;
 import org.mockserver.socket.ConnectionReset;
 
 import java.util.concurrent.RejectedExecutionException;
@@ -46,6 +47,11 @@ public class HttpErrorActionHandler {
      * connection closed, or straight away when nothing is written and the connection stays open.
      */
     public void handle(HttpError httpError, HttpRequest request, ChannelHandlerContext ctx, Runnable responseEnded) {
+        if (dropsOrResetsTheConnection(httpError) && ctx.pipeline().context(HttpServerCodec.class) != null) {
+            // HTTP/1.1: the drop or reset may be applied off the event loop, or beneath the pipelining gate, after the
+            // exchange ends
+            ConnectionClosing.mark(ctx.channel());
+        }
         if (httpError.getResponseBytes() != null) {
             // write byte directly by skipping over HTTP codec
             ChannelHandlerContext httpCodecContext = ctx.pipeline().context(HttpServerCodec.class);
@@ -84,6 +90,12 @@ public class HttpErrorActionHandler {
             HttpExchangeEndedEvent.fire(ctx);
             responseEnded.run();
         }
+    }
+
+    private static boolean dropsOrResetsTheConnection(HttpError httpError) {
+        return Boolean.TRUE.equals(httpError.getResetConnection())
+            || Boolean.TRUE.equals(httpError.getDropConnection())
+            || httpError.getStreamError() != null;
     }
 
     /**

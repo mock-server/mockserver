@@ -28,6 +28,7 @@ import org.mockserver.netty.unification.Http2GoAwayEmitter;
 import org.mockserver.responsewriter.HttpExchangeEndedEvent;
 import org.mockserver.responsewriter.ResponseWriter;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.socket.ConnectionClosing;
 import org.mockserver.socket.ConnectionReset;
 import org.mockserver.socket.ReadAfterFailedWrite;
 
@@ -305,19 +306,22 @@ public class NettyResponseWriter extends ResponseWriter {
 
         Runnable finishStream = () -> {
             if (ctx.channel().isActive()) {
+                boolean closeChannel;
+                ConnectionOptions connectionOptions = response.getConnectionOptions();
+                if (connectionOptions != null && connectionOptions.getCloseSocket() != null) {
+                    closeChannel = connectionOptions.getCloseSocket();
+                } else {
+                    closeChannel = !(request.isKeepAlive() != null && request.isKeepAlive());
+                }
+                if (closeChannel) {
+                    markClosingUnlessAnnounced(ctx, response);
+                }
                 // The terminating LastHttpContent is the terminal write of a streaming response —
                 // release the in-flight token when it flushes so the drain waits for the full
                 // stream to reach the wire (on a keep-alive connection the channel is NOT closed
                 // here, so the close-future net would otherwise not release it until much later).
                 ChannelFuture lastFuture = ctx.writeAndFlush(lastContentWithTrailers(response));
                 lastFuture.addListener(future -> {
-                    boolean closeChannel;
-                    ConnectionOptions connectionOptions = response.getConnectionOptions();
-                    if (connectionOptions != null && connectionOptions.getCloseSocket() != null) {
-                        closeChannel = connectionOptions.getCloseSocket();
-                    } else {
-                        closeChannel = !(request.isKeepAlive() != null && request.isKeepAlive());
-                    }
                     if (closeChannel || configuration.alwaysCloseSocketConnections()) {
                         ctx.close();
                     }
@@ -335,6 +339,7 @@ public class NettyResponseWriter extends ResponseWriter {
                 // closing fails and releases the writes still queued
                 completeInFlightOnFlush(ctx.close());
             } else if (ctx.channel().isActive()) {
+                markClosingUnlessAnnounced(ctx, response);
                 // Error terminates the stream: the LastHttpContent + close is the terminal write.
                 ChannelFuture errorFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
                 errorFuture.addListener(future -> ctx.close());
@@ -538,8 +543,15 @@ public class NettyResponseWriter extends ResponseWriter {
         // client reading on past it sees "connection reset". This is a destructive fault, so it
         // records a "drop" toward the chaos auto-halt circuit-breaker.
         if (lifecycleProfile != null && Boolean.TRUE.equals(lifecycleProfile.getResetMidResponse())) {
+            if (!(ctx.channel() instanceof Http2StreamChannel)) {
+                // the reset is issued beneath the pipelining gate, once the response is written
+                ConnectionClosing.mark(ctx.channel());
+            }
             writeThenReset(ctx, response);
             return;
+        }
+        if (closeChannel) {
+            markClosingUnlessAnnounced(ctx, response);
         }
 
         Delay chunkDelay = connectionOptions != null ? connectionOptions.getChunkDelay() : null;
@@ -655,6 +667,17 @@ public class NettyResponseWriter extends ResponseWriter {
                 }, cumulativeDelayMs, TimeUnit.MILLISECONDS);
             }
         });
+    }
+
+    /**
+     * Tells an HTTP/1.1 connection's pipelining gate, before the response is written, that the connection will close
+     * after it: the close is issued once the write completes, possibly off the event loop or after a delay, so the gate
+     * could release a pipelined request first. A response that says {@code Connection: close} already tells it.
+     */
+    private static void markClosingUnlessAnnounced(ChannelHandlerContext ctx, HttpResponse response) {
+        if (!(ctx.channel() instanceof Http2StreamChannel) && !"close".equalsIgnoreCase(response.getFirstHeader(HttpHeaderNames.CONNECTION.toString()))) {
+            ConnectionClosing.mark(ctx.channel());
+        }
     }
 
     /**
