@@ -5,6 +5,7 @@
     </p>
     <p>It is possible to enable both <a href="#button_configuration_control_plane_jwt_authentication_required">controlPlaneJWTAuthenticationRequired</a> and <a href="#button_configuration_control_plane_mtls_authentication_required">controlPlaneTLSMutualAuthenticationRequired</a>
         but the mTLS will be checked first.</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneJWTAuthenticationRequired(boolean controlPlaneJWTAuthenticationRequired)</code></pre>
@@ -27,6 +28,7 @@
         <li>the JWT should be validated by a key in the JWK source</li>
     </ul>
     <p>For details of JWK see the <a href="https://openid.net/specs/draft-jones-json-web-key-03.html">JWK specification</a></p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneJWTAuthenticationJWKSource(String controlPlaneJWTAuthenticationJWKSource)</code></pre>
@@ -43,6 +45,7 @@
 <button id="button_configuration_control_plane_jwt_authentication_required_audience" class="accordion title"><strong>Control Plane JWT Authentication Required Audience</strong></button>
 <div class="panel title">
     <p>Audience claim (i.e. <span class="inline_code">aud</span>) a control-plane JWT must carry when JWT authentication is enabled. When empty (the default), the audience claim is not checked &mdash; any validly-signed token is accepted regardless of its audience. Set it to the audience your issuer puts in tokens meant for this MockServer instance to reject tokens issued for other services.</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">""</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneJWTAuthenticationExpectedAudience(String controlPlaneJWTAuthenticationExpectedAudience)</code></pre>
@@ -60,6 +63,7 @@
 <div class="panel title">
     <p>Matching claims expected when JWT authentication is enabled for control plane requests</p>
     <p>Value should be string with comma separated key=value items, for example: scope=internal public,sub=some_subject</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneJWTAuthenticationMatchingClaims(Map&lt;String, String&gt; controlPlaneJWTAuthenticationMatchingClaims)</code></pre>
@@ -77,6 +81,7 @@
 <div class="panel title">
     <p>Required claims that should exist (i.e. with any value) when JWT authentication is enabled for control plane requests</p>
     <p>Value should be string with comma separated values, for example: scope,sub</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneJWTAuthenticationRequiredClaims(Set&lt;String&gt; controlPlaneJWTAuthenticationRequiredClaims)</code></pre>

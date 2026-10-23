@@ -534,6 +534,180 @@ public class HttpStateConfigurationUpdateTest {
         assertThat(warnings.get(6), containsString("grpcProtocPath is fixed at startup"));
     }
 
+    private static final String CONTROL_PLANE_CA_CHAIN = "org/mockserver/authentication/mtls/ca.pem";
+
+    private void startWithControlPlaneTrustInForce() {
+        configuration
+            .controlPlaneTLSMutualAuthenticationRequired(true)
+            .controlPlaneTLSMutualAuthenticationCAChain(CONTROL_PLANE_CA_CHAIN)
+            .controlPlaneJWTAuthenticationRequired(false)
+            .controlPlaneJWTAuthenticationJWKSource("in-force/jwks.json")
+            .controlPlaneJWTAuthenticationExpectedAudience("in-force-audience")
+            .controlPlaneJWTAuthenticationMatchingClaims(java.util.Collections.singletonMap("iss", "in-force"))
+            .controlPlaneJWTAuthenticationRequiredClaims(java.util.Collections.singleton("sub"))
+            .controlPlaneOidcAuthenticationRequired(false)
+            .controlPlaneOidcIssuer("https://in-force.example")
+            .controlPlaneOidcJwksUri("https://in-force.example/jwks")
+            .controlPlaneOidcAudience("in-force")
+            .controlPlaneOidcRequiredScopes(java.util.Collections.singleton("in-force"))
+            .controlPlaneOidcScopeClaim("scope")
+            .controlPlaneAuthorizationEnabled(false)
+            .controlPlaneScopeMapping(java.util.Collections.singletonMap("team", org.mockserver.authentication.authorization.ControlPlaneRole.READ))
+            .controlPlaneAuditEnabled(true)
+            .dashboardAnalyticsEndpoint("https://in-force.example/analytics");
+    }
+
+    @Test
+    public void shouldNotLetAPutChangeWhoMayUseTheControlPlaneOrWhatIsAudited() {
+        // given - control-plane mTLS in force, and its handler built as a first control-plane request would
+        startWithControlPlaneTrustInForce();
+        org.mockserver.authentication.AuthenticationHandler handlerInForce = httpState.getControlPlaneAuthenticationHandler();
+        assertThat(handlerInForce, org.hamcrest.Matchers.instanceOf(org.mockserver.authentication.mtls.MTLSAuthenticationHandler.class));
+
+        // when - a PUT tries to switch mTLS off, trust another CA and key set, and turn auditing off
+        put(new ConfigurationDTO()
+            .setControlPlaneTLSMutualAuthenticationRequired(false)
+            .setControlPlaneTLSMutualAuthenticationCAChain("org/mockserver/authentication/mtls/separateca/ca.pem")
+            .setControlPlaneJWTAuthenticationRequired(true)
+            .setControlPlaneJWTAuthenticationJWKSource("https://attacker.example/jwks")
+            .setControlPlaneJWTAuthenticationExpectedAudience("attacker")
+            .setControlPlaneJWTAuthenticationMatchingClaims(java.util.Collections.singletonMap("iss", "attacker"))
+            .setControlPlaneJWTAuthenticationRequiredClaims(java.util.Collections.emptySet())
+            .setControlPlaneOidcAuthenticationRequired(true)
+            .setControlPlaneOidcIssuer("https://attacker.example")
+            .setControlPlaneOidcJwksUri("https://attacker.example/jwks")
+            .setControlPlaneOidcAudience("attacker")
+            .setControlPlaneOidcRequiredScopes(java.util.Collections.emptySet())
+            .setControlPlaneOidcScopeClaim("groups")
+            .setControlPlaneAuthorizationEnabled(true)
+            .setControlPlaneScopeMapping(java.util.Collections.singletonMap("team", org.mockserver.authentication.authorization.ControlPlaneRole.ADMIN))
+            .setControlPlaneAuditEnabled(false)
+            .setDashboardAnalyticsEndpoint("https://attacker.example/beacon"));
+
+        // then - every value in force is unchanged and GET reports it
+        ConfigurationDTO get = new ConfigurationDTO(configuration);
+        assertThat(get.getControlPlaneTLSMutualAuthenticationRequired(), is(true));
+        assertThat(get.getControlPlaneTLSMutualAuthenticationCAChain(), is(CONTROL_PLANE_CA_CHAIN));
+        assertThat(get.getControlPlaneJWTAuthenticationRequired(), is(false));
+        assertThat(get.getControlPlaneJWTAuthenticationJWKSource(), is("in-force/jwks.json"));
+        assertThat(get.getControlPlaneJWTAuthenticationExpectedAudience(), is("in-force-audience"));
+        assertThat(get.getControlPlaneJWTAuthenticationMatchingClaims(), is(java.util.Collections.singletonMap("iss", "in-force")));
+        assertThat(get.getControlPlaneJWTAuthenticationRequiredClaims(), is(java.util.Collections.singleton("sub")));
+        assertThat(get.getControlPlaneOidcAuthenticationRequired(), is(false));
+        assertThat(get.getControlPlaneOidcIssuer(), is("https://in-force.example"));
+        assertThat(get.getControlPlaneOidcJwksUri(), is("https://in-force.example/jwks"));
+        assertThat(get.getControlPlaneOidcAudience(), is("in-force"));
+        assertThat(get.getControlPlaneOidcRequiredScopes(), is(java.util.Collections.singleton("in-force")));
+        assertThat(get.getControlPlaneOidcScopeClaim(), is("scope"));
+        assertThat(get.getControlPlaneAuthorizationEnabled(), is(false));
+        assertThat(get.getControlPlaneScopeMapping(), is(java.util.Collections.singletonMap("team", org.mockserver.authentication.authorization.ControlPlaneRole.READ)));
+        assertThat(get.getControlPlaneAuditEnabled(), is(true));
+        assertThat(get.getDashboardAnalyticsEndpoint(), is("https://in-force.example/analytics"));
+
+        // and - the derived authentication handler was not rebuilt
+        assertThat(httpState.getControlPlaneAuthenticationHandler(), org.hamcrest.Matchers.sameInstance(handlerInForce));
+
+        // and - each ignored value is reported once, in order
+        List<String> warnings = logger.warnings();
+        List<String> expected = java.util.Arrays.asList(
+            "controlPlaneTLSMutualAuthenticationRequired", "controlPlaneTLSMutualAuthenticationCAChain",
+            "controlPlaneJWTAuthenticationRequired", "controlPlaneJWTAuthenticationJWKSource", "controlPlaneJWTAuthenticationExpectedAudience",
+            "controlPlaneJWTAuthenticationMatchingClaims", "controlPlaneJWTAuthenticationRequiredClaims",
+            "controlPlaneOidcAuthenticationRequired", "controlPlaneOidcIssuer", "controlPlaneOidcJwksUri", "controlPlaneOidcAudience",
+            "controlPlaneOidcRequiredScopes", "controlPlaneOidcScopeClaim",
+            "controlPlaneAuthorizationEnabled", "controlPlaneScopeMapping",
+            "controlPlaneAuditEnabled", "dashboardAnalyticsEndpoint");
+        assertThat(String.join("\n", warnings), warnings, hasSize(expected.size()));
+        for (int i = 0; i < expected.size(); i++) {
+            assertThat(warnings.get(i), containsString(expected.get(i) + " is fixed at startup"));
+        }
+        assertThat(warnings.get(3), containsString("\"https://attacker.example/jwks\" has been IGNORED and controlPlaneJWTAuthenticationJWKSource remains \"in-force/jwks.json\""));
+        assertThat(warnings.get(15), containsString("false has been IGNORED and controlPlaneAuditEnabled remains true"));
+    }
+
+    @Test
+    public void shouldClearTheHeldLlmApiKeyWhenAPutChangesTheLlmBaseUrlWithoutOne() {
+        // given
+        configuration.llmProvider("OPENAI").llmBaseUrl("https://in-force.example").llmApiKey("sk-held");
+
+        // when - a PUT repoints the backend and supplies no key
+        put(new ConfigurationDTO().setLlmBaseUrl("https://elsewhere.example"));
+
+        // then - the new destination applies but the held key is not carried to it
+        assertThat(configuration.llmBaseUrl(), is("https://elsewhere.example"));
+        assertThat(configuration.llmApiKey(), is(""));
+        assertThat(new ConfigurationDTO(configuration).getLlmApiKey(), is(org.hamcrest.Matchers.nullValue()));
+        assertThat(logger.warnings(), hasSize(1));
+        assertThat(logger.warnings().get(0), containsString("llmApiKey has been CLEARED"));
+        assertThat(logger.warnings().get(0), not(containsString("sk-held")));
+    }
+
+    @Test
+    public void shouldClearTheHeldLlmApiKeyWhenAPutEchoesItMaskedWithANewLlmBaseUrl() {
+        // given - a client GETs the configuration (the key comes back masked), edits the base URL and PUTs it all back
+        configuration.llmProvider("OPENAI").llmBaseUrl("https://in-force.example").llmApiKey("sk-held");
+        com.fasterxml.jackson.databind.ObjectMapper objectMapper = org.mockserver.serialization.ObjectMapperFactory.createObjectMapper();
+        ConfigurationDTO edited;
+        try {
+            String getBody = objectMapper.writeValueAsString(new ConfigurationDTO(configuration));
+            edited = objectMapper.readValue(getBody, ConfigurationDTO.class).setLlmBaseUrl("https://elsewhere.example");
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new AssertionError(e);
+        }
+        assertThat(edited.getLlmApiKeyRawValue(), is(org.mockserver.configuration.ConfigurationProperties.REDACTED_VALUE));
+
+        // when
+        put(edited);
+
+        // then - the mask is not a key, so the held one is cleared rather than sent to the new host
+        assertThat(configuration.llmBaseUrl(), is("https://elsewhere.example"));
+        assertThat(configuration.llmApiKey(), is(""));
+        assertThat(logger.warnings(), hasSize(1));
+        assertThat(logger.warnings().get(0), containsString("llmApiKey has been CLEARED"));
+    }
+
+    @Test
+    public void shouldClearTheHeldLlmApiKeyWhenAPutChangesTheProviderAndNoBaseUrlIsSet() {
+        // given - no base URL, so the provider's own host is the destination
+        configuration.llmProvider("OPENAI").llmBaseUrl("").llmApiKey("sk-held");
+
+        // when
+        put(new ConfigurationDTO().setLlmProvider("ANTHROPIC"));
+
+        // then
+        assertThat(configuration.llmProvider(), is("ANTHROPIC"));
+        assertThat(configuration.llmApiKey(), is(""));
+        assertThat(logger.warnings(), hasSize(1));
+    }
+
+    @Test
+    public void shouldKeepTheHeldLlmApiKeyWhenTheDestinationDoesNotChange() {
+        // given - an explicit base URL: a provider change alone does not change the host
+        configuration.llmProvider("OPENAI").llmBaseUrl("https://in-force.example").llmApiKey("sk-held");
+
+        // when
+        put(new ConfigurationDTO().setLlmProvider("openai").setLlmBaseUrl(" https://in-force.example ").setLlmModel("gpt-4o"));
+        put(new ConfigurationDTO().setLlmProvider("OLLAMA"));
+
+        // then
+        assertThat(configuration.llmApiKey(), is("sk-held"));
+        assertThat(logger.warnings(), is(empty()));
+    }
+
+    @Test
+    public void shouldApplyBothWhenAPutSuppliesANewLlmBaseUrlAndKey() {
+        // given
+        configuration.llmProvider("OPENAI").llmBaseUrl("https://in-force.example").llmApiKey("sk-held");
+
+        // when
+        put(new ConfigurationDTO().setLlmBaseUrl("https://elsewhere.example").setLlmApiKey("sk-new"));
+
+        // then
+        assertThat(configuration.llmBaseUrl(), is("https://elsewhere.example"));
+        assertThat(configuration.llmApiKey(), is("sk-new"));
+        assertThat(logger.warnings(), is(empty()));
+    }
+
     @Test
     public void shouldNotWarnWhenInitOnlyPropertiesAreEchoedBackUnchanged() {
         // given - the whole-blob PUT case: a client GETs the configuration and PUTs it back
@@ -547,7 +721,11 @@ public class HttpStateConfigurationUpdateTest {
             .memoryUsageCsvDirectory("in-force/csv")
             .directoryToSaveDynamicSSLCertificate("in-force/certificates")
             .grpcProtocPath("in-force/protoc")
-            .recordedBodyFilesDirectory("in-force/bodies");
+            .recordedBodyFilesDirectory("in-force/bodies")
+            .llmProvider("OPENAI")
+            .llmBaseUrl("https://in-force.example")
+            .llmApiKey("sk-held");
+        startWithControlPlaneTrustInForce();
         ConfigurationDTO wholeBlob = new ConfigurationDTO(configuration);
 
         // when
@@ -556,6 +734,7 @@ public class HttpStateConfigurationUpdateTest {
         // then
         assertThat(logger.warnings(), is(empty()));
         assertThat(configuration.ringBufferSize(), is(httpState.getMockServerLog().getRingBufferSizeInForce()));
+        assertThat(configuration.llmApiKey(), is("sk-held"));
     }
 
     @Test

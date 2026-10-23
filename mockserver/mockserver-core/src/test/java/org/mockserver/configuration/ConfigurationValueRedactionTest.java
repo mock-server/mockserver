@@ -197,6 +197,33 @@ public class ConfigurationValueRedactionTest {
     }
 
     @Test
+    public void neverRestoresAHeldBackendCredentialIntoABackendWithANewDestination() {
+        String held = "[{\"name\":\"openai\",\"provider\":\"OPENAI\",\"baseUrl\":\"https://held.example\",\"apiKey\":\"sk-real\","
+            + "\"headers\":{\"Authorization\":\"Bearer real\"}}]";
+        assertThat("a masked key is not carried to a new baseUrl",
+            restoreRedactedValue("mockserver.llmBackendsConfig",
+                "[{\"name\":\"openai\",\"provider\":\"OPENAI\",\"baseUrl\":\"https://attacker.example\",\"apiKey\":\"" + REDACTED_VALUE + "\"}]",
+                held), is((String) null));
+        assertThat("a masked key is not carried to a new provider",
+            restoreRedactedValue("mockserver.llmBackendsConfig",
+                "[{\"name\":\"openai\",\"provider\":\"ANTHROPIC\",\"baseUrl\":\"https://held.example\",\"apiKey\":\"" + REDACTED_VALUE + "\"}]",
+                held), is((String) null));
+        assertThat("a masked header nested in the backend is not carried to a new baseUrl either",
+            restoreRedactedValue("mockserver.llmBackendsConfig",
+                "[{\"name\":\"openai\",\"provider\":\"OPENAI\",\"baseUrl\":\"https://attacker.example\",\"apiKey\":\"sk-new\","
+                    + "\"headers\":{\"Authorization\":\"" + REDACTED_VALUE + "\"}}]",
+                held), is((String) null));
+        assertThat("a new destination with a new key is applied",
+            restoreRedactedValue("mockserver.llmBackendsConfig",
+                "[{\"name\":\"openai\",\"provider\":\"OPENAI\",\"baseUrl\":\"https://other.example\",\"apiKey\":\"sk-new\"}]",
+                held), containsString("sk-new"));
+        assertThat("the same destination keeps the held key",
+            restoreRedactedValue("mockserver.llmBackendsConfig",
+                "[{\"name\":\"openai\",\"provider\":\"OPENAI\",\"baseUrl\":\"https://held.example\",\"model\":\"gpt-4o\",\"apiKey\":\"" + REDACTED_VALUE + "\"}]",
+                held), containsString("sk-real"));
+    }
+
+    @Test
     public void refusesAWholeValueCredentialCarryingTheMaskAndStillAppliesRealOnes() {
         // a credential-NAMED property is masked WHOLE by redactSensitiveValue, so there is no unmasked
         // part left to merge an incoming value against: carrying the mask anywhere makes it unusable,

@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockserver.authentication.mtls.MTLSAuthenticationHandler;
+import org.mockserver.configuration.AtomicConfigurationUpdate;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.logging.MockServerLogger;
@@ -38,9 +39,8 @@ import static org.mockserver.model.HttpRequest.request;
  * defect was never in a single control — it was in the assumption that any route reaches the enforcement
  * point. A per-route harness closes the category rather than one instance of it.
  *
- * <p>The {@code PUT /mockserver/configuration} route is exercised end-to-end in the netty module (where
- * that endpoint is served); the DTO route below is the same {@code ConfigurationDTO.applyTo} mutation that
- * endpoint performs.
+ * <p>{@code PUT /mockserver/configuration} cannot change these settings (they are fixed at startup, see
+ * {@code HttpStateConfigurationUpdateTest}); the in-process routes below are the ones that still can.
  */
 @RunWith(Parameterized.class)
 public class ControlPlaneAuthenticationRouteDenialTest {
@@ -65,8 +65,8 @@ public class ControlPlaneAuthenticationRouteDenialTest {
                 ConfigurationProperties.controlPlaneJWTAuthenticationRequired(true)},
             {Mechanism.JWT, "Configuration instance", (Route) (configuration, mechanism) ->
                 configuration.controlPlaneJWTAuthenticationRequired(true)},
-            {Mechanism.JWT, "ConfigurationDTO.applyTo", (Route) (configuration, mechanism) ->
-                new ConfigurationDTO().setControlPlaneJWTAuthenticationRequired(true).applyTo(configuration)},
+            {Mechanism.JWT, "AtomicConfigurationUpdate", (Route) (configuration, mechanism) ->
+                AtomicConfigurationUpdate.apply(configuration, () -> configuration.controlPlaneJWTAuthenticationRequired(true))},
 
             {Mechanism.MTLS, "system property", (Route) (configuration, mechanism) -> {
                 ConfigurationProperties.controlPlaneTLSMutualAuthenticationCAChain(CONTROL_PLANE_CA_CHAIN);
@@ -74,15 +74,15 @@ public class ControlPlaneAuthenticationRouteDenialTest {
             }},
             {Mechanism.MTLS, "Configuration instance", (Route) (configuration, mechanism) ->
                 configuration.controlPlaneTLSMutualAuthenticationCAChain(CONTROL_PLANE_CA_CHAIN).controlPlaneTLSMutualAuthenticationRequired(true)},
-            {Mechanism.MTLS, "ConfigurationDTO.applyTo", (Route) (configuration, mechanism) ->
-                new ConfigurationDTO().setControlPlaneTLSMutualAuthenticationCAChain(CONTROL_PLANE_CA_CHAIN).setControlPlaneTLSMutualAuthenticationRequired(true).applyTo(configuration)},
+            {Mechanism.MTLS, "AtomicConfigurationUpdate", (Route) (configuration, mechanism) ->
+                AtomicConfigurationUpdate.apply(configuration, () -> configuration.controlPlaneTLSMutualAuthenticationCAChain(CONTROL_PLANE_CA_CHAIN).controlPlaneTLSMutualAuthenticationRequired(true))},
 
             {Mechanism.OIDC, "system property", (Route) (configuration, mechanism) ->
                 ConfigurationProperties.controlPlaneOidcAuthenticationRequired(true)},
             {Mechanism.OIDC, "Configuration instance", (Route) (configuration, mechanism) ->
                 configuration.controlPlaneOidcAuthenticationRequired(true)},
-            {Mechanism.OIDC, "ConfigurationDTO.applyTo", (Route) (configuration, mechanism) ->
-                new ConfigurationDTO().setControlPlaneOidcAuthenticationRequired(true).applyTo(configuration)},
+            {Mechanism.OIDC, "AtomicConfigurationUpdate", (Route) (configuration, mechanism) ->
+                AtomicConfigurationUpdate.apply(configuration, () -> configuration.controlPlaneOidcAuthenticationRequired(true))},
         });
     }
 

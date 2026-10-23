@@ -18,7 +18,6 @@ import org.mockserver.mock.HttpState;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ObjectMapperFactory;
-import org.mockserver.serialization.model.ConfigurationDTO;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -72,8 +71,9 @@ public class McpToolAuthorizationSnapshotTest {
             @Override
             public AuthenticationResult authenticate(HttpRequest request) {
                 if (putDuringNextAuthentication.getAndSet(false)) {
-                    // the PUT lands after the request has been authenticated and before its tool is authorized
-                    new ConfigurationDTO().setControlPlaneAuthorizationEnabled(false).applyTo(configuration);
+                    // the change lands after the request has been authenticated and before its tool is authorized; a PUT
+                    // cannot make it (the setting is fixed at startup), so it is made in process
+                    configuration.controlPlaneAuthorizationEnabled(false);
                 }
                 return AuthenticationResult.authenticated("principal", "verified-oidc", Collections.emptyMap(), Set.of("readers"));
             }

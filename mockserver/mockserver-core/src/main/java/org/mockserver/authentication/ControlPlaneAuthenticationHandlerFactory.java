@@ -176,7 +176,8 @@ public class ControlPlaneAuthenticationHandlerFactory {
 
     /**
      * The same check for the configuration {@code update} would leave, so {@code PUT /mockserver/configuration} can
-     * refuse it before applying any of it.
+     * refuse it before applying any of it. The control-plane mTLS settings are fixed at startup (the update never
+     * applies them), so only the update's certificate authority settings are taken from it.
      *
      * @throws ControlPlaneMutualTlsConfigurationException naming the fix
      */
@@ -184,8 +185,8 @@ public class ControlPlaneAuthenticationHandlerFactory {
         ControlPlaneAuthenticationSettings controlPlane = ControlPlaneAuthenticationSettings.of(configuration);
         ServerTlsSettings tls = ServerTlsSettings.of(configuration);
         requireUsableControlPlaneMutualTls(
-            update.getControlPlaneTLSMutualAuthenticationRequired() != null ? update.getControlPlaneTLSMutualAuthenticationRequired() : controlPlane.controlPlaneTLSMutualAuthenticationRequired(),
-            update.getControlPlaneTLSMutualAuthenticationCAChain() != null ? update.getControlPlaneTLSMutualAuthenticationCAChain() : controlPlane.controlPlaneTLSMutualAuthenticationCAChain(),
+            controlPlane.controlPlaneTLSMutualAuthenticationRequired(),
+            controlPlane.controlPlaneTLSMutualAuthenticationCAChain(),
             update.getDynamicallyCreateCertificateAuthorityCertificate() != null ? update.getDynamicallyCreateCertificateAuthorityCertificate() : tls.dynamicallyCreateCertificateAuthorityCertificate(),
             update.getCertificateAuthorityCertificate() != null ? update.getCertificateAuthorityCertificate() : tls.certificateAuthorityCertificate()
         );

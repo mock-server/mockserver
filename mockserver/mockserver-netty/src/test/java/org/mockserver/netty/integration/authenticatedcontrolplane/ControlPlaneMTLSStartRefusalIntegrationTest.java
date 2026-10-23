@@ -27,8 +27,8 @@ import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
  * Control-plane mTLS with no controlPlaneTLSMutualAuthenticationCAChain while MockServer's CA is the bundled CA is
- * refused: at start, and when a PUT /mockserver/configuration would leave it. Every server pins its settings on its
- * own Configuration so the global store cannot move them.
+ * refused at start. A PUT /mockserver/configuration cannot enable it, because control-plane mTLS is fixed at startup.
+ * Every server pins its settings on its own Configuration so the global store cannot move them.
  */
 public class ControlPlaneMTLSStartRefusalIntegrationTest {
 
@@ -79,24 +79,20 @@ public class ControlPlaneMTLSStartRefusalIntegrationTest {
     }
 
     @Test
-    public void shouldRejectAConfigurationUpdateThatEnablesMutualTlsWithoutChainWithTheBundledCa() throws Exception {
+    public void shouldIgnoreAConfigurationUpdateThatEnablesMutualTls() throws Exception {
         ClientAndServer server = start(withoutControlPlaneAuthentication(withBundledCa(configuration())));
 
-        HttpResponse<String> response = putConfiguration(server, "{\"controlPlaneTLSMutualAuthenticationRequired\": true}");
+        // control-plane mTLS is fixed at startup, so the update is answered but neither applied nor refused
+        for (String update : new String[]{
+            "{\"controlPlaneTLSMutualAuthenticationRequired\": true}",
+            "{\"controlPlaneTLSMutualAuthenticationRequired\": true, \"controlPlaneTLSMutualAuthenticationCAChain\": \"" + CONTROL_PLANE_CA_CHAIN + "\"}"
+        }) {
+            HttpResponse<String> response = putConfiguration(server, update);
 
-        assertThat(response.statusCode(), is(400));
-        assertThat(response.body(), containsString(FIX));
-        assertThat("nothing in the refused update is applied", send(server, "GET", null).body(),
-            matchesPattern("(?s).*\"controlPlaneTLSMutualAuthenticationRequired\"\\s*:\\s*false.*"));
-    }
-
-    @Test
-    public void shouldAcceptAConfigurationUpdateThatEnablesMutualTlsWithChain() throws Exception {
-        ClientAndServer server = start(withoutControlPlaneAuthentication(withBundledCa(configuration())));
-
-        HttpResponse<String> response = putConfiguration(server, "{\"controlPlaneTLSMutualAuthenticationRequired\": true, \"controlPlaneTLSMutualAuthenticationCAChain\": \"" + CONTROL_PLANE_CA_CHAIN + "\"}");
-
-        assertThat(response.statusCode(), is(200));
+            assertThat(update, response.statusCode(), is(200));
+            assertThat(update, send(server, "GET", null).body(),
+                matchesPattern("(?s).*\"controlPlaneTLSMutualAuthenticationRequired\"\\s*:\\s*false.*"));
+        }
     }
 
     private ClientAndServer start(Configuration configuration) {

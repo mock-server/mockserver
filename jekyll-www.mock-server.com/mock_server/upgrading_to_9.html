@@ -34,6 +34,8 @@ sitemap:
         <tr><td><a href="#browser_origins">Only trusted web pages can use MockServer's own API from a browser</a> (later 9.x)</td><td>Anyone whose browser page on another host, or dashboard pointed at another host or behind a <span class="inline_code">Host</span>-rewriting proxy, calls MockServer's API; anyone who set <span class="inline_code">corsAllowOrigin</span> so a page could call it</td><td>Set <span class="inline_code">controlPlaneCorsAllowOrigin</span> to that page's origin</td></tr>
         <tr><td><a href="#block_private_networks_startup_only">forwardProxyBlockPrivateNetworks can only be set at startup</a> (later 9.x)</td><td>Anyone who turns <span class="inline_code">forwardProxyBlockPrivateNetworks</span> on or off with <span class="inline_code">PUT /mockserver/configuration</span> or a client's <span class="inline_code">updateConfiguration</span></td><td>Set it before the server starts (system property, environment variable, properties file or <span class="inline_code">Configuration</span>)</td></tr>
         <tr><td><a href="#write_paths_startup_only">File paths MockServer writes to can only be set at startup</a> (later 9.x)</td><td>Anyone who changes <span class="inline_code">auditLogFile</span>, <span class="inline_code">persistedExpectationsPath</span>, <span class="inline_code">persistedRecordedExpectationsPath</span>, <span class="inline_code">persistedRecordedRequestsPath</span>, <span class="inline_code">memoryUsageCsvDirectory</span>, <span class="inline_code">directoryToSaveDynamicSSLCertificate</span> or <span class="inline_code">grpcProtocPath</span> with <span class="inline_code">PUT /mockserver/configuration</span> or a client's <span class="inline_code">updateConfiguration</span></td><td>Set them before the server starts (system property, environment variable, properties file or <span class="inline_code">Configuration</span>)</td></tr>
+        <tr><td><a href="#control_plane_trust_startup_only">Control-plane authentication, authorization, auditing and the dashboard analytics endpoint can only be set at startup</a> (later 9.x)</td><td>Anyone who changes the control-plane mTLS, JWT or OIDC settings, <span class="inline_code">controlPlaneAuthorizationEnabled</span>, <span class="inline_code">controlPlaneScopeMapping</span>, <span class="inline_code">controlPlaneAuditEnabled</span> or <span class="inline_code">dashboardAnalyticsEndpoint</span> with <span class="inline_code">PUT /mockserver/configuration</span>, a client's <span class="inline_code">updateConfiguration</span> or the dashboard's Audit Trail switch</td><td>Set them before the server starts (system property, environment variable, properties file or <span class="inline_code">Configuration</span>)</td></tr>
+        <tr><td><a href="#llm_base_url_clears_key">Changing llmBaseUrl at runtime clears llmApiKey</a> (later 9.x)</td><td>Anyone who changes <span class="inline_code">llmBaseUrl</span> (or <span class="inline_code">llmProvider</span> with no <span class="inline_code">llmBaseUrl</span>) with <span class="inline_code">PUT /mockserver/configuration</span> and relies on the key set earlier</td><td>Send <span class="inline_code">llmApiKey</span> in the same request as the new endpoint</td></tr>
         <tr><td><a href="#forward_unmatched_to_needs_mutate">retrieve with forwardUnmatchedTo needs a role that may change state</a> (later 9.x)</td><td>Anyone with <span class="inline_code">controlPlaneAuthorizationEnabled</span> whose read-only principal calls <span class="inline_code">retrieve</span> with <span class="inline_code">forwardUnmatchedTo</span></td><td>Grant that principal the <span class="inline_code">MUTATE</span> role, or arm recording with a principal that has it</td></tr>
         <tr><td><a href="#templates_500">Failed template answers 500</a></td><td>Anyone using a response or forward template</td><td>Handle a <span class="inline_code">500</span> instead of a <span class="inline_code">404</span>/<span class="inline_code">502</span>, or set <span class="inline_code">templateFailureAsServerError=false</span></td></tr>
         <tr><td><a href="#max_logged_match_failures">maxLoggedMatchFailures defaults to 50</a></td><td>Anyone with &gt;50 expectations who reads did-not-match log entries at <span class="inline_code">INFO</span></td><td>Set <span class="inline_code">maxLoggedMatchFailures=-1</span> to keep logging every comparison</td></tr>
@@ -577,6 +579,39 @@ sitemap:
 <pre class="prettyprint code"><code class="code">-Dmockserver.auditLogFile=/var/log/mockserver/audit.ndjson
 # or, in Docker
 -e MOCKSERVER_AUDIT_LOG_FILE=/var/log/mockserver/audit.ndjson</code></pre>
+
+<a id="control_plane_trust_startup_only" class="anchor" href="#control_plane_trust_startup_only">&nbsp;</a>
+
+<h3>Control-plane authentication, authorization, auditing and the dashboard analytics endpoint can only be set at startup</h3>
+
+<p>Up to 9.1.0, <span class="inline_code">PUT /mockserver/configuration</span> could change these settings on a running server, so anyone allowed to change MockServer's configuration could weaken its security: switch control-plane authentication off, trust their own keys or identity provider, give themselves a role, switch the audit log off before making changes, or make every dashboard viewer's browser send events to their own server. They are now fixed at startup, like the <span class="inline_code">controlPlaneBasicAuthentication*</span> settings:</p>
+
+<ul>
+    <li>control-plane mTLS: <span class="inline_code">controlPlaneTLSMutualAuthenticationRequired</span> and <span class="inline_code">controlPlaneTLSMutualAuthenticationCAChain</span>;</li>
+    <li>control-plane JWT: <span class="inline_code">controlPlaneJWTAuthenticationRequired</span>, <span class="inline_code">controlPlaneJWTAuthenticationJWKSource</span>, <span class="inline_code">controlPlaneJWTAuthenticationExpectedAudience</span>, <span class="inline_code">controlPlaneJWTAuthenticationMatchingClaims</span> and <span class="inline_code">controlPlaneJWTAuthenticationRequiredClaims</span>;</li>
+    <li>control-plane OIDC: <span class="inline_code">controlPlaneOidcAuthenticationRequired</span>, <span class="inline_code">controlPlaneOidcIssuer</span>, <span class="inline_code">controlPlaneOidcJwksUri</span>, <span class="inline_code">controlPlaneOidcAudience</span>, <span class="inline_code">controlPlaneOidcRequiredScopes</span> and <span class="inline_code">controlPlaneOidcScopeClaim</span>;</li>
+    <li>authorization: <span class="inline_code">controlPlaneAuthorizationEnabled</span> and <span class="inline_code">controlPlaneScopeMapping</span>;</li>
+    <li><span class="inline_code">controlPlaneAuditEnabled</span> and <span class="inline_code">dashboardAnalyticsEndpoint</span>.</li>
+</ul>
+
+<p>A <span class="inline_code">PUT</span> that sets a different value is still answered, but the value is ignored, a warning is logged and <span class="inline_code">GET /mockserver/configuration</span> reports the value in force. A <span class="inline_code">PUT</span> that sends the value already in force, such as one that sends back the whole configuration, logs nothing. The dashboard's Audit Trail view no longer has a switch for the audit log; it shows whether it is on. <span class="inline_code">controlPlaneAuditReads</span> and <span class="inline_code">controlPlaneAuditMaxEntries</span> can still be changed at runtime.</p>
+
+<p><strong>To fix:</strong> if you set them at runtime, set them before the server starts instead:</p>
+
+<pre class="prettyprint code"><code class="code">-Dmockserver.controlPlaneAuditEnabled=true
+# or, in Docker
+-e MOCKSERVER_CONTROL_PLANE_AUDIT_ENABLED=true</code></pre>
+
+<a id="llm_base_url_clears_key" class="anchor" href="#llm_base_url_clears_key">&nbsp;</a>
+
+<h3>Changing llmBaseUrl at runtime clears llmApiKey</h3>
+
+<p><span class="inline_code">llmBaseUrl</span> can still be changed with <span class="inline_code">PUT /mockserver/configuration</span>, but up to 9.1.0 the key set earlier was then sent to the new endpoint, so anyone allowed to change MockServer's configuration could collect the LLM API key by pointing <span class="inline_code">llmBaseUrl</span> at their own server. Now a <span class="inline_code">PUT</span> that changes where the default LLM backend sends requests &mdash; a different <span class="inline_code">llmBaseUrl</span>, or a different <span class="inline_code">llmProvider</span> while <span class="inline_code">llmBaseUrl</span> is empty &mdash; without also supplying <span class="inline_code">llmApiKey</span> clears the key and logs a warning. The <span class="inline_code">***REDACTED***</span> value a <span class="inline_code">GET</span> returns does not count as supplying it. A <span class="inline_code">PUT</span> that supplies both applies both. Likewise, a JSON <span class="inline_code">llmBackendsConfig</span> value in which a backend's <span class="inline_code">baseUrl</span> or <span class="inline_code">provider</span> changes while its key is left masked is not applied, and a warning is logged.</p>
+
+<p><strong>To fix:</strong> send the key in the same request as the new endpoint:</p>
+
+<pre class="prettyprint code"><code class="code">curl -X PUT http://localhost:1080/mockserver/configuration \
+  -d '{"llmBaseUrl": "https://gateway.example.com", "llmApiKey": "sk-..."}'</code></pre>
 
 <a id="forward_unmatched_to_needs_mutate" class="anchor" href="#forward_unmatched_to_needs_mutate">&nbsp;</a>
 

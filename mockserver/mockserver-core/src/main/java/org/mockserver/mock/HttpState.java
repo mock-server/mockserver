@@ -7644,6 +7644,19 @@ public class HttpState {
             warnInitOnlyProperty("controlPlaneBasicAuthenticationCredentials", "(not shown)", "(not shown)",
                 "it decides who may use the control plane, so a request to the control plane cannot change it");
         }
+        reportStartupOnlyControlPlaneTrust(suppliedConfiguration, basicInForce);
+        warnIfInitOnlyValueSupplied("controlPlaneAuditEnabled", suppliedConfiguration.getControlPlaneAuditEnabled(), configuration.controlPlaneAuditEnabled(),
+            "switching it off would hide the control plane changes that follow, so a request to the control plane cannot change it");
+        warnIfInitOnlyPathSupplied("dashboardAnalyticsEndpoint", suppliedConfiguration.getDashboardAnalyticsEndpoint(), configuration.dashboardAnalyticsEndpoint(),
+            "it decides where every dashboard viewer's browser sends usage events, so a request to the control plane cannot change it");
+        if (suppliedConfiguration.llmApiKeyClearedForNewDestination() && mockServerLogger.isEnabledForInstance(Level.WARN)) {
+            mockServerLogger.logEvent(new LogEntry()
+                .setType(LogEntry.LogMessageType.SERVER_CONFIGURATION)
+                .setLogLevel(Level.WARN)
+                .setMessageFormat("llmApiKey has been CLEARED because this update changed where the default LLM backend sends requests "
+                    + "(llmBaseUrl, or llmProvider with no llmBaseUrl) without supplying llmApiKey, so the key held for the previous "
+                    + "destination is never sent to the new one; supply llmApiKey again, in the same update as the destination, to use the backend"));
+        }
         Boolean suppliedForwardProxyBlockPrivateNetworks = suppliedConfiguration.getForwardProxyBlockPrivateNetworks();
         if (suppliedForwardProxyBlockPrivateNetworks != null && !suppliedForwardProxyBlockPrivateNetworks.equals(configuration.forwardProxyBlockPrivateNetworks())) {
             warnInitOnlyProperty("forwardProxyBlockPrivateNetworks", String.valueOf(suppliedForwardProxyBlockPrivateNetworks), String.valueOf(configuration.forwardProxyBlockPrivateNetworks()),
@@ -7819,6 +7832,48 @@ public class HttpState {
      */
     private void warnInitOnlyProperty(String property, int suppliedValue, int valueInForce, String reason) {
         warnInitOnlyProperty(property, String.valueOf(suppliedValue), String.valueOf(valueInForce), reason);
+    }
+
+    /**
+     * WARN for each control-plane JWT, OIDC, mTLS and authorization setting a PUT supplied with a value other than the
+     * one in force: they decide who may use the control plane and what each user may do, so applyTo skips them.
+     */
+    private void reportStartupOnlyControlPlaneTrust(ConfigurationDTO supplied, ControlPlaneAuthenticationSettings inForce) {
+        String whoMayUse = "it decides who may use the control plane, so a request to the control plane cannot change it";
+        warnIfInitOnlyValueSupplied("controlPlaneTLSMutualAuthenticationRequired", supplied.getControlPlaneTLSMutualAuthenticationRequired(), inForce.controlPlaneTLSMutualAuthenticationRequired(), whoMayUse);
+        warnIfInitOnlyPathSupplied("controlPlaneTLSMutualAuthenticationCAChain", supplied.getControlPlaneTLSMutualAuthenticationCAChain(), inForce.controlPlaneTLSMutualAuthenticationCAChain(), whoMayUse);
+        warnIfInitOnlyValueSupplied("controlPlaneJWTAuthenticationRequired", supplied.getControlPlaneJWTAuthenticationRequired(), inForce.controlPlaneJWTAuthenticationRequired(), whoMayUse);
+        warnIfInitOnlyPathSupplied("controlPlaneJWTAuthenticationJWKSource", supplied.getControlPlaneJWTAuthenticationJWKSource(), inForce.controlPlaneJWTAuthenticationJWKSource(), whoMayUse);
+        warnIfInitOnlyPathSupplied("controlPlaneJWTAuthenticationExpectedAudience", supplied.getControlPlaneJWTAuthenticationExpectedAudience(), inForce.controlPlaneJWTAuthenticationExpectedAudience(), whoMayUse);
+        if (supplied.getControlPlaneJWTAuthenticationMatchingClaims() != null) {
+            Object matchingClaimsInForce;
+            try {
+                matchingClaimsInForce = inForce.controlPlaneJWTAuthenticationMatchingClaims();
+            } catch (RuntimeException unparseable) {
+                matchingClaimsInForce = "(unparseable)";
+            }
+            warnIfInitOnlyValueSupplied("controlPlaneJWTAuthenticationMatchingClaims", supplied.getControlPlaneJWTAuthenticationMatchingClaims(), matchingClaimsInForce, whoMayUse);
+        }
+        warnIfInitOnlyValueSupplied("controlPlaneJWTAuthenticationRequiredClaims", supplied.getControlPlaneJWTAuthenticationRequiredClaims(), inForce.controlPlaneJWTAuthenticationRequiredClaims(), whoMayUse);
+        warnIfInitOnlyValueSupplied("controlPlaneOidcAuthenticationRequired", supplied.getControlPlaneOidcAuthenticationRequired(), inForce.controlPlaneOidcAuthenticationRequired(), whoMayUse);
+        warnIfInitOnlyPathSupplied("controlPlaneOidcIssuer", supplied.getControlPlaneOidcIssuer(), inForce.controlPlaneOidcIssuer(), whoMayUse);
+        warnIfInitOnlyPathSupplied("controlPlaneOidcJwksUri", supplied.getControlPlaneOidcJwksUri(), inForce.controlPlaneOidcJwksUri(), whoMayUse);
+        warnIfInitOnlyPathSupplied("controlPlaneOidcAudience", supplied.getControlPlaneOidcAudience(), inForce.controlPlaneOidcAudience(), whoMayUse);
+        warnIfInitOnlyValueSupplied("controlPlaneOidcRequiredScopes", supplied.getControlPlaneOidcRequiredScopes(), inForce.controlPlaneOidcRequiredScopes(), whoMayUse);
+        warnIfInitOnlyPathSupplied("controlPlaneOidcScopeClaim", supplied.getControlPlaneOidcScopeClaim(), inForce.controlPlaneOidcScopeClaim(), whoMayUse);
+        String whatEachMayDo = "it decides what each control plane user may do, so a request to the control plane cannot change it";
+        warnIfInitOnlyValueSupplied("controlPlaneAuthorizationEnabled", supplied.getControlPlaneAuthorizationEnabled(), inForce.controlPlaneAuthorizationEnabled(), whatEachMayDo);
+        Map<String, org.mockserver.authentication.authorization.ControlPlaneRole> scopeMappingInForce = inForce.controlPlaneScopeMapping();
+        Map<String, org.mockserver.authentication.authorization.ControlPlaneRole> suppliedScopeMapping = supplied.getControlPlaneScopeMapping();
+        if (suppliedScopeMapping != null && !suppliedScopeMapping.equals(scopeMappingInForce == null ? java.util.Collections.emptyMap() : scopeMappingInForce)) {
+            warnInitOnlyProperty("controlPlaneScopeMapping", String.valueOf(suppliedScopeMapping), String.valueOf(scopeMappingInForce), whatEachMayDo);
+        }
+    }
+
+    private void warnIfInitOnlyValueSupplied(String property, Object suppliedValue, Object valueInForce, String reason) {
+        if (suppliedValue != null && !suppliedValue.equals(valueInForce)) {
+            warnInitOnlyProperty(property, String.valueOf(suppliedValue), String.valueOf(valueInForce), reason);
+        }
     }
 
     private void warnIfInitOnlyPathSupplied(String property, String suppliedValue, String valueInForce, String reason) {

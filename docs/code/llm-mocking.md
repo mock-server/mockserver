@@ -915,7 +915,7 @@ These are operational settings (config + MCP, for CI/automation), not dashboard 
 | `mockserver.llmProvider` | _(unset)_ | — | Default runtime-LLM backend provider (enables runtime-LLM features) |
 | `mockserver.llmApiKey` | _(unset)_ | — | API key for the default backend (secret; redacted in logs) |
 | `mockserver.llmModel` | _(provider default)_ | — | Model for the default backend |
-| `mockserver.llmBaseUrl` | _(provider default)_ | — | Base URL override for the default backend |
+| `mockserver.llmBaseUrl` | _(provider default)_ | — | Base URL override for the default backend; a `PUT /mockserver/configuration` that changes it (or `llmProvider` with no base URL) without `llmApiKey` clears the held key (see [configuration-reference.md](configuration-reference.md#capacity-properties-fixed-at-startup)) |
 | `mockserver.llmBackendsConfig` | _(unset)_ | — | Path to JSON file of named backends |
 | `mockserver.llmRequestTimeoutMillis` | `30000` | — | Per-request timeout for outbound runtime-LLM calls |
 | `mockserver.llmSemanticMatchingEnabled` | `false` | — | Opt-in: activate the exploratory `semanticMatch` predicate (needs a backend; never for assertions) |

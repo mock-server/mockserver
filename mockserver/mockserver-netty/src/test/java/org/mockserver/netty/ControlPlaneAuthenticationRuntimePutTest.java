@@ -4,6 +4,7 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockserver.authentication.AuthenticationHandler;
 import org.mockserver.authentication.jwt.JWKGenerator;
 import org.mockserver.authentication.jwt.JWTGenerator;
 import org.mockserver.configuration.Configuration;
@@ -28,6 +29,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockserver.model.HttpRequest.request;
@@ -98,28 +102,46 @@ public class ControlPlaneAuthenticationRuntimePutTest {
     }
 
     @Test
-    public void enablingControlPlaneAuthenticationOverPutMustActuallyDeny() {
-        // before: the control plane is open
-        assertThat(httpState.evaluateControlPlaneAuthentication(request("/mockserver/retrieve")).isAllowed(),
-            is(true));
-
+    public void aPutCannotSwitchControlPlaneAuthenticationOn() {
         HttpResponse putResponse = put("{\"controlPlaneJWTAuthenticationRequired\": true}");
 
-        // the endpoint reports success and echoes the new value back...
+        // the endpoint answers, but the value is fixed at startup: it is ignored and the value in force reported
         assertThat(putResponse.getStatusCode(), is(200));
-        assertThat(putResponse.getBodyAsString(), containsString("controlPlaneJWTAuthenticationRequired"));
+        assertThat(putResponse.getBodyAsString(), matchesPattern("(?s).*\"controlPlaneJWTAuthenticationRequired\"\\s*:\\s*false.*"));
+        assertThat(get("/mockserver/configuration").getBodyAsString(), matchesPattern("(?s).*\"controlPlaneJWTAuthenticationRequired\"\\s*:\\s*false.*"));
+        assertThat(configuration.controlPlaneJWTAuthenticationRequired(), is(false));
+        assertThat(httpState.getControlPlaneAuthenticationHandler(), is(nullValue()));
+    }
 
-        // ...so it MUST actually be enforced. Before the fix this assertion failed: the handler chain was
-        // fixed at bootstrap, so the enforcement point still saw a null handler and allowed everything.
-        assertThat("PUT /mockserver/configuration reported control-plane authentication as enabled, so an "
-                + "unauthenticated control-plane request must now be denied",
-            httpState.evaluateControlPlaneAuthentication(request("/mockserver/retrieve")).isAllowed(),
-            is(false));
+    @Test
+    public void anAuthenticatedPutCannotSwitchControlPlaneAuthenticationOffOrRebuildItsHandler() {
+        AsymmetricKeyPair keyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
+        configuration
+            .controlPlaneJWTAuthenticationJWKSource(TempFileWriter.write(new JWKGenerator().generateJWK(keyPair)))
+            .controlPlaneJWTAuthenticationRequired(true);
+        String token = new JWTGenerator(keyPair).generateJWT();
+        AuthenticationHandler handlerInForce = httpState.getControlPlaneAuthenticationHandler();
+
+        AsymmetricKeyPair attackerKeyPair = AsymmetricKeyGenerator.createAsymmetricKeyPair(AsymmetricKeyPairAlgorithm.RSA2048_SHA256);
+        HttpResponse response = exchange(request("/mockserver/configuration")
+            .withMethod("PUT")
+            .withHeader("Authorization", "Bearer " + token)
+            .withBody("{\"controlPlaneJWTAuthenticationRequired\": false, \"controlPlaneJWTAuthenticationJWKSource\": \""
+                + TempFileWriter.write(new JWKGenerator().generateJWK(attackerKeyPair)).replace("\\", "\\\\") + "\", "
+                + "\"controlPlaneOidcAuthenticationRequired\": true, \"controlPlaneAuthorizationEnabled\": true}"));
+
+        assertThat(response.getStatusCode(), is(200));
+        assertThat(configuration.controlPlaneJWTAuthenticationRequired(), is(true));
+        assertThat("the derived handler must not be rebuilt by a PUT", httpState.getControlPlaneAuthenticationHandler(), is(sameInstance(handlerInForce)));
+        assertThat(httpState.evaluateControlPlaneAuthentication(request("/mockserver/retrieve")).isAllowed(), is(false));
+        assertThat("a token signed by the key the PUT tried to install must not be accepted",
+            httpState.evaluateControlPlaneAuthentication(request("/mockserver/retrieve")
+                .withHeader("Authorization", "Bearer " + new JWTGenerator(attackerKeyPair).generateJWT())).isAllowed(), is(false));
     }
 
     @Test
     public void aFurtherUnauthenticatedPutIsItselfRefusedAndCannotReopenTheControlPlane() {
-        put("{\"controlPlaneJWTAuthenticationRequired\": true}");
+        configuration.controlPlaneJWTAuthenticationRequired(true);
         assertThat(httpState.evaluateControlPlaneAuthentication(request()).isAllowed(), is(false));
 
         // /configuration is itself a gated control-plane endpoint, so once the lock is on, a further
@@ -134,12 +156,11 @@ public class ControlPlaneAuthenticationRuntimePutTest {
 
     @Test
     public void theLockCannotBeLiftedByAnUnauthenticatedPut() {
-        put("{\"controlPlaneJWTAuthenticationRequired\": true}");
+        configuration.controlPlaneJWTAuthenticationRequired(true);
         assertThat(httpState.evaluateControlPlaneAuthentication(request()).isAllowed(), is(false));
 
         // an unauthenticated caller must NOT be able to turn control-plane authentication back off — the
-        // endpoint that would do so is itself gated. (That disabling DOES take effect when performed
-        // through an authorised route is covered by ControlPlaneAuthenticationRouteDenialTest in core.)
+        // endpoint that would do so is itself gated, and an authenticated PUT cannot either (see above).
         HttpResponse putResponse = put("{\"controlPlaneJWTAuthenticationRequired\": false}");
         assertThat(putResponse.getStatusCode(), is(401));
 
@@ -155,7 +176,7 @@ public class ControlPlaneAuthenticationRuntimePutTest {
             .controlPlaneJWTAuthenticationRequired(true);
         String token = new JWTGenerator(keyPair).generateJWT();
 
-        // each body turns JWT off before the field applyTo would reject, so a half-applied PUT reopens the control plane
+        // each body supplies JWT off with a field applyTo rejects; the whole PUT is refused and changes nothing
         for (String rejectedPut : new String[]{
             "{\"controlPlaneJWTAuthenticationRequired\": false, \"globalResponseDelayMillis\": -1}",
             "{\"controlPlaneJWTAuthenticationRequired\": false, \"tlsMutualAuthenticationCertificateChain\": \"/no/such/chain.pem\"}"
@@ -185,7 +206,7 @@ public class ControlPlaneAuthenticationRuntimePutTest {
         // /metrics had NO authentication gate, alone among its neighbours. That leaks more than it looks:
         // metric cardinality scales with the number of configured expectations, so an unauthenticated
         // caller can infer the expectation surface of a running instance.
-        put("{\"controlPlaneJWTAuthenticationRequired\": true}");
+        configuration.controlPlaneJWTAuthenticationRequired(true);
 
         HttpResponse response = get("/mockserver/metrics");
         assertThat("GET /mockserver/metrics must be refused once control-plane authentication is required",
@@ -194,7 +215,7 @@ public class ControlPlaneAuthenticationRuntimePutTest {
 
     @Test
     public void http3StatusEndpointMustDenyWhenControlPlaneAuthenticationIsRequired() {
-        put("{\"controlPlaneJWTAuthenticationRequired\": true}");
+        configuration.controlPlaneJWTAuthenticationRequired(true);
 
         HttpResponse response = get("/mockserver/http3status");
 
@@ -204,7 +225,7 @@ public class ControlPlaneAuthenticationRuntimePutTest {
 
     @Test
     public void metricsAndHttp3StatusMustStillDenyAfterAFurtherRuntimePut() {
-        put("{\"controlPlaneJWTAuthenticationRequired\": true}");
+        configuration.controlPlaneJWTAuthenticationRequired(true);
         assertThat(get("/mockserver/metrics").getStatusCode(), is(401));
 
         // a further unauthenticated reconfiguration is refused and must not re-open either endpoint

@@ -55,6 +55,8 @@ const ROLES = {
       '-Dmockserver.maxLogEntries=20000',
       '-Dmockserver.loadGenerationEnabled=true',
       '-Dmockserver.sloTrackingEnabled=true',
+      // fixed at startup, so the audit e2e tests cannot switch it on over the control plane
+      '-Dmockserver.controlPlaneAuditEnabled=true',
     ],
     logLevel: 'INFO',
   },

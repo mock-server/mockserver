@@ -10,6 +10,7 @@
     </ul>
     <p>When a control plane request fails OIDC authentication the client receives a generic <span class="keyword">Unauthorized for control plane</span> response; the detailed reason (e.g. expected issuer/audience/scopes) is written only to the MockServer server log.</p>
     <p>It is possible to enable <a href="#button_configuration_control_plane_oidc_authentication_required">controlPlaneOidcAuthenticationRequired</a> alongside <a href="#button_configuration_control_plane_mtls_authentication_required">controlPlaneTLSMutualAuthenticationRequired</a> and/or <a href="#button_configuration_control_plane_jwt_authentication_required">controlPlaneJWTAuthenticationRequired</a>, in which case every enabled handler must pass.</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">boolean</span> Default: <span class="this_value">false</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneOidcAuthenticationRequired(boolean controlPlaneOidcAuthenticationRequired)</code></pre>
@@ -26,6 +27,7 @@
 <button id="button_configuration_control_plane_oidc_issuer" class="accordion title"><strong>Control Plane OIDC Issuer</strong></button>
 <div class="panel title">
     <p>Issuer (i.e. iss) required on control plane OIDC tokens. When <a href="#button_configuration_control_plane_oidc_jwks_uri">controlPlaneOidcJwksUri</a> is not set, the JWKS URI is discovered from this issuer's OIDC discovery document at <span class="keyword">{issuer}/.well-known/openid-configuration</span>.</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneOidcIssuer(String controlPlaneOidcIssuer)</code></pre>
@@ -42,6 +44,7 @@
 <button id="button_configuration_control_plane_oidc_jwks_uri" class="accordion title"><strong>Control Plane OIDC JWKS URI</strong></button>
 <div class="panel title">
     <p>JWKS URI used to verify control plane OIDC token signatures. If not set, it is discovered from the issuer's OIDC discovery document. A remote URI must use <span class="keyword">https://</span> (plaintext <span class="keyword">http://</span> is permitted only to <span class="keyword">localhost</span>/loopback); a file or classpath path may also be used.</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneOidcJwksUri(String controlPlaneOidcJwksUri)</code></pre>
@@ -58,6 +61,7 @@
 <button id="button_configuration_control_plane_oidc_audience" class="accordion title"><strong>Control Plane OIDC Audience</strong></button>
 <div class="panel title">
     <p>Audience claim (i.e. aud) required on control plane OIDC tokens.</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneOidcAudience(String controlPlaneOidcAudience)</code></pre>
@@ -75,6 +79,7 @@
 <div class="panel title">
     <p>Scopes that must all be present in a control plane OIDC token before it is accepted.</p>
     <p>Value should be a string with comma separated values, for example: mockserver.read,mockserver.write</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">null</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneOidcRequiredScopes(Set&lt;String&gt; controlPlaneOidcRequiredScopes)</code></pre>
@@ -91,6 +96,7 @@
 <button id="button_configuration_control_plane_oidc_scope_claim" class="accordion title"><strong>Control Plane OIDC Scope Claim</strong></button>
 <div class="panel title">
     <p>Name of the claim holding granted scopes on a control plane OIDC token. Default <span class="keyword">scope</span> is read as a space-delimited string; array claims such as <span class="keyword">scp</span>, <span class="keyword">roles</span> or <span class="keyword">groups</span> are also supported.</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot change who may use it.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">scope</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.controlPlaneOidcScopeClaim(String controlPlaneOidcScopeClaim)</code></pre>
