@@ -103,6 +103,27 @@ public class CredentialRedactionTest {
     }
 
     @Test
+    public void shouldMaskAControlPlaneRequestArgumentWhicheverOrderTheEntryIsBuiltIn() {
+        HttpRequest controlPlane = request("/expectation").withMethod("PUT").withHeader("Authorization", "Basic YWRtaW46czNjcmV0");
+        org.mockserver.serialization.curl.HttpRequestToCurlSerializer curl = new org.mockserver.serialization.curl.HttpRequestToCurlSerializer(new org.mockserver.logging.MockServerLogger());
+
+        org.mockserver.log.model.LogEntry requestFirst = new org.mockserver.log.model.LogEntry()
+            .setHttpRequest(controlPlane)
+            .setMessageFormat("request:{}curl:{}")
+            .setArguments(controlPlane, org.mockserver.log.model.DeferredLogArgument.curl(curl, controlPlane, null));
+        org.mockserver.log.model.LogEntry argumentsFirst = new org.mockserver.log.model.LogEntry()
+            .setMessageFormat("request:{}curl:{}")
+            .setArguments(controlPlane, org.mockserver.log.model.DeferredLogArgument.curl(curl, controlPlane, null))
+            .setHttpRequest(controlPlane);
+
+        for (org.mockserver.log.model.LogEntry entry : java.util.Arrays.asList(requestFirst, argumentsFirst, requestFirst.clone())) {
+            String logged = java.util.Arrays.toString(entry.getHttpRequests()) + entry.getMessage();
+            assertThat(logged, containsString("***REDACTED***"));
+            assertThat(logged, not(containsString("YWRtaW46czNjcmV0")));
+        }
+    }
+
+    @Test
     public void shouldLogADataPlaneRequestAsSentWithoutCopyingIt() {
         HttpRequest dataPlane = request("/api/expectation").withMethod("PUT").withHeader("Authorization", "Bearer data-plane-token");
         HttpRequest lookAlike = request("/expectation").withMethod("GET").withHeader("Authorization", "Bearer look-alike-token");

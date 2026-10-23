@@ -284,6 +284,39 @@ public class HttpState {
         "/chaosExperiment/profiles/", Set.of("DELETE", "GET", "PUT"),
         "/chaosExperiment/apply/", Set.of("POST")
     );
+    // an array, as iterating the map allocates for each path checked
+    private static final String[] CONTROL_PLANE_BARE_PREFIX_ROUTES = CONTROL_PLANE_BARE_PREFIX_METHODS.keySet().toArray(new String[0]);
+    // Bit (c1 << 7 | c2) is set when some route above opens "/" c1 c2, so isControlPlaneRoute rejects every other
+    // path with one table lookup: it runs for each log entry, mocked traffic included. Derived, so it cannot drift.
+    private static final long[] CONTROL_PLANE_ROUTE_OPENINGS = controlPlaneRouteOpenings();
+
+    private static long[] controlPlaneRouteOpenings() {
+        List<String> routes = new ArrayList<>(List.of(PATH_PREFIX, PATH_PREFIX_SLASH, "/_mockserver_"));
+        routes.addAll(CONTROL_PLANE_BARE_ROUTE_METHODS.keySet());
+        routes.addAll(CONTROL_PLANE_BARE_PREFIX_METHODS.keySet());
+        long[] openings = new long[128 * 128 / 64];
+        for (String route : routes) {
+            if (route.length() < 3 || route.charAt(0) != '/' || route.charAt(1) >= 128 || route.charAt(2) >= 128) {
+                throw new IllegalStateException("control-plane route \"" + route + "\" does not open with \"/\" and two ASCII characters");
+            }
+            int bit = route.charAt(1) << 7 | route.charAt(2);
+            openings[bit >>> 6] |= 1L << bit;
+        }
+        return openings;
+    }
+
+    private static boolean mayBeControlPlaneRoute(String path) {
+        if (path.length() < 3 || path.charAt(0) != '/') {
+            return false;
+        }
+        char first = path.charAt(1);
+        char second = path.charAt(2);
+        if ((first | second) >= 128) {
+            return false;
+        }
+        int bit = first << 7 | second;
+        return (CONTROL_PLANE_ROUTE_OPENINGS[bit >>> 6] & 1L << bit) != 0;
+    }
 
     // PUT routes whose handler loads the OpenAPI spec its body names (see mayLoadOpenAPISpec). Every route listed
     // must be one the PUT dispatch always handles.
@@ -331,9 +364,11 @@ public class HttpState {
     }
 
     public static boolean isControlPlaneRoute(String method, String path) {
-        if (path == null) {
-            return false;
-        }
+        return path != null && mayBeControlPlaneRoute(path) && matchesControlPlaneRoute(method, path);
+    }
+
+    // a new kind of route here must also be added to controlPlaneRouteOpenings(), or isControlPlaneRoute rejects it
+    static boolean matchesControlPlaneRoute(String method, String path) {
         if (path.equals(PATH_PREFIX) || path.startsWith(PATH_PREFIX_SLASH) || path.startsWith("/_mockserver_")) {
             return true;
         }
@@ -345,8 +380,8 @@ public class HttpState {
         if (methods != null && methods.contains(upperCaseMethod)) {
             return true;
         }
-        for (Map.Entry<String, Set<String>> prefix : CONTROL_PLANE_BARE_PREFIX_METHODS.entrySet()) {
-            if (path.startsWith(prefix.getKey()) && prefix.getValue().contains(upperCaseMethod)) {
+        for (String prefix : CONTROL_PLANE_BARE_PREFIX_ROUTES) {
+            if (path.startsWith(prefix) && CONTROL_PLANE_BARE_PREFIX_METHODS.get(prefix).contains(upperCaseMethod)) {
                 return true;
             }
         }
