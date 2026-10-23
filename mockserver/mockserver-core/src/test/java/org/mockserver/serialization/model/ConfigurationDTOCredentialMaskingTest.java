@@ -388,11 +388,11 @@ public class ConfigurationDTOCredentialMaskingTest {
         assertThat("a GET-then-PUT round trip must not destroy the token",
             live.clusterFanInPeerAuthToken(), is(token));
 
-        // and it stays settable over the control plane
-        Configuration target = configuration();
+        // and it is fixed at startup: the control plane cannot replace it
+        Configuration target = configuration().clusterFanInPeerAuthToken("Bearer startup-token");
         applyJsonTo("{\"clusterFanInPeerAuthToken\":\"" + token + "\"}", target);
-        assertThat("the token must remain settable via PUT /mockserver/configuration",
-            target.clusterFanInPeerAuthToken(), is(token));
+        assertThat("PUT /mockserver/configuration must not change the token",
+            target.clusterFanInPeerAuthToken(), is("Bearer startup-token"));
     }
 
     @Test
@@ -1495,7 +1495,7 @@ public class ConfigurationDTOCredentialMaskingTest {
      * Credential-shaped properties fixed at startup: {@code applyTo} never writes them, so a control-plane
      * {@code PUT} can neither rotate nor clear them (see {@code HttpState.applyConfigurationUpdate}).
      */
-    private static final Set<String> STARTUP_ONLY_CREDENTIAL_PROPERTIES = Set.of("controlPlaneBasicAuthenticationCredentials");
+    private static final Set<String> STARTUP_ONLY_CREDENTIAL_PROPERTIES = Set.of("controlPlaneBasicAuthenticationCredentials", "clusterFanInPeerAuthToken");
 
     @Test
     public void shouldNeverApplyAStartupOnlyCredentialOverTheControlPlane() throws Exception {

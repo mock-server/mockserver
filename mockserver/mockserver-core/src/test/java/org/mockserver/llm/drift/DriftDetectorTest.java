@@ -72,6 +72,20 @@ public class DriftDetectorTest {
     }
 
     @Test
+    public void sendsNothingWhenTheCassetteProviderIsNotTheBackendProvider() {
+        // with no baseUrl the OPENAI client would carry the Anthropic key to api.openai.com
+        List<HttpRequest> sent = new java.util.concurrent.CopyOnWriteArrayList<>();
+        LlmTransport transport = (req, timeout) -> {
+            sent.add(req);
+            return response().withStatusCode(200).withBody("{}");
+        };
+        DriftReport report = new DriftDetector(transport, 1000).detect(oneExchange(), Provider.OPENAI, backend());
+        assertThat(sent.isEmpty(), is(true));
+        assertThat(report.couldNotCheckCount(), is(1L));
+        assertThat(report.getExchanges().get(0).getNote().contains("was not sent"), is(true));
+    }
+
+    @Test
     public void couldNotCheckWhenNoClientForProvider() {
         // empty registries → no client/codec
         LlmTransport transport = (req, timeout) -> response().withStatusCode(200).withBody("{}");

@@ -770,7 +770,11 @@ public class ConfigurationDTOTest {
         // switching it off would hide the control-plane changes that follow
         "controlPlaneAuditEnabled",
         // decides where every dashboard viewer's browser sends usage events
-        "dashboardAnalyticsEndpoint"
+        "dashboardAnalyticsEndpoint",
+        // the peer authentication token is sent to every fan-in peer, so a control-plane request must not
+        // choose the peers (and the peer client reads the token once, at startup)
+        "clusterVerifyFanInPeers",
+        "clusterFanInPeerAuthToken"
     ));
 
     @Test

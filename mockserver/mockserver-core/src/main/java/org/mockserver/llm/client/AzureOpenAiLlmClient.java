@@ -24,10 +24,13 @@ public class AzureOpenAiLlmClient extends OpenAiLlmClient {
 
     @Override
     public HttpRequest buildCompletionRequest(LlmBackend backend, ParsedConversation prompt) {
-        // baseUrl is required for Azure (per-resource, e.g. https://{resource}.openai.azure.com);
-        // there is no sensible global default. A null/blank baseUrl produces a request the
-        // transport cannot route, which the service treats fail-closed.
-        String baseUrl = resolveBaseUrl(backend, "https://example-resource.openai.azure.com");
+        // baseUrl is required for Azure (per-resource, e.g. https://{resource}.openai.azure.com).
+        // There is deliberately no default host: anyone owning a default resource name would be
+        // sent the api-key. Callers treat the exception fail-closed.
+        if (backend.baseUrl() == null || backend.baseUrl().isEmpty()) {
+            throw new IllegalStateException("an Azure OpenAI backend needs a baseUrl (https://{resource}.openai.azure.com); none is configured, so nothing was sent");
+        }
+        String baseUrl = backend.baseUrl();
         String deployment = resolveModel(backend, "gpt-4o-mini");
         ObjectNode body = OBJECT_MAPPER.createObjectNode();
         body.put("temperature", 0);
