@@ -129,6 +129,7 @@
 <button id="button_configuration_persisted_expectations_file_path" class="accordion title"><strong>Persisted Expectations File Path</strong></button>
 <div class="panel title">
     <p>The file path used to save persisted expectations as json, which is updated whenever the expectation state is updated (i.e. add, clear, expires, etc)</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot redirect where MockServer writes files.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">persistedExpectations.json</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.persistedExpectationsPath(String persistedExpectationsPath)</code></pre>
@@ -162,6 +163,7 @@
 <button id="button_configuration_persisted_recorded_expectations_file_path" class="accordion title"><strong>Persisted Recorded Expectations File Path</strong></button>
 <div class="panel title">
     <p>The file path used to save persisted recorded expectations as json, which is updated whenever a new request is forwarded through the proxy.</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot redirect where MockServer writes files.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">persistedRecordedExpectations.json</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.persistedRecordedExpectationsPath(String persistedRecordedExpectationsPath)</code></pre>
@@ -197,6 +199,7 @@
 <button id="button_configuration_persisted_recorded_requests_path" class="accordion title"><strong>Persisted Recorded Requests File Path</strong></button>
 <div class="panel title">
     <p>The file path for the NDJSON archive written when <a href="#button_configuration_persist_recorded_requests_to_disk">persistRecordedRequestsToDisk</a> is enabled. The file is opened in append mode on startup, so a fresh session extends the same file. Truncate it manually between sessions, or use <span class="inline_code">--keep-log</span> / omit to start fresh (the <span class="inline_code">launch-with-llm-capture.sh</span> script truncates it automatically unless <span class="inline_code">--keep-log</span> is passed).</p>
+    <p>This setting is startup-only: set it before MockServer starts (system property, environment variable, property file or <span class="inline_code">Configuration</span>). A <span class="inline_code">PUT /mockserver/configuration</span> request cannot change it (a different value is ignored and a warning is logged), so a caller of the control plane cannot redirect where MockServer writes files.</p>
     <p>Type: <span class="keyword">string</span> Default: <span class="this_value">recordedRequests.ndjson</span></p>
     <p>Java Code:</p>
     <pre class="prettyprint lang-java code"><code class="code">ConfigurationProperties.persistedRecordedRequestsPath(String path)</code></pre>

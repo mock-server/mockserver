@@ -1499,9 +1499,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (outputMemoryUsageCsv != null) {
             target.outputMemoryUsageCsv(outputMemoryUsageCsv);
         }
-        if (memoryUsageCsvDirectory != null) {
-            target.memoryUsageCsvDirectory(memoryUsageCsvDirectory);
-        }
+        // memoryUsageCsvDirectory is deliberately not applied: it decides where the server writes files, so it is
+        // fixed at startup (see HttpState.applyConfigurationUpdate)
         if (soBacklog != null) {
             target.soBacklog(soBacklog);
         }
@@ -1690,23 +1689,14 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (persistExpectations != null) {
             target.persistExpectations(persistExpectations);
         }
-        if (persistedExpectationsPath != null) {
-            target.persistedExpectationsPath(persistedExpectationsPath);
-        }
-        if (auditLogFile != null) {
-            target.auditLogFile(auditLogFile);
-        }
+        // persistedExpectationsPath, auditLogFile, persistedRecordedExpectationsPath and persistedRecordedRequestsPath
+        // are deliberately not applied: they decide where the server writes files, so they are fixed at startup
+        // (see HttpState.applyConfigurationUpdate)
         if (persistRecordedExpectations != null) {
             target.persistRecordedExpectations(persistRecordedExpectations);
         }
-        if (persistedRecordedExpectationsPath != null) {
-            target.persistedRecordedExpectationsPath(persistedRecordedExpectationsPath);
-        }
         if (persistRecordedRequestsToDisk != null) {
             target.persistRecordedRequestsToDisk(persistRecordedRequestsToDisk);
-        }
-        if (persistedRecordedRequestsPath != null) {
-            target.persistedRecordedRequestsPath(persistedRecordedRequestsPath);
         }
         if (maximumNumberOfRequestToReturnInVerificationFailure != null) {
             target.maximumNumberOfRequestToReturnInVerificationFailure(maximumNumberOfRequestToReturnInVerificationFailure);
@@ -1845,9 +1835,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (dynamicallyCreateCertificateAuthorityCertificate != null) {
             target.dynamicallyCreateCertificateAuthorityCertificate(dynamicallyCreateCertificateAuthorityCertificate);
         }
-        if (directoryToSaveDynamicSSLCertificate != null) {
-            target.directoryToSaveDynamicSSLCertificate(directoryToSaveDynamicSSLCertificate);
-        }
+        // directoryToSaveDynamicSSLCertificate is deliberately not applied: it decides where the server writes
+        // certificate and private key files, so it is fixed at startup (see HttpState.applyConfigurationUpdate)
         if (proxySetup != null) {
             target.proxySetup(proxySetup);
         }
@@ -2040,9 +2029,8 @@ public class ConfigurationDTO implements DTO<Configuration> {
         if (grpcEnabled != null) {
             target.grpcEnabled(grpcEnabled);
         }
-        if (grpcProtocPath != null) {
-            target.grpcProtocPath(grpcProtocPath);
-        }
+        // grpcProtocPath is deliberately not applied: it names an executable the server runs, so it is fixed at
+        // startup (see HttpState.applyConfigurationUpdate)
         if (grpcBidiStreamingEnabled != null) {
             target.grpcBidiStreamingEnabled(grpcBidiStreamingEnabled);
         }

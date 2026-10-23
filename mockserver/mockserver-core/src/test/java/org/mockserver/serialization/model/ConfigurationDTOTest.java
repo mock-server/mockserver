@@ -147,6 +147,45 @@ public class ConfigurationDTOTest {
     }
 
     @Test
+    public void shouldNotApplyFileWritingPathsToARunningServer() {
+        Configuration target = configuration()
+            .auditLogFile("audit.ndjson")
+            .persistedExpectationsPath("expectations.json")
+            .persistedRecordedExpectationsPath("recorded-expectations.json")
+            .persistedRecordedRequestsPath("recorded-requests.ndjson")
+            .memoryUsageCsvDirectory("csv")
+            .directoryToSaveDynamicSSLCertificate("certificates")
+            .grpcProtocPath("/usr/local/bin/protoc");
+
+        new ConfigurationDTO()
+            .setAuditLogFile("/extensions/audit.ndjson")
+            .setPersistedExpectationsPath("/extensions/expectations.json")
+            .setPersistedRecordedExpectationsPath("/extensions/recorded-expectations.json")
+            .setPersistedRecordedRequestsPath("/extensions/recorded-requests.ndjson")
+            .setMemoryUsageCsvDirectory("/extensions")
+            .setDirectoryToSaveDynamicSSLCertificate("/extensions")
+            .setGrpcProtocPath("/tmp/evil")
+            .applyTo(target);
+
+        assertThat(target.auditLogFile(), is("audit.ndjson"));
+        assertThat(target.persistedExpectationsPath(), is("expectations.json"));
+        assertThat(target.persistedRecordedExpectationsPath(), is("recorded-expectations.json"));
+        assertThat(target.persistedRecordedRequestsPath(), is("recorded-requests.ndjson"));
+        assertThat(target.memoryUsageCsvDirectory(), is("csv"));
+        assertThat(target.directoryToSaveDynamicSSLCertificate(), is("certificates"));
+        assertThat(target.grpcProtocPath(), is("/usr/local/bin/protoc"));
+        assertThat(new ConfigurationDTO(target).getAuditLogFile(), is("audit.ndjson"));
+        // a startup configuration (buildObject) still sets them
+        Configuration built = new ConfigurationDTO().setAuditLogFile("a.ndjson").setPersistedExpectationsPath("e.json")
+            .setMemoryUsageCsvDirectory("dir").setDirectoryToSaveDynamicSSLCertificate("certs").setGrpcProtocPath("protoc-3").buildObject();
+        assertThat(built.auditLogFile(), is("a.ndjson"));
+        assertThat(built.persistedExpectationsPath(), is("e.json"));
+        assertThat(built.memoryUsageCsvDirectory(), is("dir"));
+        assertThat(built.directoryToSaveDynamicSSLCertificate(), is("certs"));
+        assertThat(built.grpcProtocPath(), is("protoc-3"));
+    }
+
+    @Test
     public void shouldNotApplyExtensionPropertiesToARunningServer() {
         Configuration target = configuration()
             .extensions("com.example.Loaded")
@@ -620,6 +659,15 @@ public class ConfigurationDTOTest {
         "recordedBodyFilesDirectory",
         // decides which server files a request can read, so a control-plane request must not repoint it
         "staticFilesDirectory",
+        // decide where the server writes files, so a control-plane request must not repoint them
+        "auditLogFile",
+        "persistedExpectationsPath",
+        "persistedRecordedExpectationsPath",
+        "persistedRecordedRequestsPath",
+        "memoryUsageCsvDirectory",
+        "directoryToSaveDynamicSSLCertificate",
+        // names an executable the server runs, so a control-plane request must not repoint it
+        "grpcProtocPath",
         // decides which environment variables and system properties templates can read, so a control-plane
         // request must not widen it
         "templateSystemValueAllowList",

@@ -493,9 +493,61 @@ public class HttpStateConfigurationUpdateTest {
     }
 
     @Test
+    public void shouldNotLetAPutRepointWhereTheServerWritesFiles() {
+        // given
+        configuration
+            .auditLogFile("in-force/audit.ndjson")
+            .persistedExpectationsPath("in-force/expectations.json")
+            .persistedRecordedExpectationsPath("in-force/recorded-expectations.json")
+            .persistedRecordedRequestsPath("in-force/recorded-requests.ndjson")
+            .memoryUsageCsvDirectory("in-force/csv")
+            .directoryToSaveDynamicSSLCertificate("in-force/certificates")
+            .grpcProtocPath("in-force/protoc");
+
+        // when - a PUT tries to send every file the server writes somewhere else, and to run another protoc
+        put(new ConfigurationDTO()
+            .setAuditLogFile("/extensions/audit.ndjson")
+            .setPersistedExpectationsPath("/extensions/expectations.json")
+            .setPersistedRecordedExpectationsPath("/extensions/recorded-expectations.json")
+            .setPersistedRecordedRequestsPath("/extensions/recorded-requests.ndjson")
+            .setMemoryUsageCsvDirectory("/extensions")
+            .setDirectoryToSaveDynamicSSLCertificate("/extensions")
+            .setGrpcProtocPath("/tmp/evil"));
+
+        // then - every value in force is unchanged and each ignored value is reported once
+        assertThat(configuration.auditLogFile(), is("in-force/audit.ndjson"));
+        assertThat(configuration.persistedExpectationsPath(), is("in-force/expectations.json"));
+        assertThat(configuration.persistedRecordedExpectationsPath(), is("in-force/recorded-expectations.json"));
+        assertThat(configuration.persistedRecordedRequestsPath(), is("in-force/recorded-requests.ndjson"));
+        assertThat(configuration.memoryUsageCsvDirectory(), is("in-force/csv"));
+        assertThat(configuration.directoryToSaveDynamicSSLCertificate(), is("in-force/certificates"));
+        assertThat(configuration.grpcProtocPath(), is("in-force/protoc"));
+        List<String> warnings = logger.warnings();
+        assertThat(warnings, hasSize(7));
+        assertThat(warnings.get(0), containsString("auditLogFile is fixed at startup"));
+        assertThat(warnings.get(0), containsString("\"/extensions/audit.ndjson\" has been IGNORED and auditLogFile remains \"in-force/audit.ndjson\""));
+        assertThat(warnings.get(1), containsString("persistedExpectationsPath is fixed at startup"));
+        assertThat(warnings.get(2), containsString("persistedRecordedExpectationsPath is fixed at startup"));
+        assertThat(warnings.get(3), containsString("persistedRecordedRequestsPath is fixed at startup"));
+        assertThat(warnings.get(4), containsString("memoryUsageCsvDirectory is fixed at startup"));
+        assertThat(warnings.get(5), containsString("directoryToSaveDynamicSSLCertificate is fixed at startup"));
+        assertThat(warnings.get(6), containsString("grpcProtocPath is fixed at startup"));
+    }
+
+    @Test
     public void shouldNotWarnWhenInitOnlyPropertiesAreEchoedBackUnchanged() {
         // given - the whole-blob PUT case: a client GETs the configuration and PUTs it back
-        // verbatim, including the init-only properties. That must not produce noise.
+        // verbatim, including the init-only properties. That must not produce noise. Non-default values prove
+        // the GET reports the value in force, not a default.
+        configuration
+            .auditLogFile("in-force/audit.ndjson")
+            .persistedExpectationsPath("in-force/expectations.json")
+            .persistedRecordedExpectationsPath("in-force/recorded-expectations.json")
+            .persistedRecordedRequestsPath("in-force/recorded-requests.ndjson")
+            .memoryUsageCsvDirectory("in-force/csv")
+            .directoryToSaveDynamicSSLCertificate("in-force/certificates")
+            .grpcProtocPath("in-force/protoc")
+            .recordedBodyFilesDirectory("in-force/bodies");
         ConfigurationDTO wholeBlob = new ConfigurationDTO(configuration);
 
         // when
