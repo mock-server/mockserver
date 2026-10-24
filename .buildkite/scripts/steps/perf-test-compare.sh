@@ -986,6 +986,14 @@ def metrics:
       {name:("clustered_state."+$k+".p95_ratio"),          value:$v.p95_ratio,          bkey:"clustered_state.*.p95_ratio"},
       {name:("clustered_state."+$k+".throughput_ratio"),   value:$v.throughput_ratio,   bkey:"clustered_state.*.throughput_ratio"},
       {name:("clustered_state."+$k+".clustered_error_rate"),value:$v.clustered_error_rate,bkey:"clustered_state.*.clustered_error_rate"} ) ),
+  # In-order HTTP/1.1 pipelining A/B (http1PipeliningInOrder on / off, one run, one machine). The
+  # ratios ride the FULL baseline like clustered_state.*; the per-arm absolutes are `hw`. Read only
+  # when .measured (each arm proved its configuration), so a run where the flag did not take
+  # effect never enters the baseline; the PL_NOTE annotation below says why instead. NON-GATING.
+  ((.pipelining_inorder // {}) | select(.measured == true) | (.arms // {}) | to_entries[] | .key as $k | .value as $v |
+    ( "p50_ratio", "p95_ratio", "p99_ratio", "throughput_ratio", "error_rate_on", "error_rate_off",
+      "p95_on_ms", "p95_off_ms", "p99_on_ms", "p99_off_ms", "throughput_on_rps", "throughput_off_rps" ) as $f
+    | {name:("pipelining_inorder."+$k+"."+$f), value:$v[$f], bkey:("pipelining_inorder.*."+$f)} ),
   # Req/s per core for the SERVING path. One point per pinned core-count
   # C under .serving_percore.points; keyed serving_percore.<C>c.<metric> so a
   # wildcard bkey (serving_percore.*.<metric>) covers every C. NOT part of
@@ -1521,12 +1529,23 @@ if [ "$ARM_MODE" != true ] && [ "$CLU_ATTEMPTED_HEAD" = "false" ] && [ "${CLU_RO
 :information_source: **Clustered state A/B (item 13) did NOT run this build** — \`clustered_attempted\` is \`false\` and no \`clustered_state.*\` metrics were emitted, so the clustered/in-memory ratio is UNMEASURED this run. Reason: ${CLU_WHY} This does NOT fail the build (the whole clustered family is notify-only), but item 13 is unanswered for this commit — a persistent skip means the measurement is not happening at all.${CLU_SKIP_SUFFIX}"
 fi
 
+# Surface a pipelining A/B that ran but proved nothing (it is outside the run's validity block, so
+# this note is the only signal), or one skipped for a reason other than being switched off.
+PL_NOTE="$(jq -r '
+  if .pipelining_inorder_attempted == true and (.pipelining_inorder.measured // false) != true then
+    "\n\n:warning: **In-order pipelining A/B did NOT measure this build** — no `pipelining_inorder.*` rows were compared. Problems: " + (((.pipelining_inorder.problems // []) | join("; ")) | if . == "" then "none recorded" else . end) + ". Notify-only: this does not fail the build."
+  elif .pipelining_inorder_attempted == false and ((.pipelining_inorder_skip_reason // "disabled") != "disabled") then
+    "\n\n:information_source: **In-order pipelining A/B skipped** (`\(.pipelining_inorder_skip_reason)`)."
+  elif (.pipelining_inorder.measured // false) == true then
+    "\n\n:information_source: **In-order pipelining A/B:** `pipelining_inorder.<arm>.*_ratio` is http1PipeliningInOrder on / off on two fresh SUTs in this run. `match` and `forward` are k6 (never pipelined), so they should sit near 1.0; `pipelined` is the only arm where the gate holds requests. Its latency is per batch of pipelined requests from a Python client, so read its ratio, not its absolute figures."
+  else "" end' "$RESULT" 2>/dev/null || echo "")"
+
 # Fold the provenance line, the pre-config-baseline warning, and the microbench +
 # k6 baseline-reset notes into the body so every annotation (regression or clean)
 # carries them.
 EXTRA="${EXTRA}
 
-${PROVENANCE}${HW_NOTE}${PRECFG_NOTE}${MB_NOTE}${K6_NOTE}${INFO_NOTE}${ELS_NOTE}${SWEEPLAT_NOTE}${LAPTOP_INJVM_NOTE}${STREAM_NOTE}${CLU_NOTE}${PC_NOTE}${HWM_NOTE}${MP_NOTE}"
+${PROVENANCE}${HW_NOTE}${PRECFG_NOTE}${MB_NOTE}${K6_NOTE}${INFO_NOTE}${ELS_NOTE}${SWEEPLAT_NOTE}${LAPTOP_INJVM_NOTE}${STREAM_NOTE}${CLU_NOTE}${PL_NOTE}${PC_NOTE}${HWM_NOTE}${MP_NOTE}"
 
 HEADER="Perf regression — \`${COMMIT:0:10}\` on \`${BRANCH}\` (baseline: ${BASE_COUNT} runs, median+MAD; budgets @ \`${BUDGETS_COMMIT:0:10}\`)"
 # Legend folded into every flagged annotation so a reader knows why the build did

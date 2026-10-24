@@ -18,6 +18,7 @@ regressions hide and stale claims get published.
 | `proxy.js` forward + slow upstream | Unmatched-proxy in-flight concurrency cap (unit 21) | **Opt-in** (`PERF_WORKLOAD=forward`) | `workload_forward_served_via_upstream` validity check |
 | `streaming.js` | LLM/SSE streaming concurrency vs match latency | Daily (perf queue) | No — notify-only |
 | `clustered_crossing.js` | Cross-node request latency in a cluster | Daily (perf queue) | **Notify-only.** `perf-test-compare.sh` reads `clustered_state.*` as notify-only metrics. This measured NOTHING until the clustered image was published to the perf queue: the run gates the A/B on `docker image inspect`, nothing pulled or built that image, so every run took the absent-image skip and emitted no `clustered_state` block to read. The snapshot push now builds `mockserver-snapshot-clustered` in the same job, from the same jar and commit as the SUT image, and the run refuses to measure if the two image revisions disagree (`clustered_skip_reason=revision_mismatch`) — a ratio computed across two commits would be arithmetically fine and describe code the measured binary never contained |
+| In-order pipelining A/B (`lib/perf-pipelining-ab.sh`: `regression.js` match + forward, and `k6/tools/pipelined_http1_client.py`) | Cost of `http1PipeliningInOrder` (on / off ratio), on two fresh SUTs in one run | Daily (perf queue), inside `perf-test-run.sh`; removed with the flag | No — notify-only, `provisional` budgets, and outside the run's validity block ([details](#in-order-pipelining-ab--pipelining_inorder-notify-only)) |
 | `MatchingBenchmark` JMH | Matcher hot-path time/op and allocation/op | Daily (perf queue) | Yes — `time_per_op` + `alloc_bytes_per_op` |
 | `perf-alloc-gate.sh` (JMH `gc.alloc.rate.norm`) | Allocation/op for matching, inbound decode and response write at pinned params, plus a matching-scan arm | Per merge (every Java pipeline build) | Yes, all eight rows |
 | `CandidateIndexBenchmark` JMH | Index vs scan scaling | Daily (perf queue) | No |
@@ -39,7 +40,7 @@ regressions hide and stale claims get published.
 ```mermaid
 flowchart TD
   guard["perf-test-guard.sh\nonly dispatches if master moved"]
-  run["perf-test-run.sh\nregression.js HTTP + HTTPS/H2\nforward.js\nproxy.js forward mode\nproxy.js handshake mode\ncoverage.js + HTTPS ladder\nsweep.js\nstreaming.js\nclustered_crossing.js\ngrowth.js + resource sampler"]
+  run["perf-test-run.sh\nregression.js HTTP + HTTPS/H2\nforward.js\nproxy.js forward mode\nproxy.js handshake mode\ncoverage.js + HTTPS ladder\nsweep.js\nstreaming.js\nclustered_crossing.js\npipelining A/B\ngrowth.js + resource sampler"]
   micro["perf-test-microbench.sh\nMatchingBenchmark 2 forks\nCandidateIndexBenchmark\n7 promoted dark benchmarks\n2 proxy-path benchmarks (9b/9c)"]
   h2["perf-test-h2multiplex.sh\nHttp2StreamChannelBenchmark\nHttp2ConnectionMemoryBenchmark"]
   alloc["perf-test-allocprofile.sh\ndeep JFR run, annotation only\nnever compared or baselined"]
@@ -105,7 +106,7 @@ to the `perf-xl` queue (one c6i.32xlarge, two NUMA nodes), each as its own arm-o
 
 | Arm | `PERF_XL` unset | `PERF_XL=true` |
 |---|---|---|
-| regression, sweep, growth, forward, proxy, coverage, streaming, clustered, INFO arm | `perf-run` on `perf` | `perf-run` on `perf` (unchanged) |
+| regression, sweep, growth, forward, proxy, coverage, streaming, clustered, pipelining A/B, INFO arm | `perf-run` on `perf` | `perf-run` on `perf` (unchanged) |
 | micro-benchmarks, HTTP/2 multiplex, allocation profile | own steps on `perf` | own steps on `perf` (unchanged) |
 | multi-k6 arm (item 31) | inside `perf-run` when `PERF_SERVING_RW_MULTIK6=true` | step `perfxl-rw-multik6` on `perf-xl`, always |
 | hardware matrix (item 27) | inside `perf-run` when `PERF_SERVING_HW_MATRIX=true` | step `perfxl-hw-matrix` on `perf-xl`, when `PERF_SERVING_HW_MATRIX=true` |
@@ -142,6 +143,7 @@ these last two against the newest daily run. See
 - All promoted dark benchmark metrics
 - The proxy-path benchmark metrics (`RelayByteCopyBenchmark`, `SocksHandshakeBenchmark` — items 9b/9c), which share the `microbench_extra.*` budgets
 - Every `path_coverage.*` metric (see [Path coverage](#coveragejs--path-coverage-notify-only)), whose budgets are also marked `provisional`
+- Every `pipelining_inorder.*` metric (see [In-order pipelining A/B](#in-order-pipelining-ab--pipelining_inorder-notify-only)), also `provisional`
 
 ## What Each Harness Actually Measures
 
@@ -1523,6 +1525,114 @@ runs every group. Rates, durations and sizes are tunable with `K6_COV_*` and
 checked at start-up (`PERF_COVERAGE_H2_STEP` as whole seconds, e.g. `15s`, longer than the
 settle), so a typo fails the run before any measurement rather than part-way through.
 
+### In-order pipelining A/B — `pipelining_inorder.*` (notify-only)
+
+**What it answers.** How much `http1PipeliningInOrder` (the HTTP/1.1 pipelining gate, on by
+default) costs, as an on / off ratio measured on one machine in one job, so VM-to-VM variance cannot
+swamp it. Every metric is notify-only with a `provisional` budget, and the block is kept out of the
+run's `validity` block, as the INFO arm is, so a failed A/B never costs the run its baseline place.
+The arm is temporary: it goes when the flag goes (see [Removal](#removal-with-the-flag)).
+
+```mermaid
+flowchart LR
+  on["SUT, flag on\nMOCKSERVER_HTTP1_PIPELINING_IN_ORDER=true"]
+  off["SUT, flag off\nsame image, cpuset and memory"]
+  probe["probe\nslow-then-fast pipelined pair"]
+  reg["regression.js\nmatch + forward, 200 rps each"]
+  pl["pipelined_http1_client.py\n8 connections x 16 requests per send"]
+  res[".pipelining_inorder\nper-arm on / off ratios + absolutes"]
+  on --> probe
+  off --> probe
+  probe --> reg --> pl --> res
+```
+
+| Arm | Driver | What the gate does on it |
+|---|---|---|
+| `match` | `regression.js` (`K6_REG_ARMS=match,forward`) | Nothing beyond a few field checks: k6 never pipelines, so the ratio should sit near 1.0 |
+| `forward` | `regression.js`, through the run's upstream | The same, on the forward path |
+| `pipelined` | `mockserver-performance-test/k6/tools/pipelined_http1_client.py` | Holds each request until the response ahead of it is written; this is the only arm where the gate does work |
+
+**How it runs.** `lib/perf-pipelining-ab.sh` (`run_pipelining_ab`, called from `perf-test-run.sh`
+after the clustered A/B) starts two fresh SUTs from the run's own image, one at a time, on the main
+SUT's cpuset and memory, identical except `MOCKSERVER_HTTP1_PIPELINING_IN_ORDER`. Because both come
+from the image the run is filed under, the ratio is attributed to the same commit as everything else
+in the result. Each SUT gets, in order:
+
+1. **A probe** that proves the arm runs the configuration it claims. The client seeds a slow
+   (1,000 ms delay, as in `Http1PipeliningInOrderDisabledIntegrationTest`) and a fast expectation, then writes both requests in one send on one connection.
+   With the flag on, the slow response must come back first; with it off, the fast one must. Without
+   this, two SUTs that both ignored the variable would produce a ratio of 1.0 that reads as "the gate
+   is free".
+2. **`regression.js`**, limited to the `match` and `forward` arms (20 s warm-up, 45 s measured window,
+   `K6_PL_REG_WARMUP` / `K6_PL_REG_DURATION`), with protocol labels `pipelining_on` and `pipelining_off`.
+3. **The pipelining client**, closed loop: `PERF_PIPELINING_CONNECTIONS` (8) connections, each in its
+   own process, write `PERF_PIPELINING_DEPTH` (16) requests per send and read the 16 responses back,
+   for a 10 s warm-up and a 30 s measured window (`PERF_PIPELINING_LOAD_WARMUP_S`,
+   `PERF_PIPELINING_LOAD_DURATION_S`). Its latency is per batch: from the send to the last response.
+   It runs on the host under `taskset` to the k6 cpuset and dials the SUT's bridge IP when the host can
+   reach it (no docker-proxy hop), else the published port; `client.path_on` and `client.path_off`
+   record which. Each client call is bounded by `timeout` (30 s for the probe, the load window plus
+   60 s for the load), so a wedged client cannot spend the step's timeout.
+
+The arm order alternates with the build number (`arm_order`), so a drift across the phase does not
+always favour the same arm. `PERF_PIPELINING=false` turns the A/B off; it is also off in arm-only,
+host-network, release-comparison and allocation-profile runs, and it needs `python3` on the agent
+(`pipelining_inorder_skip_reason: no_python3` otherwise).
+
+**What is published.** `perf-result.json` carries `.pipelining_inorder` with `measured`, `problems`,
+both probe results and, per arm, the absolutes of both sides (`p50/p95/p99_on_ms`, `..._off_ms`,
+`throughput_on_rps`, `throughput_off_rps`, `error_rate_on`, `error_rate_off`, sample counts) and
+the ratios `p50_ratio`, `p95_ratio`, `p99_ratio` and `throughput_ratio` (on / off). `measured` is
+true only when both probes passed, all three arms have a p95 ratio, no arm failed more than 1% of
+its requests on either side (failed requests still yield percentiles), and both arms were dialled by
+the same path. A failed pipelining client therefore fails the whole A/B rather than leaving `match` and
+`forward`, which sit near 1.0 by design, to read as "the gate is free". `perf-test-compare.sh` reads
+the arms only when `measured` is true, as `pipelining_inorder.<arm>.<metric>`: the four ratios ride
+the full baseline, like `clustered_state.*`, and the absolutes are `hw`. An attempted A/B that did
+not measure raises a `:warning:` note naming its problems, without failing the build.
+
+**Reading it.** Read `pipelining_inorder.pipelined.*_ratio` for the gate's cost to a pipelining
+client, and the `match` / `forward` ratios to confirm a non-pipelining client pays nothing. The
+pipelined absolutes include the Python client's own time and are likely client-limited, so compare
+its ratio, not its figures, against other runs.
+
+**CI time.** About 4.5 minutes per run: two SUT starts (about 15 s each), two `regression.js` runs
+(about 75 s each) and two client runs (about 42 s each). The guard raised the `perf-run` step timeout
+from 70 to 80 minutes, and the hardware-matrix timeout from 160 to 170.
+
+#### Removal with the flag
+
+`http1PipeliningInOrder` is a temporary rollback switch, intended for removal in the next minor
+release ([netty-pipeline.md](netty-pipeline.md#http11-pipelining-gate)). Once it is gone the off arm
+measures the same thing as the on arm, so the A/B goes with it, in the same change. This finds every
+piece of it:
+
+```bash
+grep -rn 'pipelining_inorder\|PERF_PIPELINING\|PL_SUT_PREFIX\|K6_REG_ARMS\|perf-pipelining-ab\|pipelined_http1_client\|in-order-pipelining-ab' \
+  .buildkite docs mockserver-performance-test
+```
+
+- delete `.buildkite/scripts/steps/lib/perf-pipelining-ab.sh` and
+  `.buildkite/scripts/test/perf-pipelining-ab-test.sh`, and every hit above in `perf-test-run.sh`
+  (the source line, the phase, the `PERF_PIPELINING` switches, the cleanup names and the result
+  fields), `perf-test-allocprofile.sh`, `perf-test-compare.sh` (the rows and `PL_NOTE`),
+  `perf-budgets.json`, `perf-test-lint.sh` and the `PL_SUT_PREFIX=p` fixture in
+  `perf-info-budget-test.sh`;
+- keep `pipelined_http1_client.py`, its unit test and `K6_REG_ARMS` (in `regression.js`,
+  `lib/config.js` and the lint's `k6 inspect` line) only if another arm uses them;
+- lower the timeouts in `perf-test-guard.sh` by 10 minutes: the base `PERF_RUN_TIMEOUT=80` to 70
+  and the hardware-matrix `PERF_RUN_TIMEOUT=170` to 160, with the comment above them. Change the
+  expectations in `perf-xl-dispatch-test.sh` to match (80, 170, 100 and 80 become 70, 160, 90 and 70);
+- fix the timeout prose: the step table and the step-timeouts paragraph in
+  [ci-cd.md](../infrastructure/ci-cd.md), and the hardware-matrix paragraph in this file
+  (its 80 to 170 raise and its 80-minute timeout);
+- remove this section and the rows and links to it in this file, the sentence about it in
+  [netty-pipeline.md](netty-pipeline.md#http11-pipelining-gate), and close the row in
+  [performance-measurement-backlog.md](../plans/performance-measurement-backlog.md).
+
+Stored runs keep their `pipelining_inorder` block; compare is head-driven, so the old rows just stop
+appearing.
+
 ### Release comparison — measuring a past release on today's rig
 
 `PERF_RELEASE_COMPARISON=<version>` runs the same `perf-test-run.sh` against a published release
@@ -2012,7 +2122,7 @@ bk build create -p mockserver-performance-test -b master -c HEAD \
 ```
 
 The build runs the normal regression chain plus the matrix (about 10 minutes per point, 60 in
-all); the guard raises the run step's timeout from 70 to 160 minutes only when
+all); the guard raises the run step's timeout from 80 to 170 minutes only when
 `PERF_SERVING_HW_MATRIX=true`. Avoid the 04:00 UTC daily slot, the Saturday 08:00 weekly perf-xl
 build and the Sunday 08:00 soak (a daily build can hold all three `perf` agents, so a matrix build
 would queue behind it).
@@ -2020,7 +2130,7 @@ would queue behind it).
 `cores:memory[:control]` entries.
 
 Adding `-e PERF_XL=true` runs the matrix as its own step on the `perf-xl` queue instead (130-minute
-timeout), and the run step keeps its 70-minute timeout. That step's result never reaches compare or
+timeout), and the run step keeps its 80-minute timeout. That step's result never reaches compare or
 the website, so the published table keeps its last committed figures. The placement below is the
 c5.12xlarge's ([which queue runs which arm](#which-queue-runs-which-arm)).
 

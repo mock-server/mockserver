@@ -41,7 +41,7 @@ if [ -n "$PERF_RUN_ARM" ]; then
     echo "ERROR: PERF_RUN_ARM=rw_multik6 needs bridge networking (PERF_NETWORK_MODE=host would skip the arm and measure nothing)" >&2; exit 1
   fi
   PERF_RUN_NAME="${PERF_RUN_NAME:-arm-${PERF_RUN_ARM}}"
-  PERF_INFO_ARM=false; PERF_STREAMING=false; PERF_CLUSTERED=false; PERF_PROXY_PROFILE=false
+  PERF_INFO_ARM=false; PERF_STREAMING=false; PERF_CLUSTERED=false; PERF_PROXY_PROFILE=false; PERF_PIPELINING=false
   # shellcheck disable=SC2034  # read by lib/perf-path-coverage.sh, sourced below
   PERF_COVERAGE=false
   PERF_LAPTOP_PROFILE=false; PERF_LAPTOP_PARALLEL=false; PERF_LARGE_HEAP_PROFILE=false
@@ -109,7 +109,7 @@ K6_IMAGE="grafana/k6:1.7.1@sha256:4fd3a694926b064d3491d9b02b01cde886583c4931f122
 # is config_profile=release-<version>, so never baselined or published. Relaxed for it
 # only: snapshot freshness, the revision-label grace date, and GC/JDK read via jcmd when
 # the image predates jvm_runtime_info. The clustered A/B defaults off (its image is the
-# snapshot, not the release).
+# snapshot, not the release), and so does the pipelining A/B (a release before the flag has no gate).
 PERF_RELEASE_COMPARISON="${PERF_RELEASE_COMPARISON:-}"
 if [ -n "$PERF_RELEASE_COMPARISON" ]; then
   if ! [[ "$PERF_RELEASE_COMPARISON" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -118,6 +118,7 @@ if [ -n "$PERF_RELEASE_COMPARISON" ]; then
   fi
   MOCKSERVER_IMAGE="${MOCKSERVER_IMAGE:-mockserver/mockserver:mockserver-${PERF_RELEASE_COMPARISON}-graaljs}"
   PERF_CLUSTERED="${PERF_CLUSTERED:-false}"
+  PERF_PIPELINING="${PERF_PIPELINING:-false}"
   echo "--- release comparison: measuring MockServer ${PERF_RELEASE_COMPARISON} ($MOCKSERVER_IMAGE); the result is recorded but never baselined or published"
 fi
 # The SUT runs the -graaljs snapshot variant so the JavaScript response-template
@@ -215,7 +216,7 @@ PERF_STEADY_DURATION="${PERF_STEADY_DURATION:-5m}"
 PERF_STEADY_WARMUP="${PERF_STEADY_WARMUP:-30s}"
 if [ "$PERF_NETWORK_MODE" = host ]; then
   echo "--- PERF_NETWORK_MODE=host — primary path only (regression, sweep, growth, steady); multi-SUT secondary phases skipped"
-  PERF_INFO_ARM=false; PERF_STREAMING=false; PERF_CLUSTERED=false; PERF_PROXY_PROFILE=false
+  PERF_INFO_ARM=false; PERF_STREAMING=false; PERF_CLUSTERED=false; PERF_PROXY_PROFILE=false; PERF_PIPELINING=false
   # shellcheck disable=SC2034  # read by lib/perf-path-coverage.sh, sourced below
   PERF_COVERAGE=false
 fi
@@ -256,6 +257,10 @@ CLU_B="mockserver-perf-clu-b-${RUN_ID}"
 # Short, DNS-resolvable aliases for JGroups discovery - see start_clu.
 CLU_A_ALIAS="clu-a"
 CLU_B_ALIAS="clu-b"
+# The in-order HTTP/1.1 pipelining A/B SUTs: ${PL_SUT_PREFIX}-on and ${PL_SUT_PREFIX}-off.
+PL_SUT_PREFIX="mockserver-perf-pl-${RUN_ID}"
+# shellcheck source=lib/perf-pipelining-ab.sh
+. "$SCRIPT_DIR/lib/perf-pipelining-ab.sh"
 # shellcheck source=lib/perf-path-coverage.sh
 . "$SCRIPT_DIR/lib/perf-path-coverage.sh"
 cov_validate_env || exit 1
@@ -739,7 +744,7 @@ cleanup() {
   # so an early exit before the proxy block's own cleanup never leaks them.
   docker rm -f "$SERVER" "$UPSTREAM" "$SWEEP_K6" "$STREAM_K6" "$STREAM_SUT" \
     "$INFO_SERVER" "$INFO_SWEEP_K6" "${STEADY_K6:-}" \
-    "$CLU_CTRL" "$CLU_A" "$CLU_B" \
+    "$CLU_CTRL" "$CLU_A" "$CLU_B" "$PL_SUT_PREFIX-on" "$PL_SUT_PREFIX-off" \
     "mockserver-mtls-${RUN_ID}" "mockserver-jdk-${RUN_ID}" >/dev/null 2>&1 || true
   cov_cleanup
   docker network rm "$NETWORK" >/dev/null 2>&1 || true
@@ -4005,6 +4010,27 @@ JGROUPS_XML
       <<<"$CLUSTERED_JSON" 2>/dev/null || echo "$CLUSTERED_JSON"
 fi
 
+# --- in-order HTTP/1.1 pipelining cost (within-run A/B, notify-only) ----------
+# http1PipeliningInOrder (default true) vs false on two fresh SUTs from this run's image, so the
+# on / off ratio is attributed to the same commit as the rest of the run. Like the INFO arm it is
+# kept out of VALIDITY_CHECKS: a failed or non-genuine A/B (measured:false) is annotated by compare
+# and never costs the run its baseline place. Remove with the flag (lib/perf-pipelining-ab.sh).
+abort_if_sut_died
+PIPELINING_JSON='{}'
+PIPELINING_ATTEMPTED=false
+PIPELINING_SKIP_REASON="disabled"
+if [ "${PERF_PIPELINING:-true}" = "true" ]; then
+  if command -v python3 >/dev/null 2>&1; then
+    PIPELINING_ATTEMPTED=true; PIPELINING_SKIP_REASON=""
+    PL_T_START="$(date -u +%s)"
+    run_pipelining_ab
+    echo "--- pipelining A/B done; added wall-clock $(( $(date -u +%s) - PL_T_START ))s"
+  else
+    PIPELINING_SKIP_REASON="no_python3"
+    echo "WARNING: python3 not on the agent — pipelining A/B skipped (notify-only, no pipelining_inorder block)" >&2
+  fi
+fi
+
 # --- derive resource slope ratios from the sample log -------------------------
 # start = first non-empty sample, end = last, peak = max. ratio = end/start.
 # PROVOCATION (observed false): with the metrics port unreachable the sampler
@@ -4557,6 +4583,9 @@ jq -n \
   --argjson clustered_state "$CLUSTERED_JSON" \
   --argjson clustered_attempted "$CLUSTERED_ATTEMPTED" \
   --arg clustered_skip_reason "$CLUSTERED_SKIP_REASON" \
+  --argjson pipelining_inorder "$PIPELINING_JSON" \
+  --argjson pipelining_inorder_attempted "$PIPELINING_ATTEMPTED" \
+  --arg pipelining_inorder_skip_reason "$PIPELINING_SKIP_REASON" \
   --argjson clu_ctrl "$CLU_CTRL_BEHAVIOURS" \
   --argjson clu_cand "$CLU_CAND_BEHAVIOURS" \
   --argjson validity "$VALIDITY_JSON" \
@@ -4657,6 +4686,13 @@ jq -n \
     # annotation. A skip that cannot say why is the same shape of defect as a skip
     # nobody sees.
     clustered_skip_reason: $clustered_skip_reason,
+    # In-order HTTP/1.1 pipelining A/B: per-arm on / off ratios and the absolutes of both arms, plus the
+    # probe proving each arm ran the configuration it claims. Not .behaviours, so the k6 arm-set
+    # fingerprint is untouched; compare reads .arms only when .measured. {} when skipped, and
+    # pipelining_inorder_skip_reason says why (disabled | no_python3).
+    pipelining_inorder: $pipelining_inorder,
+    pipelining_inorder_attempted: $pipelining_inorder_attempted,
+    pipelining_inorder_skip_reason: $pipelining_inorder_skip_reason,
     growth: {
       duration_s: ($growth.duration_s // null),
       p95_ms: ($growth.p95_ms // null),
