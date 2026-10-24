@@ -761,8 +761,25 @@ Each `Expectation` binds a request matcher to exactly one action. There are 19 a
 | `WEBSOCKET_RESPONSE` | `HttpWebSocketResponseActionHandler` | Upgrades to WebSocket and sends a sequence of `WebSocketMessage` frames with per-message delays. An optional `templateType` renders each text frame per message (binary frames are never templated). When subprotocol is `graphql-transport-ws`/`graphql-ws` with a `graphqlSubscriptionFilter`, installs `GraphQLSubscriptionHandler` for the graphql-transport-ws protocol state machine |
 | `GRPC_STREAM_RESPONSE` | `GrpcStreamResponseActionHandler` | Streams gRPC-framed protobuf messages with per-message delays and grpc-status trailers (Netty only; returns 501 in WAR). A per-message `templateType` renders the message `json` as a response template before protobuf encoding |
 | `GRPC_BIDI_RESPONSE` | `GrpcBidiRouterHandler` / `GrpcBidiStreamHandler` | Bidirectional gRPC streaming via the multiplex pipeline (requires `grpcBidiStreamingEnabled=true`; returns 501 otherwise or in WAR) |
-| `BINARY_RESPONSE` | (inline in `BinaryRequestProxyingHandler`) | Returns raw binary bytes when a `BinaryRequestDefinition` matches |
-| `DNS_RESPONSE` | (inline in `DnsRequestHandler`) | Returns DNS response records when a `DnsRequestDefinition` matches a UDP DNS query |
+| `BINARY_RESPONSE` | (inline in `BinaryRequestProxyingHandler`) | Returns raw binary bytes when a `BinaryRequestDefinition` matches. An HTTP request that matches one of these expectations instead gets `501 Not Implemented` (below, Binary/DNS actions and HTTP requests) |
+| `DNS_RESPONSE` | (inline in `DnsRequestHandler`) | Returns DNS response records when a `DnsRequestDefinition` matches a UDP DNS query. An HTTP request that matches one of these expectations instead gets `501 Not Implemented` (below) |
+
+#### Binary/DNS actions and HTTP requests
+
+**An HTTP request matched by a `BINARY_RESPONSE` or `DNS_RESPONSE` action gets `501 Not Implemented`, not silence.** Those two action types answer binary and DNS traffic; they have no HTTP response to give an HTTP request, so `HttpActionHandler.dispatchPrimaryActionInternal`'s switch has a dedicated `case BINARY_RESPONSE, DNS_RESPONSE` for exactly that case, instead of leaving such a request unanswered — the client would otherwise wait indefinitely, and so would any request pipelined behind it on the same HTTP/1.1 connection (see [netty-pipeline.md → HTTP/1.1 pipelining gate](netty-pipeline.md#http11-pipelining-gate), *wedge backstop*). The branch logs one `WARN` naming the action type and answers `501 Not Implemented` with a body of `the matched expectation's <TYPE> action cannot answer an HTTP request`, written through the normal `writeResponseActionResponse` path, so the exchange ends exactly as any other response does. The expectation still answers binary and DNS traffic normally; only an HTTP request matched against it differs.
+
+### How an Exchange Ends
+
+Every action type above ends its exchange one of four ways, which `Http1PipeliningGate` (HTTP/1.1 only) and `HttpExchangeTracker`/`HttpTransportTimer` (the idle timeout and transport-latency metrics, HTTP/1.1 only) rely on to know when the next request may be handled or the connection may be considered idle:
+
+| End | When |
+|---|---|
+| A terminal write completes | Every ordinary, streamed, chunked, forwarded, templated, callback, file, static-file, breakpoint-continued and `501` response — the overwhelming majority |
+| `HttpExchangeEndedEvent` | An exchange with no HTTP response at all: raw bytes (`error()` with `responseBytes`), an `error()` that writes nothing and keeps the connection open, or a final `1xx` other than `101` |
+| `101` written | The connection stops carrying HTTP/1.1; `Http1PipeliningGate` removes itself (CONNECT does the same through `HttpConnectHandler`/`SocksConnectHandler`) |
+| The connection is closed or reset with nothing written | `error()` with `dropConnection`/`resetConnection`, and chaos resets; these mark `ConnectionClosing` rather than ending the exchange through a write, so the exchange ends only when the connection itself closes (`channelInactive`), not through any of the three ends above |
+
+See [netty-pipeline.md → Inbound Connection Bounds](netty-pipeline.md#inbound-connection-bounds) for `HttpExchangeEndedEvent`'s two instances and who fires them, and [netty-pipeline.md → HTTP/1.1 pipelining gate](netty-pipeline.md#http11-pipelining-gate) for how the gate reads the same signals, plus the fourth, to release the next pipelined request.
 
 > **Concurrent writes to a shared `HttpResponse` are not safe** — writing from multiple threads simultaneously tears `KeysToMultiValues` header arrays (NPE / AIOOBE). In practice this is not reachable: the mock path clones the stored response per request before writing (`ResponseWriter.addConnectionHeader`), control-plane responses are built per request, and the dashboard communicates via WebSocket frames rather than shared response objects. `ResponseWriterConcurrencySafetyTest` guards the per-request-clone invariant on the mock path.
 

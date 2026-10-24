@@ -334,6 +334,8 @@ idle-closed counter"]
 
 **Long-lived (exempt) connections** — marked with `InboundConnectionActivity.markLongLived(channel)`: a `101 Switching Protocols` (WebSocket: dashboard, callback, mocked and proxied), MockServer's own loopback leg of a CONNECT/SOCKS tunnel (`PortUnificationHandler.switchToProxyConnected`), and raw binary proxying (`switchToBinaryRequestProxying`). Their silences are legitimate and their traffic is not HTTP exchanges the tracker could see. Marking also removes the idle handler and the exchange tracker from the pipeline (on the event loop), so a WebSocket or tunnel stops paying their per-write cost, and `isTracked` stops a later `switchToHttp` on the loopback leg from re-installing the tracker. An exchange whose response never passes the tracker as HTTP objects — raw bytes (an `HttpError` `responseBytes`, written from `HttpServerCodec`'s context), an `HttpError` that writes nothing and keeps the connection open, or a mocked final `1xx` other than `101` — is ended by `HttpExchangeEndedEvent` (`mockserver-core`, `org.mockserver.responsewriter`). `HttpErrorActionHandler` (from a listener on the raw write, so it runs on the event loop as the write completes and any drop is chained after it) and `NettyResponseWriter` fire it from the codec's context, so it travels inbound through exactly the tracker and `HttpTransportTimer`, which each end their oldest exchange; without it the connection would count as busy for the rest of its life and never be closed as idle. The event has two instances, which those handlers treat alike: `RAW_RESPONSE_WRITTEN` for raw bytes, and `INSTANCE` for an exchange with no response or a final `1xx`. Only the relay tells them apart (see *Tunnels and the idle timeout*). Raw bytes are also announced before they are written, by a `RawResponseBytesEvent` carrying their length, which only the relay's loopback acts on (see [Raw-bytes responses through a tunnel](#raw-bytes-responses-through-a-tunnel)).
 
+**Exception: pipelined requests held behind a stalled response.** `HttpExchangeTracker`, which sits ahead of `Http1PipeliningGate` (see [HTTP/1.1 pipelining gate](#http11-pipelining-gate)) in the pipeline, counts a held request's decoded head as an exchange in progress, so `InboundConnectionActivity` reads the connection as busy and the idle close above never fires while anything is held. The gate's own backstop closes such a connection instead, reusing `inboundConnectionIdleTimeoutMillis`: if `backstopMillis` (the timeout's value) is `0`, the backstop never closes the connection, matching this section's "`0` disables" rule, but it still logs one `WARN` per connection after 300 s with no progress, so a lost end signal stays visible. See [HTTP/1.1 pipelining gate — wedge backstop](#http11-pipelining-gate) for what counts as progress.
+
 **TLS handshakes and the idle timeout.** A client has a whole idle period after its TLS handshake completes to send its first request. On a direct TLS connection `SslHandler#0` (and `SniHandler` before it) sits ahead of the idle handler, so the handshake's records never pass the idle handler and its timer does not see them. Two things stand in for them: a handshake in progress is busy, and the idle handler restarts its period on the `SslHandler`'s successful `SslHandshakeCompletionEvent`. Without the restart the period ran on from the ClientHello's first bytes, so a connection whose handshake had outlasted it was closed at the first check after the handshake, however recently it had completed. A failed handshake restarts nothing; the `SslHandler` closes the connection.
 
 Every stage before the first request is bounded, so a connection cannot be held open by a handshake that never finishes:
@@ -796,6 +798,99 @@ A reset is reported by the transport first, as its own exception, which these ha
 - **Failed terminal write.** `NettyResponseWriter.completeInFlightOnFlush` closes the connection when the response's terminal write fails: the whole response, the last delayed chunk, the head of a response sent in delayed chunks, or a streamed response's last content. The client may have part of the response or none of it, and on a keep-alive connection would otherwise wait for a response that is never coming. The close shares the in-flight token's listener, so it costs nothing on a write that succeeds. A connection whose output the failure has already ended is left alone (`ReadAfterFailedWrite.isReadingOn`): it is being read to the end of its input so that a request the client sent before it reset the connection is still recorded (see [A write that fails on a connection the client has reset](#a-write-that-fails-on-a-connection-the-client-has-reset)). Closing it there fails `RequestAfterFailedWriteIntegrationTest`. A writer built without a token (no `LifeCycle`, which only tests do) does not close.
 
 `ResponseWriterConnectionHeaderTest` and `NettyResponseWriterFailedWriteTest` cover these.
+
+##### HTTP/1.1 pipelining gate
+
+**`Http1PipeliningGate` (`o.m.codec`) answers pipelined HTTP/1.1 requests in the order they arrived, by passing at most one exchange at a time to the handlers after it.** A client that sends several requests on one connection without waiting for each response (pipelining) would otherwise get responses back in whatever order each handler finished, which can pair a fast response with the wrong request; the gate makes one request on a connection outstanding at a time, so a request decoded while another is outstanding is held, body included, until the earlier exchange ends. Controlled by `http1PipeliningInOrder` (default `true`; see *Opt-out flag* below); a connection that never pipelines pays only a few field checks per message and allocates nothing.
+
+```mermaid
+flowchart LR
+    CLA["HttpChunkLineLimiter
+(after codec)"] --> TRK["HttpExchangeTracker
+(if tracked)"]
+    TRK --> LRS["LoopbackRelaySignalHandler
+(tunnel loopback only)"]
+    LRS --> TT["HttpTransportTimer
+(if metricsEnabled)"]
+    TT --> GATE["Http1PipeliningGate
+(if http1PipeliningInOrder, default true)"]
+    GATE --> B["PreserveHeadersNettyRemoves"]
+    B --> REST["MockServerHttpContentDecompressor,
+HttpContentLengthRemover, EarlyMatchingHandler,
+HttpObjectAggregator, .../ HttpRequestHandler"]
+    REST -. "every response write
+passes back through" .-> GATE
+```
+
+One instance per connection, installed by `PortUnificationHandler.switchToHttp` right after whichever of `HttpChunkLineLimiter` (after codec), `HttpExchangeTracker`, `LoopbackRelaySignalHandler` and `HttpTransportTimer` is the last one present on that connection (each of the last three is conditional), and before `PreserveHeadersNettyRemoves`. Every field is confined to the event loop.
+
+**Holding and releasing a request.** On the hot path (nothing held or outstanding) a decoded `HttpRequest` is marked `outstanding` and fired straight through. A request head decoded while another is outstanding is held in an `ArrayDeque`, along with its body objects as they arrive; once a held request is complete (its `LastHttpContent` is held) or the held cost passes `maxRequestBodySize`, reads are paused (`ChannelReadPause`) so the socket is not read further. The release invariant, `settle()`, runs after every state change on the slow path: whenever a request is held and nothing is outstanding or awaiting its terminal write's completion — and the connection is not closing, switching protocols, or discarding at stop — a drain is scheduled as an event-loop task. The drain fires exactly one held request (and its body, up to the next head), then `channelReadComplete`, then resumes reads once nothing is left held. A request released with its body still arriving (`bodyArriving`) keeps a held token open until its `LastHttpContent` passes on the content path, or until `HttpExpectationFailedEvent`, `channelInactive` or `handlerRemoved` closes it. A request whose body has already fully arrived has its `Expect` header stripped before release (so no spurious `100`/`417` fires against the next request's body); this is the one way a recorded, pipelined request can differ from what the client sent.
+
+```mermaid
+flowchart TD
+    OPEN["OPEN
+nothing outstanding, nothing held"] -->|"request head"| OUT["OUTSTANDING
+one exchange downstream"]
+    OUT -->|"terminal write completes,
+or an end signal"| OPEN
+    OUT -->|"request head while outstanding"| HOLD["HOLDING
+later requests queued; reads pause once one
+is complete or the cost limit is hit; a
+1,025th held request caps further arrivals"]
+    HOLD -->|"exchange ends; next event-loop turn:
+release one request"| OUT
+    OUT -->|"close decided"| CLOSING["CLOSING
+no release of held requests; read pause dropped"]
+    HOLD -->|"close decided, write failed,
+or wedge backstop"| CLOSING
+    HOLD -->|"capped, and the last
+held request's write completes"| CLOSING
+    CLOSING -->|"fresh head: nothing held, idle,
+output open, not switching, nothing dropped"| OUT
+    CLOSING -->|"channelInactive"| DONE["held requests fired,
+or dropped if the stop drain ended"]
+    OUT -->|"101 or CONNECT"| GONE["gate removed;
+anything held is dropped"]
+```
+
+**Exchange-end signals.** Every response path has a defined way of telling the gate its exchange is over, read in `write()` or `userEventTriggered()`:
+
+| End signal | Fires from | Covers |
+|---|---|---|
+| Terminal write: a final (status `>= 200`) `FullHttpResponse`, or a `LastHttpContent` not following an interim head | `write()`, `outstanding = false` before the terminal write is issued | Every ordinary, streamed, chunked, forwarded, templated, callback, file, static-file and breakpoint-continued response, and the `501` answered for a `BINARY_RESPONSE`/`DNS_RESPONSE` action matched by an HTTP request (see [request-processing.md](request-processing.md#action-types)) |
+| `HttpExchangeEndedEvent` (`INSTANCE` or `RAW_RESPONSE_WRITTEN`) | `userEventTriggered()` | An exchange with no HTTP response at all: raw bytes, an `error()` that writes nothing and keeps the connection open, or a final `1xx` other than `101` — the same event `HttpExchangeTracker`/`HttpTransportTimer` use for the idle timeout (see [Inbound Connection Bounds](#inbound-connection-bounds)) |
+| `HttpExpectationFailedEvent` | `userEventTriggered()` | Ends a released request's "body still arriving" state when the aggregator's `100`-continue/`Expect` handling resets the decoder, so the next held request is not left waiting for a `LastHttpContent` that will never arrive |
+| `101` response | `write()` | The gate removes itself from the pipeline right after forwarding the `101` (see *CONNECT and 101* below) |
+| Connection closed or reset with nothing written | the gate's own outbound `close()`/`disconnect()` intercept, or `ConnectionClosingEvent` | `error()` with `dropConnection`/`resetConnection`, and chaos resets; these mark `ConnectionClosing` (see *Closing* below) rather than ending the exchange through a write, so the gate enters closing and any held requests go to `channelInactive` instead of being released in turn |
+
+A `BINARY_RESPONSE` or `DNS_RESPONSE` action leaves an HTTP request with no response and no end signal of its own, so a request pipelined behind one would wait for the wedge backstop; `HttpActionHandler` answers such a request `501 Not Implemented` through the normal terminal-write path instead, which ends the exchange the same way any other response does.
+
+**Closing.** Once anything has decided the connection will close, the gate stops releasing *held* requests — they wait for `channelInactive` — but a fresh request (nothing held, outstanding or awaiting a write, not switching protocols, output not shut down) is still fired and answered as it would be without the gate, for example during a `closeSocketDelay` linger. The gate learns a close is coming from any of:
+
+- its own outbound `close()`/`disconnect()` intercept, which catches every closer issued on the event loop after the gate (including Netty's own);
+- the terminal write's response head (`!HttpUtil.isKeepAlive(head)`) or `configuration.alwaysCloseSocketConnections()`, read live so a `PUT /mockserver/configuration` change applies to the next terminal write;
+- `ConnectionClosing.isMarked(channel)` / a `ConnectionClosingEvent` — a channel-attribute flag (`org.mockserver.socket.ConnectionClosing`, mockserver-core) that a writer sets *before* a close it decides off the event loop, after its write, or beneath the gate (`closeSocket` with a keep-alive head, a delayed close, chaos faults, `LingeringClose`, `ConnectionReset`, `HttpErrorActionHandler`'s drop/reset path, and gRPC `GrpcStreamResponseActionHandler`'s `closeConnection`), so the gate still learns about it deterministically;
+- a failed terminal write;
+- the wedge backstop (below).
+
+In closing, the gate drops its read pause at once (so a lingering close's read-and-discard is not blocked behind it) and keeps held objects until `channelInactive`; past the held-cost limit while closing, the newest incomplete held request and everything after it are dropped rather than paused.
+
+**CONNECT and `101` removal.** `Http1PipeliningGate.switching(pipeline)` is called from `HttpRequestHandler`'s accepted-CONNECT branch (not from a refused `407`), and sets a `switching` flag that both `settle()` and the drain check, so nothing held is released into the outer HTTP handlers once a CONNECT's `2xx` is on its way to becoming a tunnel; `Http1PipeliningGate.removeFrom(pipeline)` is then called from `HttpConnectHandler`/`SocksConnectHandler`'s `removeCodecSupport`, alongside `HttpTransportTimer.removeFrom`. A `101` response removes the gate itself, synchronously after the write (`write()`): a client must wait for the `101` before sending frames of the new protocol (RFC 6455), so nothing of the new protocol is ever held. Either way, anything still held when the gate is removed is released unfired, with a `WARN`, because it belongs to the new protocol, not to HTTP.
+
+**The 1,024 + cost bound.** Held requests are bounded three ways:
+- **Count:** `MAX_HELD_REQUESTS = 1024`. The head of request 1,026 (1,024 held behind the one outstanding) sets `capped`: it and everything after it are released unprocessed, one `WARN` is logged, and the 1,024 already held still drain in order — a capped connection therefore answers up to 1,025 requests, then closes once the last terminal write completes.
+- **Cost:** `heldCostLimit = maxRequestBodySize`. Each held object costs `OBJECT_COST` (128 bytes, at least the heap of a held content object, its derived slice and its deque slot) plus the capacity of its unwrapped read buffer, compared by identity against only the buffer charged immediately before it (`lastPinned`): a run of held objects backed by the same buffer is charged once, but the same buffer reappearing after another one in between is charged again. Past the limit, reads pause (or, while closing, the newest incomplete held request and everything after it is dropped).
+- **Time:** the wedge backstop. While anything is held, a recurring task (a tenth of `inboundConnectionIdleTimeoutMillis`, clamped between 10 ms and 10 s) compares `progress` — any outbound object through the gate, or an exchange ending, while on the slow path — against its last tick. With no progress for `inboundConnectionIdleTimeoutMillis`, the gate logs one `WARN`, increments `mock_server_http1_pipelining_wedged_connections` and enters closing, closing the connection, so held requests follow `channelInactive`. With the idle timeout set to `0` the backstop never closes the connection, but still logs one `WARN` and increments the same counter per connection after 300 s with no progress (see [metrics.md](metrics.md#inbound-connection-metrics) and [Inbound Connection Bounds](#inbound-connection-bounds)).
+
+See [memory-management.md → Pipelined (held) HTTP/1.1 requests](memory-management.md#pipelined-held-http11-requests) for the bound restated in memory terms.
+
+**`channelInactive` processing of held requests.** Mirroring `ByteToMessageDecoder`'s `decodeLast` pattern: every object still held is fired — complete requests are matched and recorded as usual, with their responses going nowhere; an incomplete one meets the aggregator's premature-close handling — then `channelReadComplete` is fired once, and every held token is closed. If the server's graceful stop drain has already ended (`HeldRequestAccounting.discardHeldOnClose()`), held objects are instead released without firing, and the drop count is logged at `DEBUG`: a held request counts as in flight from the moment it is held, so `stopDrainMillis` waits for it like any other request, but once the drain itself has given up, firing it against a stopped scheduler would be worse than dropping it.
+
+**The failed-write rule.** `afterTerminalWrite` (the gate's listener on every slow-path terminal write) runs on both outcomes. On success it clears `awaitingWrite` and calls `settle()`, which schedules the next drain. On failure: if the failure has already shut the connection's output down and `ReadAfterFailedWrite.isReadingOn(channel)` is true, the gate only enters closing — it does not close the channel itself, so the connection keeps reading the client's input to the end, recording a request the client sent before it reset the connection (see [A write that fails on a connection the client has reset](#a-write-that-fails-on-a-connection-the-client-has-reset)). Otherwise — a response that failed part-way, leaving the connection's framing unknown — the gate enters closing and closes the channel.
+
+**Opt-out flag.** `http1PipeliningInOrder` (`ConfigurationProperties`/`Configuration`, default `true`) is read once, in `PortUnificationHandler.switchToHttp`, when a connection's HTTP/1.1 pipeline is built; a runtime change applies to new connections only. With it `false` the gate is never installed, which is exactly the pre-gate pipeline: each pipelined request is handled as soon as it arrives, and a fast response can be written ahead of a slower one sent before it. The flag is a temporary rollback switch and is intended for removal in the minor release after the one that introduces it.
+
+`Http1PipeliningGateTest` covers the state machine as a unit; `Http1PipelinedResponseOrderIntegrationTest`, `Http1PipelinedExchangeEndCoverageIntegrationTest`, `Http1PipeliningClosingAndStopIntegrationTest`, `Http1PipeliningLimitsIntegrationTest`, `ConnectionClosingCoverageTest` and `Http1PipeliningInOrderDisabledIntegrationTest` cover it end to end.
 
 #### HTTP/2 Pipeline
 

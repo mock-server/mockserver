@@ -487,8 +487,9 @@ Track how many client connections MockServer holds and what the two connection b
 | `mock_server_inbound_connections_open` | GaugeWithCallback | Inbound TCP connections currently open, summed over every MockServer in the JVM (HTTP/3 excluded). Backed by a static `AtomicLong` maintained whether or not metrics are enabled, so it is correct from the first scrape. |
 | `mock_server_inbound_connections_rejected_total` | Counter | Connections reset on accept because `maxInboundConnections` were already open. |
 | `mock_server_inbound_connections_idle_closed_total` | Counter | Connections closed by `inboundConnectionIdleTimeoutMillis` with nothing in progress. |
+| `mock_server_http1_pipelining_wedged_connections_total` | Counter | HTTP/1.1 connections whose pipelined requests were held by `Http1PipeliningGate` behind a response that made no progress for `inboundConnectionIdleTimeoutMillis` (the connection is then closed), or for 300 seconds when that timeout is `0` (the connection is left open). See [netty-pipeline.md → HTTP/1.1 pipelining gate](netty-pipeline.md#http11-pipelining-gate). |
 
-Updated through `Metrics.inboundConnectionOpened()` / `inboundConnectionClosed()` (from `InboundConnectionLimiter`), `incrementInboundConnectionsRejected()` and `incrementInboundConnectionsIdleClosed()` (from `InboundConnectionIdleHandler`); the two counters are no-ops until metrics are enabled. Not mirrored to OTLP.
+Updated through `Metrics.inboundConnectionOpened()` / `inboundConnectionClosed()` (from `InboundConnectionLimiter`), `incrementInboundConnectionsRejected()` and `incrementInboundConnectionsIdleClosed()` (from `InboundConnectionIdleHandler`), and `incrementHttp1PipeliningWedgedConnections()` (from `Http1PipeliningGate`'s backstop); all three counters are no-ops until metrics are enabled. Not mirrored to OTLP.
 
 ### Response Write-Stall Metric
 
