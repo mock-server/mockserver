@@ -48,6 +48,7 @@ public class HttpErrorActionHandlerTest {
     public void shouldDropConnection() {
         // given
         ChannelHandlerContext mockChannelHandlerContext = mock(ChannelHandlerContext.class);
+        when(mockChannelHandlerContext.pipeline()).thenReturn(mock(io.netty.channel.ChannelPipeline.class));
         HttpError httpError = error().withDropConnection(true);
 
         // when

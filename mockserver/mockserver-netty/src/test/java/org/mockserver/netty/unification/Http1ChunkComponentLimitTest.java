@@ -20,6 +20,7 @@ import org.mockserver.codec.CoalescingHttpObjectAggregator;
 import org.mockserver.codec.HttpObjectAggregators;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.lifecycle.LifeCycle;
+import org.mockserver.responsewriter.HttpExchangeEndedEvent;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.HttpState;
 import org.mockserver.mock.action.http.HttpActionHandler;
@@ -343,7 +344,8 @@ public class Http1ChunkComponentLimitTest {
 
     /**
      * Captures each aggregated request, and any exception the aggregator raised, which the handlers after it would
-     * otherwise turn into a response.
+     * otherwise turn into a response. Each exchange is ended as it is captured, as a response would end it, so the
+     * connection's in-order pipelining gate passes the next request on rather than holding it behind this one.
      */
     private static final class CapturingHandler extends ChannelInboundHandlerAdapter {
         private final List<FullHttpRequest> requests = new ArrayList<>();
@@ -352,6 +354,7 @@ public class Http1ChunkComponentLimitTest {
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
             requests.add((FullHttpRequest) msg);
+            HttpExchangeEndedEvent.fire(ctx);
         }
 
         @Override

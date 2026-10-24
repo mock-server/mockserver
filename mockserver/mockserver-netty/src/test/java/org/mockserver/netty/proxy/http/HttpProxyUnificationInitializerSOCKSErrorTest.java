@@ -198,6 +198,7 @@ public class HttpProxyUnificationInitializerSOCKSErrorTest {
                 "HttpServerCodecResponsePairing$AfterCodec#0",
                 "HttpChunkLineLimiter$AfterCodec#0",
                 "HttpExchangeTracker#0",
+                "Http1PipeliningGate#0",
                 "PreserveHeadersNettyRemoves#0",
                 "MockServerHttpContentDecompressor#0",
                 "HttpContentLengthRemover#0",

@@ -82,6 +82,22 @@ public class TcpChaosHandlerTest {
     }
 
     @Test
+    public void shouldMarkTheConnectionClosingBeforeClosingItPastTheDataLimit() {
+        TcpChaosHandler chaos = new TcpChaosHandler(channel -> tcpChaosProfile().withLimitDataBytes(10L));
+        Collector collector = new Collector();
+        EmbeddedChannel channel = new EmbeddedChannel(chaos, collector);
+
+        channel.writeInbound(Unpooled.copiedBuffer(filled(10, 'a')));
+        assertThat(org.mockserver.socket.ConnectionClosing.isMarked(channel), is(false));
+        channel.writeInbound(Unpooled.copiedBuffer(filled(1, 'b')));
+
+        // the close starts beneath the pipelining gate, so the gate must be told it is coming
+        assertThat(org.mockserver.socket.ConnectionClosing.isMarked(channel), is(true));
+        assertThat(channel.isOpen(), is(false));
+        channel.finishAndReleaseAll();
+    }
+
+    @Test
     public void shouldDeliverBandwidthLimitedReadsInArrivalOrderAtTheLinkRate() {
         TcpChaosHandler chaos = new TcpChaosHandler(channel -> tcpChaosProfile().withBandwidthBytesPerSec(10_000L));
         Collector collector = new Collector();

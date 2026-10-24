@@ -115,6 +115,56 @@ public class RequestAfterFailedWriteIntegrationTest {
         }
     }
 
+    /**
+     * Pipelined behind a response that is still being written: one request held by the in-order pipelining gate, with
+     * reads paused, and one still unread in the socket when the client resets. Both are received once.
+     */
+    @Test
+    public void shouldReceiveHttp1RequestsPipelinedBehindAStalledResponseWhenTheClientResets() throws Exception {
+        byte[] large = new byte[LARGE_BODY_BYTES];
+        Arrays.fill(large, (byte) 'x');
+        ExpectationSerializer serializer = new ExpectationSerializer(new MockServerLogger());
+        // delayed, so the request pipelined behind it is held and the response is written while it is
+        controlPlane("/mockserver/expectation", serializer.serialize(
+            new Expectation(request().withPath("/delayedLarge")).thenRespond(response()
+                .withBody(new String(large, StandardCharsets.US_ASCII))
+                .withDelay(TimeUnit.MILLISECONDS, 200))
+        ));
+        for (String path : new String[]{"/held", "/unread"}) {
+            controlPlane("/mockserver/expectation", serializer.serialize(
+                new Expectation(request().withPath(path), Times.once(), TimeToLive.unlimited(), 0).thenRespond(response().withBody("answered"))
+            ));
+        }
+
+        try (Socket socket = connect()) {
+            List<String> loggedBefore = loggedAtWarnOrAbove();
+            ByteArrayOutputStream pipelined = new ByteArrayOutputStream();
+            write(pipelined, http1Get("/delayedLarge"));
+            write(pipelined, http1Get("/held"));
+            socket.getOutputStream().write(pipelined.toByteArray());
+            socket.getOutputStream().flush();
+            await("the first request was received", () -> requestsReceived("/delayedLarge") == 1);
+            awaitStalled(socket.getInputStream());
+
+            Runnable release = holdEventLoops();
+            try {
+                socket.getOutputStream().write(http1Get("/unread"));
+                socket.getOutputStream().flush();
+                socket.setSoLinger(true, 0);
+                socket.close();
+                // loopback delivers the request and the reset before the loops run again
+                Thread.sleep(300);
+            } finally {
+                release.run();
+            }
+
+            awaitReceivedOnce("/held");
+            awaitReceivedOnce("/unread");
+            await("every connection closed", () -> mockServer.getInboundConnectionCount() == 0);
+            assertThat("nothing logged at WARN or above for a client that reset", loggedAtWarnOrAbove(), is(loggedBefore));
+        }
+    }
+
     @Test
     public void shouldReceiveAnHttp1RequestThroughAConnectTunnel() throws Exception {
         try (Socket socket = connect()) {
