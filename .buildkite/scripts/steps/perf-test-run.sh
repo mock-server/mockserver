@@ -261,6 +261,9 @@ CLU_B_ALIAS="clu-b"
 PL_SUT_PREFIX="mockserver-perf-pl-${RUN_ID}"
 # shellcheck source=lib/perf-pipelining-ab.sh
 . "$SCRIPT_DIR/lib/perf-pipelining-ab.sh"
+# The FILE-body A/B SUT ($FB_SUT) and its phase (fb_ab_phase).
+# shellcheck source=lib/perf-file-body-ab.sh
+. "$SCRIPT_DIR/lib/perf-file-body-ab.sh"
 # shellcheck source=lib/perf-path-coverage.sh
 . "$SCRIPT_DIR/lib/perf-path-coverage.sh"
 cov_validate_env || exit 1
@@ -747,6 +750,7 @@ cleanup() {
     "$CLU_CTRL" "$CLU_A" "$CLU_B" "$PL_SUT_PREFIX-on" "$PL_SUT_PREFIX-off" \
     "mockserver-mtls-${RUN_ID}" "mockserver-jdk-${RUN_ID}" >/dev/null 2>&1 || true
   cov_cleanup
+  declare -F fb_ab_cleanup >/dev/null && fb_ab_cleanup
   docker network rm "$NETWORK" >/dev/null 2>&1 || true
   [ -n "${FILE_BODY_DIR:-}" ] && rm -rf "$FILE_BODY_DIR" >/dev/null 2>&1 || true
   [ -n "${HS_CERT_DIR:-}" ] && rm -rf "$HS_CERT_DIR" >/dev/null 2>&1 || true
@@ -4031,6 +4035,12 @@ if [ "${PERF_PIPELINING:-true}" = "true" ]; then
   fi
 fi
 
+# --- FILE response body cost (within-run A/B, notify-only) ----------------------
+# A FILE body vs the identical inline body on one fresh SUT (lib/perf-file-body-ab.sh). Kept out of
+# VALIDITY_CHECKS like the pipelining A/B; compare annotates a run that did not measure.
+abort_if_sut_died
+fb_ab_phase
+
 # --- derive resource slope ratios from the sample log -------------------------
 # start = first non-empty sample, end = last, peak = max. ratio = end/start.
 # PROVOCATION (observed false): with the metrics port unreachable the sampler
@@ -4586,6 +4596,9 @@ jq -n \
   --argjson pipelining_inorder "$PIPELINING_JSON" \
   --argjson pipelining_inorder_attempted "$PIPELINING_ATTEMPTED" \
   --arg pipelining_inorder_skip_reason "$PIPELINING_SKIP_REASON" \
+  --argjson file_body "$FILE_BODY_AB_JSON" \
+  --argjson file_body_attempted "$FILE_BODY_AB_ATTEMPTED" \
+  --arg file_body_skip_reason "$FILE_BODY_AB_SKIP_REASON" \
   --argjson clu_ctrl "$CLU_CTRL_BEHAVIOURS" \
   --argjson clu_cand "$CLU_CAND_BEHAVIOURS" \
   --argjson validity "$VALIDITY_JSON" \
@@ -4693,6 +4706,11 @@ jq -n \
     pipelining_inorder: $pipelining_inorder,
     pipelining_inorder_attempted: $pipelining_inorder_attempted,
     pipelining_inorder_skip_reason: $pipelining_inorder_skip_reason,
+    # FILE-body A/B: per-size file / inline ratios (only when measured) and the absolutes of both arms.
+    # {} when skipped; file_body_skip_reason says why (disabled | host_network).
+    file_body: $file_body,
+    file_body_attempted: $file_body_attempted,
+    file_body_skip_reason: $file_body_skip_reason,
     growth: {
       duration_s: ($growth.duration_s // null),
       p95_ms: ($growth.p95_ms // null),

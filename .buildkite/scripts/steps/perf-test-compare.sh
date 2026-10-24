@@ -994,6 +994,12 @@ def metrics:
     ( "p50_ratio", "p95_ratio", "p99_ratio", "throughput_ratio", "error_rate_on", "error_rate_off",
       "p95_on_ms", "p95_off_ms", "p99_on_ms", "p99_off_ms", "throughput_on_rps", "throughput_off_rps" ) as $f
     | {name:("pipelining_inorder."+$k+"."+$f), value:$v[$f], bkey:("pipelining_inorder.*."+$f)} ),
+  # FILE-body A/B (a FILE body / the identical inline body, one SUT, one run). Read only when
+  # .measured; the ratios ride the FULL baseline, the absolutes are `hw`. NON-GATING; FB_NOTE below.
+  ((.file_body // {}) | select(.measured == true) | (.sizes // {}) | to_entries[] | .key as $k | .value as $v |
+    ( "p50_ratio", "p95_ratio", "p99_ratio", "throughput_ratio", "error_rate_file", "error_rate_inline",
+      "p95_file_ms", "p95_inline_ms", "p99_file_ms", "p99_inline_ms", "throughput_file_rps", "throughput_inline_rps" ) as $f
+    | {name:("file_body."+$k+"."+$f), value:$v[$f], bkey:("file_body.*."+$f)} ),
   # Req/s per core for the SERVING path. One point per pinned core-count
   # C under .serving_percore.points; keyed serving_percore.<C>c.<metric> so a
   # wildcard bkey (serving_percore.*.<metric>) covers every C. NOT part of
@@ -1540,12 +1546,22 @@ PL_NOTE="$(jq -r '
     "\n\n:information_source: **In-order pipelining A/B:** `pipelining_inorder.<arm>.*_ratio` is http1PipeliningInOrder on / off on two fresh SUTs in this run. `match` and `forward` are k6 (never pipelined), so they should sit near 1.0; `pipelined` is the only arm where the gate holds requests. Its latency is per batch of pipelined requests from a Python client, so read its ratio, not its absolute figures."
   else "" end' "$RESULT" 2>/dev/null || echo "")"
 
+# The FILE-body A/B is outside the validity block too, so this note is its only failure signal.
+FB_NOTE="$(jq -r '
+  if .file_body_attempted == true and (.file_body.measured // false) != true then
+    "\n\n:warning: **FILE-body A/B did NOT measure this build** — no `file_body.*` rows were compared. Problems: " + (((.file_body.problems // []) | join("; ")) | if . == "" then "none recorded" else . end) + ". Notify-only: this does not fail the build."
+  elif .file_body_attempted == false and ((.file_body_skip_reason // "disabled") != "disabled") then
+    "\n\n:information_source: **FILE-body A/B skipped** (`\(.file_body_skip_reason)`)."
+  elif (.file_body.measured // false) == true then
+    "\n\n:information_source: **FILE-body A/B:** `file_body.<size>.*_ratio` is a FILE response body / the byte-identical inline STRING body, measured back to back on one fresh SUT at a fixed offered rate. Above 1.0 is the cost of the per-request file read and the hop to the file read pool. `throughput_ratio` sits near 1.0 unless the FILE arm could not keep up with the offered rate."
+  else "" end' "$RESULT" 2>/dev/null || echo "")"
+
 # Fold the provenance line, the pre-config-baseline warning, and the microbench +
 # k6 baseline-reset notes into the body so every annotation (regression or clean)
 # carries them.
 EXTRA="${EXTRA}
 
-${PROVENANCE}${HW_NOTE}${PRECFG_NOTE}${MB_NOTE}${K6_NOTE}${INFO_NOTE}${ELS_NOTE}${SWEEPLAT_NOTE}${LAPTOP_INJVM_NOTE}${STREAM_NOTE}${CLU_NOTE}${PL_NOTE}${PC_NOTE}${HWM_NOTE}${MP_NOTE}"
+${PROVENANCE}${HW_NOTE}${PRECFG_NOTE}${MB_NOTE}${K6_NOTE}${INFO_NOTE}${ELS_NOTE}${SWEEPLAT_NOTE}${LAPTOP_INJVM_NOTE}${STREAM_NOTE}${CLU_NOTE}${PL_NOTE}${FB_NOTE}${PC_NOTE}${HWM_NOTE}${MP_NOTE}"
 
 HEADER="Perf regression — \`${COMMIT:0:10}\` on \`${BRANCH}\` (baseline: ${BASE_COUNT} runs, median+MAD; budgets @ \`${BUDGETS_COMMIT:0:10}\`)"
 # Legend folded into every flagged annotation so a reader knows why the build did

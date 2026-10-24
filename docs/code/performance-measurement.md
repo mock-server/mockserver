@@ -19,6 +19,7 @@ regressions hide and stale claims get published.
 | `streaming.js` | LLM/SSE streaming concurrency vs match latency | Daily (perf queue) | No — notify-only |
 | `clustered_crossing.js` | Cross-node request latency in a cluster | Daily (perf queue) | **Notify-only.** `perf-test-compare.sh` reads `clustered_state.*` as notify-only metrics. This measured NOTHING until the clustered image was published to the perf queue: the run gates the A/B on `docker image inspect`, nothing pulled or built that image, so every run took the absent-image skip and emitted no `clustered_state` block to read. The snapshot push now builds `mockserver-snapshot-clustered` in the same job, from the same jar and commit as the SUT image, and the run refuses to measure if the two image revisions disagree (`clustered_skip_reason=revision_mismatch`) — a ratio computed across two commits would be arithmetically fine and describe code the measured binary never contained |
 | In-order pipelining A/B (`lib/perf-pipelining-ab.sh`: `regression.js` match + forward, and `k6/tools/pipelined_http1_client.py`) | Cost of `http1PipeliningInOrder` (on / off ratio), on two fresh SUTs in one run | Daily (perf queue), inside `perf-test-run.sh`; removed with the flag | No — notify-only, `provisional` budgets, and outside the run's validity block ([details](#in-order-pipelining-ab--pipelining_inorder-notify-only)) |
+| FILE-body A/B (`lib/perf-file-body-ab.sh`, `k6/file_body_ab.js`) | Cost of a FILE response body against the byte-identical inline body (file / inline ratio, 1 KB and 64 KB), on one fresh SUT in one run | Daily (perf queue), inside `perf-test-run.sh` | No — notify-only, `provisional` budgets, and outside the run's validity block ([details](#file-body-ab--file_body-notify-only)) |
 | `MatchingBenchmark` JMH | Matcher hot-path time/op and allocation/op | Daily (perf queue) | Yes — `time_per_op` + `alloc_bytes_per_op` |
 | `perf-alloc-gate.sh` (JMH `gc.alloc.rate.norm`) | Allocation/op for matching, inbound decode and response write at pinned params, plus a matching-scan arm | Per merge (every Java pipeline build) | Yes, all eight rows |
 | `CandidateIndexBenchmark` JMH | Index vs scan scaling | Daily (perf queue) | No |
@@ -40,7 +41,7 @@ regressions hide and stale claims get published.
 ```mermaid
 flowchart TD
   guard["perf-test-guard.sh\nonly dispatches if master moved"]
-  run["perf-test-run.sh\nregression.js HTTP + HTTPS/H2\nforward.js\nproxy.js forward mode\nproxy.js handshake mode\ncoverage.js + HTTPS ladder\nsweep.js\nstreaming.js\nclustered_crossing.js\npipelining A/B\ngrowth.js + resource sampler"]
+  run["perf-test-run.sh\nregression.js HTTP + HTTPS/H2\nforward.js\nproxy.js forward mode\nproxy.js handshake mode\ncoverage.js + HTTPS ladder\nsweep.js\nstreaming.js\nclustered_crossing.js\npipelining A/B\nFILE-body A/B\ngrowth.js + resource sampler"]
   micro["perf-test-microbench.sh\nMatchingBenchmark 2 forks\nCandidateIndexBenchmark\n7 promoted dark benchmarks\n2 proxy-path benchmarks (9b/9c)"]
   h2["perf-test-h2multiplex.sh\nHttp2StreamChannelBenchmark\nHttp2ConnectionMemoryBenchmark"]
   alloc["perf-test-allocprofile.sh\ndeep JFR run, annotation only\nnever compared or baselined"]
@@ -106,7 +107,7 @@ to the `perf-xl` queue (one c6i.32xlarge, two NUMA nodes), each as its own arm-o
 
 | Arm | `PERF_XL` unset | `PERF_XL=true` |
 |---|---|---|
-| regression, sweep, growth, forward, proxy, coverage, streaming, clustered, pipelining A/B, INFO arm | `perf-run` on `perf` | `perf-run` on `perf` (unchanged) |
+| regression, sweep, growth, forward, proxy, coverage, streaming, clustered, pipelining A/B, FILE-body A/B, INFO arm | `perf-run` on `perf` | `perf-run` on `perf` (unchanged) |
 | micro-benchmarks, HTTP/2 multiplex, allocation profile | own steps on `perf` | own steps on `perf` (unchanged) |
 | multi-k6 arm (item 31) | inside `perf-run` when `PERF_SERVING_RW_MULTIK6=true` | step `perfxl-rw-multik6` on `perf-xl`, always |
 | hardware matrix (item 27) | inside `perf-run` when `PERF_SERVING_HW_MATRIX=true` | step `perfxl-hw-matrix` on `perf-xl`, when `PERF_SERVING_HW_MATRIX=true` |
@@ -144,6 +145,7 @@ these last two against the newest daily run. See
 - The proxy-path benchmark metrics (`RelayByteCopyBenchmark`, `SocksHandshakeBenchmark` — items 9b/9c), which share the `microbench_extra.*` budgets
 - Every `path_coverage.*` metric (see [Path coverage](#coveragejs--path-coverage-notify-only)), whose budgets are also marked `provisional`
 - Every `pipelining_inorder.*` metric (see [In-order pipelining A/B](#in-order-pipelining-ab--pipelining_inorder-notify-only)), also `provisional`
+- Every `file_body.*` metric (see [FILE-body A/B](#file-body-ab--file_body-notify-only)), also `provisional`
 
 ## What Each Harness Actually Measures
 
@@ -1632,6 +1634,96 @@ grep -rn 'pipelining_inorder\|PERF_PIPELINING\|PL_SUT_PREFIX\|K6_REG_ARMS\|perf-
 
 Stored runs keep their `pipelining_inorder` block; compare is head-driven, so the old rows just stop
 appearing.
+
+### FILE-body A/B — `file_body.*` (notify-only)
+
+**What it answers.** What a FILE response body costs against the same bytes inline: the per-request
+file read plus the hop to the file read pool (see
+[request-processing.md](request-processing.md#templated-response-body-files-filebody--templatetype)),
+as a file / inline ratio at 1 KB and 64 KB, measured on one machine in one job. Every metric is
+notify-only with a `provisional` budget, and the block is kept out of the run's `validity` block, as
+the pipelining A/B is, so a failed A/B never costs the run its baseline place.
+
+```mermaid
+flowchart LR
+  files["body files\nfb-ab-1kb.json, fb-ab-64kb.json\nin the read-only /perf-files mount"]
+  sut["one fresh SUT\nmain SUT cpuset, memory and mount"]
+  probe["setup probe\nFILE and inline bodies byte-identical"]
+  win["file_body_ab.js\n20 s shared warm-up, then\n1kb A, 1kb B, 64kb A, 64kb B\n35 s each at 200 rps"]
+  res[".file_body\nper-size file / inline ratios + absolutes"]
+  files --> sut --> probe --> win --> res
+```
+
+| Arm | Expectation | What differs |
+|---|---|---|
+| `file` | `GET /fb_ab/<size>/file` answers a `FILE` body (`application/json`) from `/perf-files/fb-ab-<size>.json` | Read from disk on every request, on the 4-thread file read pool |
+| `inline` | `GET /fb_ab/<size>/inline` answers a `STRING` body with the same bytes and content type | Nothing to read; the event loop answers directly |
+
+**Why this design.** It adds the least time that still gives a valid A/B, about 3.5 minutes per run:
+
+- **One fresh SUT, not two.** Both arms differ only in the expectation, so one server serves both.
+  They share one JVM, heap and JIT state, which is a cleaner pairing than the pipelining A/B's two
+  servers, and saves one start (about 15 s).
+- **Not the main SUT.** Extra scenarios on the main SUT would need no start at all, but they would put
+  64 KB bodies into its event log after the load phases. The run reads its whole-run event-log peaks,
+  evictions and the binding bound from the main SUT's diagnostic samples, so the default run's other
+  figures would change.
+- **Back to back, not concurrent.** Interleaving both arms in one window would cancel drift, but
+  each arm's cost would leak into the other's latency (the file read pool, the shared event loops),
+  pulling the ratio toward 1.0. Windows run one after the other instead, a size's two windows
+  adjacent, and the arm order alternates with the build number (`arm_order`), so drift does not
+  always favour the same arm.
+- **A fixed offered rate.** `constant-arrival-rate` at 200 rps, as in `regression.js`, so the
+  latency ratio is the per-request cost under the same load. `throughput_ratio` therefore sits near
+  1.0 and falls only when the FILE arm cannot keep up.
+
+**How it runs.** `lib/perf-file-body-ab.sh` (`fb_ab_phase`, called from `perf-test-run.sh` after
+the pipelining A/B) writes the two body files with `lib/perf-file-body-ab-content.awk` into the
+directory the run already mounts read-only at `/perf-files` for the `large_file` arm. It then starts
+one SUT (`mockserver-perf-fb-<run id>`, alias `filebody-ab`) from the run's own image, on the main
+SUT's cpuset and memory, with that mount, `ERROR` logging and the harness event-log budget.
+`k6/file_body_ab.js` runs from the k6 cpuset:
+
+1. **Setup** seeds the four expectations, then fetches each one and refuses to measure (k6 exits
+   107) unless, per size, both arms answer 200 with the body `fbContent` builds, and the same
+   `Content-Type`. `fbContent` must match the awk program byte for byte; the lint's
+   `k6-file-body-ab-init-test.sh` checks that through `K6_FB_SELFTEST_DIR`.
+2. **A 20 s warm-up** at 100 rps, round-robin over all four paths, which also creates the file read
+   pool (it starts on first use).
+3. **Four 35 s windows** at 200 rps with 20 pre-allocated VUs, 2 s apart. The first 5 s of each is
+   tagged `<op>_settle` and kept out of the percentiles. A request counts as an error
+   (`fb_ab_errors`) unless it gets a 200 and a body of the exact size.
+
+Knobs: `PERF_FILE_BODY_AB=false` turns it off (`file_body_skip_reason: disabled`), and so do arm-only
+runs and the allocation profile. A host-network run skips it with `host_network`, because the SUT is
+reached by its bridge alias. `PERF_FILE_BODY_AB_SIZES` (`1kb,64kb`) sets the sizes, each `<n>kb`.
+`K6_FB_RATE`, `K6_FB_WARMUP` and `K6_FB_DURATION` pass through to k6. A release comparison runs it too.
+
+**What is published.** `perf-result.json` carries `.file_body` with `measured`, `problems`,
+`arm_order`, the setup `probe`, the k6 `config` and, per size, the absolutes of both arms
+(`p50/p95/p99_file_ms`, `..._inline_ms`, `throughput_file_rps`, `throughput_inline_rps`,
+`error_rate_file`, `error_rate_inline`, sample counts and dropped iterations). The ratios
+`p50_ratio`, `p95_ratio`, `p99_ratio` and `throughput_ratio` (file / inline) are present **only when
+`measured` is true**: k6 exited 0, the probe proved the bodies identical, the measured windows ran
+one after another in the requested order (each window's first response came after the previous
+window's last, from the per-arm `window_file_ms` / `window_inline_ms` it records), and every arm of every requested size has a p95, a p99 and a throughput with at
+most 1% errors. Any failure leaves the absolutes for diagnosis and no ratio at all.
+`perf-test-compare.sh` reads the sizes only when `measured` is true, as `file_body.<size>.<metric>`:
+the four ratios ride the full baseline, and the absolutes are `hw`. An attempted A/B that did not
+measure raises a `:warning:` note naming its problems, without failing the build.
+
+**Reading it.** `file_body.<size>.p95_ratio` and `p99_ratio` above 1.0 are what a FILE body costs
+per request. Expect the 64 KB ratio to sit further from 1.0 than the 1 KB one only if the read
+itself, not the hop, dominates. The absolutes include the rig's state after the earlier phases (the
+idle main SUT and upstream share these cores, and the page cache is warm), so compare ratios across
+runs, not absolutes. The second arm of each size has had about 37 s more JIT warm-up than the first;
+the alternating `arm_order` turns that into a two-valued bias, so check whether `p95_ratio` splits by
+`arm_order` before deriving budgets.
+
+**CI time.** About 3.5 minutes: one SUT start (about 15 s) and one k6 run (2 min 48 s of schedule
+plus setup). `perf-run` took about 55 minutes before the pipelining A/B (about 4.5 minutes) was
+added, so with both it should take about 63 minutes, inside the existing 80-minute timeout. The
+guard's timeouts are unchanged.
 
 ### Release comparison — measuring a past release on today's rig
 
