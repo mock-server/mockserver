@@ -35,7 +35,7 @@ public enum ExtensionHook {
     SETTINGS_LISTENER("settingsListener", SettingsListener.class),
 
     /**
-     * Helpers for response and forward templates, under {@code ext}. Disabled when HTTP/3 is enabled.
+     * Helpers for response and forward templates, under {@code ext}.
      */
     TEMPLATE_HELPER("templateHelper", TemplateHelperProvider.class);
 

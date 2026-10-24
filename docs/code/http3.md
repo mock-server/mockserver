@@ -140,6 +140,50 @@ sequenceDiagram
     W->>C: Http3HeadersFrame + Http3DataFrame
 ```
 
+### Threading: nothing waits on the QUIC event loop
+
+**A delayed HTTP/3 response waits on the `Scheduler`, not on the QUIC event loop, so one slow stream never
+holds up the other streams and connections that share the loop.** The listener has a single event loop for
+every QUIC connection, so anything that sleeps or blocks there stalls them all.
+
+`Http3MockServerHandler` calls `HttpActionHandler.processAction` with `synchronous=false`, exactly as
+`HttpRequestHandler` does for HTTP/1.1 and HTTP/2, for both plain and gRPC requests. It used to pass `true`,
+the WAR servlets' blocking mode, which made the `Scheduler` sleep on the event loop for every action delay,
+`globalResponseDelayMillis` and chaos latency, wait for a forwarded response with a blocking `get`, and run
+local callbacks and template renders inline. Now, as on HTTP/1.1 and HTTP/2:
+
+| Work | Where it runs |
+|---|---|
+| Undelayed `RESPONSE` | Inline on the stream's event loop, as before: no hop and no extra allocation |
+| Any delay (action, global, chaos latency) | `Scheduler.scheduleAfterDelay`, then the write hops back to the stream's event loop |
+| Forward family | The upstream response is consumed by a scheduler continuation, never a blocking `get` |
+| Template actions, local callbacks | The template pool and the local-callback pool |
+| MCP `POST` | The MCP session executor, as `McpStreamableHttpHandler` does on TCP; a full executor answers `503` |
+
+Request and response breakpoints, which `HttpActionHandler` skips in synchronous mode, now apply to HTTP/3
+requests too; with no breakpoint registered they cost one empty-list check. Extension template helpers (`$ext`)
+work with HTTP/3 enabled, under the same executor cap, timeout and per-render budget as on TCP; they were switched
+off while HTTP/3 rendered templates on the QUIC loop.
+
+The asynchronous dispatch brings the [overload bounds](request-processing.md#overload-bounds-on-delayed-and-templated-actions)
+with it: an HTTP/3 request can now be answered `503` (`Retry-After: 1`) when `maxPendingDelayedResponses` delayed
+responses or `maxQueuedTemplateActions` template renders are already waiting, counted in
+`mock_server_overload_rejections` exactly as for HTTP/1.1 and HTTP/2. Before, HTTP/3 never queued, so it was never
+refused, but each delay held the event loop instead.
+
+`Http3ResponseWriter` and `Http3GrpcResponseWriter` write on the stream's event loop: a `sendResponse` (or a
+stream reset, or a gRPC server stream) that arrives on another thread is handed to `ctx.executor()` as one
+task (`Http3ResponseWriter.executeOnStreamEventLoop`), so its frames are written and flushed together and the gRPC
+writer's response-once state and `grpc-timeout` deadline are only touched on the loop. A failure inside that
+task has no caller left to answer it, so it is logged and the stream is reset with `H3_INTERNAL_ERROR`; if the
+loop has already shut down, the connection is gone and a streamed body's upstream is closed.
+`Http3DelayedResponseIndependenceIntegrationTest` sends a 2 s delayed request and then an undelayed one, on
+the same connection and on two connections, and asserts the undelayed one is answered first.
+`Http3StreamEventLoopHopTest` covers the hop itself (one task, reset on failure, upstream closed when the loop has
+shut down, gRPC response-once), `Http3GrpcIntegrationTest` a delayed unary call with and without a shorter
+`grpc-timeout`, `Http3BreakpointIntegrationTest` a response breakpoint and a caller leaving while paused, and
+`Http3MockServerHandlerTest` the MCP `503` and `500` branches.
+
 ### Exceptions on a connection
 
 **An exception on an HTTP/3 connection, or on one of the streams Netty's codec keeps for itself, is logged once in MockServer's log.** Netty's `Http3ServerConnectionHandler` handles no exception, so whatever QUIC fires on a connection used to reach the end of Netty's pipeline, which logs it at `WARN` with a stack trace through Netty's own logger. The same held for a client's control stream and QPACK streams, whose pipelines hold only Netty's handlers.

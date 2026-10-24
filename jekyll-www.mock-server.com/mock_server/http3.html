@@ -192,7 +192,7 @@ Fix it with one of:
 
 <h2>HTTP/3 parity and known differences</h2>
 
-<p>All expectation matching, actions, recording, verification, HTTP chaos profiles, forward-proxy, trace-context propagation, mTLS, MCP (Model Context Protocol Streamable HTTP, including control-plane authentication), and gRPC (unary, server-streaming, and bidirectional streaming) work over HTTP/3, matching the TCP (HTTP/1.1 and HTTP/2) path.</p>
+<p>All expectation matching, actions (including response delays, which never hold up other HTTP/3 requests), recording, verification, request and response breakpoints, HTTP chaos profiles, forward-proxy, trace-context propagation, mTLS, MCP (Model Context Protocol Streamable HTTP, including control-plane authentication), and gRPC (unary, server-streaming, and bidirectional streaming) work over HTTP/3, matching the TCP (HTTP/1.1 and HTTP/2) path.</p>
 
 <h3>Inherently not applicable over HTTP/3</h3>
 

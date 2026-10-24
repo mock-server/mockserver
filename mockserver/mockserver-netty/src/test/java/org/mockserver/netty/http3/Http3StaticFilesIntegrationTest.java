@@ -24,7 +24,7 @@ import static org.mockserver.netty.http3.Http3TestServer.startWithHttp3;
 import static org.mockserver.stop.Stop.stopQuietly;
 
 /**
- * HTTP/3 processes requests synchronously on its stream's event loop; a static file is still served, with the read
+ * A static file is served over HTTP/3 as over HTTP/1.1 and HTTP/2, with the read
  * handed to the static file pool. Skipped when the QUIC native library is missing.
  */
 @SuppressWarnings("deprecation") // NioEventLoopGroup deprecation in Netty 4.2

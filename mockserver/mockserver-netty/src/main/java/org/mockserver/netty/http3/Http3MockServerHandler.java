@@ -329,7 +329,7 @@ public class Http3MockServerHandler extends Http3RequestStreamInboundHandler {
                         ctx,
                         buildLocalAddresses(ctx),
                         false,                  // not proxying
-                        true                    // synchronous processing
+                        false                   // asynchronous, as HTTP/1.1 and HTTP/2: delays, forwards and callbacks never wait on the QUIC event loop
                     );
                 } catch (Throwable throwable) {
                     String message = ControlPlaneFailureResponse.logUnexpectedFailure(mockServerLogger, request, throwable);
@@ -562,7 +562,7 @@ public class Http3MockServerHandler extends Http3RequestStreamInboundHandler {
                     ctx,
                     buildLocalAddresses(ctx),
                     false,
-                    true
+                    false
                 );
             } catch (Throwable throwable) {
                 responseWriter.writeErrorResponseIfUnanswered(
@@ -637,9 +637,8 @@ public class Http3MockServerHandler extends Http3RequestStreamInboundHandler {
                     result = buildUnauthorizedResult();
                     break;
                 }
-                String body = request.getBodyAsText();
-                result = mcpRequestProcessor.handlePost(body, mcpSessionId, authentication);
-                break;
+                handleMcpPostOffEventLoop(ctx, request.getBodyAsText(), mcpSessionId, authentication, corsOrigin, accessControlRequestHeaders, Http3ResponseWriter.isHead(method));
+                return;
             case "DELETE":
                 if (!authenticateMcpRequest(ctx, request)) {
                     result = buildUnauthorizedResult();
@@ -660,6 +659,42 @@ public class Http3MockServerHandler extends Http3RequestStreamInboundHandler {
         }
 
         writeMcpResultAsHttp3(ctx, result, corsOrigin, accessControlRequestHeaders, Http3ResponseWriter.isHead(method));
+    }
+
+    /**
+     * Run an MCP POST, whose tools may block, on the MCP executor as {@code McpStreamableHttpHandler} does on TCP, and
+     * write its result back on the stream's event loop: {@code 503} when the executor refuses it, {@code 500} when it fails.
+     */
+    private void handleMcpPostOffEventLoop(
+        ChannelHandlerContext ctx, String body, String mcpSessionId,
+        org.mockserver.authentication.ControlPlaneAuthentication authentication,
+        String corsOrigin, String accessControlRequestHeaders, boolean head
+    ) {
+        try {
+            mcpRequestProcessor.getSessionManager().getExecutor().execute(() -> {
+                McpRequestProcessor.McpResult result;
+                try {
+                    result = mcpRequestProcessor.handlePost(body, mcpSessionId, authentication);
+                } catch (Throwable throwable) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setLogLevel(Level.ERROR)
+                            .setMessageFormat("exception processing MCP request over HTTP/3")
+                            .setThrowable(throwable)
+                    );
+                    result = new McpRequestProcessor.McpResult(500,
+                        "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"Internal error\"},\"id\":null}".getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                        null);
+                }
+                McpRequestProcessor.McpResult toWrite = result;
+                Http3ResponseWriter.executeOnStreamEventLoop(ctx, mockServerLogger,
+                    () -> writeMcpResultAsHttp3(ctx, toWrite, corsOrigin, accessControlRequestHeaders, head));
+            });
+        } catch (java.util.concurrent.RejectedExecutionException busy) {
+            writeMcpResultAsHttp3(ctx, new McpRequestProcessor.McpResult(503,
+                "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"Server is busy, try again later\"},\"id\":null}".getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                null), corsOrigin, accessControlRequestHeaders, head);
+        }
     }
 
     /**

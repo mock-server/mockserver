@@ -168,6 +168,47 @@ public class Http3GrpcIntegrationTest {
     }
 
     /**
+     * A delayed unary response is released by the scheduler, off the QUIC event loop, and written back on the
+     * stream's loop with its gRPC framing intact; with a shorter {@code grpc-timeout} the deadline wins and the late
+     * response is dropped, leaving one trailers-only DEADLINE_EXCEEDED frame.
+     */
+    @Test
+    public void shouldAnswerADelayedUnaryCallOverHttp3UnlessTheDeadlineElapsesFirst() throws Exception {
+        int http3Port = startMockServerWithGrpc();
+        mockServerClient.when(
+            request().withMethod("POST").withPath("/com.example.grpc.GreetingService/Greeting").withBody(json("{\"name\":\"Delayed\"}"))
+        ).respond(
+            response().withStatusCode(200).withBody("{\"greeting\":\"Hello Delayed\"}").withDelay(TimeUnit.MILLISECONDS, 300)
+        );
+        mockServerClient.when(
+            request().withMethod("POST").withPath("/com.example.grpc.GreetingService/Greeting").withBody(json("{\"name\":\"Late\"}"))
+        ).respond(
+            response().withStatusCode(200).withBody("{\"greeting\":\"Hello Late\"}").withDelay(TimeUnit.MILLISECONDS, 3000)
+        );
+
+        GrpcH3Response delayed = sendGrpcOverHttp3(http3Port, "/com.example.grpc.GreetingService/Greeting", greetingFrame("Delayed"));
+        assertThat(delayed.trailingHeaders.get(GrpcStatusMapper.GRPC_STATUS_HEADER), is("0"));
+        assertThat(delayed.headersFrameCount, is(2));
+        List<byte[]> messages = GrpcFrameCodec.decode(delayed.bodyBytes);
+        assertThat(messages.size(), is(1));
+        assertThat(converter.toJson(messages.get(0), descriptorStore.getMethod("com.example.grpc.GreetingService", "Greeting").getOutputType()),
+            containsString("Hello Delayed"));
+
+        GrpcH3Response late = sendGrpcOverHttp3(http3Port, "/com.example.grpc.GreetingService/Greeting", greetingFrame("Late"), "300m");
+        assertThat("trailers-only: the deadline's single terminal HEADERS frame", late.headersFrameCount, is(1));
+        assertThat(late.initialHeaders.get(GrpcStatusMapper.GRPC_STATUS_HEADER),
+            is(String.valueOf(GrpcStatusMapper.GrpcStatusCode.DEADLINE_EXCEEDED.getCode())));
+        assertThat(late.bodyBytes.length, is(0));
+    }
+
+    private byte[] greetingFrame(String name) {
+        return GrpcFrameCodec.encode(converter.toProtobuf(
+            "{\"name\":\"" + name + "\"}",
+            descriptorStore.getMethod("com.example.grpc.GreetingService", "Greeting").getInputType()
+        ));
+    }
+
+    /**
      * A response WITH a body must deliver the expectation's trailing metadata to a real HTTP/3
      * client, on the trailing HEADERS frame, alongside {@code grpc-status}.
      * <p>
@@ -464,6 +505,10 @@ public class Http3GrpcIntegrationTest {
      * distinguishing between initial and trailing HEADERS frames.
      */
     private GrpcH3Response sendGrpcOverHttp3(int port, String path, byte[] grpcBody) throws Exception {
+        return sendGrpcOverHttp3(port, path, grpcBody, null);
+    }
+
+    private GrpcH3Response sendGrpcOverHttp3(int port, String path, byte[] grpcBody, String grpcTimeout) throws Exception {
         QuicConnection connection = connectQuicWithRetry(port);
         Channel clientChannel = connection.datagramChannel;
         QuicChannel quicChannel = connection.quicChannel;
@@ -514,6 +559,9 @@ public class Http3GrpcIntegrationTest {
         requestHeaders.headers().authority("127.0.0.1:" + port);
         requestHeaders.headers().add("content-type", GrpcStatusMapper.GRPC_CONTENT_TYPE);
         requestHeaders.headers().add("te", "trailers");
+        if (grpcTimeout != null) {
+            requestHeaders.headers().add("grpc-timeout", grpcTimeout);
+        }
 
         requestStream.writeAndFlush(requestHeaders).sync();
         requestStream.writeAndFlush(new DefaultHttp3DataFrame(Unpooled.wrappedBuffer(grpcBody)))

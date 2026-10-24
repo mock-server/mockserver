@@ -503,7 +503,7 @@ public class HttpActionHandler {
     /**
      * Answers a request that matched nothing and is not proxied from {@code staticFilesDirectory}, or with the
      * usual 404. The file system work runs on the scheduler's bounded static file pool, so never on an event
-     * loop (HTTP/3 also calls this synchronously); only a caller with no channel, a servlet, reads inline.
+     * loop; only a synchronous caller with no channel, a servlet, reads inline.
      */
     private void serveStaticFileOrReturnNotFound(final ResponseWriter responseWriter, final HttpRequest request, final ChannelHandlerContext ctx, final boolean synchronous) {
         final StaticFileDirectory staticFiles = staticFileDirectory;
@@ -2839,8 +2839,8 @@ public class HttpActionHandler {
 
     /**
      * Runs the dispatch of a RESPONSE action whose body is a FILE body on the scheduler's bounded file read pool,
-     * so the disk read never blocks an event loop (HTTP/3 calls this synchronously on its stream's loop, so it
-     * hops too). Only a synchronous caller with no channel, a servlet, reads inline, as before.
+     * so the disk read never blocks an event loop. Only a synchronous caller with no channel, a servlet, reads
+     * inline, as before.
      */
     private void submitFileBodyResponse(final Runnable dispatch, final HttpRequest request, final ResponseWriter responseWriter, final ChannelHandlerContext ctx, final boolean synchronous, final Runnable postProcessor) {
         scheduler.submitFileBodyRead(dispatch, () -> {

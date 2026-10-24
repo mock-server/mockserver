@@ -170,6 +170,7 @@ public class Http3ConnectionOptionsIgnoredTest {
 
     private ChannelHandlerContext mockActiveCtx() {
         ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+        when(ctx.executor()).thenReturn(io.netty.util.concurrent.ImmediateEventExecutor.INSTANCE);
         Channel channel = mock(Channel.class);
         when(ctx.channel()).thenReturn(channel);
         when(channel.isActive()).thenReturn(true);
