@@ -158,7 +158,8 @@ public abstract class ResponseWriter {
      * what the handler writing that response runs once it has ended (its last part written, or the exchange
      * ended without one), so a writer that tracks the exchange can release it. Only that handler holds it: on a
      * connection carrying other exchanges too, their ends do not run it. It may run more than once. Does
-     * nothing here.
+     * nothing here; a writer whose channel cannot take the HTTP/1.1 objects such a handler writes (HTTP/3) readies
+     * the channel for them.
      */
     public Runnable respondingDirectly() {
         return () -> {

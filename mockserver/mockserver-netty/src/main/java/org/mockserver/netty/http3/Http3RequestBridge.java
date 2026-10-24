@@ -311,7 +311,7 @@ public final class Http3RequestBridge {
      * answers with {@code Keep-Alive: timeout=5, max=100}, which was therefore relayed verbatim
      * onto an HTTP/3 response.
      */
-    private static boolean isForbiddenHttp3ResponseHeader(String lowerCaseName, String value) {
+    static boolean isForbiddenHttp3ResponseHeader(String lowerCaseName, String value) {
         switch (lowerCaseName) {
             case "connection":
             case "keep-alive":

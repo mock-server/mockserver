@@ -159,7 +159,8 @@ Fix it with one of:
 <ul>
     <li><strong>Expectation matching</strong> &mdash; HTTP/3 requests are matched against expectations identically to HTTP/1.1 and HTTP/2</li>
     <li><strong>Response actions</strong> &mdash; all response action types (static, template, callback, etc.)</li>
-    <li><strong>Streaming / SSE responses</strong> &mdash; Server-Sent Events, chunked proxy forwarding, and LLM streaming responses are fully supported. Each body chunk is delivered as an HTTP/3 DATA frame with backpressure; the QUIC stream is cleanly shut down on completion or error</li>
+    <li><strong>Streaming responses</strong> &mdash; <span class="inline_code">sseResponse</span> expectations and streamed <span class="inline_code">llmResponse</span> expectations (<span class="inline_code">"streaming": true</span>) work over HTTP/3, including per-event delays: the response headers are sent at once, each event is its own HTTP/3 DATA frame, and the stream ends after the last event. An event's delay never holds up other HTTP/3 requests. Streamed responses from a forward or proxy are relayed chunk by chunk with backpressure. The QUIC stream is cleanly shut down on completion or error</li>
+    <li><strong>WebSocket responses are refused</strong> &mdash; a <span class="inline_code">webSocketResponse</span> expectation matched over HTTP/3 is answered <span class="inline_code">501 Not Implemented</span> with a message saying why, and a warning is logged, because a WebSocket over HTTP/3 needs RFC 9220 extended CONNECT, which MockServer does not implement. Send WebSocket requests over HTTP/1.1</li>
     <li><strong>Request recording</strong> &mdash; HTTP/3 requests are recorded for verification</li>
     <li><strong>Proxy forwarding</strong> &mdash; unmatched requests can be forwarded when proxy mode is configured</li>
     <li><strong>Request body</strong> &mdash; text and binary request bodies are read and matched correctly</li>
@@ -192,13 +193,13 @@ Fix it with one of:
 
 <h2>HTTP/3 parity and known differences</h2>
 
-<p>All expectation matching, actions (including response delays, which never hold up other HTTP/3 requests), recording, verification, request and response breakpoints, HTTP chaos profiles, forward-proxy, trace-context propagation, mTLS, MCP (Model Context Protocol Streamable HTTP, including control-plane authentication), and gRPC (unary, server-streaming, and bidirectional streaming) work over HTTP/3, matching the TCP (HTTP/1.1 and HTTP/2) path.</p>
+<p>All expectation matching, actions (including response delays, which never hold up other HTTP/3 requests), recording, verification, request and response breakpoints, HTTP chaos profiles, forward-proxy, trace-context propagation, mTLS, MCP (Model Context Protocol Streamable HTTP, including control-plane authentication), SSE and streamed LLM responses, and gRPC (unary, server-streaming, and bidirectional streaming) work over HTTP/3, matching the TCP (HTTP/1.1 and HTTP/2) path.</p>
 
 <h3>Inherently not applicable over HTTP/3</h3>
 
 <ul>
     <li><strong>TCP chaos (TcpChaosHandler)</strong> &mdash; QUIC has no TCP RST/FIN/slow_close semantics. HTTP-level chaos profiles (latency, error responses, degradation ramp) DO work over HTTP/3</li>
-    <li><strong>WebSocket callbacks + dashboard WebSocket</strong> &mdash; RFC 6455 HTTP/1.1 Upgrade has no HTTP/3 equivalent. The analog is WebTransport (not yet implemented)</li>
+    <li><strong>WebSocket responses, callbacks and the dashboard WebSocket</strong> &mdash; RFC 6455 HTTP/1.1 Upgrade has no HTTP/3 equivalent; a WebSocket over HTTP/3 needs RFC 9220 extended CONNECT, which is not implemented. A <span class="inline_code">webSocketResponse</span> expectation matched over HTTP/3 is answered <span class="inline_code">501</span></li>
     <li><strong>HTTP/1.1 framing fixups</strong> &mdash; handlers like <span class="inline_code">PreserveHeadersNettyRemoves</span> and <span class="inline_code">EarlyMatchingHandler</span> are HTTP/1.1-specific and have no meaning in HTTP/3</li>
 </ul>
 

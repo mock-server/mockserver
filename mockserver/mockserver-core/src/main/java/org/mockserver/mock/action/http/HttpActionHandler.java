@@ -93,6 +93,8 @@ public class HttpActionHandler {
 
     public static final AttributeKey<InetSocketAddress> REMOTE_SOCKET = AttributeKey.valueOf("REMOTE_SOCKET");
 
+    static final String WEBSOCKET_OVER_HTTP3_UNSUPPORTED = "WebSocket mocking is not supported over HTTP/3 (it needs RFC 9220 extended CONNECT, which MockServer does not implement); send the request over HTTP/1.1";
+
     /**
      * Internal header carrying the upstream round-trip time (in milliseconds) on the LOGGED
      * {@code FORWARDED_REQUEST} response only. Mirrors the {@code x-mockserver-streamed} /
@@ -980,6 +982,22 @@ public class HttpActionHandler {
                 } else if (ctx == null) {
                     writeResponseActionResponse(
                         response().withStatusCode(501).withBody("WebSocket mocking is not supported in WAR deployments"),
+                        responseWriter, request, action, synchronous, null, expectationPostProcessor
+                    );
+                } else if (request.getProtocol() == org.mockserver.model.Protocol.HTTP_3) {
+                    // a WebSocket over HTTP/3 needs RFC 9220 extended CONNECT, which is not implemented
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(WARN)
+                            .setLogLevel(Level.WARN)
+                            .setCorrelationId(request.getLogCorrelationId())
+                            .setHttpRequest(request)
+                            .setExpectationId(action.getExpectationId())
+                            .setMessageFormat(WEBSOCKET_OVER_HTTP3_UNSUPPORTED + " for request:{}from expectation:{}")
+                            .setArguments(request, action.getExpectationId())
+                    );
+                    writeResponseActionResponse(
+                        response().withStatusCode(501).withBody(WEBSOCKET_OVER_HTTP3_UNSUPPORTED),
                         responseWriter, request, action, synchronous, null, expectationPostProcessor
                     );
                 } else {

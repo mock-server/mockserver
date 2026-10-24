@@ -1225,6 +1225,29 @@ public class HttpActionHandlerTest {
     }
 
     @Test
+    public void shouldRefuseWebSocketResponseOverHttp3With501() {
+        // given
+        HttpRequest http3Request = request("/ws").withProtocol(org.mockserver.model.Protocol.HTTP_3);
+        when(mockHttpStateHandler.firstMatchingExpectation(http3Request))
+            .thenReturn(new Expectation(http3Request).thenRespondWithWebSocket(HttpWebSocketResponse.webSocketResponse()));
+        ResponseWriter responseWriter = mock(ResponseWriter.class);
+        ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+
+        // when
+        actionHandler.processAction(http3Request, responseWriter, ctx, new HashSet<>(), false, true);
+
+        // then - answered through the writer, never handed the channel for an upgrade
+        verify(responseWriter).writeResponse(
+            eq(http3Request),
+            argThat(resp -> resp.getStatusCode() == 501
+                && resp.getBodyAsString().contains("WebSocket mocking is not supported over HTTP/3")),
+            eq(false)
+        );
+        verify(responseWriter, never()).respondingDirectly();
+        verifyNoInteractions(ctx);
+    }
+
+    @Test
     public void shouldNotAnnounceResponsesWrittenThroughTheResponseWriter() {
         // given
         ResponseWriter responseWriter = mock(ResponseWriter.class);

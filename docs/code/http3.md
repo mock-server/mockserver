@@ -99,6 +99,7 @@ has zero impact on the existing TCP/HTTP server.
 | `SourceAddressQuicTokenHandler` | `mockserver-netty` | Source-address-validating QUIC retry token handler (HMAC-SHA256 over client IP + dcid); replaces Netty's forgeable `InsecureQuicTokenHandler` to mitigate address-spoofing / amplification |
 | `GrpcHttp3Adapter` | `mockserver-netty` | Pure helper: detects gRPC content-type, decodes gRPC framing to JSON (reusing `GrpcFrameCodec` + `GrpcProtoDescriptorStore`), builds H3 HEADERS/DATA frames for gRPC responses with correct trailing HEADERS framing |
 | `Http3GrpcResponseWriter` | `mockserver-netty` | `ResponseWriter` subclass that writes gRPC responses over H3 with initial HEADERS + DATA + trailing HEADERS (grpc-status) framing; also implements `GrpcStreamResponseWriter` for server-streaming responses |
+| `Http3HttpObjectEncoder` | `mockserver-netty` | Turns the HTTP/1.1 objects an SSE or streamed LLM response writes straight to the channel into HTTP/3 HEADERS and DATA frames and ends the stream after the last one; added ahead of `Http3MockServerHandler` by `Http3ResponseWriter.respondingDirectly()`, so only for actions that write straight to the channel |
 | `Http3GrpcBidiStreamHandler` | `mockserver-netty` | Drives true bidirectional gRPC streaming over a single full-duplex QUIC stream (HTTP/3 analogue of `GrpcBidiStreamHandler`); driven incrementally by `Http3MockServerHandler` |
 | `GrpcStreamResponseWriter` | `mockserver-core` | Transport-neutral seam `HttpActionHandler` uses to delegate `GRPC_STREAM_RESPONSE` writing to the HTTP/3 writer (HTTP/2 keeps using `GrpcStreamResponseActionHandler`) |
 | `GrpcStreamMessageEncoder` / `GrpcBidiRuleMatcher` | `mockserver-core` | Shared encoding + rule-matching helpers so HTTP/2 and HTTP/3 streaming behave identically |
@@ -241,8 +242,8 @@ Netty's epoll datagram channel (the listener on Linux, see [UDP receive buffer a
 
 ### Streaming Response Path
 
-When the response carries a `StreamingBody` (SSE, chunked proxy forwarding, LLM
-streaming), `Http3ResponseWriter` sends the headers immediately and subscribes
+When the response carries a `StreamingBody` (chunked proxy forwarding, a relayed upstream SSE or LLM
+stream), `Http3ResponseWriter` sends the headers immediately and subscribes
 to the body to forward each chunk as an HTTP/3 DATA frame:
 
 ```mermaid
@@ -275,6 +276,50 @@ Key design points:
 - **Request decompression**: a body with a `Content-Encoding` that HTTP/1.1 decodes (`gzip`, `x-gzip`, `deflate`, `x-deflate`, `snappy` in either its raw block or its framing format, and `zstd` / `br` when their native libraries are on the classpath) is decompressed by `Http3RequestDecompressor`, which runs the same `MockServerHttpContentDecompressor` over each DATA frame in 8 KiB slices, so the request is the one HTTP/1.1 builds: the decompressed body is matched, the wire bytes are kept as its original body, `content-length` (when sent) becomes the decompressed size and `content-encoding` is kept, moved after the other headers. A forward then treats the body exactly as an HTTP/1.1 forward does: an unchanged body is forwarded as the wire bytes, and a changed one is encoded again (see [request-processing.md](request-processing.md#bodies-with-a-content-encoding)). `maxRequestBodySize` bounds the decompressed size as well as the wire size (413 when over; a raw Snappy block that declares more is refused as corrupt before it is decoded, on every protocol), and a body that fails to decompress closes the request stream without a response, as HTTP/2 resets the stream and HTTP/1.1 closes the connection. A list of codings, `identity` or an unknown coding is not decompressed, on any protocol
 - **Streaming support**: `Http3ResponseWriter` subscribes to `StreamingBody` and forwards each chunk as an HTTP/3 DATA frame with backpressure, matching the pattern used by `NettyResponseWriter` for HTTP/1.1
 - **A response to `HEAD`**: RFC 9110 section 9.3.2 gives a response to `HEAD` no content, so when the request was `HEAD`, `Http3ResponseWriter` writes the header section a `GET` is sent (keeping a static response's `content-length`; a streamed one has none, as for `GET`) and ends the stream with it: no DATA frame and no trailers. A streamed body is discarded as it arrives (each chunk still reported to `chunkWritten`) and its upstream closed. `Http3MockServerHandler`'s own responses, the MCP result and the 413 for an oversized body, do the same. `Http3HeadResponseIntegrationTest` compares HEAD with GET over a real QUIC connection; the HTTP/2 equivalent is in [netty-pipeline.md](netty-pipeline.md). gRPC (`Http3GrpcResponseWriter`) is left as it is: a gRPC call is always `POST`
+
+### SSE, streamed LLM and WebSocket actions
+
+**`sseResponse` and streamed `llmResponse` actions work over HTTP/3; a `webSocketResponse` matched over HTTP/3 is
+answered `501`.** These actions do not go through `sendResponse`: `HttpSseResponseActionHandler` and
+`HttpWebSocketResponseActionHandler` write Netty HTTP/1.1 objects (`HttpResponse`, `HttpContent`,
+`LastHttpContent`) straight to the request's channel. On a QUIC request stream the next handler is Netty's HTTP/3
+frame codec, which fails and releases anything that is not an HTTP/3 frame, so before this fix the response head
+and every event were dropped and the stream was closed with no response at all (`Http3StreamingActionsIntegrationTest`
+failed all four cases that way, without a hang or a leak).
+
+| Action | Over HTTP/3 |
+|---|---|
+| `sseResponse` | One HEADERS frame, one DATA frame per event, the stream ended after the last event |
+| `llmResponse` with `"streaming": true` | As `sseResponse`, in the provider's streaming format |
+| `webSocketResponse` | `501` with a message naming RFC 9220, and a `WARN` |
+
+`HttpActionHandler` announces each response it hands straight to the channel with `ResponseWriter.respondingDirectly()`:
+SSE, a streamed LLM response, an error action (`responseBytes`, `dropConnection`) and a `grpcStreamResponse` matched by a
+request that is not gRPC (a gRPC request uses `Http3GrpcResponseWriter`, which writes HTTP/3 frames itself).
+`Http3ResponseWriter` overrides it to add the shared, stateless `Http3HttpObjectEncoder` just ahead of
+`Http3MockServerHandler` in that stream's pipeline, synchronously, so the writes that follow pass through it from
+whichever thread they come. The encoder turns the response head into a HEADERS frame (dropping the fields
+RFC 9114 section 4.2 forbids, such as the `Connection` and `Transfer-Encoding` the SSE handler sets for HTTP/1.1,
+and `content-length`), each content into a DATA frame, and the last content into its DATA frame (and trailers)
+followed by `shutdownOutput`, completing the write's promise only once the stream is ended. Anything else,
+HTTP/3 frames included, passes through unchanged. Nothing else changes: an event's delay is still waited out on
+the `Scheduler` and its write hops to the stream's event loop, so a delayed event never holds up the loop, and
+the SSE handler's own templating, formats, chaos and stream breakpoints are the same code on every protocol. An
+undelayed event after the first is rendered in the previous write's listener, on the stream's event loop, as on
+HTTP/1.1 and HTTP/2, so a slow event template does hold up the loop. No other request passes through the encoder:
+HTTP/1.1, HTTP/2 and HTTP/3 responses sent through `sendResponse` never add it, and the SSE, WebSocket and gRPC-stream
+handlers are unchanged. The error action's raw bytes are not HTTP objects and pass through to the HTTP/3 codec as
+before. A `grpcStreamResponse` matched by a non-gRPC request, which used to be dropped as an SSE response was, is now
+sent as HEADERS, DATA frames and trailers. An SSE response to `HEAD` is sent with its events over HTTP/3, as over
+HTTP/1.1 and HTTP/2, unlike `Http3ResponseWriter`'s responses to `HEAD`.
+
+A WebSocket over HTTP/3 needs RFC 9220 extended CONNECT (`:protocol=websocket`), which is out of scope, so
+`HttpActionHandler` answers a `WEBSOCKET_RESPONSE` whose request arrived over HTTP/3 with `501` through the
+response writer and logs a `WARN` naming the expectation, rather than handing the channel to the WebSocket
+handshaker. `Http3StreamingActionsIntegrationTest` covers SSE (three events, one delayed), a stream answered while
+another waits out an event's delay, a client resetting an SSE stream mid-stream (the server stays healthy and the
+leak gate clean), a streamed OpenAI response and the `501`; `Http3HttpObjectEncoderTest` the translation and a
+failed write; `Http3ResponseWriterTest` the installation; `HttpActionHandlerTest` the `501`.
 
 ### Lifecycle Integration
 
@@ -704,11 +749,14 @@ declarations are needed -- they resolve automatically.
 - Fail-fast startup with an actionable message when the native QUIC library is absent, and when the
   HTTP/3 server cannot start on `http3Port` (the UDP port is held, or any other failure)
 - Metrics: HTTP/3 requests counted in `REQUESTS_RECEIVED_COUNT`
-- **Streaming/SSE responses**: `StreamingBody` (SSE, chunked proxy forwarding,
-  LLM streaming) responses are fully supported over HTTP/3. Each chunk is sent
-  as an HTTP/3 DATA frame with backpressure via `StreamingBody.chunkWritten(bytes)`, which requests the next
-  upstream read once the unwritten backlog has drained.
+- **Streamed bodies**: `StreamingBody` responses (chunked proxy forwarding, relayed upstream SSE or LLM
+  streams) are sent over HTTP/3 one DATA frame per chunk with backpressure via `StreamingBody.chunkWritten(bytes)`,
+  which requests the next upstream read once the unwritten backlog has drained.
   The QUIC stream output is shut down on stream completion or error.
+- **SSE and streamed LLM actions**: `sseResponse` and streamed `llmResponse` expectations are sent as one DATA
+  frame per event through `Http3HttpObjectEncoder` (see
+  [SSE, streamed LLM and WebSocket actions](#sse-streamed-llm-and-websocket-actions)); a `webSocketResponse` is
+  answered `501`.
 - Unit-tested frame conversion (no native QUIC needed for bridge tests)
 - Unit-tested streaming response writer (no native QUIC needed)
 - Integration-tested pipeline parity (expectation matching via HTTP/3)

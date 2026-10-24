@@ -271,6 +271,15 @@ public final class Http3TestClient implements AutoCloseable {
         }
 
         /**
+         * Stops reading the response, as a client that leaves part-way through does: the server is sent STOP_SENDING
+         * with the error code.
+         */
+        public Exchange stopReading(Http3ErrorCode errorCode) throws Exception {
+            stream.shutdownInput(errorCode.code()).sync();
+            return this;
+        }
+
+        /**
          * Sends the request's trailer section and ends the request.
          */
         public Exchange trailers(Http3Headers trailers) throws Exception {

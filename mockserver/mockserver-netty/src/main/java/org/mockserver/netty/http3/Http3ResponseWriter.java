@@ -3,6 +3,7 @@ package org.mockserver.netty.http3;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http3.DefaultHttp3DataFrame;
 import io.netty.handler.codec.http3.DefaultHttp3HeadersFrame;
 import io.netty.handler.codec.http3.Http3ErrorCode;
@@ -23,6 +24,7 @@ import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.RejectedExecutionException;
 
 /**
@@ -123,6 +125,26 @@ public class Http3ResponseWriter extends ResponseWriter implements StreamErrorWr
         } else if (ctx.channel().isActive()) {
             ctx.close();
         }
+    }
+
+    /**
+     * An action that writes its own response (SSE, a streamed LLM response) writes HTTP/1.1 objects, which this
+     * stream's HTTP/3 frame codec cannot take, so {@link Http3HttpObjectEncoder} is added ahead of the request's
+     * handler to turn them into HTTP/3 frames. It is added synchronously, from whichever thread this runs on, so the
+     * writes that follow pass through it.
+     */
+    @Override
+    public Runnable respondingDirectly() {
+        responseStarted = true;
+        ChannelPipeline pipeline = ctx.pipeline();
+        if (!ctx.isRemoved() && pipeline.get(Http3HttpObjectEncoder.NAME) == null) {
+            try {
+                pipeline.addBefore(ctx.name(), Http3HttpObjectEncoder.NAME, Http3HttpObjectEncoder.INSTANCE);
+            } catch (NoSuchElementException | IllegalArgumentException streamGone) {
+                // the stream closed meanwhile (its handlers were removed): nothing more is written to it
+            }
+        }
+        return super.respondingDirectly();
     }
 
     @Override

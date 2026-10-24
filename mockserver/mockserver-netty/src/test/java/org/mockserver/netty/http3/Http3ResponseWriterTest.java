@@ -5,9 +5,15 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http3.DefaultHttp3DataFrame;
 import io.netty.handler.codec.http3.DefaultHttp3HeadersFrame;
 import io.netty.handler.codec.http3.Http3ErrorCode;
+import io.netty.handler.codec.http3.Http3HeadersFrame;
 import io.netty.handler.codec.quic.QuicStreamChannel;
 import io.netty.util.concurrent.GenericFutureListener;
 import org.junit.Test;
@@ -556,6 +562,43 @@ public class Http3ResponseWriterTest {
         assertThat(headersObj, instanceOf(DefaultHttp3HeadersFrame.class));
         DefaultHttp3HeadersFrame headers = (DefaultHttp3HeadersFrame) headersObj;
         assertThat(headers.headers().status().toString(), is("404"));
+    }
+
+    @Test
+    public void shouldReadyTheStreamForHttpObjectsWrittenStraightToIt() {
+        // given - the request's handler on a real pipeline
+        EmbeddedChannel channel = new EmbeddedChannel();
+        channel.pipeline().addLast("request", new ChannelInboundHandlerAdapter());
+        ChannelHandlerContext ctx = channel.pipeline().context("request");
+        Http3ResponseWriter writer = new Http3ResponseWriter(CONFIGURATION, LOGGER, ctx);
+
+        // when - announced twice, as a writer may be
+        writer.respondingDirectly();
+        writer.respondingDirectly();
+
+        // then - one encoder, ahead of the request's handler, and the response counts as started
+        assertThat(channel.pipeline().names().subList(0, 2), contains(Http3HttpObjectEncoder.NAME, "request"));
+        assertThat(writer.isResponseStarted(), is(true));
+        ctx.writeAndFlush(new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK));
+        assertThat(channel.readOutbound(), instanceOf(Http3HeadersFrame.class));
+        channel.finishAndReleaseAll();
+    }
+
+    @Test
+    public void shouldNotReadyAStreamWhoseHandlerHasGone() {
+        // given
+        EmbeddedChannel channel = new EmbeddedChannel();
+        channel.pipeline().addLast("request", new ChannelInboundHandlerAdapter());
+        ChannelHandlerContext ctx = channel.pipeline().context("request");
+        Http3ResponseWriter writer = new Http3ResponseWriter(CONFIGURATION, LOGGER, ctx);
+        channel.pipeline().remove("request");
+
+        // when
+        writer.respondingDirectly();
+
+        // then
+        assertThat(channel.pipeline().get(Http3HttpObjectEncoder.NAME), is(nullValue()));
+        channel.finishAndReleaseAll();
     }
 
     /**
