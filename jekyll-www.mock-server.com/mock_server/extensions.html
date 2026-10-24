@@ -198,7 +198,7 @@ public class AcmeHelpers implements TemplateHelperProvider {
     <li>Each call runs on a helper thread of its own, never on a thread that handles network traffic, so a slow helper cannot hold up other requests.</li>
     <li>All the helper calls one template makes share one time budget, <a href="/mock_server/configuration_properties.html#button_configuration_extension_helper_timeout_millis"><span class="inline_code">extensionHelperTimeoutMillis</span></a> (default 1 second). A call still running when it is used up is interrupted and the template fails, like any other failing template.</li>
     <li>At most <a href="/mock_server/configuration_properties.html#button_configuration_extension_helper_max_in_flight"><span class="inline_code">extensionHelperMaxInFlight</span></a> calls (default 32) run at once; a call over that limit fails its template at once. A helper cannot call another helper.</li>
-    <li>When HTTP/3 is enabled (<span class="inline_code">http3Port</span>), helpers are switched off and MockServer logs a warning at start-up, because HTTP/3 renders templates on a thread that handles network traffic. A template that calls a helper then fails with that reason; everything else about the extension still works.</li>
+    <li>Helpers work the same over HTTP/1.1, HTTP/2 and HTTP/3.</li>
 </ul>
 
 <p>Give helper methods string, number or boolean parameters. A JavaScript object or array passed to a helper cannot be read on the helper's thread, so pass it as <span class="inline_code">JSON.stringify(...)</span> and parse it in the helper. When a helper throws, the template's error names only the exception's type, so a client never sees what the exception says; the MockServer log has the full exception.</p>

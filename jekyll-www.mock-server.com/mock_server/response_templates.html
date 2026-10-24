@@ -4086,7 +4086,7 @@ curl_close($ch);{% endraw %}</code></pre>
     <li><strong>Mustache:</strong> <code class="inline code">&lbrace;&lbrace;#ext.acme.upper&rbrace;&rbrace;&lbrace;&lbrace;request.path&rbrace;&rbrace;&lbrace;&lbrace;/ext.acme.upper&rbrace;&rbrace;</code> (the section is rendered first and the helper receives the result)</li>
 </ul>
 
-<p>All the helper calls one template makes share one time budget, <a href="/mock_server/configuration_properties.html#button_configuration_extension_helper_timeout_millis"><code class="inline code">extensionHelperTimeoutMillis</code></a> (default 1 second): a call still running when it is used up is stopped, and the template fails the same way as any other failing template (see <a href="#response_template_failures">When a Template Fails or Runs Too Long</a>). A name that does not exist, such as a mistyped helper, also fails the template rather than rendering as written. When HTTP/3 is enabled, helpers are switched off, with a warning at start-up, and a template that calls one fails with that reason.</p>
+<p>All the helper calls one template makes share one time budget, <a href="/mock_server/configuration_properties.html#button_configuration_extension_helper_timeout_millis"><code class="inline code">extensionHelperTimeoutMillis</code></a> (default 1 second): a call still running when it is used up is stopped, and the template fails the same way as any other failing template (see <a href="#response_template_failures">When a Template Fails or Runs Too Long</a>). A name that does not exist, such as a mistyped helper, also fails the template rather than rendering as written.</p>
 
 <a id="mustache_templates" class="anchor" href="#mustache_templates">&nbsp;</a>
 

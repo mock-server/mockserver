@@ -1,5 +1,9 @@
 package org.mockserver.lifecycle;
 
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http3.DefaultHttp3Headers;
+import io.netty.handler.codec.http3.Http3Headers;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockserver.client.MockServerClient;
@@ -7,12 +11,12 @@ import org.mockserver.configuration.Configuration;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.templates.engine.velocity.VelocityTemplateEngine;
 import org.mockserver.extension.ExtensionHook;
-import org.mockserver.extension.LoadedExtension;
 import org.mockserver.extension.MustacheHelper;
 import org.mockserver.extension.TemplateHelperProvider;
 import org.mockserver.model.Delay;
 import org.mockserver.netty.MockServer;
 import org.mockserver.netty.http3.Http3Server;
+import org.mockserver.netty.http3.Http3TestClient;
 import org.mockserver.templates.engine.javascript.JavaScriptTemplateEngine;
 
 import java.net.URI;
@@ -47,8 +51,9 @@ import static org.mockserver.netty.http3.Http3TestServer.startWithHttp3;
 
 /**
  * Extension template helpers on a Netty server: called from Velocity, Mustache and JavaScript response templates on
- * the helper executor, and a render waiting on a slow helper never holds the event loop.
+ * the helper executor, over HTTP/1.1 and HTTP/3, and a render waiting on a slow helper never holds the event loop.
  */
+@SuppressWarnings("deprecation") // NioEventLoopGroup deprecation in Netty 4.2
 public class ExtensionTemplateHelpersTest {
 
     static final List<String> HELPER_THREADS = new CopyOnWriteArrayList<>();
@@ -167,23 +172,42 @@ public class ExtensionTemplateHelpersTest {
     }
 
     @Test
-    public void shouldStartWithHttp3AndDisableHelpersWithAWarning() throws Exception {
+    public void shouldCallHelpersFromResponseTemplatesOverHttp3WithoutHoldingTheQuicEventLoop() throws Exception {
         assumeTrue("native QUIC not available on this platform", Http3Server.isQuicAvailable());
-        MockServer mockServer = startWithHttp3(configuration().extensions(Greeter.class));
-        try (MockServerClient client = new MockServerClient("127.0.0.1", mockServer.getLocalPort())) {
-            assertThat("HTTP/3 started: a helper extension does not refuse start-up", mockServer.getHttp3Port() > 0, is(true));
-            LoadedExtension greeter = mockServer.getExtensionRegistry().extensions().get(0);
-            assertThat(greeter.disabledReason(ExtensionHook.TEMPLATE_HELPER), containsString("HTTP/3 is enabled"));
+        MockServer mockServer = startWithHttp3(configuration().extensions(Greeter.class).extensionHelperTimeoutMillis(10_000L));
+        NioEventLoopGroup clientGroup = new NioEventLoopGroup(1);
+        try (MockServerClient client = new MockServerClient("127.0.0.1", mockServer.getLocalPort());
+             Http3TestClient http3 = Http3TestClient.open(clientGroup, mockServer)) {
+            assertThat(mockServer.getExtensionRegistry().extensions().get(0).isHookEnabled(ExtensionHook.TEMPLATE_HELPER), is(true));
             client.when(request("/velocity")).respond(template(VELOCITY, "{ \"statusCode\": 200, \"body\": \"$ext.greeter.Greetings.greet('velocity')\" }"));
+            client.when(request("/mustache")).respond(template(MUSTACHE, "{ \"statusCode\": 200, \"body\": \"{{#ext.greeter.greet}}mustache{{/ext.greeter.greet}}\" }"));
+            client.when(request("/slow")).respond(template(VELOCITY, "{ \"statusCode\": 200, \"body\": \"$ext.greeter.Greetings.slow(2000)\" }"));
+            client.when(request("/plain")).respond(response("plain"));
 
-            HttpResponse<String> response = get(mockServer, "/velocity");
+            assertThat(http3.send(http3Get(mockServer, "/velocity")).body(), is("hello velocity"));
+            assertThat(http3.send(http3Get(mockServer, "/mustache")).body(), is("hello mustache"));
+            for (String thread : HELPER_THREADS) {
+                assertThat(thread, startsWith("MockServer-ext-helper-"));
+            }
 
-            assertThat(response.statusCode(), is(500));
-            assertThat(response.body(), containsString("extension template helpers ($ext) are disabled because HTTP/3 is enabled"));
-            assertThat("no helper ran", HELPER_THREADS.isEmpty(), is(true));
+            // the QUIC listener has one event loop: a render waiting there would stall the plain request
+            Http3TestClient.Exchange slow = http3.send(http3Get(mockServer, "/slow"));
+            assertThat(slowEntered.await(10, SECONDS), is(true));
+            assertThat(http3.send(http3Get(mockServer, "/plain")).body(), is("plain"));
+            assertThat("served while the helper still runs", slow.dataFrames(), is(0));
+            assertThat(slow.body(), is("slow"));
         } finally {
             mockServer.stop();
+            clientGroup.shutdownGracefully(0, 1, SECONDS).awaitUninterruptibly(10, SECONDS);
         }
+    }
+
+    private static Http3Headers http3Get(MockServer mockServer, String path) {
+        return new DefaultHttp3Headers()
+            .method(HttpMethod.GET.asciiName())
+            .scheme("https")
+            .authority("127.0.0.1:" + mockServer.getHttp3Port())
+            .path(path);
     }
 
     private static HttpResponse<String> get(MockServer mockServer, String path) throws Exception {

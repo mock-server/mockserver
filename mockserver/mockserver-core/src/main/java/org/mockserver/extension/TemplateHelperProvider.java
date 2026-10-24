@@ -21,9 +21,6 @@ import java.util.Map;
  * Anyone who can create an expectation can call a helper. A helper that returns an object exposing reflection or
  * class loading defeats {@code mockserver.velocityDisallowClassLoading} and the JavaScript class filter, so return
  * strings, numbers, booleans or plain data.
- * <p>
- * When HTTP/3 is enabled ({@code mockserver.http3Port}) helpers are disabled, with a WARN at start-up, because HTTP/3
- * renders templates on its event loop; a template that calls one fails with that reason.
  */
 public interface TemplateHelperProvider extends Extension {
 

@@ -133,6 +133,7 @@ public class Http3MockServerHandlerTest {
         Channel stream = mock(Channel.class);
         when(stream.remoteAddress()).thenReturn(new InetSocketAddress("127.0.0.1", 50443));
         ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+        when(ctx.executor()).thenReturn(io.netty.util.concurrent.ImmediateEventExecutor.INSTANCE);
         when(ctx.channel()).thenReturn(stream);
         return ctx;
     }
@@ -247,6 +248,74 @@ public class Http3MockServerHandlerTest {
         handler.channelInputClosed(ctx);
 
         verify(httpActionHandler).processAction(any(), any(), any(), any(), anyBoolean(), anyBoolean());
+        ArgumentCaptor<Object> written = ArgumentCaptor.forClass(Object.class);
+        verify(ctx, atLeast(0)).write(written.capture());
+        verify(ctx, atLeast(0)).writeAndFlush(written.capture());
+        stream.close();
+        return written.getAllValues();
+    }
+
+    @Test
+    public void shouldAnswerAnMcpPostWithServiceUnavailableWhenTheMcpExecutorRefusesIt() throws Exception {
+        io.netty.util.concurrent.EventExecutorGroup executor = mock(io.netty.util.concurrent.EventExecutorGroup.class);
+        doThrow(new java.util.concurrent.RejectedExecutionException("full")).when(executor).execute(any(Runnable.class));
+        org.mockserver.netty.mcp.McpRequestProcessor processor = mcpProcessorOn(executor);
+
+        List<Object> written = writtenForMcpPost(processor);
+
+        assertThat(statusesOf(written), contains("503"));
+        assertThat(bodyOf(written), containsString("Server is busy, try again later"));
+        verify(processor, never()).handlePost(any(), any(), any());
+    }
+
+    @Test
+    public void shouldAnswerAnMcpPostWithAnInternalErrorWhenProcessingItFails() throws Exception {
+        io.netty.util.concurrent.EventExecutorGroup executor = mock(io.netty.util.concurrent.EventExecutorGroup.class);
+        doAnswer(invocation -> {
+            invocation.<Runnable>getArgument(0).run();
+            return null;
+        }).when(executor).execute(any(Runnable.class));
+        org.mockserver.netty.mcp.McpRequestProcessor processor = mcpProcessorOn(executor);
+        when(processor.handlePost(any(), any(), any())).thenThrow(new IllegalStateException("internal detail of the fault"));
+
+        List<Object> written = writtenForMcpPost(processor);
+
+        assertThat(statusesOf(written), contains("500"));
+        String body = bodyOf(written);
+        assertThat(body, containsString("Internal error"));
+        assertThat(body, not(containsString("internal detail")));
+    }
+
+    private static org.mockserver.netty.mcp.McpRequestProcessor mcpProcessorOn(io.netty.util.concurrent.EventExecutorGroup executor) {
+        org.mockserver.netty.mcp.McpSessionManager sessionManager = mock(org.mockserver.netty.mcp.McpSessionManager.class);
+        when(sessionManager.getExecutor()).thenReturn(executor);
+        org.mockserver.netty.mcp.McpRequestProcessor processor = mock(org.mockserver.netty.mcp.McpRequestProcessor.class);
+        when(processor.getSessionManager()).thenReturn(sessionManager);
+        return processor;
+    }
+
+    /**
+     * Sends an MCP POST and returns the frames written to the stream, all on the stream's (immediate) event loop.
+     */
+    private List<Object> writtenForMcpPost(org.mockserver.netty.mcp.McpRequestProcessor processor) throws Exception {
+        HttpState httpState = mock(HttpState.class);
+        when(httpState.controlPlaneAuthenticationSettings()).thenReturn(org.mockserver.configuration.ControlPlaneAuthenticationSettings.of(CONFIGURATION));
+        Http3MockServerHandler handler = new Http3MockServerHandler(
+            CONFIGURATION, LOGGER, httpState, mock(HttpActionHandler.class), new Metrics(CONFIGURATION), processor
+        );
+        ChannelHandlerContext ctx = mockChannelHandlerContextWithWrite();
+        Channel stream = new io.netty.channel.embedded.EmbeddedChannel();
+        when(ctx.channel()).thenReturn(stream);
+
+        DefaultHttp3HeadersFrame headersFrame = new DefaultHttp3HeadersFrame();
+        headersFrame.headers().method("POST");
+        headersFrame.headers().path("/mockserver/mcp");
+        headersFrame.headers().scheme("https");
+        headersFrame.headers().add("content-type", "application/json");
+        handler.channelRead(ctx, headersFrame);
+        handler.channelRead(ctx, new DefaultHttp3DataFrame(Unpooled.copiedBuffer("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}", StandardCharsets.UTF_8)));
+        handler.channelInputClosed(ctx);
+
         ArgumentCaptor<Object> written = ArgumentCaptor.forClass(Object.class);
         verify(ctx, atLeast(0)).write(written.capture());
         verify(ctx, atLeast(0)).writeAndFlush(written.capture());
@@ -686,6 +755,7 @@ public class Http3MockServerHandlerTest {
 
     private ChannelHandlerContext mockChannelHandlerContext() {
         ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+        when(ctx.executor()).thenReturn(io.netty.util.concurrent.ImmediateEventExecutor.INSTANCE);
         when(ctx.alloc()).thenReturn(ByteBufAllocator.DEFAULT);
         return ctx;
     }
@@ -696,6 +766,7 @@ public class Http3MockServerHandlerTest {
      */
     private ChannelHandlerContext mockChannelHandlerContextWithWrite() {
         ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+        when(ctx.executor()).thenReturn(io.netty.util.concurrent.ImmediateEventExecutor.INSTANCE);
         when(ctx.alloc()).thenReturn(ByteBufAllocator.DEFAULT);
         ChannelFuture future = mock(ChannelFuture.class);
         when(future.addListener(any())).thenReturn(future);

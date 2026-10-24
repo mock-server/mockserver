@@ -7,6 +7,7 @@ import io.netty.handler.codec.http3.DefaultHttp3DataFrame;
 import io.netty.handler.codec.http3.DefaultHttp3HeadersFrame;
 import io.netty.handler.codec.http3.Http3ErrorCode;
 import io.netty.handler.codec.quic.QuicStreamChannel;
+import io.netty.util.concurrent.EventExecutor;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
@@ -22,6 +23,7 @@ import org.slf4j.event.Level;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * A {@link ResponseWriter} that serialises the MockServer {@link HttpResponse}
@@ -67,6 +69,14 @@ public class Http3ResponseWriter extends ResponseWriter implements StreamErrorWr
     @Override
     public void writeStreamError(long errorCode) {
         responseStarted = true;
+        if (ctx.executor().inEventLoop()) {
+            resetStream(errorCode);
+        } else {
+            executeOnStreamEventLoop(ctx, mockServerLogger, () -> resetStream(errorCode));
+        }
+    }
+
+    private void resetStream(long errorCode) {
         if (ctx.channel() instanceof QuicStreamChannel && ctx.channel().isActive()) {
             // Netty's QuicStreamChannel.shutdownOutput takes an int, but a QUIC application error code
             // is a 62-bit varint. Every RFC 9114 §8.1 HTTP/3 code is tiny (<= 0x110), so this only
@@ -100,6 +110,14 @@ public class Http3ResponseWriter extends ResponseWriter implements StreamErrorWr
     @Override
     public void writeConnectionReset() {
         responseStarted = true;
+        if (ctx.executor().inEventLoop()) {
+            closeConnection();
+        } else {
+            executeOnStreamEventLoop(ctx, mockServerLogger, this::closeConnection);
+        }
+    }
+
+    private void closeConnection() {
         if (ctx.channel() instanceof QuicStreamChannel && ((QuicStreamChannel) ctx.channel()).parent() != null) {
             ((QuicStreamChannel) ctx.channel()).parent().close(true, Http3ErrorCode.H3_INTERNAL_ERROR.code(), Unpooled.EMPTY_BUFFER);
         } else if (ctx.channel().isActive()) {
@@ -110,9 +128,51 @@ public class Http3ResponseWriter extends ResponseWriter implements StreamErrorWr
     @Override
     public void sendResponse(HttpRequest request, HttpResponse response) {
         responseStarted = true;
-        if (response == null) {
-            response = HttpResponse.notFoundResponse();
+        HttpResponse toSend = response != null ? response : HttpResponse.notFoundResponse();
+        if (ctx.executor().inEventLoop()) {
+            writeResponse(request, toSend);
+        } else if (!executeOnStreamEventLoop(ctx, mockServerLogger, () -> writeResponse(request, toSend))) {
+            discard(toSend.getStreamingBody());
         }
+    }
+
+    /**
+     * Run {@code write}, from a thread off the stream's event loop (a scheduler thread releasing a delayed response),
+     * on that loop as one task, so its frames are written and flushed together. The task has no caller left to answer
+     * a failure, so it logs it and resets the stream.
+     *
+     * @return false when the event loop has shut down, so nothing will be written
+     */
+    static boolean executeOnStreamEventLoop(ChannelHandlerContext ctx, MockServerLogger mockServerLogger, Runnable write) {
+        EventExecutor executor = ctx.executor();
+        try {
+            executor.execute(() -> {
+                try {
+                    write.run();
+                } catch (Throwable throwable) {
+                    if (mockServerLogger != null && mockServerLogger.isEnabledForInstance(Level.WARN)) {
+                        mockServerLogger.logEvent(
+                            new LogEntry()
+                                .setLogLevel(Level.WARN)
+                                .setMessageFormat("exception writing HTTP/3 response, resetting stream:{}")
+                                .setArguments(throwable.getMessage())
+                                .setThrowable(throwable)
+                        );
+                    }
+                    if (ctx.channel() instanceof QuicStreamChannel) {
+                        ((QuicStreamChannel) ctx.channel()).shutdownOutput(Http3ErrorCode.H3_INTERNAL_ERROR.code());
+                    } else {
+                        ctx.close();
+                    }
+                }
+            });
+            return true;
+        } catch (RejectedExecutionException shutDown) {
+            return false;
+        }
+    }
+
+    private void writeResponse(HttpRequest request, HttpResponse response) {
 
         // W3C trace-context propagation on outbound HTTP/3 responses, gated by
         // otelPropagateTraceContext -- mirrors the outbound logic of

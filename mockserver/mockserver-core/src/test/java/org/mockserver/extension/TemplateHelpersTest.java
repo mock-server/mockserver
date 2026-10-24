@@ -35,6 +35,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
@@ -48,7 +49,7 @@ import static org.mockserver.model.HttpTemplate.template;
  * Extension template helpers ({@code ext}): reachable from the primary response and forward template engines
  * (Velocity, Mustache and JavaScript), run on the helper executor with a real timeout and one budget per render,
  * refused on an event loop, from inside another helper and over the in-flight cap, a stub everywhere else, and
- * disabled with a WARN when HTTP/3 is enabled.
+ * available whether or not HTTP/3 is enabled.
  */
 public class TemplateHelpersTest {
 
@@ -405,21 +406,19 @@ public class TemplateHelpersTest {
     }
 
     @Test
-    public void shouldDisableHelpersWithAWarningWhenHttp3IsEnabled() {
+    public void shouldKeepHelpersEnabledWhenHttp3IsEnabled() {
         Configuration configuration = configuration().http3Port(4433);
 
         TemplateHelpers helpers = start(configuration);
 
-        assertThat(helpers, nullValue());
+        assertThat(helpers, notNullValue());
         LoadedExtension acme = registry.extensions().get(0);
-        assertThat(acme.isHookEnabled(ExtensionHook.TEMPLATE_HELPER), is(false));
-        assertThat(acme.disabledReason(ExtensionHook.TEMPLATE_HELPER), containsString("HTTP/3 is enabled (http3Port 4433)"));
-        assertThat(logger.messages(Level.WARN), hasItem(containsString("HTTP/3 is enabled")));
-        // response templates then use the shared handler, whose engines bind the stub
-        RuntimeException failure = assertThrows(RuntimeException.class, () -> respond(new HttpResponseTemplateActionHandler(logger, configuration), HttpTemplate.TemplateType.VELOCITY,
-            "{ \"statusCode\": 200, \"body\": \"$ext.acme.Strings.upper('x')\" }"));
-        assertThat(fullMessage(failure), containsString("extension template helpers ($ext) are disabled because HTTP/3 is enabled"));
-        assertThat("no helper ran", HELPER_THREADS.isEmpty(), is(true));
+        assertThat(acme.isHookEnabled(ExtensionHook.TEMPLATE_HELPER), is(true));
+        assertThat(logger.messages(Level.WARN), not(hasItem(containsString("HTTP/3"))));
+        HttpResponse response = respond(new HttpResponseTemplateActionHandler(logger, configuration, helpers), HttpTemplate.TemplateType.VELOCITY,
+            "{ \"statusCode\": 200, \"body\": \"$ext.acme.Strings.upper('x')\" }");
+        assertThat(response.getBodyAsString(), is("X"));
+        assertThat(HELPER_THREADS.get(0), startsWith("MockServer-ext-helper-"));
     }
 
     @Test

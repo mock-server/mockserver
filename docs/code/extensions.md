@@ -88,12 +88,11 @@ sequenceDiagram
   run.
 - **Loaded but disabled.** A hook can be switched off for every extension that implements it, with a reason,
   without unloading the extension: `ExtensionRegistry.disableHook(hook, reason)` records the reason on each
-  `LoadedExtension` and logs a WARN. U11c uses this to turn off `$ext` template helpers when HTTP/3 is enabled
-  (an owner decision: warn and disable rather than refuse to start).
-- **Helpers never on an event loop.** HTTP/3 renders template actions inline on its QUIC loop, so helpers are
-  disabled there. Everywhere else a helper runs on its own executor while the render waits on the template pool
-  (Netty) or the servlet thread (WAR); `TemplateHelpers.call` also refuses outright when the caller is an event loop
-  thread (`ThreadExecutorMap.currentExecutor() instanceof EventLoop`).
+  `LoadedExtension` and logs a WARN. Nothing disables a hook today: U11c used it to turn off `$ext` template helpers
+  when HTTP/3 was enabled, until HTTP/3 stopped rendering template actions on its QUIC event loop.
+- **Helpers never on an event loop.** A helper runs on its own executor while the render waits on the template pool
+  (Netty: HTTP/1.1, HTTP/2 and HTTP/3 alike) or the servlet thread (WAR); `TemplateHelpers.call` also refuses outright
+  when the caller is an event loop thread (`ThreadExecutorMap.currentExecutor() instanceof EventLoop`).
 
 ## Detailed behaviour
 
@@ -376,9 +375,10 @@ text to the helper on the helper executor, and writes the result only if it retu
 (`continuationExecutorFor`), so it never waits on a helper from the shared scheduler. Without helpers it continues on
 the shared scheduler as before.
 
-**HTTP/3.** With `http3Port > 0` the registry calls `disableHook(TEMPLATE_HELPER, …)` (a WARN per extension), does
-not call `helpers()`, builds no executor, and sets a stub whose message gives the HTTP/3 reason; response and forward
-templates then use the shared handlers and get that stub.
+**HTTP/3.** Helpers behave the same with `http3Port > 0`: HTTP/3 dispatches template actions to the template pool as
+HTTP/1.1 and HTTP/2 do (see [http3.md](http3.md#threading-nothing-waits-on-the-quic-event-loop)), so the same capped
+helper executor, timeout and per-render budget apply. `ExtensionTemplateHelpersTest` renders helpers over HTTP/3 and
+checks a slow helper does not hold up another HTTP/3 request.
 
 **Start-up refusal.** A `helpers()` key that is not a public interface, a value that does not implement its key, two
 interfaces of one extension with the same simple name, a Mustache key outside `[A-Za-z0-9_-]+`, a null helper, or a

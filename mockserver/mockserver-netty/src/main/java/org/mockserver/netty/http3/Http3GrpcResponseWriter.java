@@ -72,12 +72,10 @@ public class Http3GrpcResponseWriter extends ResponseWriter implements GrpcStrea
     private final java.util.concurrent.atomic.AtomicBoolean completed = new java.util.concurrent.atomic.AtomicBoolean();
 
     /**
-     * Stream lifecycle, so starting a stream and an elapsed deadline are a SINGLE atomic
-     * transition. {@code completed.get()} followed by {@code streamStarted.set(true)} was not
-     * atomic with respect to each other: {@code writeGrpcStreamResponse} is dispatched off the QUIC
-     * event loop by the scheduler whenever a delay is configured, so the deadline could win its CAS
-     * between the two and emit a trailers-only frame (with {@code :status}) while the streaming
-     * path then emitted its own initial HEADERS -- two {@code :status} frames on one stream.
+     * Stream lifecycle, so starting a stream and an elapsed deadline are one transition: otherwise the deadline could
+     * write a trailers-only frame (with {@code :status}) and the stream its own initial HEADERS, two {@code :status}
+     * frames on one stream. Every transition now runs on the stream's event loop, as the writer's entry points hop
+     * there first; the state stays atomic as a defence should a caller ever reach it from another thread.
      */
     private enum StreamState { IDLE, STREAMING, COMPLETED }
 
@@ -181,6 +179,11 @@ public class Http3GrpcResponseWriter extends ResponseWriter implements GrpcStrea
 
     @Override
     public void sendResponse(HttpRequest request, HttpResponse response) {
+        if (!ctx.executor().inEventLoop()) {
+            // the deadline and the response-once guard are then only ever touched on the stream's event loop
+            Http3ResponseWriter.executeOnStreamEventLoop(ctx, mockServerLogger, () -> sendResponse(request, response));
+            return;
+        }
         if (!completed.compareAndSet(false, true)) {
             // the deadline already fired and terminated this stream -- dropping the late response
             // avoids writing a second response onto a stream that already ended
@@ -199,19 +202,17 @@ public class Http3GrpcResponseWriter extends ResponseWriter implements GrpcStrea
             deadlineFuture.cancel(false);
             deadlineFuture = null;
         }
-        if (response == null) {
-            response = HttpResponse.notFoundResponse();
-        }
+        HttpResponse toWrite = response != null ? response : HttpResponse.notFoundResponse();
 
         if (grpcService != null && !grpcService.isEmpty()
             && grpcMethod != null && !grpcMethod.isEmpty()
             && descriptorStore != null && descriptorStore.hasServices()) {
-            writeGrpcResponse(request, response, grpcService, grpcMethod);
+            writeGrpcResponse(request, toWrite, grpcService, grpcMethod);
         } else {
             // No descriptor-based conversion: the body stays as-is (binary or
             // whatever the expectation returned). Frame grpc-status correctly
             // in trailing HEADERS.
-            writePassthroughGrpcResponse(response);
+            writePassthroughGrpcResponse(toWrite);
         }
     }
 
@@ -359,6 +360,10 @@ public class Http3GrpcResponseWriter extends ResponseWriter implements GrpcStrea
      */
     @Override
     public void writeGrpcStreamResponse(GrpcStreamResponse grpcStreamResponse, HttpRequest request) {
+        if (!ctx.executor().inEventLoop()) {
+            Http3ResponseWriter.executeOnStreamEventLoop(ctx, mockServerLogger, () -> writeGrpcStreamResponse(grpcStreamResponse, request));
+            return;
+        }
         Descriptors.MethodDescriptor methodDescriptor = resolveMethodDescriptor();
 
         // Pre-compute breakpoint matcher + WS dispatch decision once per stream (CPX-01)

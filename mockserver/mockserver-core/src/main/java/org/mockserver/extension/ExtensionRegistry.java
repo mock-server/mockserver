@@ -307,8 +307,7 @@ public final class ExtensionRegistry {
 
     /**
      * Collects each started provider's helpers and builds the {@code ext} namespace. Every other template engine of
-     * this configuration binds {@code ext} to a stub that fails with the reason helpers cannot be called there; with
-     * HTTP/3 enabled the hook is disabled and every engine, response and forward templates included, gets the stub.
+     * this configuration binds {@code ext} to a stub that fails with the reason helpers cannot be called there.
      */
     private void prepareTemplateHelpers(Configuration configuration) {
         List<LoadedExtension> providers = new ArrayList<>();
@@ -320,13 +319,6 @@ public final class ExtensionRegistry {
         if (providers.isEmpty()) {
             // a configuration reused from a server that had template helpers must not keep its stub
             configuration.extensionTemplateHelperStub(null);
-            return;
-        }
-        Integer http3Port = configuration.http3Port();
-        if (http3Port != null && http3Port > 0) {
-            String reason = "HTTP/3 is enabled (http3Port " + http3Port + ") and HTTP/3 renders templates on its event loop, where waiting for a helper would block other requests";
-            disableHook(ExtensionHook.TEMPLATE_HELPER, reason);
-            setStub(configuration, ExtensionHelperNamespace.unavailable("extension template helpers ($ext) are disabled because " + reason));
             return;
         }
         Map<String, Map<Class<?>, Object>> helpers = new LinkedHashMap<>();

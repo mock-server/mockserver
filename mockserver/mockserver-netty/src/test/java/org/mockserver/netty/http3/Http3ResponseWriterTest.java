@@ -274,6 +274,7 @@ public class Http3ResponseWriterTest {
     public void shouldResetTheStreamWhenUnwrittenBytesPassTheBound() {
         // given -- a QUIC stream whose DATA frame writes never complete
         ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+        when(ctx.executor()).thenReturn(io.netty.util.concurrent.ImmediateEventExecutor.INSTANCE);
         QuicStreamChannel channel = mock(QuicStreamChannel.class);
         when(channel.isActive()).thenReturn(true);
         stubCloseFuture(channel);
@@ -485,6 +486,7 @@ public class Http3ResponseWriterTest {
         ChannelHandlerContext ctx = mockCtxWithListenerFiringChannel(new ArrayList<>(), stream);
         List<Runnable> tasks = new ArrayList<>();
         io.netty.util.concurrent.EventExecutor executor = mock(io.netty.util.concurrent.EventExecutor.class);
+        when(executor.inEventLoop()).thenReturn(true);
         doAnswer(invocation -> tasks.add(invocation.getArgument(0))).when(executor).execute(any(Runnable.class));
         when(ctx.executor()).thenReturn(executor);
         HttpResponse resp = response().withStatusCode(102).withBody("a body no 1xx carries").withTrailer("x-checksum", "abc123");
@@ -512,6 +514,7 @@ public class Http3ResponseWriterTest {
         QuicStreamChannel stream = mock(QuicStreamChannel.class);
         ChannelHandlerContext ctx = mockCtxWithListenerFiringChannel(new ArrayList<>(), stream);
         io.netty.util.concurrent.EventExecutor executor = mock(io.netty.util.concurrent.EventExecutor.class);
+        when(executor.inEventLoop()).thenReturn(true);
         doAnswer(invocation -> {
             invocation.<Runnable>getArgument(0).run();
             return null;
@@ -562,6 +565,7 @@ public class Http3ResponseWriterTest {
      */
     private ChannelHandlerContext mockCtxWithActiveChannel() {
         ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+        when(ctx.executor()).thenReturn(io.netty.util.concurrent.ImmediateEventExecutor.INSTANCE);
         Channel channel = mock(Channel.class);
         when(channel.isActive()).thenReturn(true);
         stubCloseFuture(channel);
@@ -591,6 +595,7 @@ public class Http3ResponseWriterTest {
     @SuppressWarnings("unchecked")
     private ChannelHandlerContext mockCtxWithListenerFiringChannel(List<ByteBuf> writtenBufs, Channel channel) {
         ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+        when(ctx.executor()).thenReturn(io.netty.util.concurrent.ImmediateEventExecutor.INSTANCE);
         when(channel.isActive()).thenReturn(true);
         stubCloseFuture(channel);
         when(ctx.channel()).thenReturn(channel);
