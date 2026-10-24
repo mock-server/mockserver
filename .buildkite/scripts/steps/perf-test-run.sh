@@ -264,6 +264,8 @@ PL_SUT_PREFIX="mockserver-perf-pl-${RUN_ID}"
 # The FILE-body A/B SUT ($FB_SUT) and its phase (fb_ab_phase).
 # shellcheck source=lib/perf-file-body-ab.sh
 . "$SCRIPT_DIR/lib/perf-file-body-ab.sh"
+# shellcheck source=lib/perf-clustered-ab.sh
+. "$SCRIPT_DIR/lib/perf-clustered-ab.sh"
 # shellcheck source=lib/perf-path-coverage.sh
 . "$SCRIPT_DIR/lib/perf-path-coverage.sh"
 cov_validate_env || exit 1
@@ -1610,7 +1612,9 @@ SO_BACKLOG_VAL="$(container_env MOCKSERVER_SO_BACKLOG)"
 RIG_PROFILE="default"
 if [ -n "${PERF_SERVER_CPUS:-}" ] \
    || [ -n "${PERF_UPSTREAM_CPUS:-}" ] \
-   || [ -n "${PERF_K6_CPUS:-}" ]; then
+   || [ -n "${PERF_K6_CPUS:-}" ] \
+   || [ "${PERF_CLUSTERED_CPUS:-2}" != 2 ] || [ "${PERF_CLUSTERED_PIN:-true}" != true ] \
+   || [ -n "${PERF_CLUSTERED_CTRL_CPUS:-}${PERF_CLUSTERED_A_CPUS:-}${PERF_CLUSTERED_B_CPUS:-}" ]; then
   RIG_PROFILE="pinned"
 fi
 # host networking is rig TOPOLOGY (a different data path), so — like a cpuset
@@ -3608,7 +3612,7 @@ abort_if_sut_died
 # request network cost for this read/forward/template mix is ~zero; what the ratio
 # captures is the STEADY-STATE overhead of running the clustered stack on the
 # request path (Infinispan on the classpath, background JGroups FD_ALL3 heartbeats
-# + STABLE gossip stealing a little CPU) plus the one-time seed replication. That
+# + STABLE gossip stealing a little CPU) plus the per-window seed replication. That
 # is the honest, useful answer for the central deployment: how far a node's per-
 # request latency moves merely by being a clustered member.
 #
@@ -3625,11 +3629,19 @@ abort_if_sut_died
 # regardless of residence — and applies identically on control and cluster, so it does
 # not bias the ratio. The
 # SECOND node (B) receives NO request load, so its ring stays ~empty; it holds only
-# the seeded expectation set (tiny, seeded once) + bounded JGroups buffers (UFC/MFC
+# the seeded expectation set (tiny, re-seeded per window) + bounded JGroups buffers (UFC/MFC
 # 2M each, NAKACK2/UNICAST3 send/recv, FRAG2 60K — single-digit MB). REPL_SYNC
-# replicates only expectation/scenario WRITES, of which there are ~none after the
-# one-time seed, so node B never accumulates bodies. The clustered arm therefore
+# replicates only expectation/scenario WRITES, of which there are ~none beyond each
+# window's seed and reset, so node B never accumulates bodies. The clustered arm therefore
 # adds no retention risk beyond the control's, per node.
+#
+# PAIRED, PINNED, THROTTLE-RECORDED (lib/perf-clustered-ab.sh): all three servers stay up on
+# disjoint cpusets carved from the idle main SUT's, the arms alternate in adjacent windows, and each
+# ratio is the median of the per-pair ratios. With 3 pairs a linear drift leaves a one-window bias
+# whose sign flips with build parity, so it averages out across the baseline, not within a run.
+# Each window records its containers' cgroup throttling. A missing window, a window over 1% errors,
+# a missing ratio or a cluster that is not genuine before AND after the windows gives measured:false,
+# and compare then reads no clustered_state rows (as for pipelining_inorder).
 #
 # BEST-EFFORT / NOTIFY-ONLY like streaming/laptop: a failure defaults the block to
 # {} and never costs the k6/growth result its baseline place. BUT an empty block
@@ -3701,15 +3713,23 @@ fi
 
 if [ -z "$CLUSTERED_SKIP_REASON" ]; then
     CLUSTERED_ATTEMPTED=true
+    CLU_T_START="$(date -u +%s)"
     CLU_CPUS="${PERF_CLUSTERED_CPUS:-2}"
     CLU_MEM="${PERF_CLUSTERED_MEMORY:-2g}"
     CLU_NAME="perf-cluster-${RUN_ID}"
-    # Shorter measured window than the main run (the ratio is robust and both arms
-    # are measured identically, so a full 2 m window buys little); still long enough
-    # for the small-body arms to clear MIN_TAIL_SAMPLES for a p95 ratio.
+    # All three servers stay up and the arms alternate in PERF_CLUSTERED_PAIRS pairs of adjacent
+    # windows; each ratio is the median of the per-pair ratios (lib/perf-clustered-ab.sh). Pairs
+    # after the first reuse warm servers, so they get the shorter K6_CLU_PAIR_WARMUP.
+    CLU_PAIRS="${PERF_CLUSTERED_PAIRS:-3}"
+    if ! [[ "$CLU_PAIRS" =~ ^[1-9]$ ]]; then
+      echo "WARNING: PERF_CLUSTERED_PAIRS='$CLU_PAIRS' is not 1-9; using 3" >&2; CLU_PAIRS=3
+    fi
     CLU_WARMUP="${K6_CLU_REG_WARMUP:-20s}"
-    CLU_DURATION="${K6_CLU_REG_DURATION:-45s}"
-    echo "--- clustered A/B: image=$CLU_IMAGE cpus=$CLU_CPUS mem=$CLU_MEM warmup=$CLU_WARMUP duration=$CLU_DURATION"
+    CLU_PAIR_WARMUP="${K6_CLU_PAIR_WARMUP:-5s}"
+    CLU_DURATION="${K6_CLU_REG_DURATION:-30s}"
+    clu_resolve_pinning "${SERVER_CPUS:-}" "$CLU_CPUS"
+    echo "--- clustered A/B: image=$CLU_IMAGE mem=$CLU_MEM pairs=$CLU_PAIRS warmup=$CLU_WARMUP then $CLU_PAIR_WARMUP duration=$CLU_DURATION"
+    echo "--- clustered A/B: cpu $CLU_PIN_MODE ($CLU_PIN_REASON): control=${CLU_CTRL_CPUS:-$CLU_CPUS cpus} node_a=${CLU_A_CPUS:-$CLU_CPUS cpus} node_b=${CLU_B_CPUS:-$CLU_CPUS cpus}"
 
     # JGroups TCP + TCPPING transport for two SEPARATE containers (the built-in
     # loopback stack is in-JVM only and would form two clusters of one). initial_hosts
@@ -3784,9 +3804,10 @@ JGROUPS_XML
       printf '%s' "$hosts"
     }
 
-    start_clu() { # name  alias  backend(memory|infinispan)  cluster_name_or_empty
+    start_clu() { # name  alias  backend(memory|infinispan)  cluster_name_or_empty  cpuset_or_empty
       local name="$1" alias="$2" backend="$3" cname="${4:-}"
       local extra=()
+      clu_cpu_flags "${5:-}"
       if [ "$backend" = "infinispan" ]; then
         extra=(
           -e MOCKSERVER_CLUSTER_ENABLED=true
@@ -3806,7 +3827,7 @@ JGROUPS_XML
       # `set -u` (the memory-backend control passes no extra flags), matching the
       # start_mockserver java_opts_arg idiom above.
       docker run -d --rm --name "$name" --network "$NETWORK" --network-alias "$alias" \
-        --cpus "$CLU_CPUS" --memory "$CLU_MEM" -p 127.0.0.1::1080 \
+        "${CLU_CPU_FLAGS[@]}" --memory "$CLU_MEM" -p 127.0.0.1::1080 \
         -e MOCKSERVER_LOG_LEVEL=WARN -e MOCKSERVER_DISABLE_SYSTEM_OUT=true \
         -e MOCKSERVER_METRICS_ENABLED=true \
         -e MOCKSERVER_MAX_EVENT_LOG_SIZE_IN_BYTES="$HARNESS_FIXED_EVENT_LOG_BYTES" \
@@ -3820,14 +3841,14 @@ JGROUPS_XML
     clu_clustered(){ curl -s --max-time 4 "http://$1/mockserver/cluster" 2>/dev/null | jq -r '.clustered // false' 2>/dev/null || echo false; }
     # Run regression.js UNCHANGED against one clustered target. Distinct PROTO so its
     # behaviour keys (<op>_<proto>) do not collide with the main run's.
-    run_clu_regression() { # proto  base_url  out
+    run_clu_regression() { # proto  base_url  out  warmup
       # shellcheck disable=SC2046
       docker run --rm --network "$NETWORK" $(cpuset_arg "$K6_CPUS") \
         -v "$REPO_ROOT/mockserver-performance-test/k6:/k6:ro" -v "$OUT_DIR:/out" \
         -e "BASE_URL=$2" -e "PROTO=$1" -e "INSECURE_SKIP_TLS_VERIFY=false" \
         -e "K6_RESULT_PATH=/out/$3" \
         -e "K6_REG_JS_TEMPLATE=false" -e "K6_REG_FILE_BODY_PATH=" \
-        -e "K6_REG_WARMUP=$CLU_WARMUP" -e "K6_REG_DURATION=$CLU_DURATION" \
+        -e "K6_REG_WARMUP=${4:-$CLU_WARMUP}" -e "K6_REG_DURATION=$CLU_DURATION" \
         ${K6_REG_RATE:+-e K6_REG_RATE="$K6_REG_RATE"} \
         ${K6_CLU_REG_RATE:+-e K6_REG_RATE="$K6_CLU_REG_RATE"} \
         "$K6_IMAGE" run /k6/regression.js >/dev/null 2>&1
@@ -3839,29 +3860,28 @@ JGROUPS_XML
     # trip on the cluster — so its clustered/control ratio is the real per-request
     # NETWORK cost (RequestMatchers shared-Times CAS -> InfinispanKeyValueStore
     # .compareAndSet -> cache.replace). Emits the same behaviours shape (op `crossing`).
-    run_clu_crossing() { # proto  base_url  out
+    run_clu_crossing() { # proto  base_url  out  warmup
       # shellcheck disable=SC2046
       docker run --rm --network "$NETWORK" $(cpuset_arg "$K6_CPUS") \
         -v "$REPO_ROOT/mockserver-performance-test/k6:/k6:ro" -v "$OUT_DIR:/out" \
         -e "BASE_URL=$2" -e "PROTO=$1" -e "INSECURE_SKIP_TLS_VERIFY=false" \
         -e "K6_CLU_CROSS_RESULT_PATH=/out/$3" \
-        -e "K6_CLU_CROSS_WARMUP=$CLU_WARMUP" -e "K6_CLU_CROSS_DURATION=$CLU_DURATION" \
+        -e "K6_CLU_CROSS_WARMUP=${4:-$CLU_WARMUP}" -e "K6_CLU_CROSS_DURATION=$CLU_DURATION" \
         ${K6_CLU_CROSS_RATE:+-e K6_CLU_CROSS_RATE="$K6_CLU_CROSS_RATE"} \
         "$K6_IMAGE" run /k6/clustered_crossing.js >/dev/null 2>&1
     }
 
+    # The streaming SUT is done but unpinned (--cpus), so it could land on the nodes' cpus.
+    docker rm -f "$STREAM_SUT" >/dev/null 2>&1 || true
+
     # --- CONTROL arm: single node, in-memory backend --------------------------
+    # It stays up through the cluster windows; its cpuset is disjoint from the cluster nodes'.
     echo "--- clustered A/B: starting CONTROL (stateBackend=memory)"
-    if start_clu "$CLU_CTRL" clu-ctrl memory ""; then wait_ready "$CLU_CTRL" || true; fi
+    if start_clu "$CLU_CTRL" clu-ctrl memory "" "$CLU_CTRL_CPUS"; then wait_ready "$CLU_CTRL" || true; fi
     CTRL_HP="$(clu_hostport "$CLU_CTRL")"
     CTRL_MEMBERS="$(clu_members "$CTRL_HP")"
     CTRL_CLUSTERED="$(clu_clustered "$CTRL_HP")"
     echo "--- clustered A/B: control cluster view members=$CTRL_MEMBERS clustered=$CTRL_CLUSTERED (expect 1 / false)"
-    run_clu_regression "clustered_control" "http://clu-ctrl:1080" "clu-control.json" \
-      || echo "WARNING: clustered CONTROL regression run failed" >&2
-    run_clu_crossing "clustered_control" "http://clu-ctrl:1080" "clu-cross-control.json" \
-      || echo "WARNING: clustered CONTROL crossing run failed" >&2
-    docker rm -f "$CLU_CTRL" >/dev/null 2>&1 || true
 
     # --- CANDIDATE arm: two-node Infinispan/JGroups cluster -------------------
     # Positive control (degrade-and-confirm-red): PERF_CLU_BREAK=cluster starts node
@@ -3873,8 +3893,8 @@ JGROUPS_XML
       echo "--- clustered A/B: PERF_CLU_BREAK=cluster — node B joins '$CLU_B_NAME' (SELF-TEST: view must stay 1)" >&2
     fi
     echo "--- clustered A/B: starting CANDIDATE 2-node cluster (stateBackend=infinispan, JGroups TCPPING)"
-    start_clu "$CLU_A" "$CLU_A_ALIAS" infinispan "$CLU_NAME" || echo "WARNING: cluster node A did not start" >&2
-    start_clu "$CLU_B" "$CLU_B_ALIAS" infinispan "$CLU_B_NAME" || echo "WARNING: cluster node B did not start" >&2
+    start_clu "$CLU_A" "$CLU_A_ALIAS" infinispan "$CLU_NAME" "$CLU_A_CPUS" || echo "WARNING: cluster node A did not start" >&2
+    start_clu "$CLU_B" "$CLU_B_ALIAS" infinispan "$CLU_B_NAME" "$CLU_B_CPUS" || echo "WARNING: cluster node B did not start" >&2
     wait_ready "$CLU_A" || true
     wait_ready "$CLU_B" || true
     A_HP="$(clu_hostport "$CLU_A")"; B_HP="$(clu_hostport "$CLU_B")"
@@ -3927,88 +3947,78 @@ JGROUPS_XML
     [ "$CROSS_CODE" = 222 ] && STATE_CROSSED=true
     echo "--- clustered A/B: state-crossed(A->B)=$STATE_CROSSED (probe HTTP $CROSS_CODE, negative-control HTTP $NEG_CODE)"
 
-    run_clu_regression "clustered" "http://clu-a:1080" "clu-clustered.json" \
-      || echo "WARNING: clustered CANDIDATE regression run failed" >&2
-    run_clu_crossing "clustered" "http://clu-a:1080" "clu-cross-clustered.json" \
-      || echo "WARNING: clustered CANDIDATE crossing run failed" >&2
-    docker rm -f "$CLU_A" "$CLU_B" >/dev/null 2>&1 || true
+    # --- the measured windows: control and cluster alternate, pair by pair ------
+    CLU_PLACEMENT="$OUT_DIR/clu-placement.ndjson"; : > "$CLU_PLACEMENT"
+    log_container_cpuset clu_control "$CLU_CTRL" "$CLU_PLACEMENT"
+    log_container_cpuset clu_node_a "$CLU_A" "$CLU_PLACEMENT"
+    log_container_cpuset clu_node_b "$CLU_B" "$CLU_PLACEMENT"
+    clu_locate_cpu_stats "$CLU_CTRL" "$CLU_A" "$CLU_B"
+    clu_run_pairs "$CLU_PAIRS"
+    # The up-front proof holds only at its instant: re-read every view, so a member lost mid-phase
+    # unmeasures the run instead of filing single-node windows as cluster ones.
+    A_MEMBERS_AFTER="$(clu_members "$A_HP")"; B_MEMBERS_AFTER="$(clu_members "$B_HP")"
+    CTRL_MEMBERS_AFTER="$(clu_members "$CTRL_HP")"
+    echo "--- clustered A/B: view after the windows A=$A_MEMBERS_AFTER B=$B_MEMBERS_AFTER control=$CTRL_MEMBERS_AFTER (expect 2 / 2 / 1)"
+    docker rm -f "$CLU_CTRL" "$CLU_A" "$CLU_B" >/dev/null 2>&1 || true
+    CLU_ELAPSED_S=$(( $(date -u +%s) - CLU_T_START ))
+    echo "--- clustered A/B windows done; added wall-clock ${CLU_ELAPSED_S}s"
 
-    # Load both behaviour blocks (guarded to {} on any parse failure), then MERGE in
-    # the crossing arm (op `crossing`) so the ratio machinery treats it identically —
-    # it becomes clustered_state.arms.crossing, the per-request NETWORK-cost headline,
-    # alongside the non-crossing membership arms.
-    CLU_CTRL_BEHAVIOURS="$(jq -sc '(.[0].behaviours // {}) + (.[1].behaviours // {})' \
-      "$OUT_DIR/clu-control.json" "$OUT_DIR/clu-cross-control.json" 2>/dev/null || echo '{}')"
-    jq -e . >/dev/null 2>&1 <<<"$CLU_CTRL_BEHAVIOURS" || CLU_CTRL_BEHAVIOURS='{}'
-    CLU_CAND_BEHAVIOURS="$(jq -sc '(.[0].behaviours // {}) + (.[1].behaviours // {})' \
-      "$OUT_DIR/clu-clustered.json" "$OUT_DIR/clu-cross-clustered.json" 2>/dev/null || echo '{}')"
-    jq -e . >/dev/null 2>&1 <<<"$CLU_CAND_BEHAVIOURS" || CLU_CAND_BEHAVIOURS='{}'
-
-    # Assemble .clustered_state: the per-arm ratio (the metric), plus the cluster
-    # genuineness proof. Ratios pair on the arm op (behaviour key minus its _<proto>
-    # suffix). p50 is the primary ratio (robust at low N); p95 only where BOTH arms
-    # cleared MIN_TAIL_SAMPLES (non-null p95). throughput_ratio is dir:down.
-    CLUSTERED_JSON="$(jq -nc \
-      --argjson ctrl "$CLU_CTRL_BEHAVIOURS" --argjson cand "$CLU_CAND_BEHAVIOURS" \
+    # .clustered_state = the meta below (image, cluster proof, placement) + the per-arm ratios,
+    # measured verdict and throttling from clu_assemble_json; the per-window medians land in
+    # .behaviours as <op>_clustered_control / <op>_clustered, the keys they always had.
+    # NB: no apostrophes in this jq program; it is a single-quoted bash string.
+    CLU_META="$(jq -nc \
       --argjson a_members "${A_MEMBERS:-0}" --argjson b_members "${B_MEMBERS:-0}" \
       --argjson ctrl_members "${CTRL_MEMBERS:-0}" \
+      --argjson a_after "${A_MEMBERS_AFTER:-0}" --argjson b_after "${B_MEMBERS_AFTER:-0}" \
+      --argjson ctrl_after "${CTRL_MEMBERS_AFTER:-0}" \
       --arg a_clustered "${A_CLUSTERED:-false}" --arg ctrl_clustered "${CTRL_CLUSTERED:-false}" \
       --arg state_crossed "$STATE_CROSSED" \
       --argjson cross_code "${CROSS_CODE:-0}" --argjson neg_code "${NEG_CODE:-0}" \
-      --arg image "$CLU_IMAGE" --arg image_revision "$CLU_IMAGE_REVISION" '
-      # strip a trailing _<proto> to recover the arm op
-      def op(k; p): (k | sub("_"+p+"$"; ""));
-      ($ctrl | to_entries | map({key: op(.key; "clustered_control"), value: .value}) | from_entries) as $C |
-      ($cand | to_entries | map({key: op(.key; "clustered"),         value: .value}) | from_entries) as $K |
+      --arg image "$CLU_IMAGE" --arg image_revision "$CLU_IMAGE_REVISION" \
+      --arg mode "$CLU_PIN_MODE" --arg reason "$CLU_PIN_REASON" --arg quota "$CLU_CPUS" \
+      --arg ctrl_cpus "$CLU_CTRL_CPUS" --arg a_cpus "$CLU_A_CPUS" --arg b_cpus "$CLU_B_CPUS" \
+      --slurpfile observed "$CLU_PLACEMENT" \
+      --arg warmup "$CLU_WARMUP" --arg pair_warmup "$CLU_PAIR_WARMUP" --arg duration "$CLU_DURATION" \
+      --arg orders "$CLU_PAIR_ORDERS" --argjson elapsed "$CLU_ELAPSED_S" '
+      def nz: if . == "" then null else . end;
       {
-        attempted: true,
-        control_backend: "memory",
-        candidate_backend: "infinispan",
         image: $image,
-        # The OWN commit of the clustered image. Recorded, not just checked, so a
-        # stored run can be audited later: the gate above refuses to measure unless
-        # this equals the SUT image revision the run is filed under, and a reader of
-        # the history can confirm that rather than take it on trust. Empty only for a
-        # deliberately-unlabelled local image (PERF_CLUSTERED_REQUIRE_MATCHING_REVISION=false).
-        # NB: no apostrophes in this jq program — it lives inside a single-quoted
-        # bash string, so one would terminate it and break the script.
+        # The clustered image commit, recorded so a stored run can be audited: the gate above refuses
+        # to measure unless it equals the SUT image revision. Empty only for a deliberately-unlabelled
+        # local image (PERF_CLUSTERED_REQUIRE_MATCHING_REVISION=false).
         image_revision: $image_revision,
         cluster: {
           member_count_node_a: $a_members,
           member_count_node_b: $b_members,
           control_member_count: $ctrl_members,
+          member_count_node_a_after: $a_after,
+          member_count_node_b_after: $b_after,
+          control_member_count_after: $ctrl_after,
           candidate_clustered: ($a_clustered == "true"),
           control_clustered: ($ctrl_clustered == "true"),
           state_crossed_network: ($state_crossed == "true"),
           cross_node_probe_http_code: $cross_code,
           negative_control_http_code: $neg_code
         },
-        arms: (
-          [ $K | keys[] | select($C[.] != null) | . as $op |
-            { key: $op, value: (
-              ($C[$op]) as $c | ($K[$op]) as $k |
-              {
-                p50_control_ms: $c.p50_ms, p50_clustered_ms: $k.p50_ms,
-                p50_ratio: (if ($c.p50_ms // 0) > 0 and $k.p50_ms != null
-                            then (($k.p50_ms / $c.p50_ms) * 1000 | round) / 1000 else null end),
-                p95_control_ms: $c.p95_ms, p95_clustered_ms: $k.p95_ms,
-                p95_ratio: (if ($c.p95_ms // null) != null and ($c.p95_ms // 0) > 0 and ($k.p95_ms // null) != null
-                            then (($k.p95_ms / $c.p95_ms) * 1000 | round) / 1000 else null end),
-                throughput_control_rps: $c.throughput_rps, throughput_clustered_rps: $k.throughput_rps,
-                throughput_ratio: (if ($c.throughput_rps // 0) > 0 and $k.throughput_rps != null
-                            then (($k.throughput_rps / $c.throughput_rps) * 1000 | round) / 1000 else null end),
-                control_error_rate: $c.error_rate, clustered_error_rate: $k.error_rate,
-                sample_count_control: $c.sample_count, sample_count_clustered: $k.sample_count,
-                # true ONLY for the bounded-Times `crossing` arm (a per-request REPL_SYNC
-                # round trip); the regression arms are node-local membership overhead.
-                # So a reader never mistakes a membership ratio for total clustering cost.
-                crosses_network: ($k.crosses_network // false)
-              }) } ] | from_entries
-        )
-      }')"
+        cpu_pinning: {
+          mode: $mode, reason: $reason,
+          quota_cpus: (if $mode == "cpu-quota" then $quota else null end),
+          control: ($ctrl_cpus | nz), node_a: ($a_cpus | nz), node_b: ($b_cpus | nz),
+          observed: $observed
+        },
+        windows: {warmup_first_pair: $warmup, warmup_later_pairs: $pair_warmup, duration: $duration,
+                  pair_orders: ($orders | split(" ") | map(select(. != ""))), elapsed_s: $elapsed}
+      }')" || CLU_META='{}'
+
+    CLU_ASSEMBLED="$(clu_assemble_json "$OUT_DIR" "$CLU_PAIRS" "$CLU_META")" || CLU_ASSEMBLED=""
+    CLUSTERED_JSON="$(jq -ce '.state' <<<"$CLU_ASSEMBLED" 2>/dev/null)" \
+      || CLUSTERED_JSON='{"attempted":true,"measured":false,"problems":["result assembly failed"],"arms":{}}'
+    CLU_CTRL_BEHAVIOURS="$(jq -ce '.control_behaviours' <<<"$CLU_ASSEMBLED" 2>/dev/null)" || CLU_CTRL_BEHAVIOURS='{}'
+    CLU_CAND_BEHAVIOURS="$(jq -ce '.cluster_behaviours' <<<"$CLU_ASSEMBLED" 2>/dev/null)" || CLU_CAND_BEHAVIOURS='{}'
     jq -e . >/dev/null 2>&1 <<<"$CLUSTERED_JSON" || CLUSTERED_JSON='{}'
     echo "--- clustered A/B result (crossing = per-request NETWORK cost; the rest = membership-only):"
-    jq -c '{cluster,
+    jq -c '{measured, problems, method, cpu: .cpu_pinning.mode, throttling: (.throttling | {available, material}), cluster,
             crossing_arm: (.arms | to_entries | map(select(.value.crosses_network)) | from_entries | with_entries(.value |= {p50_ratio, p95_ratio, throughput_ratio})),
             membership_arms: (.arms | to_entries | map(select(.value.crosses_network|not)) | from_entries | with_entries(.value |= {p50_ratio, p95_ratio, throughput_ratio}))}' \
       <<<"$CLUSTERED_JSON" 2>/dev/null || echo "$CLUSTERED_JSON"

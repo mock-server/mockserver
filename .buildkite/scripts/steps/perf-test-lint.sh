@@ -148,6 +148,9 @@ bash "$REPO_ROOT/.buildkite/scripts/test/perf-pipelining-ab-test.sh"
 echo "--- FILE-body A/B checks (lib/perf-file-body-ab.sh on stubbed docker; its compare rows)"
 bash "$REPO_ROOT/.buildkite/scripts/test/perf-file-body-ab-test.sh"
 
+echo "--- clustered-state A/B checks (lib/perf-clustered-ab.sh: pinning, cgroup throttling, paired windows, assembly; its compare rows)"
+bash "$REPO_ROOT/.buildkite/scripts/test/perf-clustered-ab-test.sh"
+
 echo "--- INFO investigation step checks (cell verdict, cleanup on cancel, fail-closed exit, on stubbed docker and curl)"
 bash "$REPO_ROOT/.buildkite/scripts/test/perf-info-investigation-test.sh"
 

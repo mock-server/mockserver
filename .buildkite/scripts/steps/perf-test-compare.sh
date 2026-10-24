@@ -1007,8 +1007,10 @@ def metrics:
   # A disabled/absent-image run leaves .clustered_state {} (no arms), so this emits
   # ZERO metrics rather than a fail-closed missing-budget error — the genuineness of
   # an ATTEMPTED run is enforced by the run clustered_metrics_present validity check,
-  # not here. p95_ratio is null (dropped) unless BOTH arms cleared MIN_TAIL_SAMPLES.
-  ((.clustered_state.arms // {}) | to_entries[] | .key as $k | .value as $v |
+  # not here. p95_ratio is null (dropped) unless BOTH arms cleared MIN_TAIL_SAMPLES in every pair.
+  # Read only when .measured is not false (a missing window or a non-genuine cluster), like
+  # pipelining_inorder; a run from before the paired A/B has no .measured and is read as before.
+  ((.clustered_state // {}) | select(.measured != false) | (.arms // {}) | to_entries[] | .key as $k | .value as $v |
     ( {name:("clustered_state."+$k+".p50_ratio"),          value:$v.p50_ratio,          bkey:"clustered_state.*.p50_ratio"},
       {name:("clustered_state."+$k+".p95_ratio"),          value:$v.p95_ratio,          bkey:"clustered_state.*.p95_ratio"},
       {name:("clustered_state."+$k+".throughput_ratio"),   value:$v.throughput_ratio,   bkey:"clustered_state.*.throughput_ratio"},
@@ -1165,6 +1167,13 @@ def infomeasured: (.info_log_level_arm // {}).measured == true;
 def mainelsfp: ((.config // {}).event_log_budget.method // "fixed-268435456");
 def mainelsmetric($m): ($m.bkey | startswith("behaviours.")) or $m.bkey == "rig_valid_peak_achieved_rps"
   or (($m.bkey | startswith("tls_handshake.")) and ($m.name | startswith("tls13.")));
+# Clustered A/B method fingerprint. Until the paired A/B each arm was one window under a --cpus
+# quota, whose CFS throttling inflated the tails; clustered_state.* and the clustered behaviours
+# (<op>_clustered, <op>_clustered_control) compare only against runs with the same method.
+def clufp: ((.clustered_state // {}).method // "single-window-cpu-quota");
+def clupresent: (((.clustered_state // {}).arms // {}) | length) > 0;
+def clumetric($m): ($m.bkey | startswith("clustered_state."))
+  or (($m.bkey | startswith("behaviours.")) and ($m.name | test("_clustered(_control)?[.][^.]+$")));
 
 # JMH methodology fingerprint of the HEAD run (baseline-discontinuity guard).
 # microbench / microbench_extra metrics are only comparable against baseline runs
@@ -1212,6 +1221,7 @@ def mainelsmetric($m): ($m.bkey | startswith("behaviours.")) or $m.bkey == "rig_
 | ((.behaviours // {}) | keys | sort) as $headarms
 | infofp as $headinfofp
 | mainelsfp as $headelsfp
+| clufp as $headclufp
 | $baseline as $ballruns
 | [ $ballruns[] | select((.config.jmh // null) == $headjmh) ] as $bmicroruns
 | [ $ballruns[] | select(((.behaviours // {}) | keys | sort) == $headarms) ] as $bk6runs
@@ -1223,6 +1233,8 @@ def mainelsmetric($m): ($m.bkey | startswith("behaviours.")) or $m.bkey == "rig_
 | bmapof($binforuns) as $bmapInfo
 | bmapof($belsruns) as $bmapEls
 | bmapof($bk6elsruns) as $bmapK6Els
+| bmapof([ $ballruns[] | select(clufp == $headclufp) ]) as $bmapClu
+| bmapof([ $bk6elsruns[] | select(clufp == $headclufp) ]) as $bmapK6ElsClu
 # Hardware-matched subsets, for metrics whose VALUE moves with the machine.
 # A timing figure from a different instance type is not a comparable sample, and a
 # rolling median that spans a hardware change absorbs the step change instead of
@@ -1255,6 +1267,8 @@ def mainelsmetric($m): ($m.bkey | startswith("behaviours.")) or $m.bkey == "rig_
 | bmapof($binfohwruns) as $bmapInfoHw
 | bmapof($belshwruns) as $bmapElsHw
 | bmapof($bk6elshwruns) as $bmapK6ElsHw
+| bmapof([ $bhwruns[] | select(clufp == $headclufp) ]) as $bmapCluHw
+| bmapof([ $bk6elshwruns[] | select(clufp == $headclufp) ]) as $bmapK6ElsCluHw
 | ({serving_percore: latfp("serving_percore"), serving_multiproc: latfp("serving_multiproc"),
     serving_hw_matrix: latfp("serving_hw_matrix"), serving_rw_multik6: latfp("serving_rw_multik6")}) as $headlat
 | ($headlat | with_entries(.key as $f | .value as $v | .value = {
@@ -1280,6 +1294,9 @@ def mainelsmetric($m): ($m.bkey | startswith("behaviours.")) or $m.bkey == "rig_
     head_main_els_method: $headelsfp,
     baseline_main_els_comparable: ($belsruns | length),
     baseline_main_els_other: ([ $ballruns[] | select(mainelsfp != $headelsfp) ] | length),
+    head_clu_method: (if clupresent then $headclufp else null end),
+    baseline_clu_comparable: ([ $ballruns[] | select(clupresent and clufp == $headclufp) ] | length),
+    baseline_clu_other: ([ $ballruns[] | select(clupresent and clufp != $headclufp) ] | length),
     sweep_latency_reset: ([ $headmetrics[] | .bkey | latfam | select(. != null) ] | unique
       | map(. as $fam | {family: ., head_settle_s: $headlat[.], comparable: $bmapLat[.].comparable, other: $bmapLat[.].other,
              head_window: ($headlat[.] | if $fam == "serving_rw_multik6" then (split("|") | "settle \(.[0])s, rule \(.[1]), p99 bound \(.[2]) ms, min quiet \(.[3]) s, SUT diagnostics \(.[4])")
@@ -1301,6 +1318,9 @@ def mainelsmetric($m): ($m.bkey | startswith("behaviours.")) or $m.bkey == "rig_
       # (same image + arm set). growth/sweep/forward keep the full baseline.
       | ($m.bkey | latfam) as $lf
       | (if $lf != null then ($bmapLat[$lf][if $m.hw then "hw" else "all" end][$m.name] // [])
+         elif clumetric($m) then
+           (if ($m.bkey|startswith("behaviours")) then (if $m.hw then $bmapK6ElsCluHw else $bmapK6ElsClu end)
+            else (if $m.hw then $bmapCluHw else $bmapClu end) end)[$m.name] // []
          elif $m.hw then
            (if ($m.bkey|startswith("microbench")) then ($bmapMicroHw[$m.name] // [])
             elif ($m.bkey|startswith("behaviours")) then ($bmapK6ElsHw[$m.name] // [])
@@ -1324,7 +1344,7 @@ def mainelsmetric($m): ($m.bkey | startswith("behaviours.")) or $m.bkey == "rig_
       # BASE_COUNT warm-up (which keys off the UNFILTERED baseline and so does NOT
       # cover these filtered subsets). The remaining metrics (growth/sweep/forward)
       # are never fingerprint-filtered and keep the existing >=1 behaviour.
-      | (if $m.hw or ($lf != null) then $minbaseline
+      | (if $m.hw or ($lf != null) or clumetric($m) then $minbaseline
          elif ($m.bkey|startswith("microbench")) then $minbaseline
          elif ($m.bkey|startswith("behaviours")) then $minbaseline
          elif ($m.bkey|startswith("info_")) then $minbaseline
@@ -1582,6 +1602,36 @@ if [ "$ARM_MODE" != true ] && [ "$CLU_ATTEMPTED_HEAD" = "false" ] && [ "${CLU_RO
 :information_source: **Clustered state A/B (item 13) did NOT run this build** — \`clustered_attempted\` is \`false\` and no \`clustered_state.*\` metrics were emitted, so the clustered/in-memory ratio is UNMEASURED this run. Reason: ${CLU_WHY} This does NOT fail the build (the whole clustered family is notify-only), but item 13 is unanswered for this commit — a persistent skip means the measurement is not happening at all.${CLU_SKIP_SUFFIX}"
 fi
 
+# A clustered A/B that ran but did not measure (compare reads no clustered_state rows), one whose
+# containers were CPU-throttled, one whose throttling could not be read, and a method change in its
+# baseline. All notify-only.
+CLU_STATE_NOTE="$(jq -r '
+  (.clustered_state // {}) as $c | ($c.throttling // {}) as $t
+  | (if .clustered_attempted == true and $c.measured == false then
+      "\n\n:warning: **Clustered state A/B did NOT measure this build** — no `clustered_state.*` rows were compared. Problems: " + ((($c.problems // []) | join("; ")) | if . == "" then "none recorded" else . end) + ". Notify-only: this does not fail the build."
+    else "" end)
+  + (if .clustered_attempted == true and (($c.warnings // []) | length) > 0 then
+      "\n\n:information_source: **Clustered A/B arms missing from some windows** (their ratios are null): " + ($c.warnings | join("; ")) + "."
+    else "" end)
+  + (if .clustered_attempted == true and $t.material == true then
+      "\n\n:warning: **Clustered A/B containers were CPU-throttled** (CPU mode `\($c.cpu_pinning.mode // "unknown")`): share of CFS periods throttled in each container worst window: " + ([ ($t.by_role // {}) | to_entries[] | "\(.key) \(.value.max_window_throttled_period_pct)%" ] | join(", ")) + " (material at \($t.material_threshold_pct)%). A throttled window inflates its tail, so read the tail ratios of this run with care."
+    elif .clustered_attempted == true and ($t | has("available")) and $t.available != true then
+      "\n\n:information_source: **Clustered A/B throttling not recorded** — cgroup `cpu.stat` could not be read for every container and window, so whether CFS throttled them is unknown."
+    else "" end)' "$RESULT" 2>/dev/null || echo "")"
+CLU_COMPARABLE="$(printf '%s' "$RESULT_CMP" | jq -r '.baseline_clu_comparable // 0')"
+CLU_OTHER="$(printf '%s' "$RESULT_CMP" | jq -r '.baseline_clu_other // 0')"
+CLU_METHOD="$(printf '%s' "$RESULT_CMP" | jq -r '.head_clu_method // ""')"
+if [ -n "$CLU_METHOD" ] && [ "$CLU_OTHER" -gt 0 ]; then
+  if [ "$CLU_COMPARABLE" -lt "$MIN_BASELINE" ]; then
+    CLU_STATE="so they stay \`:new: new\` (not flagged) until ${MIN_BASELINE} exist"
+  else
+    CLU_STATE="which is enough to compare; the other runs are ignored until they leave the baseline window"
+  fi
+  CLU_STATE_NOTE="${CLU_STATE_NOTE}
+
+:information_source: **Clustered A/B baseline reset — method changed.** This run measured the clustered A/B as \`${CLU_METHOD}\`; ${CLU_OTHER} baseline run(s) used a different method (runs before the paired A/B are \`single-window-cpu-quota\`). \`clustered_state.*\` and the clustered behaviours (\`*_clustered\`, \`*_clustered_control\`) compare ONLY against the ${CLU_COMPARABLE} run(s) with the same method, ${CLU_STATE}. Notify-only; this never blocks the build."
+fi
+
 # Surface a pipelining A/B that ran but proved nothing (it is outside the run's validity block, so
 # this note is the only signal), or one skipped for a reason other than being switched off.
 PL_NOTE="$(jq -r '
@@ -1608,7 +1658,7 @@ FB_NOTE="$(jq -r '
 # carries them.
 EXTRA="${EXTRA}
 
-${PROVENANCE}${HW_NOTE}${PRECFG_NOTE}${MB_NOTE}${K6_NOTE}${INFO_NOTE}${ELS_NOTE}${SWEEPLAT_NOTE}${LAPTOP_INJVM_NOTE}${STREAM_NOTE}${CLU_NOTE}${PL_NOTE}${FB_NOTE}${PC_NOTE}${HWM_NOTE}${MP_NOTE}"
+${PROVENANCE}${HW_NOTE}${PRECFG_NOTE}${MB_NOTE}${K6_NOTE}${INFO_NOTE}${ELS_NOTE}${SWEEPLAT_NOTE}${LAPTOP_INJVM_NOTE}${STREAM_NOTE}${CLU_NOTE}${CLU_STATE_NOTE}${PL_NOTE}${FB_NOTE}${PC_NOTE}${HWM_NOTE}${MP_NOTE}"
 
 HEADER="Perf regression — \`${COMMIT:0:10}\` on \`${BRANCH}\` (baseline: ${BASE_COUNT} runs, median+MAD; budgets @ \`${BUDGETS_COMMIT:0:10}\`)"
 # Legend folded into every flagged annotation so a reader knows why the build did

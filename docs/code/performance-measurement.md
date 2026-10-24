@@ -17,7 +17,7 @@ regressions hide and stale claims get published.
 | `proxy.js` | Proxy and TLS handshake latency | Daily (perf queue) | No — notify-only |
 | `proxy.js` forward + slow upstream | Unmatched-proxy in-flight concurrency cap (unit 21) | **Opt-in** (`PERF_WORKLOAD=forward`) | `workload_forward_served_via_upstream` validity check |
 | `streaming.js` | LLM/SSE streaming concurrency vs match latency | Daily (perf queue) | No — notify-only |
-| `clustered_crossing.js` | Cross-node request latency in a cluster | Daily (perf queue) | **Notify-only.** `perf-test-compare.sh` reads `clustered_state.*` as notify-only metrics. This measured NOTHING until the clustered image was published to the perf queue: the run gates the A/B on `docker image inspect`, nothing pulled or built that image, so every run took the absent-image skip and emitted no `clustered_state` block to read. The snapshot push now builds `mockserver-snapshot-clustered` in the same job, from the same jar and commit as the SUT image, and the run refuses to measure if the two image revisions disagree (`clustered_skip_reason=revision_mismatch`) — a ratio computed across two commits would be arithmetically fine and describe code the measured binary never contained |
+| `clustered_crossing.js` | Cross-node request latency in a cluster | Daily (perf queue) | **Notify-only.** `perf-test-compare.sh` reads `clustered_state.*` as notify-only metrics. This measured NOTHING until the clustered image was published to the perf queue: the run gates the A/B on `docker image inspect`, nothing pulled or built that image, so every run took the absent-image skip and emitted no `clustered_state` block to read. The snapshot push now builds `mockserver-snapshot-clustered` in the same job, from the same jar and commit as the SUT image, and the run refuses to measure if the two image revisions disagree (`clustered_skip_reason=revision_mismatch`) — a ratio computed across two commits would be arithmetically fine and describe code the measured binary never contained. The arms run as pinned, alternating pairs of windows with CPU throttling recorded ([details](#clustered-state-ab--clustered_state-notify-only)) |
 | In-order pipelining A/B (`lib/perf-pipelining-ab.sh`: `regression.js` match + forward, and `k6/tools/pipelined_http1_client.py`) | Cost of `http1PipeliningInOrder` (on / off ratio), on two fresh SUTs in one run | Daily (perf queue), inside `perf-test-run.sh`; removed with the flag | No — notify-only, `provisional` budgets, and outside the run's validity block ([details](#in-order-pipelining-ab--pipelining_inorder-notify-only)) |
 | FILE-body A/B (`lib/perf-file-body-ab.sh`, `k6/file_body_ab.js`) | Cost of a FILE response body against the byte-identical inline body (file / inline ratio, 1 KB and 64 KB), on one fresh SUT in one run | Daily (perf queue), inside `perf-test-run.sh` | No — notify-only, `provisional` budgets, and outside the run's validity block ([details](#file-body-ab--file_body-notify-only)) |
 | `MatchingBenchmark` JMH | Matcher hot-path time/op and allocation/op | Daily (perf queue) | Yes — `time_per_op` + `alloc_bytes_per_op` |
@@ -1527,6 +1527,126 @@ runs every group. Rates, durations and sizes are tunable with `K6_COV_*` and
 checked at start-up (`PERF_COVERAGE_H2_STEP` as whole seconds, e.g. `15s`, longer than the
 settle), so a typo fails the run before any measurement rather than part-way through.
 
+### Clustered-state A/B — `clustered_state.*` (notify-only)
+
+**What it answers.** What running MockServer as a two-node Infinispan/JGroups cluster costs per
+request, as a cluster / in-memory control ratio per `regression.js` arm, plus the `crossing` arm
+(`clustered_crossing.js`), whose bounded-`Times` match is a replicated round trip on the cluster.
+Every metric is notify-only. Each ratio is the **median of three paired ratios** taken from adjacent
+windows on CPU-pinned containers, and each window records its containers' CFS throttling, so a tail
+ratio from this arm describes the backend rather than the scheduler.
+
+```mermaid
+flowchart LR
+  pin["three cpusets
+carved from the idle SUT's"]
+  up["control + node A + node B
+all up, all pinned"]
+  pair["pair i: regression first, second
+crossing second, first"]
+  snap["cgroup cpu.stat
+before and after each window"]
+  res[".clustered_state
+median of per-pair ratios
+measured, throttling"]
+  pin --> up --> pair --> res
+  pair --> snap --> res
+```
+
+| Part | Default | Override |
+|---|---|---|
+| Pairs | 3; pair 1 opens on the control for an even build number, and each later pair swaps the order | `PERF_CLUSTERED_PAIRS` (1-9) |
+| Windows | `regression.js` and `clustered_crossing.js`, 30 s measured (10 s of it settle), 20 s warm-up in pair 1, 5 s in later pairs | `K6_CLU_REG_DURATION`, `K6_CLU_REG_WARMUP`, `K6_CLU_PAIR_WARMUP` |
+| CPU | control, node A and node B each get 2 cpus of the main SUT's cpuset (`0-1`, `2-3`, `4-5`), no quota | `PERF_CLUSTERED_CPUS` (width), `PERF_CLUSTERED_CTRL_CPUS` + `_A_CPUS` + `_B_CPUS` (all three), `PERF_CLUSTERED_PIN=false`; a non-default value of any of them makes the run `rig_profile: pinned`, so it is not baselined |
+| Throttling | material when any container loses at least 1% of a window's CFS periods | `PERF_CLUSTERED_THROTTLE_MATERIAL_PCT`; `PERF_CGROUP_ROOT` (default `/sys/fs/cgroup`) |
+
+**Why it is measured this way.** Before the change, each arm was one window: the control ran,
+was removed, and then the cluster ran, each under `--cpus 2`. That quota is enforced per 100 ms CFS
+period, so a burst of JVM threads (JIT, GC, the JGroups heartbeats on the cluster nodes) is
+throttled until the next period, which shows up as tens of milliseconds in the tail and not at all
+in the median. The recurring flags were tail-only: `clustered_state.template_mustache.p95_ratio`
+3.43 against a 1.34 baseline, `match_clustered_control.p99_ms` 85 against 20. The two arms were
+also measured minutes apart, so drift in the box landed on one side only. Now:
+
+- **Pinned, no quota.** The three containers get non-overlapping cpusets and no `--cpus`, like the
+  main SUT. They are carved from the main SUT's cpuset because that SUT is idle during this phase
+  (the pipelining A/B reuses it the same way), and the split is proven disjoint in physical cores
+  from each other, the upstream and k6 with the same topology check as the main rig. When it cannot
+  be (an unpinned host under 16 cpus, a fractional `PERF_CLUSTERED_CPUS`, a SUT cpuset narrower
+  than three nodes, or nodes sharing a core), the nodes fall back to `--cpus`, and
+  `cpu_pinning.reason` and the `paired-cpu-quota` method say so.
+- **Paired.** All three servers stay up for the whole phase, so the windows can alternate. Pair *i*
+  runs `regression.js` on its first arm and then its second, and `clustered_crossing.js` in the
+  reverse order, so each window's partner is the window next to it in time and drift falls on both
+  arms. The opening arm swaps from pair to pair, so with three pairs a linear drift still leaves a
+  one-window bias in the median; it also swaps with the build number, so that bias changes sign
+  from build to build and averages out across the baseline rather than within one run.
+- **Throttling recorded.** The images are distroless, so the harness reads each container's
+  `cpu.stat` from the host cgroup tree (v2 under the systemd or cgroupfs driver, then v1) before and
+  after every window. With a cpuset and no quota there are no CFS periods, so a pinned run records
+  zero by construction: `material: false` there proves no quota was applied, not that the nodes saw
+  no contention. A `paired-cpu-quota` run shows how much the quota cost it. `available` is true
+  only when every window has a reading for every container (6 per pair).
+- **Residual neighbours.** The main SUT stays up, idle, on the same cpus (its diagnostics sampler
+  scrapes it every 2 s), as for the pipelining A/B; the scheduler places that work on whichever
+  node's cpus are idle, so it falls on both arms. The finished streaming SUT, which is unpinned, is
+  removed before the nodes start.
+- **Fail-closed.** The block has `measured: false`, and compare reads no `clustered_state.*` rows,
+  with the reasons in `problems`, as for the pipelining A/B, when:
+  - any window produced no result (absent, empty or unparseable);
+  - any arm in any window failed more than 1% of its requests, or reported no error rate (a fast
+    refusal would otherwise read as a faster cluster);
+  - `match`, `forward` or `crossing` is missing from any window, or has no p50 ratio, or an arm that cleared the 30-sample tail
+    floor in every window has no p50, p95 or throughput ratio (`large_1mb` and `large_10mb` sit
+    below the floor by design);
+  - the cluster was not genuine at the up-front probe (view below 2, state did not cross, control
+    not a single node) or **after the windows** (both nodes' views and the control's are re-read,
+    as `*_after` fields in `cluster`), so a member lost mid-phase cannot pass as a cluster.
+
+  A ratio is null unless every pair produced one, so a partial median is never published. Any
+  other arm missing from a window is listed in `warnings` (and noted in the annotation) without
+  unmeasuring the run.
+  Throttling never unmeasures a run; it is flagged instead. The `clustered_metrics_present`
+  validity check is unchanged (genuineness at the probe and at least one ratio), so nothing new
+  can fail the build.
+
+**What is recorded.** Under `.clustered_state`:
+
+| Field | Meaning |
+|---|---|
+| `measured`, `problems`, `warnings` | The verdict above, why not, and optional arms missing from a window |
+| `method` | `paired-cpuset`, or `paired-cpu-quota` for the fallback; compare keys the baseline on it |
+| `pairs`, `windows` | The pair count, the warm-ups and duration, the order of each pair (`pair_orders`) and the phase's wall-clock (`elapsed_s`) |
+| `cpu_pinning` | `mode`, `reason`, the three cpusets (or `quota_cpus`) and the cpusets Docker applied (`observed`) |
+| `cluster` | The up-front proof, plus `member_count_node_a_after`, `member_count_node_b_after` and `control_member_count_after` re-read after the windows |
+| `throttling` | `available`, `material`, `material_threshold_pct`; per container (`control`, `node_a`, `node_b`) the summed `nr_periods`, `nr_throttled` and `throttled_usec`, the worst window's `max_window_throttled_period_pct` and the `median_window_cpu_util_pct`; and every window's readings |
+| `arms.<op>` | `p50_ratio`, `p95_ratio`, `throughput_ratio` (medians of `*_pair_ratios`), the absolutes of each side (window medians), `control_error_rate` / `clustered_error_rate` (window means), `sample_count_*` (sums), `min_window_samples` and `crosses_network` |
+
+The per-arm absolutes still land in `.behaviours` as `<op>_clustered_control` and `<op>_clustered`:
+each figure is the median over the arm's three windows (`error_rate` the mean, counts the sum) and
+carries `windows`. A field is null unless every window has it.
+
+**Baseline.** The ratios keep their meaning (cluster / control for the same arm), but the method
+changed what they measure: the tails no longer carry quota throttling, and a median of pairs is less
+noisy than one window. So compare keys `clustered_state.*` and the clustered behaviours on
+`clustered_state.method` (a run without it is `single-window-cpu-quota`): they stay `:new:` until
+`MIN_BASELINE` (5) runs share the method, and the annotation says so ("Clustered A/B baseline reset").
+The other behaviours keep their history, because the k6 arm set did not change. The annotation also
+warns when an attempted A/B did not measure, when throttling was material, and notes when it could
+not be read.
+
+**Cost.** About 5.5 minutes more than the single-window A/B, which took 6.65 minutes in build 733:
+about 11.5 minutes in all, mostly the extra k6 windows (pair 1 about 260 s, pairs 2 and 3 about
+200 s each). The guard raised the `perf-run`
+step timeout from 80 to 90 minutes and the hardware-matrix timeout from 170 to 180: with the
+pipelining and FILE-body A/Bs the step should take about 68.5 minutes. The three
+2 GB containers now run together, 6 GB in all, where at most 4 GB ran at once before.
+
+**Code.** `lib/perf-clustered-ab.sh` (pinning, `cpu.stat`, the window loop, assembly), the
+clustered block in `perf-test-run.sh`, and the `clufp` key and `CLU_STATE_NOTE` in
+`perf-test-compare.sh`. `.buildkite/scripts/test/perf-clustered-ab-test.sh`, run by the perf lint,
+checks them against fake sysfs and cgroup trees and stubbed k6 runs.
+
 ### In-order pipelining A/B — `pipelining_inorder.*` (notify-only)
 
 **What it answers.** How much `http1PipeliningInOrder` (the HTTP/1.1 pipelining gate, on by
@@ -1622,12 +1742,12 @@ grep -rn 'pipelining_inorder\|PERF_PIPELINING\|PL_SUT_PREFIX\|K6_REG_ARMS\|perf-
   `perf-info-budget-test.sh`;
 - keep `pipelined_http1_client.py`, its unit test and `K6_REG_ARMS` (in `regression.js`,
   `lib/config.js` and the lint's `k6 inspect` line) only if another arm uses them;
-- lower the timeouts in `perf-test-guard.sh` by 10 minutes: the base `PERF_RUN_TIMEOUT=80` to 70
-  and the hardware-matrix `PERF_RUN_TIMEOUT=170` to 160, with the comment above them. Change the
-  expectations in `perf-xl-dispatch-test.sh` to match (80, 170, 100 and 80 become 70, 160, 90 and 70);
+- lower the timeouts in `perf-test-guard.sh` by 10 minutes: the base `PERF_RUN_TIMEOUT=90` to 80
+  and the hardware-matrix `PERF_RUN_TIMEOUT=180` to 170, with the comment above them. Change the
+  expectations in `perf-xl-dispatch-test.sh` to match (90, 180, 110 and 90 become 80, 170, 100 and 80);
 - fix the timeout prose: the step table and the step-timeouts paragraph in
   [ci-cd.md](../infrastructure/ci-cd.md), and the hardware-matrix paragraph in this file
-  (its 80 to 170 raise and its 80-minute timeout);
+  (its 90 to 180 raise and its 90-minute timeout);
 - remove this section and the rows and links to it in this file, the sentence about it in
   [netty-pipeline.md](netty-pipeline.md#http11-pipelining-gate), and close the row in
   [performance-measurement-backlog.md](../plans/performance-measurement-backlog.md).
@@ -1722,8 +1842,9 @@ the alternating `arm_order` turns that into a two-valued bias, so check whether 
 
 **CI time.** About 3.5 minutes: one SUT start (about 15 s) and one k6 run (2 min 48 s of schedule
 plus setup). `perf-run` took about 55 minutes before the pipelining A/B (about 4.5 minutes) was
-added, so with both it should take about 63 minutes, inside the existing 80-minute timeout. The
-guard's timeouts are unchanged.
+added, so with both it should take about 63 minutes, inside the 80-minute timeout of the time. The
+clustered A/B's paired windows then added about 5.5 minutes (about 68.5 in all) and raised the
+timeout to 90 ([Clustered-state A/B](#clustered-state-ab--clustered_state-notify-only)).
 
 ### Release comparison — measuring a past release on today's rig
 
@@ -2214,7 +2335,7 @@ bk build create -p mockserver-performance-test -b master -c HEAD \
 ```
 
 The build runs the normal regression chain plus the matrix (about 10 minutes per point, 60 in
-all); the guard raises the run step's timeout from 80 to 170 minutes only when
+all); the guard raises the run step's timeout from 90 to 180 minutes only when
 `PERF_SERVING_HW_MATRIX=true`. Avoid the 04:00 UTC daily slot, the Saturday 08:00 weekly perf-xl
 build and the Sunday 08:00 soak (a daily build can hold all three `perf` agents, so a matrix build
 would queue behind it).
@@ -2222,7 +2343,7 @@ would queue behind it).
 `cores:memory[:control]` entries.
 
 Adding `-e PERF_XL=true` runs the matrix as its own step on the `perf-xl` queue instead (130-minute
-timeout), and the run step keeps its 80-minute timeout. That step's result never reaches compare or
+timeout), and the run step keeps its 90-minute timeout. That step's result never reaches compare or
 the website, so the published table keeps its last committed figures. The placement below is the
 c5.12xlarge's ([which queue runs which arm](#which-queue-runs-which-arm)).
 
@@ -3467,6 +3588,12 @@ The heap divisors the harness expects mirror `ConfigurationProperties` and must 
 `els_default_divisor` for the retention budget (20 at `INFO`/`WARN`/`ERROR`/`OFF`, 12 at
 `DEBUG`/`TRACE`) and `els_inflight_divisor` for the in-flight floor (7 at `WARN`/`ERROR`/`OFF` and `INFO`, 12 at `DEBUG`/`TRACE`). `.buildkite/scripts/test/perf-default-budget-test.sh` checks the call sites, both guards,
 the scoped PUT against a stubbed SUT, the window statistics and the key.
+
+The clustered A/B method is an eighth break, in `clustered_state.*` and the clustered behaviours
+(`*_clustered`, `*_clustered_control`) only. Runs before it measured each arm once under a `--cpus`
+quota; runs after it pin the nodes and take the median of three pairs (see
+[Clustered-state A/B](#clustered-state-ab--clustered_state-notify-only)). Compare keys those metrics
+on `clustered_state.method`, so they re-baseline after `MIN_BASELINE` runs.
 
 ### INFO-arm event-log pressure
 

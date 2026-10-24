@@ -604,6 +604,17 @@ still referenced. After a stop the thread ends at the next garbage collection, n
 Source: `org.mockserver.cluster.ClusterFanIn`, `org.mockserver.cluster.HttpClusterPeerAccessor`,
 `org.mockserver.cluster.ClusterFanInException` (all in `mockserver-core`).
 
+## Measured Cost on the Perf Rig
+
+The daily perf run measures what clustering costs per request as a within-run A/B: a single
+in-memory control and a two-node Infinispan cluster from the same clustered image, each ratio being
+cluster / control. The `crossing` arm (a bounded-`Times` match, so a replicated `compareAndSet` per
+request) is the network cost; the other arms only measure the overhead of being a cluster member.
+The nodes are pinned to their own cpusets, the arms alternate in pairs of adjacent windows, and each
+window records CFS throttling. See
+[performance-measurement.md](performance-measurement.md#clustered-state-ab--clustered_state-notify-only)
+for the method and the recorded fields.
+
 ## Limitations and Known Follow-Ups
 
 | Limitation | Detail |
