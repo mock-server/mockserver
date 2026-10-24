@@ -756,6 +756,33 @@ COMPARE='
 def fabs: if . < 0 then -. else . end;
 def median: sort | length as $n | if $n==0 then null elif ($n%2==1) then .[($n/2|floor)] else (.[$n/2-1]+.[$n/2])/2 end;
 def mad($m): map((. - $m)|fabs) | median;
+# A bimodal baseline split at the largest ratio between neighbouring sorted values
+# (the first, on a tie). null unless that ratio reaches $r and the lower mode has at
+# least $minlo runs; the upper mode may be a single run.
+def modesplit($r; $minlo):
+  sort as $s
+  | reduce (range(0; ($s|length) - 1) | select($s[.] > 0) | {k: ., g: ($s[.+1] / $s[.])}) as $x
+      (null; if . == null or $x.g > .g then $x else . end)
+  | if . == null or .g < $r or .k + 1 < $minlo then null
+    else {lo: $s[0:.k+1], up: $s[.k+1:]} end;
+def binomtail($n; $k; $p):
+  [range($k; $n + 1) as $i | (reduce range(0; $i) as $j (1; . * ($n - $j) / ($j + 1))) * pow($p; $i) * pow(1 - $p; $n - $i)] | add // 0;
+# Mode-share check for a bimodal metric (input: the baseline, oldest first). The per-mode
+# band cannot see runs moving INTO the upper mode, so an upper-mode head is also tested:
+# is the upper-mode count in the last share_runs runs plus the head improbable (binomial
+# tail < share_alpha) at the historical upper-mode share listed for the metric?
+def modeshare($v; $bi; $name):
+  . as $bv
+  | modesplit($bi.split_ratio; 1) as $s1
+  | if $s1 == null then {} else
+      ((($s1.lo | max) * ($s1.up | min)) | sqrt) as $cut
+      | if $v < $cut then {} else
+          ($bv[-($bi.share_runs):] + [$v]) as $recent
+          | ($recent | length) as $n | ([$recent[] | select(. >= $cut)] | length) as $k
+          | binomtail($n; $k; $bi.metrics[$name]) as $p
+          | {share: {upper_runs: $k, runs: $n, expected: $bi.metrics[$name], p: $p, flagged: ($p < $bi.share_alpha)}}
+        end
+    end;
 
 # Flat list of comparable metrics for one run object. Each metric carries a
 # `bkey` (budget key) resolved against $budgets (loaded from the committed
@@ -1267,7 +1294,8 @@ def mainelsmetric($m): ($m.bkey | startswith("behaviours.")) or $m.bkey == "rig_
       | ($budgets[$m0.bkey]) as $b
       # gating is OPTIONAL in a budget entry: an omitted `gating` means notify-only
       # (a flag annotates but does not fail the build), so default it to false.
-      | ($m0 + {dir:$b.dir, min_pct:$b.min_pct, floor:$b.floor, gating:($b.gating // false), hw:($b.hw // false)}) as $m
+      | ($m0 + {dir:$b.dir, min_pct:$b.min_pct, floor:$b.floor, gating:($b.gating // false), hw:($b.hw // false),
+                bimodal:(if ((($b.bimodal // {}).metrics // {}) | has($m0.name)) then $b.bimodal else null end)}) as $m
       # microbench(_extra) compare only against JMH-config-matching baselines;
       # behaviours (k6 arms) compare only against k6-fingerprint-matching baselines
       # (same image + arm set). growth/sweep/forward keep the full baseline.
@@ -1325,7 +1353,22 @@ def mainelsmetric($m): ($m.bkey | startswith("behaviours.")) or $m.bkey == "rig_
               {name:$m.name, head:$m.value, gating:$m.gating, status:"bad-floor",
                regression:true}
             else
-            (if $m.dir=="up"
+            (if $m.dir=="up" and $m.bimodal != null then ($bv | modesplit($m.bimodal.split_ratio; 3)) else null end) as $sp
+            # A bimodal metric is judged against the baseline mode its head falls in: the
+            # lower mode by the usual band, the upper by its median +/- max(3 sigma,
+            # upper_band_pct). A head between the two modes is a level the window has not
+            # shown, so it is flagged. A unimodal window falls through to the usual band.
+            | (if $sp != null then
+              ($sp.lo|median) as $ml | (($sp.lo|mad($ml)) * 1.4826) as $sl
+              | (if $hasFloor then ([$ml + 3*$sl, $m.floor]|max) else ([$ml + 3*$sl, $ml*(1+$m.min_pct)]|max) end) as $tl
+              | ($sp.up|median) as $mu
+              | ([3*(($sp.up|mad($mu)) * 1.4826), $mu*$m.bimodal.upper_band_pct]|max) as $w
+              | (if $hasFloor then ([$mu + $w, $m.floor]|max) else $mu + $w end) as $tu
+              | {name:$m.name, head:$m.value, gating:$m.gating}
+                + (if $m.value <= $tl then {baseline:$ml, threshold:$tl, mode:"lower", regression:false}
+                   elif $m.value >= ($mu - $w) then {baseline:$mu, threshold:$tu, mode:"upper", regression:($m.value > $tu)}
+                   else {baseline:$ml, threshold:$tl, mode:"between", regression:true} end)
+            elif $m.dir=="up"
               then (if $hasFloor then ([$med + 3*$sigma, $m.floor]|max)
                     else ([$med + 3*$sigma, $med*(1+$m.min_pct)]|max) end) as $th
                    | {name:$m.name, head:$m.value, baseline:$med, threshold:$th,
@@ -1334,6 +1377,10 @@ def mainelsmetric($m): ($m.bkey | startswith("behaviours.")) or $m.bkey == "rig_
                     else ([$med - 3*$sigma, $med*(1-$m.min_pct)]|min) end) as $th
                    | {name:$m.name, head:$m.value, baseline:$med, threshold:$th,
                       gating:$m.gating, regression: ($m.value < $th)} end)
+            | if $m.dir=="up" and $m.bimodal != null
+              then . + ($bv | modeshare($m.value; $m.bimodal; $m.name))
+                   | .regression = (.regression or ((.share // {}).flagged == true))
+              else . end
             end
         end ] as $rows
     | ($meta + { missing: [],
@@ -1448,7 +1495,7 @@ SWEEPLAT_NOTE="$(printf '%s' "$RESULT_CMP" | jq -r --argjson minb "$MIN_BASELINE
 TABLE="$(printf '%s' "$RESULT_CMP" | jq -r '
   "| Metric | Head | Baseline | Threshold | Gate | Status |\n|---|---:|---:|---:|:--|:--|",
   (.rows[] |
-    "| \(.name) | \(.head // "n/a") | \(.baseline // "n/a" | if type=="number" then (.*1000|round)/1000 else . end) | \(.threshold // "n/a" | if type=="number" then (.*1000|round)/1000 else . end) | \(if .gating==true then "gating" else "notify-only" end) | \(if .status=="no-baseline" then ":new: new" elif .regression then (if .gating==true then ":red_circle: REGRESSION (fails build)" else ":warning: flagged (informational)" end) else ":white_check_mark: ok" end) |")')"
+    "| \(.name) | \(.head // "n/a") | \(.baseline // "n/a" | if type=="number" then (.*1000|round)/1000 else . end)\(if .mode == null then "" elif .mode == "between" then " (between modes)" else " (\(.mode) mode)" end)\(if (.share // {}).flagged == true then " (\(.share.upper_runs) of last \(.share.runs) runs upper-mode, expected \(.share.expected * 100 | round)%)" else "" end) | \(.threshold // "n/a" | if type=="number" then (.*1000|round)/1000 else . end) | \(if .gating==true then "gating" else "notify-only" end) | \(if .status=="no-baseline" then ":new: new" elif .regression then (if .gating==true then ":red_circle: REGRESSION (fails build)" else ":warning: flagged (informational)" end) else ":white_check_mark: ok" end) |")')"
 
 # Context appended to the table: which sweep rungs were excluded (and why) so an
 # excluded top rung cannot masquerade as a server ceiling, and the per-behaviour
@@ -1566,7 +1613,7 @@ ${PROVENANCE}${HW_NOTE}${PRECFG_NOTE}${MB_NOTE}${K6_NOTE}${INFO_NOTE}${ELS_NOTE}
 HEADER="Perf regression — \`${COMMIT:0:10}\` on \`${BRANCH}\` (baseline: ${BASE_COUNT} runs, median+MAD; budgets @ \`${BUDGETS_COMMIT:0:10}\`)"
 # Legend folded into every flagged annotation so a reader knows why the build did
 # (or did not) go red, and how a notify-only metric graduates to gating.
-LEGEND="_Gating metrics_ (JMH \`*.time_per_op\` / \`*.alloc_bytes_per_op\`, \`forward.error_rate\`) **fail the build** when flagged. _Notify-only_ metrics are reported just as loudly but do NOT fail the build — they graduate to gating once they have >=10 clean runs of history and a budget derived from them (see docs/operations/performance-tuning.md -> \"Regression thresholds\")."
+LEGEND="_Gating metrics_ (JMH \`*.time_per_op\` / \`*.alloc_bytes_per_op\`, \`forward.error_rate\`) **fail the build** when flagged. _Notify-only_ metrics are reported just as loudly but do NOT fail the build — they graduate to gating once they have >=10 clean runs of history and a budget derived from them (see docs/operations/performance-tuning.md -> \"Regression thresholds\"). A Baseline marked _lower mode_ or _upper mode_ is a bimodal metric judged against the baseline mode its head falls in; _between modes_ is a level the baseline window has not shown; _N of last M runs upper-mode_ means the share of runs in the upper mode has risen improbably far above that metric's historical share."
 
 # Exit non-zero ONLY when at least one GATING metric is flagged — that non-zero
 # exit is the regression notification (the pipeline goes red). A non-gating flag

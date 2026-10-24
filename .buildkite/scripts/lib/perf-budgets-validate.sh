@@ -86,8 +86,8 @@ validate_perf_budgets() {
         # default -- and the default for `gating` is notify-only, i.e. a typo
         # turns a build-failing metric into one that only annotates. The value
         # checks cannot see that; only the key set can.
-        elif (($v | keys) - ["dir","min_pct","floor","gating","provisional","hw"] | length) > 0 then
-          "\($k): unrecognised key(s) \((($v | keys) - ["dir","min_pct","floor","gating","provisional","hw"]) | tojson) -- a misspelled key does not error, it silently reverts that setting to its default (a typo of `gating` makes a build-failing metric notify-only)"
+        elif (($v | keys) - ["dir","min_pct","floor","gating","provisional","hw","bimodal"] | length) > 0 then
+          "\($k): unrecognised key(s) \((($v | keys) - ["dir","min_pct","floor","gating","provisional","hw","bimodal"]) | tojson) -- a misspelled key does not error, it silently reverts that setting to its default (a typo of `gating` makes a build-failing metric notify-only)"
         elif (($v | has("dir")) and ($v | has("min_pct")) and ($v | has("floor"))) | not then
           ((["dir","min_pct","floor"] - ($v | keys)) as $missing
            | "\($k): missing required key(s) \($missing | tojson) -- absence is not a usable default"
@@ -106,6 +106,32 @@ validate_perf_budgets() {
           "\($k): provisional is \($v.provisional | tojson), expected true or false"
         elif (($v | has("hw")) and (($v.hw | type) != "boolean")) then
           "\($k): hw is \($v.hw | tojson), expected true or false -- jq treats ANY non-null, non-false value as true, so the string \"false\" would mark the metric hardware-sensitive and silently stop it comparing across machines"
+        # `bimodal` judges a head against the baseline mode it falls in. It is a
+        # looser rule than one median+MAD band, so it is notify-only and up-only,
+        # and its numbers are type-checked for the same jq-ordering reason as floor.
+        elif ($v | has("bimodal")) then
+          ($v.bimodal) as $bm
+          | ($k | split(".") | last) as $leaf
+          | if ($bm | type) != "object" then "\($k): bimodal is \($bm | tojson), expected an object"
+            elif ((($bm | keys) - ["metrics","split_ratio","upper_band_pct","share_runs","share_alpha"]) | length) > 0
+                 or ((["metrics","split_ratio","upper_band_pct","share_runs","share_alpha"] - ($bm | keys)) | length) > 0 then
+              "\($k): bimodal needs exactly the keys [\"metrics\",\"split_ratio\",\"upper_band_pct\",\"share_runs\",\"share_alpha\"], got \($bm | keys | tojson)"
+            elif (($bm.metrics | type) != "object") or (($bm.metrics | length) == 0)
+                 or ([$bm.metrics | to_entries[] | select((.key | endswith("." + $leaf) | not) or ((.value | type) != "number") or .value <= 0 or .value >= 1)] | length) > 0 then
+              "\($k): bimodal.metrics is \($bm.metrics | tojson), expected a non-empty object of metric names ending in .\($leaf), each mapped to its historical upper-mode share in (0, 1)"
+            elif (($bm.share_runs | type) != "number") or ($bm.share_runs < 1) or ($bm.share_runs != ($bm.share_runs | floor)) then
+              "\($k): bimodal.share_runs is \($bm.share_runs | tojson), expected a whole number >= 1"
+            elif (($bm.share_alpha | type) != "number") or ($bm.share_alpha <= 0) or ($bm.share_alpha >= 1) then
+              "\($k): bimodal.share_alpha is \($bm.share_alpha | tojson), expected a number in (0, 1)"
+            elif (($bm.split_ratio | type) != "number") or ($bm.split_ratio <= 1) then
+              "\($k): bimodal.split_ratio is \($bm.split_ratio | tojson), expected a number > 1"
+            elif (($bm.upper_band_pct | type) != "number") or ($bm.upper_band_pct <= 0) or ($bm.upper_band_pct >= 1) then
+              "\($k): bimodal.upper_band_pct is \($bm.upper_band_pct | tojson), expected a number in (0, 1)"
+            elif $v.dir != "up" then
+              "\($k): bimodal is only defined for dir \"up\", got \($v.dir | tojson)"
+            elif ($v.gating == true) then
+              "\($k): bimodal may not be set on a gating budget -- its per-mode band is looser than one median+MAD band, so making it gate needs its own reviewed change"
+            else empty end
         else empty end
     ] | .[]' "$file" 2>&1)"
 
@@ -169,6 +195,24 @@ _perf_budgets_self_test() {
     '{"budgets":{"a.b.c":{"dir":"up","min_pct":0.1,"floor":5000,"unexpected":123}}}'
   _expect_reject "missing floor (absence must be stated as null, not omitted)" \
     '{"budgets":{"a.b.c":{"dir":"up","min_pct":0.1}}}'
+  _expect_reject "quoted bimodal split_ratio" \
+    '{"budgets":{"b.*.p95_ms":{"dir":"up","min_pct":0.1,"floor":null,"bimodal":{"metrics":{"m.p95_ms":0.3},"split_ratio":"2","upper_band_pct":0.25,"share_runs":5,"share_alpha":0.05}}}}'
+  _expect_reject "bimodal upper_band_pct of 1 or more" \
+    '{"budgets":{"b.*.p95_ms":{"dir":"up","min_pct":0.1,"floor":null,"bimodal":{"metrics":{"m.p95_ms":0.3},"split_ratio":2,"upper_band_pct":1,"share_runs":5,"share_alpha":0.05}}}}'
+  _expect_reject "bimodal metric name for another leaf (a typo would silently never apply)" \
+    '{"budgets":{"b.*.p95_ms":{"dir":"up","min_pct":0.1,"floor":null,"bimodal":{"metrics":{"m.p99_ms":0.3},"split_ratio":2,"upper_band_pct":0.25,"share_runs":5,"share_alpha":0.05}}}}'
+  _expect_reject "misspelled bimodal key" \
+    '{"budgets":{"b.*.p95_ms":{"dir":"up","min_pct":0.1,"floor":null,"bimodal":{"metrics":{"m.p95_ms":0.3},"split_ratio":2,"upper_pct":0.25,"share_runs":5,"share_alpha":0.05}}}}'
+  _expect_reject "quoted historical upper-mode share" \
+    '{"budgets":{"b.*.p95_ms":{"dir":"up","min_pct":0.1,"floor":null,"bimodal":{"metrics":{"m.p95_ms":"0.3"},"split_ratio":2,"upper_band_pct":0.25,"share_runs":5,"share_alpha":0.05}}}}'
+  _expect_reject "fractional share_runs" \
+    '{"budgets":{"b.*.p95_ms":{"dir":"up","min_pct":0.1,"floor":null,"bimodal":{"metrics":{"m.p95_ms":0.3},"split_ratio":2,"upper_band_pct":0.25,"share_runs":4.5,"share_alpha":0.05}}}}'
+  _expect_reject "share_alpha of 1 (the share check could never stay quiet)" \
+    '{"budgets":{"b.*.p95_ms":{"dir":"up","min_pct":0.1,"floor":null,"bimodal":{"metrics":{"m.p95_ms":0.3},"split_ratio":2,"upper_band_pct":0.25,"share_runs":5,"share_alpha":1}}}}'
+  _expect_reject "bimodal on a gating budget" \
+    '{"budgets":{"b.*.p95_ms":{"dir":"up","min_pct":0.1,"floor":null,"gating":true,"bimodal":{"metrics":{"m.p95_ms":0.3},"split_ratio":2,"upper_band_pct":0.25,"share_runs":5,"share_alpha":0.05}}}}'
+  _expect_reject "bimodal on a down budget" \
+    '{"budgets":{"b.*.rps":{"dir":"down","min_pct":0.1,"floor":null,"bimodal":{"metrics":{"m.rps":0.3},"split_ratio":2,"upper_band_pct":0.25,"share_runs":5,"share_alpha":0.05}}}}'
   _expect_reject "entry is not an object" \
     '{"budgets":{"a.b.c":[1,2,3]}}'
   _expect_reject "no budgets object" \
@@ -189,6 +233,8 @@ _perf_budgets_self_test() {
     '{"budgets":{"a.b.c":{"dir":"up","min_pct":0.1,"floor":null,"gating":false}}}'
   _expect_accept "well-formed hw:true (the real shape this change adds)" \
     '{"budgets":{"a.b.c":{"dir":"up","min_pct":0.1,"floor":5000,"hw":true}}}'
+  _expect_accept "well-formed notify-only bimodal" \
+    '{"budgets":{"b.*.p95_ms":{"dir":"up","min_pct":0.1,"floor":null,"gating":false,"bimodal":{"metrics":{"m.p95_ms":0.3},"split_ratio":2,"upper_band_pct":0.25,"share_runs":5,"share_alpha":0.05}}}}'
   _expect_accept "comment entry holding an array" \
     '{"budgets":{"_comment_x":["prose","more prose"],"a.b.c":{"dir":"down","min_pct":0,"floor":1}}}'
 

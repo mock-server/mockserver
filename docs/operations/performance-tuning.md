@@ -176,13 +176,88 @@ The compare step applies a **rolling median + MAD** baseline over the last N=10 
 | Growth slope (p95 latency ratio) | Higher is worse; absolute floor 2.0 (latency is noisier; a #2329-class signal is ~hundreds×) — rolling median+MAD stays the sensitive gate | 10% |
 | Error rate | Higher is worse; absolute floor 0.005 | — |
 
+#### Bimodal metrics
+
+**Four notify-only p95s are judged by two checks instead of one band:** `match_http.p95_ms`, `template_http.p95_ms`, `info_match_http.p95_ms` and `info_match_https_h2.p95_ms`. They are listed under `bimodal` in their `perf-budgets.json` entry.
+
+- **Per-mode band:** the head is judged against the baseline mode it falls in.
+- **Mode-share check:** a head in the upper mode is also flagged when too many recent runs are in that mode.
+
+Replayed over builds 649–734, the pair cuts these metrics' notify-only flags from 25 to 9 in 154 compared runs. They also catch more regressions:
+
+| Injected into the real history | Single band | Bimodal |
+|---|---|---|
+| Six-run episode in which every fast run lands in the clump (3.8 ms), all four metrics | 51 of 134 episodes | 101 of 134 |
+| Sustained shift into the clump, caught within 10 runs (`match_http` / `info_match_http` / `info_match_https_h2`) | 15/29, 20/30, 12/30 | 29/29 (median 3 runs), 30/30 (6), 30/30 (5) |
+| `match_http`: 1.5× slowdown, among runs the rule otherwise passes | 3 of 30 | 19 of 35 |
+
+```mermaid
+flowchart TD
+  W["baseline window (10 runs, oldest first)"] --> S{"largest ratio between\nneighbouring sorted values\n>= split_ratio, and lower\nmode has >= 3 runs?"}
+  S -- no --> U["single median + MAD band"]
+  S -- yes --> H{"where is the head?"}
+  H -- "<= lower band" --> OK1["ok (lower mode)"]
+  H -- "within upper median\n+/- max(3 sigma, upper_band_pct)" --> SH{"upper-mode share of the\nlast share_runs runs + head\nimprobable at the historical\nshare? (binomial < share_alpha)"}
+  U --> SH
+  SH -- yes --> F3["flagged (mode share)"]
+  SH -- no --> OK2["ok"]
+  H -- "above the upper band" --> F1["flagged (upper mode)"]
+  H -- "between the bands" --> F2["flagged (between modes)"]
+```
+
+**Why.** On the 200 rps and 50 rps arms a fixed latency clump of about 4–5 ms holds a run-varying share of requests, either side of 5%. So these p95s read either the fast body (about 0.4–1.0 ms) or the clump (about 3.2–4.6 ms). In the 69 persisted `match_http` runs from build 443, 32% read the clump. Which mode a run reads is random:
+
+- The same image on the same instance takes both modes (for example `i-09affe652699dee0a`: clump, fast, clump, fast, clump).
+- Both modes appear on JDK 25.0.4.1 and 25.0.5, in both availability zones and on both AMIs.
+- The mode of `match_http` is uncorrelated with the other arms of the same run (phi 0.0–0.2), and barely with the previous run (lag-1 phi 0.16).
+
+One median+MAD band over such a window fails in both directions. When the window is mostly fast, every clump run is flagged. When it is mostly clump, the median jumps to about 3.5 ms and the threshold to 5–9 ms, so the band cannot see a fast-mode regression.
+
+**Per-mode band.**
+
+- The lower mode keeps the usual band: `median + 3 × 1.4826 × MAD`, at least `min_pct`.
+- The upper mode allows its median ± `max(3σ, upper_band_pct × median)`. Its 1–3 runs cannot estimate a spread on their own, and the clump spans about −16%/+22% of its median, so `upper_band_pct` is 0.25.
+- A head between the two bands is a level the window has not shown, so it is flagged.
+- `split_ratio` is 2, well under the clump-to-body ratio of about 7. A rare run between the modes (1.78 ms in build 673) can move the split below it. That run then joins the upper mode and widens its band while it is in the window.
+
+**Mode-share check.** On its own, the per-mode band reads a regression that pushes runs *into* the clump as the upper mode. In the six-run replay above, it flagged 7 of 134 episodes where the single band had flagged 51. The share check closes that gap:
+
+- Runs are classified by the window's largest-ratio split, at the geometric midpoint of the gap. It needs only one run on each side.
+- For a head in the upper mode, the check counts the upper-mode runs among the last `share_runs` (5) runs plus the head. The binomial probability of at least that many, at the metric's historical upper-mode share, must stay at or above `share_alpha` (0.05).
+- The historical shares are the values under `bimodal.metrics`: 0.32, 0.75, 0.44 and 0.55. `generate-history.py` derives them from every persisted run since build 443.
+- At a 0.32 share, 5 of 6 recent runs is flagged and 4 of 6 is not. At 0.44 and 0.55 it takes 6 of 6. At 0.75 (`template_http`) the check can never fire.
+- In the real history it adds two flags, builds 655 and 659. Each was the fifth clump run in six, which is improbable at 32% even though no code had changed.
+
+**Rejected alternatives:**
+
+- *Normalising by a same-run reference:* no arm co-moves with `match_http`'s mode.
+- *Using p90:* p90 is not recorded, so the history cannot test it. Extrapolating the clump share from p95 and p99 suggests about 15% of runs would still put p90 in the clump.
+- *Taking the threshold from the upper mode for every head:* it stops the flags but cannot see a fast-mode regression below about 5 ms.
+- *A share check over the whole 10-run window:* it reacts more slowly. At 8–11 false flags it caught 54–59 of 134 episodes, against 101 at 9 for the last 5 runs.
+
+**Limits.**
+
+- `template_http.p95` is in the clump 75% of the time, so a shift into it is barely a change. Neither rule sees one quickly: the single band caught 5 of 33 six-run episodes and this rule catches 1. Its gain is the false flags, which fall from 4 to 0.
+- A moderate rise in the clump share goes effectively undetected. For `match_http`, at the historical 32% the share check fires on about 1 run in 80. It fires on about 1 in 11 at 50%, 1 in 4 at 65%, and more than half of runs only from about 80%. The share check is for a shift *into* the clump, not a drift in its frequency.
+- **The historical shares must be re-derived** after anything that changes the clump: a k6 rate or harness change, a new instance type, a base-image or JDK change, or the F5 root-cause fix. Re-derive them too if share flags recur on unchanged code. To re-derive:
+  1. Download the `perf-result.json` of every persisted build since the change (`bk artifacts list <N>` / `bk artifacts download`, as in `generate-history.py`'s docstring).
+  2. Run `generate-history.py <dir> --from <first build>`.
+  3. Copy the printed shares into `bimodal.metrics`.
+  4. Commit the regenerated fixture with the test's expected flag lists updated.
+- A body slowdown of about 6–9× lands inside the upper band. It reads as the upper mode and is flagged only through the share check, once it persists. The clump's own trigger is open in [the backlog](../plans/performance-measurement-backlog.md) (row F5).
+- A level seen once in the window becomes a mode. A repeat of a flagged regression at the same level is therefore not flagged again by the band while the flagged run is still in the window.
+- Both checks are notify-only. The validator rejects `bimodal` on a gating budget or on a `down` budget.
+- A per-request cost of a few microseconds is far below these metrics' run-to-run spread. The U12f credential-masking cost (+6.5 µs/op, +8% in the matching JMH benchmark) did not show in `match_http.p95` under either rule: the same pre-fix image read 1.022 in build 728 and 0.433 in build 729. That class of change is the JMH micro-benchmarks' job.
+
+The evidence is replayed in `.buildkite/scripts/test/perf-bimodal-budget-test.sh`, against the real windows in `.buildkite/scripts/test/fixtures/perf-bimodal/`. Those windows are written by `generate-history.py` in the same directory, from the builds' `perf-result.json` artifacts. Listing another metric needs its history and share regenerated there.
+
 The pipeline uses **per-metric gating**. A flagged regression on a **gating** metric fails the build (the compare step exits non-zero — and there is no `soft_fail`, so the build goes red). A flagged regression on a **notify-only** metric is reported just as loudly in the annotation but does not change the exit code. The failing build **is** the regression notification — there is no separate webhook or channel.
 
 Only metrics with a derived, trustworthy budget gate today: the **JMH micro-benchmark** metrics (`*.time_per_op`, `*.alloc_bytes_per_op` — deterministic, hardware-independent) and **`forward.error_rate`** (a discriminating pass/fail guard, not a tuned threshold). Every other metric — all k6 latency percentiles, the growth ratios, `rig_valid_peak_achieved_rps` and `live_set_bytes` — runs notify-only. A notify-only metric graduates to gating once it has ≥ 10 clean runs of history and a budget derived from them; the repo owner decides each promotion. Open measurement items are tracked in [docs/plans/performance-measurement-backlog.md](../plans/performance-measurement-backlog.md).
 
 ### Reading the annotation table
 
-The annotation shows one row per compared metric with columns: metric key, head value, baseline (median), threshold, **Gate** (`gating` or `notify-only`), and Status. Status is `:red_circle: REGRESSION (fails build)` for a flagged gating metric, `:warning: flagged (informational)` for a flagged notify-only metric, `:new: new` for a metric with no baseline yet, and `:white_check_mark: ok` otherwise. The "baseline warming up" annotation appears when fewer than 5 prior runs exist on the branch — this is expected when the pipeline is first deployed or after the S3 history is pruned.
+The annotation shows one row per compared metric with columns: metric key, head value, baseline (median), threshold, **Gate** (`gating` or `notify-only`), and Status. Status is `:red_circle: REGRESSION (fails build)` for a flagged gating metric, `:warning: flagged (informational)` for a flagged notify-only metric, `:new: new` for a metric with no baseline yet, and `:white_check_mark: ok` otherwise. For a [bimodal metric](#bimodal-metrics) the Baseline cell names the mode the head was judged against: `(lower mode)`, `(upper mode)` or `(between modes)`. A mode-share flag adds the count, for example `(6 of last 6 runs upper-mode, expected 32%)`. The "baseline warming up" annotation appears when fewer than 5 prior runs exist on the branch — this is expected when the pipeline is first deployed or after the S3 history is pruned.
 
 ### Re-baselining
 

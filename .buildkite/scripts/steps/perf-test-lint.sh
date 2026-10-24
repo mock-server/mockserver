@@ -84,6 +84,9 @@ bash "$REPO_ROOT/.buildkite/scripts/test/perf-upstream-alias-test.sh"
 echo "--- INFO-arm event-log budget checks (shipped default on the INFO SUT, info_* baseline key)"
 bash "$REPO_ROOT/.buildkite/scripts/test/perf-info-budget-test.sh"
 
+echo "--- bimodal budget checks (a listed p95 is judged against its head's mode; the real 649-734 history replayed)"
+bash "$REPO_ROOT/.buildkite/scripts/test/perf-bimodal-budget-test.sh"
+
 echo "--- perf-xl dispatch checks (guard YAML with and without PERF_XL, PERF_RUN_ARM switch)"
 bash "$REPO_ROOT/.buildkite/scripts/test/perf-xl-dispatch-test.sh"
 
