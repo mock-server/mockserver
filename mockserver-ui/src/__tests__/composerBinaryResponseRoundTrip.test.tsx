@@ -152,11 +152,17 @@ describe('editing a binaryResponse expectation', () => {
     await screen.findByTestId('kept-action-fields');
     await user.click(screen.getByRole('button', { name: /New \/ clear/ }));
     expect(screen.queryByTestId('kept-action-fields')).not.toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /^Static HTTP response/ })).toBeChecked();
     await user.type(screen.getByLabelText('Path'), '/fresh');
+    await user.click(screen.getByRole('radio', { name: /^Binary response/ }));
+    expect(screen.getByLabelText(/Binary data/)).toHaveValue('');
+    await user.type(screen.getByLabelText(/Binary data/), 'QQ==');
     await user.click(screen.getByRole('button', { name: /Register expectation/ }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     const sent = JSON.parse(String(fetchMock.mock.calls[0]![1]?.body)) as Record<string, unknown>;
-    expect(sent['binaryResponse']).toEqual({ binaryData: 'SGVsbG8=' });
+    // Neither the loaded data nor its delay and primary reach the next binary response.
+    expect(sent['binaryResponse']).toEqual({ binaryData: 'QQ==' });
+    expect(sent['httpResponse']).toBeUndefined();
   });
 
   it.each([['listed', true], ['not listed', false]])('loading a different %s expectation does not carry the fields into it', async (_label, listed) => {
