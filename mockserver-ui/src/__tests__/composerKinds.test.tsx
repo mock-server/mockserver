@@ -9,7 +9,7 @@
  * - Store: 'mcp-tools' view migrates to 'composer'
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { buildTheme } from '../theme';
@@ -63,6 +63,11 @@ function getActionRadioLabels(): string[] {
     }
     return '';
   });
+}
+
+function respondRadio(label: RegExp): HTMLElement {
+  const respondSection = screen.getByText(/2 · Respond with/).closest('[class*="MuiPaper"]')!;
+  return within(respondSection as HTMLElement).getByLabelText(label);
 }
 
 describe('ComposerView kinds', () => {
@@ -200,24 +205,17 @@ describe('ComposerView action-type filtering', () => {
 
 describe('ComposerView kind-change default reset', () => {
   beforeEach(() => {
-    useDashboardStore.setState({ activeExpectations: [] });
+    useDashboardStore.setState({ activeExpectations: [], pendingEditExpectation: null });
   });
 
-  it('switching to gRPC defaults actionType to grpc_stream', async () => {
+  it('switching a fresh form to gRPC selects the gRPC default (grpc_stream)', async () => {
     const user = userEvent.setup({ delay: null });
     renderComposer();
-    // Start on HTTP, actionType defaults to 'static'
+    // The untouched HTTP default ('static') is replaced by the gRPC default,
+    // matching what New / clear gives in the gRPC kind.
     await user.click(screen.getByLabelText('gRPC'));
-    // The grpc_stream radio should be checked
-    const labels = getActionRadioLabels();
-    expect(labels).toContain('gRPC stream response');
-    const respondSection = screen.getByText(/2 · Respond with/).closest('[class*="MuiPaper"]')!;
-    const grpcRadio = within(respondSection as HTMLElement).getByLabelText(/gRPC stream response/);
-    // static is valid in gRPC kind and was the previous selection, so it stays.
-    // But grpc_stream should at least be present and selectable.
-    // Actually, 'static' IS in the gRPC allowed list, so it stays selected.
-    // Let's verify that switching from a type NOT in the gRPC list resets.
-    expect(grpcRadio).toBeInTheDocument();
+    expect(respondRadio(/gRPC stream response/)).toBeChecked();
+    expect(respondRadio(/Static HTTP response/)).not.toBeChecked();
   });
 
   it('switching from HTTP (forward selected) to DNS resets to dns_response', async () => {
@@ -232,14 +230,88 @@ describe('ComposerView kind-change default reset', () => {
     expect(dnsRadio).toBeChecked();
   });
 
-  it('switching from HTTP (static selected) to gRPC keeps static since it is valid', async () => {
+  it('a user-picked static response survives switching HTTP to gRPC', async () => {
     const user = userEvent.setup({ delay: null });
     renderComposer();
-    // 'static' is the default for HTTP and is also valid for gRPC
+    // Explicitly pick Static (via another action, since re-clicking the checked radio is a no-op).
+    await user.click(screen.getByLabelText(/Forward to upstream/));
+    await user.click(screen.getByLabelText(/Static HTTP response/));
     await user.click(screen.getByLabelText('gRPC'));
-    const respondSection = screen.getByText(/2 · Respond with/).closest('[class*="MuiPaper"]')!;
-    const staticRadio = within(respondSection as HTMLElement).getByLabelText(/Static HTTP response/);
-    expect(staticRadio).toBeChecked();
+    expect(respondRadio(/Static HTTP response/)).toBeChecked();
+  });
+
+  it('a static response picked in gRPC survives a round trip through MCP', async () => {
+    const user = userEvent.setup({ delay: null });
+    renderComposer();
+    await user.click(screen.getByLabelText('gRPC'));
+    await user.click(screen.getByLabelText(/Static HTTP response/));
+    await user.click(screen.getByLabelText('MCP'));
+    expect(respondRadio(/Static HTTP response/)).toBeChecked();
+    await user.click(screen.getByLabelText('gRPC'));
+    expect(respondRadio(/Static HTTP response/)).toBeChecked();
+  });
+
+  it('an untouched default follows each kind switch', async () => {
+    const user = userEvent.setup({ delay: null });
+    renderComposer();
+    await user.click(screen.getByLabelText('MCP'));
+    expect(respondRadio(/Static HTTP response/)).toBeChecked();
+    await user.click(screen.getByLabelText('gRPC'));
+    expect(respondRadio(/gRPC stream response/)).toBeChecked();
+    await user.click(screen.getByLabelText('DNS'));
+    expect(respondRadio(/DNS response/)).toBeChecked();
+    await user.click(screen.getByLabelText('HTTP'));
+    expect(respondRadio(/Static HTTP response/)).toBeChecked();
+  });
+
+  it('switching a fresh form from HTTP to MCP keeps static', async () => {
+    const user = userEvent.setup({ delay: null });
+    renderComposer();
+    await user.click(screen.getByLabelText('MCP'));
+    expect(respondRadio(/Static HTTP response/)).toBeChecked();
+  });
+
+  it('a user-picked HTTP action not valid in MCP resets to static', async () => {
+    const user = userEvent.setup({ delay: null });
+    renderComposer();
+    await user.click(screen.getByLabelText(/Forward to upstream/));
+    await user.click(screen.getByLabelText('MCP'));
+    expect(respondRadio(/Static HTTP response/)).toBeChecked();
+  });
+
+  it('a static action loaded from the mocks list survives switching to gRPC', async () => {
+    const user = userEvent.setup({ delay: null });
+    useDashboardStore.setState({
+      activeExpectations: [{
+        key: 'loaded-static-001',
+        value: {
+          id: 'loaded-static-001',
+          httpRequest: { method: 'POST', path: '/pkg.Svc/M' },
+          httpResponse: { statusCode: 200, body: 'x' },
+        },
+      }],
+    });
+    renderComposer();
+    await user.click(within(screen.getByTestId('existing-mocks-list')).getByText(/\/pkg\.Svc\/M/));
+    await user.click(screen.getByLabelText('gRPC'));
+    expect(respondRadio(/Static HTTP response/)).toBeChecked();
+  });
+
+  it('a static action handed off for edit survives switching to gRPC', async () => {
+    const user = userEvent.setup({ delay: null });
+    // Not in activeExpectations, so the hand-off takes its direct-load path.
+    useDashboardStore.setState({
+      pendingEditExpectation: {
+        id: 'handoff-static-001',
+        httpRequest: { method: 'POST', path: '/pkg.Svc/M' },
+        httpResponse: { statusCode: 200, body: 'x' },
+      },
+    });
+    renderComposer();
+    await waitFor(() => expect(useDashboardStore.getState().pendingEditExpectation).toBeNull());
+    expect((screen.getByLabelText('Path') as HTMLInputElement).value).toBe('/pkg.Svc/M');
+    await user.click(screen.getByLabelText('gRPC'));
+    expect(respondRadio(/Static HTTP response/)).toBeChecked();
   });
 
   it('switching from gRPC (grpc_stream selected) to HTTP resets to static', async () => {

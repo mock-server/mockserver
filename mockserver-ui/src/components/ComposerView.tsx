@@ -4684,6 +4684,9 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
 
   const [kind, setKind] = useState<ExpectationKind>('standard');
   const [actionType, setActionType] = useState<ActionType>('static');
+  // True once the action was picked by the user or loaded from a mock; while false
+  // the action is just its kind's default, so a kind switch moves it to the new default.
+  const actionChosenRef = useRef(false);
   const [matcher, setMatcher] = useState<MatcherState>(emptyMatcher);
   const [dnsMatcher, setDnsMatcher] = useState<StandardDnsMatcher>({ dnsName: '', dnsType: '', dnsClass: '' });
   const [loadFromKey, setLoadFromKey] = useState('');
@@ -4875,6 +4878,7 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
         const inferredKind = kindForActionType(prefill.type);
         setKind((prevKind) => (prevKind === 'mcp' && inferredKind === 'standard') ? 'mcp' : inferredKind);
         setActionType(prefill.type);
+        actionChosenRef.current = true;
         if (prefill.staticState) setStaticState(prefill.staticState);
         if (prefill.forwardState) setForwardState(prefill.forwardState);
         if (prefill.forwardOverrideState) setForwardOverrideState(prefill.forwardOverrideState);
@@ -5017,6 +5021,7 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
     setCaptureEnabled(false);
     setCaptureRules([]);
     setActionType(kind === 'llm_conversation' || kind === 'import' ? 'static' : DEFAULT_ACTION_BY_KIND[kind]);
+    actionChosenRef.current = false;
     setStaticState(initialStaticState());
     setForwardState(initialForwardState());
     setForwardOverrideState(initialForwardOverrideState());
@@ -5099,6 +5104,7 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
         const inferredKind = kindForActionType(prefill.type);
         setKind(inferredKind);
         setActionType(prefill.type);
+        actionChosenRef.current = true;
         if (prefill.staticState) setStaticState(prefill.staticState);
         if (prefill.forwardState) setForwardState(prefill.forwardState);
         if (prefill.forwardOverrideState) setForwardOverrideState(prefill.forwardOverrideState);
@@ -5278,6 +5284,7 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
                 // values are preserved, so nothing the user typed is lost.
                 setKind('standard');
                 setActionType('static');
+                actionChosenRef.current = false;
               }
               setMode(next);
             }}
@@ -5377,12 +5384,13 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
                   path: prev.path === GRPC_PATH ? '' : prev.path,
                 }));
               }
-              // Reset actionType to a valid default for the new kind
+              // Keep an action the user chose if the new kind allows it; otherwise
+              // (or if it is still the old kind's default) use the new kind's default.
               if (newKind !== 'llm_conversation' && newKind !== 'import') {
-                const allowed = ACTION_TYPES_BY_KIND[newKind];
-                setActionType((prev) =>
-                  allowed.includes(prev) ? prev : DEFAULT_ACTION_BY_KIND[newKind],
-                );
+                if (!actionChosenRef.current || !ACTION_TYPES_BY_KIND[newKind].includes(actionType)) {
+                  setActionType(DEFAULT_ACTION_BY_KIND[newKind]);
+                  actionChosenRef.current = false;
+                }
               }
             }}
           >
@@ -5629,7 +5637,13 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
               <Typography variant="subtitle2" sx={{ mb: 1, textTransform: 'uppercase', letterSpacing: 0.5, color: 'text.secondary' }}>
                 2 · Respond with
               </Typography>
-              <RadioGroup value={actionType} onChange={(e) => setActionType(e.target.value as ActionType)}>
+              <RadioGroup
+                value={actionType}
+                onChange={(e) => {
+                  setActionType(e.target.value as ActionType);
+                  actionChosenRef.current = true;
+                }}
+              >
                 {actionTypesForKind(kind as ActionKind).map((a) => (
                   <FormControlLabel
                     key={a.value}
