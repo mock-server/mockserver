@@ -179,6 +179,7 @@ public class ConfigurationProperties {
     private static final String MOCKSERVER_SOCKET_CONNECTION_TIMEOUT_IN_MILLIS = "mockserver.socketConnectionTimeoutInMillis";
     private static final String MOCKSERVER_CONNECTION_DELAY_MILLIS = "mockserver.connectionDelayMillis";
     private static final String MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS = "mockserver.alwaysCloseSocketConnections";
+    private static final String MOCKSERVER_HTTP1_PIPELINING_IN_ORDER = "mockserver.http1PipeliningInOrder";
     private static final String MOCKSERVER_LOCAL_BOUND_IP = "mockserver.localBoundIP";
 
     // http request parsing
@@ -3235,6 +3236,23 @@ public class ConfigurationProperties {
 
     public static boolean alwaysCloseSocketConnections() {
         return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS, "MOCKSERVER_ALWAYS_CLOSE_SOCKET_CONNECTIONS", "false"));
+    }
+
+    /**
+     * <p>If true (the default) HTTP/1.1 requests pipelined on one connection are answered in the order they arrived, as
+     * RFC 9112 requires, by handling one request on a connection at a time. If false each pipelined request is handled
+     * as soon as it arrives, and its response may be written before the response to a request sent ahead of it.</p>
+     * <p>
+     * Read when a connection is set up. To be removed in the minor release after the one that introduces it.
+     *
+     * @param inOrder true to answer pipelined HTTP/1.1 requests in the order they arrived
+     */
+    public static void http1PipeliningInOrder(boolean inOrder) {
+        setProperty(MOCKSERVER_HTTP1_PIPELINING_IN_ORDER, "" + inOrder);
+    }
+
+    public static boolean http1PipeliningInOrder() {
+        return Boolean.parseBoolean(readPropertyHierarchically(PROPERTIES, MOCKSERVER_HTTP1_PIPELINING_IN_ORDER, "MOCKSERVER_HTTP1_PIPELINING_IN_ORDER", "true"));
     }
 
     // streaming proxy

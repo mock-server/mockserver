@@ -1130,6 +1130,26 @@ public class HttpActionHandler {
                 dispatchErrorAction((HttpError) action, request, responseWriter, ctx);
                 expectationPostProcessor.run();
             }, expectationPostProcessor), actionDelay, request, responseWriter, expectationPostProcessor), synchronous, combineWithGlobalDelay(actionDelay));
+            case BINARY_RESPONSE, DNS_RESPONSE -> {
+                // these answer binary and DNS traffic; an HTTP request they match must still get a response
+                String message = "the matched expectation's " + action.getType() + " action cannot answer an HTTP request";
+                if (mockServerLogger.isEnabledForInstance(Level.WARN)) {
+                    mockServerLogger.logEvent(
+                        new LogEntry()
+                            .setType(WARN)
+                            .setLogLevel(Level.WARN)
+                            .setCorrelationId(request.getLogCorrelationId())
+                            .setHttpRequest(request)
+                            .setExpectationId(action.getExpectationId())
+                            .setMessageFormat("the matched expectation's{}action cannot answer an HTTP request, so returning 501 for request:{}")
+                            .setArguments(action.getType(), request)
+                    );
+                }
+                writeResponseActionResponse(
+                    response().withStatusCode(501).withReasonPhrase("Not Implemented").withBody(message),
+                    responseWriter, request, action, synchronous, null, expectationPostProcessor
+                );
+            }
         }
 
         final List<Action> secondaryActions = expectation.getSecondaryActions();

@@ -1285,6 +1285,31 @@ public class HttpActionHandlerTest {
         );
     }
 
+    @Test
+    public void shouldAnswer501WhenAnHttpRequestMatchesABinaryOrDnsAction() {
+        Expectation[] notHttp = {
+            new Expectation(request).thenRespondWithBinary(org.mockserver.model.BinaryResponse.binaryResponse("binary".getBytes(java.nio.charset.StandardCharsets.UTF_8))),
+            new Expectation(request).thenRespondWithDns(org.mockserver.model.DnsResponse.dnsResponse())
+        };
+        for (Expectation notHttpExpectation : notHttp) {
+            // given
+            when(mockHttpStateHandler.firstMatchingExpectation(request)).thenReturn(notHttpExpectation);
+            ResponseWriter responseWriter = mock(ResponseWriter.class);
+            String type = notHttpExpectation.getAction().getType().name();
+
+            // when
+            actionHandler.processAction(request, responseWriter, mock(ChannelHandlerContext.class), new HashSet<>(), false, true);
+
+            // then - answered, so the exchange ends and a request pipelined behind it is not held
+            verify(responseWriter, description(type + " is answered with 501")).writeResponse(
+                eq(request),
+                argThat(resp -> resp.getStatusCode() == 501
+                    && resp.getBodyAsString().equals("the matched expectation's " + type + " action cannot answer an HTTP request")),
+                eq(false)
+            );
+        }
+    }
+
     // ----------------------------------------------------------------------------------------------------
     // FILE response body (issue #2450): a FileBody produced by a callback / template / forward-override must
     // be MATERIALISED (the file READ, its CONTENTS placed on the wire) by the write-path funnels, not emitted

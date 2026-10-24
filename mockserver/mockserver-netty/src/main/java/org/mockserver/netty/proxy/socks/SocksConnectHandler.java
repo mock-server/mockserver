@@ -9,6 +9,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import org.mockserver.netty.connection.HttpTransportTimer;
 import org.mockserver.netty.unification.HttpServerCodecResponsePairing;
 import org.mockserver.netty.unification.PacedLargeWriteHandler;
+import org.mockserver.codec.Http1PipeliningGate;
 import org.mockserver.codec.HttpChunkLineLimiter;
 import org.mockserver.codec.HttpLineEndSplitGuard;
 import org.mockserver.codec.MockServerHttpServerCodec;
@@ -35,6 +36,7 @@ public abstract class SocksConnectHandler<T> extends RelayConnectHandler<T> {
         removeHandler(pipeline, MockServerHttpServerCodec.class);
         removeHandler(pipeline, PacedLargeWriteHandler.class);
         HttpTransportTimer.removeFrom(pipeline);
+        Http1PipeliningGate.removeFrom(pipeline);
         if (pipeline.get(this.getClass()) != null) {
             pipeline.remove(this);
         }

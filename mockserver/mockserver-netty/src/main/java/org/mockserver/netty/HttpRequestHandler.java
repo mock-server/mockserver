@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
 import org.apache.commons.text.StringEscapeUtils;
+import org.mockserver.codec.Http1PipeliningGate;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.configuration.ServerTlsSettings;
 import org.mockserver.dashboard.DashboardHandler;
@@ -516,6 +517,8 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<HttpRequest>
                             );
                         }
                     } else {
+                        // nothing pipelined behind the CONNECT may reach the HTTP handlers: it is the tunnel's
+                        Http1PipeliningGate.switching(ctx.pipeline());
                         setProxyingRequest(ctx, Boolean.TRUE);
                         // The tunnelled protocol is unknown here: the client sends its ClientHello (TLS),
                         // its h2c prior-knowledge preface, or a plaintext HTTP/1.1 request only AFTER it

@@ -3,6 +3,7 @@ package org.mockserver.mock.action.http;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http2.Http2StreamChannel;
 import org.mockserver.closurecallback.websocketregistry.WebSocketClientRegistry;
 import org.mockserver.configuration.Configuration;
 import org.mockserver.grpc.GrpcProtoDescriptorStore;
@@ -19,6 +20,7 @@ import org.mockserver.model.Delay;
 import org.mockserver.model.GrpcStreamMessage;
 import org.mockserver.model.GrpcStreamResponse;
 import org.mockserver.scheduler.Scheduler;
+import org.mockserver.socket.ConnectionClosing;
 import org.slf4j.event.Level;
 
 import java.util.List;
@@ -412,6 +414,10 @@ public class GrpcStreamResponseActionHandler {
                     GrpcStatusMapper.percentEncodeMessage(grpcStreamResponse.getStatusMessage()));
             }
 
+            if (Boolean.TRUE.equals(grpcStreamResponse.getCloseConnection()) && !(ctx.channel() instanceof Http2StreamChannel)) {
+                // the close follows the trailers' write, possibly off the event loop
+                ConnectionClosing.mark(ctx.channel());
+            }
             ctx.writeAndFlush(trailers).addListener(future -> {
                 responseEnded.run();
                 if (grpcStreamResponse.getCloseConnection() != null && grpcStreamResponse.getCloseConnection()) {

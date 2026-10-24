@@ -115,6 +115,24 @@ public abstract class LifeCycle implements Stoppable {
     // drain in-flight requests before shutting down the event loops (WS7.2 graceful shutdown).
     private final java.util.concurrent.atomic.AtomicInteger requestsInFlight = new java.util.concurrent.atomic.AtomicInteger(0);
     private final java.util.function.IntSupplier requestsInFlightSupplier = requestsInFlight::get;
+    // set once stop has stopped waiting for in-flight requests, so requests still held behind a pipelined one are dropped
+    private volatile boolean drainEnded;
+    private final org.mockserver.codec.HeldRequestAccounting heldRequestAccounting = new org.mockserver.codec.HeldRequestAccounting() {
+        @Override
+        public void held() {
+            requestProcessingStarted();
+        }
+
+        @Override
+        public void released() {
+            requestProcessingComplete();
+        }
+
+        @Override
+        public boolean discardHeldOnClose() {
+            return drainEnded;
+        }
+    };
     private final Scheduler scheduler;
     private final ClientTlsHandshakeFailureLog clientTlsHandshakeFailureLog = new ClientTlsHandshakeFailureLog();
     // optional OTel exporters — null unless the corresponding config is enabled
@@ -250,6 +268,13 @@ public abstract class LifeCycle implements Stoppable {
     }
 
     /**
+     * @return how HTTP/1.1 connections count the pipelined requests they hold as in flight, so a stop waits for them
+     */
+    public org.mockserver.codec.HeldRequestAccounting getHeldRequestAccounting() {
+        return heldRequestAccounting;
+    }
+
+    /**
      * Wait up to {@code stopDrainMillis} for in-flight requests to complete. When the timeout is 0
      * draining is disabled and this returns immediately (pre-7.2 behaviour). If the timeout elapses
      * with requests still in flight a warning is logged and shutdown proceeds anyway.
@@ -357,6 +382,7 @@ public abstract class LifeCycle implements Stoppable {
                 // requests still being processed to complete before tearing down the event loops
                 // (WS7.2 graceful shutdown connection drain). Bounded by stopDrainMillis.
                 drainInFlightRequests();
+                drainEnded = true;
 
                 httpState.stop();
                 if (extensionRegistry != null) {

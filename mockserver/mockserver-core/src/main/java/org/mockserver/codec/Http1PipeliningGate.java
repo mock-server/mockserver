@@ -27,6 +27,7 @@ import org.mockserver.responsewriter.HttpExchangeEndedEvent;
 import org.mockserver.socket.ChannelReadPause;
 import org.mockserver.socket.ConnectionClosing;
 import org.mockserver.socket.ConnectionClosingEvent;
+import org.mockserver.socket.ReadAfterFailedWrite;
 import org.slf4j.event.Level;
 
 import java.util.ArrayDeque;
@@ -97,13 +98,16 @@ public final class Http1PipeliningGate extends ChannelDuplexHandler {
     private long stalledMillis;
     private ScheduledFuture<?> backstop;
 
+    /**
+     * @param accounting how held requests are counted as in flight; null counts nothing, as {@link HeldRequestAccounting#NONE}
+     */
     public Http1PipeliningGate(Configuration configuration, HeldRequestAccounting accounting, MockServerLogger mockServerLogger) {
         this(configuration, accounting, mockServerLogger, Metrics::incrementHttp1PipeliningWedgedConnections);
     }
 
     Http1PipeliningGate(Configuration configuration, HeldRequestAccounting accounting, MockServerLogger mockServerLogger, Runnable wedgedCounter) {
         this.configuration = configuration;
-        this.accounting = accounting;
+        this.accounting = accounting != null ? accounting : HeldRequestAccounting.NONE;
         this.mockServerLogger = mockServerLogger;
         this.heldCostLimit = configuration.maxRequestBodySize();
         this.backstopMillis = configuration.inboundConnectionIdleTimeoutMillis();
@@ -366,6 +370,11 @@ public final class Http1PipeliningGate extends ChannelDuplexHandler {
         awaitingWrite = false;
         if (written.isSuccess()) {
             settle();
+        } else if (ReadAfterFailedWrite.isReadingOn(written.channel())) {
+            // the failure ended the output, and the channel reads the client's requests to the end of its input so they
+            // are still recorded: drop the read pause now, before the output-shutdown event checks for one, and leave
+            // held and later requests to channelInactive
+            enterClosing();
         } else {
             // a response that failed part-way leaves the connection's framing unknown
             enterClosing();

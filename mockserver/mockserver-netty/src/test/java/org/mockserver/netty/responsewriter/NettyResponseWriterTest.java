@@ -206,6 +206,8 @@ public class NettyResponseWriterTest {
     @Test
     public void shouldOverrideKeepAlive() {
         // given
+        EmbeddedChannel channel = new EmbeddedChannel();
+        when(mockChannelHandlerContext.channel()).thenReturn(channel);
         HttpRequest request = request("some_request");
         HttpResponse response = response("some_response")
             .withConnectionOptions(
@@ -226,11 +228,16 @@ public class NettyResponseWriterTest {
                 )
         );
         verify(mockChannelFuture).addListener(any(GenericFutureListener.class));
+        // the socket closes after a head that does not say so, so the pipelining gate is told first
+        org.hamcrest.MatcherAssert.assertThat(org.mockserver.socket.ConnectionClosing.isMarked(channel), org.hamcrest.Matchers.is(true));
+        channel.finishAndReleaseAll();
     }
 
     @Test
     public void shouldSuppressConnectionHeader() {
         // given
+        EmbeddedChannel channel = new EmbeddedChannel();
+        when(mockChannelHandlerContext.channel()).thenReturn(channel);
         HttpRequest request = request("some_request");
         HttpResponse response = response("some_response")
             .withConnectionOptions(
@@ -250,6 +257,9 @@ public class NettyResponseWriterTest {
                 )
         );
         verify(mockChannelFuture).addListener(any(GenericFutureListener.class));
+        // the socket closes after a head that does not say so, so the pipelining gate is told first
+        org.hamcrest.MatcherAssert.assertThat(org.mockserver.socket.ConnectionClosing.isMarked(channel), org.hamcrest.Matchers.is(true));
+        channel.finishAndReleaseAll();
     }
 
     @Test

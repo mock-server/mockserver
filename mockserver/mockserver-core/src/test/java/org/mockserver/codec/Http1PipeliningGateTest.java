@@ -59,6 +59,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
 
 /**
  * {@link Http1PipeliningGate} on an {@link EmbeddedChannel}: inbound objects are fired straight into the pipeline, so
@@ -121,6 +122,51 @@ public class Http1PipeliningGateTest {
         assertThat(Http1PipeliningGate.isSlowPath(channel), is(false));
         assertThat(accounting.open, is(0));
         assertThat(accounting.heldCalls, is(2));
+    }
+
+    @Test
+    public void shouldHoldAndReleaseWithNoInFlightAccounting() {
+        open(new Http1PipeliningGate(configuration(1 << 20, 300_000), null, logger, wedged::incrementAndGet));
+
+        feed(head("/1"), LastHttpContent.EMPTY_LAST_CONTENT);
+        feed(head("/2"), LastHttpContent.EMPTY_LAST_CONTENT);
+        assertThat(gate.heldRequests(), is(1));
+
+        downstream.answer(ok());
+        channel.runPendingTasks();
+
+        assertThat(downstream.heads(), contains("/1", "/2"));
+    }
+
+    @Test
+    public void shouldPassTheAggregators413ForAnOversizedRequestThatIsNotPipelined() {
+        Tail tail = new Tail();
+        EmbeddedChannel codec = new EmbeddedChannel(new HttpServerCodec(), gate(1 << 20, 300_000), HttpObjectAggregators.httpObjectAggregator(16), tail);
+        try {
+            codec.writeInbound(Unpooled.copiedBuffer("GET /first HTTP/1.1\r\nHost: a\r\n\r\n", StandardCharsets.US_ASCII));
+            codec.writeOutbound(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EMPTY_BUFFER));
+            readAll(codec);
+            codec.runPendingTasks();
+
+            codec.writeInbound(Unpooled.copiedBuffer("POST /oversized HTTP/1.1\r\nHost: a\r\nContent-Length: 100\r\n\r\n", StandardCharsets.US_ASCII));
+
+            assertThat("written straight through the gate", readAll(codec), startsWith("HTTP/1.1 413 Request Entity Too Large"));
+            assertThat(tail.uris(), contains("/first"));
+        } finally {
+            tail.releaseAll();
+            codec.finishAndReleaseAll();
+        }
+    }
+
+    private static String readAll(EmbeddedChannel codec) {
+        StringBuilder written = new StringBuilder();
+        for (Object outbound = codec.readOutbound(); outbound != null; outbound = codec.readOutbound()) {
+            if (outbound instanceof ByteBuf) {
+                written.append(((ByteBuf) outbound).toString(StandardCharsets.US_ASCII));
+            }
+            ReferenceCountUtil.release(outbound);
+        }
+        return written.toString();
     }
 
     // ---- U-2 ----

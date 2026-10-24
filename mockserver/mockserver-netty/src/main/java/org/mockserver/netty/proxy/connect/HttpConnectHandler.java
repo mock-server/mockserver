@@ -15,6 +15,7 @@ import org.mockserver.lifecycle.LifeCycle;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.netty.proxy.relay.RelayConnectHandler;
+import org.mockserver.codec.Http1PipeliningGate;
 import org.mockserver.codec.HttpChunkLineLimiter;
 import org.mockserver.codec.HttpLineEndSplitGuard;
 import org.mockserver.codec.MockServerHttpServerCodec;
@@ -40,6 +41,7 @@ public final class HttpConnectHandler extends RelayConnectHandler<HttpRequest> {
         removeHandler(pipeline, MockServerHttpServerCodec.class);
         removeHandler(pipeline, PacedLargeWriteHandler.class);
         HttpTransportTimer.removeFrom(pipeline);
+        Http1PipeliningGate.removeFrom(pipeline);
         // the tunnel's bytes are logged on its loopback leg, where they are decrypted
         RawNetworkTrafficLog.removeFrom(pipeline);
         if (pipeline.get(this.getClass()) != null) {
