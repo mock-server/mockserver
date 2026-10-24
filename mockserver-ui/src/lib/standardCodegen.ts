@@ -2043,6 +2043,9 @@ interface Merged {
  */
 function mergeTracked(original: unknown, form: unknown, baseline: unknown): Merged {
   if (unchangedByForm(form, baseline)) return { value: structuredClone(original), kept: keptDiff(original, baseline) };
+  // The form showed nothing here on load (e.g. connectionOptions holding only chunkSize), so
+  // what it now emits is added to the original object rather than replacing its hidden fields.
+  if (baseline === undefined && isMergeableObject(original) && isMergeableObject(form)) return mergeTracked(original, form, {});
   if (isMergeableObject(original) && isMergeableObject(form) && isMergeableObject(baseline)) {
     const value: Record<string, unknown> = structuredClone(original);
     const kept: KeptLeaf[] = [];

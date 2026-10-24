@@ -192,7 +192,10 @@ const ACTION_TYPES_BY_KIND: Record<ActionKind, ActionType[]> = {
   mcp: ['static'],
 };
 
-/** Default action type when switching to a kind. */
+/** The matcher path the gRPC kind starts with: gRPC calls are POSTs to /package.Service/Method. */
+const GRPC_PATH = '/package.Service/Method';
+
+/** Default action type when switching to a kind, and after New / clear in that kind. */
 const DEFAULT_ACTION_BY_KIND: Record<ActionKind, ActionType> = {
   standard: 'static',
   grpc: 'grpc_stream',
@@ -1537,12 +1540,12 @@ function actionFromExpectation(item: JsonListItem): ActionPrefill | null {
         filePath: fileBody && typeof fileBody['filePath'] === 'string' ? (fileBody['filePath'] as string) : '',
         fileTemplateType: fileTt === 'MUSTACHE' || fileTt === 'VELOCITY' ? fileTt : '',
         templatedFilePath: fileBody?.['templatedFilePath'] === true ? true : undefined,
-        // For a FILE body the content type is whatever the body declares (possibly none); don't
-        // fall back to the application/json header default, which would silently add one on re-save.
+        // The loaded content type, or none: an application/json default would show a header the
+        // save does not send (an untouched form value keeps the original), so the preview would differ.
         contentType: fileBody
           ? (fileContentType ?? '')
-          : (Array.isArray(contentType) ? String((contentType as unknown[])[0] ?? 'application/json')
-            : typeof contentType === 'string' ? contentType : 'application/json'),
+          : (Array.isArray(contentType) ? String((contentType as unknown[])[0] ?? '')
+            : typeof contentType === 'string' ? contentType : ''),
         // Preserve any non-content-type response headers so editing in place does not drop them.
         headers: headersToText(r['headers'], 'content-type'),
         connectionOptions: connectionOptionsFromValue(r['connectionOptions']),
@@ -1864,12 +1867,26 @@ function StatusCodeField({
   );
 }
 
+/**
+ * Why a fixed delay field is disabled: the loaded delay has a distribution (which the server uses
+ * instead of the fixed value) or a template (which falls back to the fixed value). A delay is saved
+ * whole, so typing a fixed value would replace, and lose, either one.
+ */
+const LOCKED_DELAY_HELP = 'This delay uses a distribution, or a template with the fixed value only as its fallback, kept under Other fields. Remove it there to set a fixed delay.';
+
+function isPlainRecord(v: unknown): v is Record<string, unknown> {
+  return !!v && typeof v === 'object' && !Array.isArray(v);
+}
+
 function StaticHttpPanel({
   state,
   setState,
+  delayLocked = false,
 }: {
   state: StaticState;
   setState: (s: StaticState) => void;
+  /** See {@link LOCKED_DELAY_HELP}. */
+  delayLocked?: boolean;
 }) {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -1982,13 +1999,15 @@ function StaticHttpPanel({
           type="number"
           value={state.delayValue}
           onChange={(e) => setState({ ...state, delayValue: Number(e.target.value) || 0 })}
-          sx={{ width: { xs: '100%', sm: 180 } }}
-          helperText="0 = no delay"
+          sx={{ width: { xs: '100%', sm: delayLocked ? 360 : 180 } }}
+          disabled={delayLocked}
+          helperText={delayLocked ? LOCKED_DELAY_HELP : '0 = no delay'}
         />
         <TextField
           label="Unit"
           size="small"
           select
+          disabled={delayLocked}
           value={state.delayUnit}
           onChange={(e) => setState({ ...state, delayUnit: e.target.value as StaticDelayUnit })}
           sx={{ width: { xs: '100%', sm: 160 } }}
@@ -2421,9 +2440,12 @@ interface ErrorState {
 function ErrorPanel({
   state,
   setState,
+  delayLocked = false,
 }: {
   state: ErrorState;
   setState: (s: ErrorState) => void;
+  /** See {@link LOCKED_DELAY_HELP}. */
+  delayLocked?: boolean;
 }) {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -2476,13 +2498,15 @@ function ErrorPanel({
           type="number"
           value={state.delayValue}
           onChange={(e) => setState({ ...state, delayValue: Number(e.target.value) || 0 })}
-          sx={{ width: { xs: '100%', sm: 180 } }}
-          helperText="0 = no delay"
+          sx={{ width: { xs: '100%', sm: delayLocked ? 360 : 180 } }}
+          disabled={delayLocked}
+          helperText={delayLocked ? LOCKED_DELAY_HELP : '0 = no delay'}
         />
         <TextField
           label="Unit"
           size="small"
           select
+          disabled={delayLocked}
           value={state.delayUnit}
           onChange={(e) => setState({ ...state, delayUnit: e.target.value as DelayUnit })}
           sx={{ width: { xs: '100%', sm: 160 } }}
@@ -4518,6 +4542,132 @@ function getInitialMode(): ComposerMode {
   return 'quick';
 }
 
+/** Blank per-action form states: the initial values, and what New / clear resets to. */
+function initialStaticState(): StaticState {
+  return {
+    statusCode: 200,
+    body: '',
+    contentType: 'application/json',
+    bodyFromFile: false,
+    filePath: '',
+    fileTemplateType: '',
+    headers: '',
+    reasonPhrase: '',
+    cookies: '',
+    delayValue: 0,
+    delayUnit: 'MILLISECONDS',
+  };
+}
+
+function initialForwardState(): ForwardState {
+  return {
+    scheme: 'HTTPS',
+    host: '',
+    port: 443,
+  };
+}
+
+function initialForwardOverrideState(): ForwardOverrideState {
+  return {
+    overrideMethod: '',
+    overrideHost: '',
+    overrideScheme: '',
+    overridePath: '',
+    overrideQueryString: '',
+    overrideHeaders: '',
+    overrideBody: '',
+  };
+}
+
+function initialCallbackState(): CallbackState {
+  return { callbackClass: '' };
+}
+
+function initialTemplateState(): TemplateState {
+  return {
+    templateType: 'VELOCITY',
+    template: '',
+    templateFile: '',
+  };
+}
+
+function initialErrorState(): ErrorState {
+  return {
+    dropConnection: true,
+    resetConnection: false,
+    responseBytesB64: '',
+    delayValue: 0,
+    delayUnit: 'MILLISECONDS',
+  };
+}
+
+function initialForwardFallbackState(): ForwardFallbackState {
+  return {
+    scheme: 'HTTPS',
+    host: '',
+    port: 443,
+    fallbackStatusCode: 200,
+    fallbackBody: '',
+    fallbackOnStatusCodes: '500,502,503',
+    fallbackOnTimeout: true,
+  };
+}
+
+function initialWebsocketState(): WebSocketState {
+  return {
+    subprotocol: '',
+    messages: [listItemRow('')],
+    closeConnection: false,
+    matchers: [],
+  };
+}
+
+function initialSseState(): StandardSseState {
+  return {
+    statusCode: 200,
+    headers: '',
+    events: [emptySseEvent()],
+    closeConnection: false,
+  };
+}
+
+function initialBinaryResponseState(): StandardBinaryResponseState {
+  return {
+    binaryData: '',
+  };
+}
+
+function initialDnsResponseState(): StandardDnsState {
+  return {
+    responseCode: 'NOERROR',
+    answerRecords: '',
+  };
+}
+
+function initialForwardTemplateState(): StandardForwardTemplateState {
+  return {
+    templateType: 'VELOCITY',
+    template: '',
+    templateFile: '',
+  };
+}
+
+function initialForwardClassCallbackState(): StandardForwardClassCallbackState {
+  return {
+    callbackClass: '',
+  };
+}
+
+function initialGrpcStreamState(): GrpcStreamState {
+  return {
+    statusName: '',
+    statusMessage: '',
+    headers: '',
+    messages: [listItemRow('')],
+    closeConnection: false,
+  };
+}
+
 export default function ComposerView({ connectionParams }: ComposerViewProps) {
   const activeExpectations = useDashboardStore((s) => s.activeExpectations);
   const activeExpectationsTotal = useDashboardStore((s) => s.activeExpectationsTotal);
@@ -4540,89 +4690,20 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
   const [llmScenarioName, setLlmScenarioName] = useState('');
 
   // Per-action state (kept independent so switching radios doesn't lose work).
-  const [staticState, setStaticState] = useState<StaticState>({
-    statusCode: 200,
-    body: '',
-    contentType: 'application/json',
-    bodyFromFile: false,
-    filePath: '',
-    fileTemplateType: '',
-    headers: '',
-    reasonPhrase: '',
-    cookies: '',
-    delayValue: 0,
-    delayUnit: 'MILLISECONDS',
-  });
-  const [forwardState, setForwardState] = useState<ForwardState>({
-    scheme: 'HTTPS',
-    host: '',
-    port: 443,
-  });
-  const [forwardOverrideState, setForwardOverrideState] = useState<ForwardOverrideState>({
-    overrideMethod: '',
-    overrideHost: '',
-    overrideScheme: '',
-    overridePath: '',
-    overrideQueryString: '',
-    overrideHeaders: '',
-    overrideBody: '',
-  });
-  const [callbackState, setCallbackState] = useState<CallbackState>({ callbackClass: '' });
-  const [templateState, setTemplateState] = useState<TemplateState>({
-    templateType: 'VELOCITY',
-    template: '',
-    templateFile: '',
-  });
-  const [errorState, setErrorState] = useState<ErrorState>({
-    dropConnection: true,
-    resetConnection: false,
-    responseBytesB64: '',
-    delayValue: 0,
-    delayUnit: 'MILLISECONDS',
-  });
-  const [forwardFallbackState, setForwardFallbackState] = useState<ForwardFallbackState>({
-    scheme: 'HTTPS',
-    host: '',
-    port: 443,
-    fallbackStatusCode: 200,
-    fallbackBody: '',
-    fallbackOnStatusCodes: '500,502,503',
-    fallbackOnTimeout: true,
-  });
-  const [websocketState, setWebsocketState] = useState<WebSocketState>({
-    subprotocol: '',
-    messages: [listItemRow('')],
-    closeConnection: false,
-    matchers: [],
-  });
-  const [sseState, setSseState] = useState<StandardSseState>({
-    statusCode: 200,
-    headers: '',
-    events: [emptySseEvent()],
-    closeConnection: false,
-  });
-  const [binaryResponseState, setBinaryResponseState] = useState<StandardBinaryResponseState>({
-    binaryData: '',
-  });
-  const [dnsResponseState, setDnsResponseState] = useState<StandardDnsState>({
-    responseCode: 'NOERROR',
-    answerRecords: '',
-  });
-  const [forwardTemplateState, setForwardTemplateState] = useState<StandardForwardTemplateState>({
-    templateType: 'VELOCITY',
-    template: '',
-    templateFile: '',
-  });
-  const [forwardClassCallbackState, setForwardClassCallbackState] = useState<StandardForwardClassCallbackState>({
-    callbackClass: '',
-  });
-  const [grpcStreamState, setGrpcStreamState] = useState<GrpcStreamState>({
-    statusName: '',
-    statusMessage: '',
-    headers: '',
-    messages: [listItemRow('')],
-    closeConnection: false,
-  });
+  const [staticState, setStaticState] = useState<StaticState>(initialStaticState);
+  const [forwardState, setForwardState] = useState<ForwardState>(initialForwardState);
+  const [forwardOverrideState, setForwardOverrideState] = useState<ForwardOverrideState>(initialForwardOverrideState);
+  const [callbackState, setCallbackState] = useState<CallbackState>(initialCallbackState);
+  const [templateState, setTemplateState] = useState<TemplateState>(initialTemplateState);
+  const [errorState, setErrorState] = useState<ErrorState>(initialErrorState);
+  const [forwardFallbackState, setForwardFallbackState] = useState<ForwardFallbackState>(initialForwardFallbackState);
+  const [websocketState, setWebsocketState] = useState<WebSocketState>(initialWebsocketState);
+  const [sseState, setSseState] = useState<StandardSseState>(initialSseState);
+  const [binaryResponseState, setBinaryResponseState] = useState<StandardBinaryResponseState>(initialBinaryResponseState);
+  const [dnsResponseState, setDnsResponseState] = useState<StandardDnsState>(initialDnsResponseState);
+  const [forwardTemplateState, setForwardTemplateState] = useState<StandardForwardTemplateState>(initialForwardTemplateState);
+  const [forwardClassCallbackState, setForwardClassCallbackState] = useState<StandardForwardClassCallbackState>(initialForwardClassCallbackState);
+  const [grpcStreamState, setGrpcStreamState] = useState<GrpcStreamState>(initialGrpcStreamState);
 
   // Chaos profile — cross-cutting, applies regardless of action type
   // (except httpError which is already a fault action).
@@ -4924,7 +5005,8 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
   // re-registering the still-populated one.
   const resetForm = useCallback(() => {
     setLoadFromKey('');
-    setMatcher(emptyMatcher());
+    // Blank for the current kind, as switching to it shows: gRPC starts as a POST stream.
+    setMatcher(kind === 'grpc' ? { ...emptyMatcher(), method: 'POST', path: GRPC_PATH } : emptyMatcher());
     setDnsMatcher({ dnsName: '', dnsType: '', dnsClass: '' });
     setChaosEnabled(false);
     setChaosState({});
@@ -4934,19 +5016,34 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
     setStepsState([]);
     setCaptureEnabled(false);
     setCaptureRules([]);
-    setBinaryResponseState(withoutCarriedBinaryFields);
+    setActionType(kind === 'llm_conversation' || kind === 'import' ? 'static' : DEFAULT_ACTION_BY_KIND[kind]);
+    setStaticState(initialStaticState());
+    setForwardState(initialForwardState());
+    setForwardOverrideState(initialForwardOverrideState());
+    setCallbackState(initialCallbackState());
+    setTemplateState(initialTemplateState());
+    setErrorState(initialErrorState());
+    setForwardFallbackState(initialForwardFallbackState());
+    setWebsocketState(initialWebsocketState());
+    setSseState(initialSseState());
+    setBinaryResponseState(initialBinaryResponseState());
+    setDnsResponseState(initialDnsResponseState());
+    setForwardTemplateState(initialForwardTemplateState());
+    setForwardClassCallbackState(initialForwardClassCallbackState());
+    setGrpcStreamState(initialGrpcStreamState());
     // Drop the edit overlay so a fresh compose does not merge onto a stale
     // original (and cannot resurrect an old expectation's unmodeled fields).
     setEditOriginal(null);
     setKeptRemovals(NO_KEPT_REMOVALS);
     setEditActionModeled(true);
+    setEditActionBaseline(undefined);
     setEditJwtModeled(true);
     setScenarioBindingName('');
     setScenarioBindingState('');
     setScenarioBindingNext('');
     setError(null);
     setRegisteredLabel(null);
-  }, []);
+  }, [kind]);
 
   // Persist the Quick/Advanced choice within the browser session so it survives
   // navigating away and back (cheap, non-destructive).
@@ -5118,6 +5215,10 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
     [kind, matcher, dnsMatcher],
   );
   const advancedKeptFields = useMemo(() => keptActionFields(effectiveMatcher, draftAction), [effectiveMatcher, draftAction]);
+  const lockedDelayActions = useMemo(() => new Set(advancedKeptFields
+    .filter((f) => f.path.length === 1 && f.path[0] === 'delay' && isPlainRecord(f.value)
+      && ('distribution' in f.value || 'template' in f.value))
+    .map((f) => f.actionKey)), [advancedKeptFields]);
 
   // The exact expectation JSON that would be registered, used to seed the
   // "Test Matcher" playground. Empty string when the draft can't be built yet.
@@ -5263,7 +5364,6 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
               // gRPC pre-shapes the matcher for gRPC conventions; leaving gRPC for
               // another kind undoes that pre-shaping unless the user customised it,
               // so the matcher no longer shows gRPC content under HTTP / DNS / MCP.
-              const GRPC_PATH = '/package.Service/Method';
               if (newKind === 'grpc') {
                 setMatcher((prev) => ({
                   ...prev,
@@ -5559,7 +5659,7 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
               <Divider sx={{ mb: 1.5 }} />
 
               {actionType === 'static' && (
-                <StaticHttpPanel state={staticState} setState={setStaticState} />
+                <StaticHttpPanel state={staticState} setState={setStaticState} delayLocked={lockedDelayActions.has('httpResponse')} />
               )}
               {actionType === 'forward' && (
                 <ForwardPanel state={forwardState} setState={setForwardState} />
@@ -5574,7 +5674,7 @@ export default function ComposerView({ connectionParams }: ComposerViewProps) {
                 <TemplatePanel state={templateState} setState={setTemplateState} connectionParams={connectionParams} />
               )}
               {actionType === 'error' && (
-                <ErrorPanel state={errorState} setState={setErrorState} />
+                <ErrorPanel state={errorState} setState={setErrorState} delayLocked={lockedDelayActions.has('httpError')} />
               )}
               {actionType === 'forward_fallback' && (
                 <ForwardFallbackPanel state={forwardFallbackState} setState={setForwardFallbackState} />
